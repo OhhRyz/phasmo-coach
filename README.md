@@ -85,6 +85,14 @@ git push git@github.com:<compte>/phasmo-coach.git phasmo-coach-standalone:main
 Puis mettre à jour `SOURCE_REPO_URL` dans `src/config.ts` (lien vers le code source affiché dans l’app,
 requis par la licence AGPL).
 
+## Pistes pour la suite
+
+- **Pièges du coach** : le coach (700 h de jeu) fournira des situations vécues en partie, pour en faire
+  des questions pièges et des enquêtes avec indice trompeur volontaire, expliqué à la fin.
+- **Comparaison avec les fiches en ligne de tybayn** : si l’accès réseau à `zero-network.net` est
+  autorisé, comparer `src/data/ghosts/*.json` aux fiches actuelles du site (vérification uniquement,
+  l’app n’appelle jamais cette adresse).
+
 ## Sources, crédits et licence
 
 - Données dérivées de l’[Unofficial Phasmo Cheat Sheet](https://github.com/tybayn/phasmo-cheat-sheet) de
