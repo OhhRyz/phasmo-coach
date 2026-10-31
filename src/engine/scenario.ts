@@ -92,23 +92,37 @@ export function generateScenario(g: Ghost, difficulty: Difficulty, rng: Rng): Sc
     .map((o) => ({ kind: 'observation', text: redactGhostName(o.text, g), strength: o.strength }))
 
   const hunt: Omit<Clue, 'id' | 'time'>[] = []
-  if (g.huntSanity.normal >= 0) {
-    const v = Math.max(5, g.huntSanity.normal - randInt(rng, 0, 6))
+  // seuil de référence : le seuil normal, ou le plus haut quand l'entité n'en a pas d'unique (Obambo)
+  const threshold = g.huntSanity.normal >= 0 ? g.huntSanity.normal : g.huntSanity.high
+  if (threshold >= 0) {
+    const v = Math.max(5, threshold - randInt(rng, 0, 6))
     hunt.push({
       kind: 'hunt-sanity',
       text: `Première chasse : la santé mentale moyenne de l’équipe était d’environ ${v} % quand les lumières ont commencé à clignoter.`,
     })
   }
-  if (g.speed.min >= 0) {
-    const v = g.speed.isRange && g.speed.max != null ? round2(g.speed.min + rng() * (g.speed.max - g.speed.min)) : g.speed.min
-    const los = g.speed.los
-      ? 'Elle accélère progressivement pendant qu’elle te poursuit à vue.'
-      : 'Même en te poursuivant à vue, elle ne semble pas accélérer comme d’habitude.'
-    hunt.push({
-      kind: 'hunt-speed',
-      speed: v,
-      text: `Pendant la chasse, tu entends ses pas : environ ${num(v)} m/s quand elle ne te voit pas. ${los}`,
-    })
+  if (g.speed.min > 0) {
+    const s = g.speed
+    const special = s.isRange || s.max != null || s.alt != null
+    if (!special) {
+      const los = s.los
+        ? 'Elle accélère progressivement pendant qu’elle te poursuit à vue.'
+        : 'Même en te poursuivant à vue, elle ne semble pas accélérer comme d’habitude.'
+      hunt.push({
+        kind: 'hunt-speed',
+        speed: s.min,
+        text: `Au début de la chasse, tu entends ses pas : environ ${num(s.min)} m/s. ${los}`,
+      })
+    } else {
+      // vitesse variable : on donne une vitesse réellement possible, sans affirmer dans quelles conditions
+      const options = [s.min, s.max, s.alt].filter((v): v is number => v != null && v > 0)
+      const v = s.isRange && s.max != null ? round2(s.min + rng() * (s.max - s.min)) : pick(rng, options)
+      hunt.push({
+        kind: 'hunt-speed',
+        speed: v,
+        text: `À un moment de la chasse, tu entends ses pas : environ ${num(v)} m/s.`,
+      })
+    }
   }
 
   // Mise en scène : preuves et indices faibles d'abord, indices forts ensuite.

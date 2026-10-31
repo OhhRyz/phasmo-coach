@@ -1,0 +1,224 @@
+{
+  "id": "oni",
+  "name": "Oni",
+  "nameEn": "Oni",
+  "evidence": ["emf", "freezing", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue.",
+      "Sa vitesse est normale, mais il est plus visible pendant les chasses : son clignotement le laisse apparent plus longtemps que les autres entités."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Ses événements drainent 20 % de santé mentale au lieu de 10 %, ce qui fait souvent atteindre le seuil plus vite."
+    ]
+  },
+  "summary": "Une entité démonstrative, très active près des groupes, qui se montre beaucoup pendant les chasses et dont les événements coûtent deux fois plus de santé mentale, mais qui ne fait jamais le brouillard fantomatique.",
+  "keyTells": [
+    "Plus visible en chasse : reste apparent plus longtemps entre deux clignotements",
+    "Événement : −20 % de santé mentale au lieu de −10 %",
+    "Ne fait jamais l'événement bulle d'air / brouillard fantomatique",
+    "Plus actif quand plusieurs joueurs sont à proximité"
+  ],
+  "tells": [
+    {
+      "text": "Draine 20 % de santé mentale lors des événements (au lieu des 10 % standard).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne fait pas l'événement « brouillard fantomatique » (bulle d'air).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Est plus visible pendant les chasses : son clignotement le laisse apparent plus longtemps que les autres entités.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Plus actif quand plusieurs personnes sont à proximité.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Plus susceptible d'apparaître avec son modèle complet lors des événements.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Observe l'entité pendant une chasse : si elle est plus visible que la normale, c'est un Oni (le Deogen est lui aussi plus visible en chasse, mais sa vitesse est complètement différente).",
+      "definitive": true
+    },
+    {
+      "text": "Si l'affichage de la santé mentale est activé, vérifie-la après un événement : si elle a baissé de 20 % au lieu de 10 %, c'est un Oni.",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si tu vois un événement « brouillard fantomatique » (bulle d'air), ce n'est pas un Oni. Attention : l'événement de l'apparition en marche peut produire le même « souffle » ; assure-toi d'avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "deogen",
+      "why": "Le Deogen est aussi plus visible en chasse, mais il fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi ; il peut aussi respirer bruyamment dans la Spirit Box."
+    },
+    {
+      "with": "phantom",
+      "why": "Clignotement opposé : le Fantôme est invisible plus longtemps pendant les chasses, l'Oni visible plus longtemps."
+    },
+    {
+      "with": "jinn",
+      "why": "Mêmes EMF 5 et températures glaciales. Le Djinn fonce à 2,5 m/s en LdV quand le disjoncteur est allumé et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF au disjoncteur)."
+    },
+    {
+      "with": "shade",
+      "why": "Mêmes EMF 5 et températures glaciales, mais tempérament opposé : l'Ombre ne fait rien quand tu es dans sa pièce et ne chasse pas avant 35 %."
+    },
+    {
+      "with": "the-twins",
+      "why": "Mêmes EMF 5 et températures glaciales. Les Jumeaux font deux interactions à la fois et chassent à environ 1,5 ou 1,9 m/s ; l'Oni est toujours à 1,7 m/s."
+    },
+    {
+      "with": "wraith",
+      "why": "Mêmes EMF 5 et D.O.T.S. Le Spectre ne touche jamais au sel et peut se téléporter vers un joueur."
+    },
+    {
+      "with": "goryo",
+      "why": "Mêmes EMF 5 et D.O.T.S. Les D.O.T.S du Goryo ne se voient qu'à la caméra et jamais avec un joueur dans la pièce."
+    },
+    {
+      "with": "raiju",
+      "why": "Mêmes EMF 5 et D.O.T.S. Le Raiju accélère à 2,5 m/s près des appareils électroniques actifs et perturbe l'électronique à 15 m en chasse (au lieu de 10 m)."
+    },
+    {
+      "with": "deildegast",
+      "why": "Mêmes EMF 5 et D.O.T.S. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet utilisé avant la chasse."
+    },
+    {
+      "with": "yurei",
+      "why": "Mêmes températures glaciales et D.O.T.S. Le Yurei fait perdre 15 % de santé mentale en fermant une porte ; l'Oni fait perdre 20 % lors de ses événements."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps entre deux clignotements que d'habitude : tu la suis facilement des yeux.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Juste après un événement fantôme, l'écran de santé mentale montre que tu as perdu 20 % d'un coup.",
+      "kind": "event",
+      "strength": "definitive"
+    },
+    {
+      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète que sous forme d'ombre.",
+      "kind": "event",
+      "strength": "hint"
+    },
+    {
+      "text": "L'activité (portes, objets, événements) augmente nettement quand vous êtes plusieurs près de sa pièce.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "Malgré de nombreux événements, tu n'as jamais vu de bulle d'air ni de brouillard fantomatique.",
+      "kind": "event",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves de l'Oni ?",
+      "choices": [
+        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
+        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
+        "EMF niveau 5, Ultraviolet, Températures glaciales",
+        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "Oni = EMF 5, températures glaciales, D.O.T.S. EMF 5 + Spirit Box + D.O.T.S, c'est le Spectre ; orbes + glaciales + D.O.T.S, le Yurei ; EMF 5 + UV + glaciales, le Djinn."
+    },
+    {
+      "q": "Combien de santé mentale un événement d'Oni draine-t-il ?",
+      "choices": ["20 %", "10 %", "15 %", "25 %"],
+      "answer": 0,
+      "explain": "20 %, soit le double des 10 % standard. 15 % correspond au pouvoir du Yurei, 25 % à celui du Djinn."
+    },
+    {
+      "q": "Quel événement fantôme un Oni ne fait-il jamais ?",
+      "choices": [
+        "L'apparition en marche",
+        "Le brouillard fantomatique (bulle d'air)",
+        "Une apparition avec son modèle complet",
+        "Un événement qui fait perdre de la santé mentale"
+      ],
+      "answer": 1,
+      "explain": "L'Oni ne fait pas le brouillard fantomatique / la bulle d'air. Il apparaît au contraire volontiers avec son modèle complet, et ses événements coûtent 20 % de santé mentale."
+    },
+    {
+      "q": "Pendant un événement, tu entends un « souffle » sans rien voir. Peux-tu exclure l'Oni ?",
+      "choices": [
+        "Oui, ce souffle est propre au brouillard fantomatique",
+        "Oui, l'Oni ne fait aucun bruit pendant ses événements",
+        "Non, l'apparition en marche peut produire le même souffle",
+        "Non, mais uniquement en difficulté Démence"
+      ],
+      "answer": 2,
+      "explain": "Le wiki tybayn le rappelle : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni."
+    },
+    {
+      "q": "Quelles entités sont plus visibles que la normale pendant une chasse ?",
+      "choices": [
+        "L'Oni et le Fantôme",
+        "L'Oni et le Deogen",
+        "Le Fantôme et le Deogen",
+        "L'Oni et l'Ombre"
+      ],
+      "answer": 1,
+      "explain": "D'après le wiki tybayn sur le clignotement : l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
+    }
+  ],
+  "changes": [
+    "v0.19.0.0 (25 août 2026) : correction d'un bug où l'événement de chant de l'Oni ne drainait que 10 % de santé mentale au lieu des 20 % prévus (annonce Steam de la v0.19.0.0, relayée par Phasmopedia, PlayNews et d'autres sites)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_flickering_p1",
+    "tybayn wiki: wiki_flickering_p2",
+    "tybayn wiki: wiki_misconceptions_oni_1_c",
+    "tybayn wiki: wiki_misconceptions_oni_1_r",
+    "tybayn wiki: wiki_known_bugs_oni",
+    "https://phasmophobia.fandom.com/wiki/Oni",
+    "https://phasmopedia.com/en/ghosts/oni/",
+    "https://phasmophobia.wiki.fextralife.com/Oni",
+    "https://www.playnews.gg/en/guides/phasmophobia-0-19-0-0-the-door-sound-that-got-yurei-wrongly-accused-is-fixed-and-two-traps-await-on-restricted-maps"
+  ],
+  "uncertain": [
+    "Temps visible en chasse : environ 55–63 % du temps contre 31–33 % pour une entité normale selon Phasmopedia (≈ 64 % contre ≈ 31 % selon Fextralife) ; chiffres hors tybayn, résumés en « bien plus longtemps ».",
+    "Plusieurs sources précisent que le drain de 20 % s'applique quand l'entité entre en contact avec le joueur pendant l'événement ; tybayn dit simplement « lors des événements ».",
+    "Phasmopedia indique que l'Oni fait plus souvent l'événement de poursuite (40 % contre 20 %) ; non vérifié ailleurs.",
+    "Le correctif v0.19.0.0 sur l'événement de chant est connu par le texte de l'annonce Steam relayé dans les résultats de recherche ; la page n'a pas pu être ouverte directement (kineticgames.co.uk et steamcommunity.com inaccessibles depuis cette session)."
+  ]
+}

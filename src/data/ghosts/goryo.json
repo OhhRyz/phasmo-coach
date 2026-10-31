@@ -1,0 +1,129 @@
+{
+  "id": "goryo",
+  "name": "Goryo",
+  "nameEn": "Goryo",
+  "evidence": ["emf", "uv", "dots"],
+  "forcedEvidence": "dots",
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard de 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
+    ]
+  },
+  "summary": "Une entité discrète et casanière, dont la silhouette D.O.T.S ne se voit qu'à travers une caméra vidéo et jamais quand quelqu'un est dans la pièce.",
+  "keyTells": [
+    "Silhouette D.O.T.S visible uniquement à la caméra vidéo, jamais à l'œil nu",
+    "Pas de D.O.T.S quand un joueur est dans la même pièce",
+    "Ne change jamais seul de pièce favorite et s'en éloigne peu",
+    "D.O.T.S garanti en Cauchemar et en Démence"
+  ],
+  "tells": [
+    { "text": "Le D.O.T.S n'apparaît que sur une caméra vidéo et ne se montre pas si un joueur est dans la même pièce (l'état D.O.T.S peut toutefois commencer hors de la pièce et entrer dans la pièce où se trouve un joueur).", "zeroEvidence": false }
+  ],
+  "behaviors": [
+    { "text": "Ne peut pas changer de pièce favorite. Exception valable pour toutes les entités : le vœu « I wish for sanity » (« Je souhaite être sain d'esprit ») de la patte de singe déplace la pièce favorite dans une pièce aléatoire.", "zeroEvidence": true },
+    { "text": "S'éloigne rarement de sa pièce.", "zeroEvidence": true },
+    { "text": "Depuis la mise à jour Chronicle (v0.13, juin 2025), a davantage de chances d'entrer dans l'état D.O.T.S.", "zeroEvidence": false }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    { "text": "Place un projecteur D.O.T.S et une caméra vidéo dans sa pièce, sors-en et surveille l'écran. Si la silhouette apparaît régulièrement à la caméra mais jamais quand tu regardes toi-même depuis la pièce, c'est très probablement un Goryo.", "definitive": false }
+  ],
+  "eliminationTests": [
+    { "text": "Si l'entité change de pièce favorite (sans que personne ait fait le vœu « I wish for sanity » à la patte de singe), ce n'est pas un Goryo." },
+    { "text": "Si tu vois la silhouette D.O.T.S à l'œil nu, sans passer par une caméra, ce n'est pas un Goryo." },
+    { "text": "En Cauchemar ou en Démence, si tu as exclu le D.O.T.S, ce n'est pas un Goryo." }
+  ],
+  "confusions": [
+    { "with": "jinn", "why": "Même EMF 5 + UV, mais le Djinn a des températures glaciales au lieu du D.O.T.S ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m et peut faire chuter ta santé mentale de 25 %." },
+    { "with": "myling", "why": "Même EMF 5 + UV, mais le Myling a l'écriture au lieu du D.O.T.S ; en chasse, ses pas ne s'entendent qu'à 12 m (au lieu de 20 m)." },
+    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu du D.O.T.S ; il peut laisser des empreintes à 6 doigts et change de modèle le temps d'un clignotement en chasse." },
+    { "with": "gallu", "why": "Même EMF 5 + UV, mais le Gallu a la Spirit Box au lieu du D.O.T.S ; le sel, l'encens ou un crucifix le font passer en état enragé (1,96 m/s), puis affaibli (1,36 m/s)." },
+    { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu de l'UV ; il ne marche jamais dans le sel et peut se téléporter vers un joueur en laissant de l'EMF." },
+    { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu de l'UV ; il est plus visible pendant les chasses et ne fait jamais l'événement « brume fantomatique »." },
+    { "with": "raiju", "why": "Même EMF 5 + D.O.T.S, mais le Raiju a les orbes au lieu de l'UV ; il fonce à 2,5 m/s près de ton équipement électronique allumé et peut chasser dès 65 %." },
+    { "with": "deildegast", "why": "Même EMF 5 + D.O.T.S, mais le Deildegast a l'écriture au lieu de l'UV ; sa vitesse de chasse part de 3,0 m/s et baisse de 0,1 m/s par objet différent utilisé depuis la dernière chasse." },
+    { "with": "phantom", "why": "Même UV + D.O.T.S, mais le Fantôme a la Spirit Box au lieu de l'EMF ; il n'apparaît pas sur les photos et disparaît quand tu le photographies, D.O.T.S compris. Le D.O.T.S du Goryo, lui, ne se voit qu'à la caméra." },
+    { "with": "banshee", "why": "Même UV + D.O.T.S, mais la Banshee a les orbes au lieu de l'EMF ; elle cible un seul joueur, peut pousser un cri unique au micro parabolique et se dirige souvent vers sa cible en état D.O.T.S." },
+    { "with": "obambo", "why": "Même UV + D.O.T.S, mais l'Obambo a l'écriture au lieu de l'EMF ; il alterne entre un état calme (chasse à 10 %, 1,45 m/s) et un état agressif (chasse à 65 %, 1,96 m/s)." }
+  ],
+  "observations": [
+    { "text": "Sur l'écran de la caméra vidéo, tu vois une silhouette traverser sa pièce, mais quand tu y entres pour regarder toi-même, tu ne vois jamais rien.", "kind": "tell", "strength": "strong" },
+    { "text": "Tant que quelqu'un reste dans sa pièce, rien ne se montre à la caméra ; dès que tout le monde sort, la silhouette réapparaît à l'écran.", "kind": "tell", "strength": "strong" },
+    { "text": "Toute la partie, l'activité reste concentrée dans la même pièce : l'entité n'en change jamais et s'aventure rarement loin.", "kind": "behavior", "strength": "hint" },
+    { "text": "En chasse, rien d'inhabituel : vitesse normale, accélération quand elle te voit, première chasse vers 50 % de santé mentale.", "kind": "hunt", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "Comment se manifeste le D.O.T.S d'un Goryo ?",
+      "choices": ["Uniquement à travers une caméra vidéo, et pas si un joueur est dans la pièce", "Uniquement à l'œil nu, jamais sur caméra", "Seulement pendant les chasses", "Seulement si la lumière de la pièce est éteinte"],
+      "answer": 0,
+      "explain": "La silhouette D.O.T.S du Goryo n'apparaît que via une caméra vidéo et ne se montre pas quand un joueur est dans la même pièce. Si tu la vois à l'œil nu, ce n'est pas un Goryo."
+    },
+    {
+      "q": "Quelle preuve est garantie pour le Goryo en Cauchemar et en Démence ?",
+      "choices": ["Projecteur D.O.T.S", "EMF niveau 5", "Ultraviolet (empreintes)", "Aucune"],
+      "answer": 0,
+      "explain": "Le Goryo garde toujours le D.O.T.S quand le nombre de preuves est réduit."
+    },
+    {
+      "q": "Sans patte de singe utilisée, l'entité a changé de pièce favorite en cours de partie. Laquelle peux-tu éliminer ?",
+      "choices": ["Le Goryo", "Le Myling", "Le Djinn", "Le Raiju"],
+      "answer": 0,
+      "explain": "Le Goryo ne peut pas changer de lui-même de pièce favorite (seul le vœu « I wish for sanity » de la patte de singe peut la déplacer). Les trois autres le peuvent."
+    },
+    {
+      "q": "Qu'a changé la mise à jour Chronicle (v0.13, juin 2025) pour le Goryo ?",
+      "choices": ["Il a plus de chances d'entrer dans l'état D.O.T.S", "Il peut désormais changer de pièce favorite", "Son D.O.T.S est maintenant visible à l'œil nu", "Son seuil de chasse est passé à 60 %"],
+      "answer": 0,
+      "explain": "Les notes de patch de Chronicle indiquent que le Goryo a davantage de chances de passer en D.O.T.S. Le reste (pièce fixe, D.O.T.S visible seulement à la caméra, seuil à 50 %) n'a pas changé."
+    },
+    {
+      "q": "Tu as EMF 5, ultraviolet et D.O.T.S. De quelle entité s'agit-il ?",
+      "choices": ["Le Goryo", "Le Djinn", "Le Spectre", "Le Fantôme"],
+      "answer": 0,
+      "explain": "Seul le Goryo combine EMF 5, UV et D.O.T.S. Le Djinn a EMF/UV/glaciales, le Spectre EMF/Spirit Box/D.O.T.S et le Fantôme Spirit Box/UV/D.O.T.S."
+    },
+    {
+      "q": "Quelle est la vitesse de chasse du Goryo ?",
+      "choices": ["1,7 m/s avec accélération en LdV", "1,4 à 2,7 m/s selon la température", "2,5 m/s près de l'électronique active", "1,0 m/s puis 3,0 m/s quand il te détecte"],
+      "answer": 0,
+      "explain": "Le Goryo a une vitesse tout à fait standard. Les autres réponses décrivent le Hantu, le Raiju et le Revenant."
+    }
+  ],
+  "changes": [
+    "Chronicle v0.13.0 (24 juin 2025) : le Goryo a désormais plus de chances d'entrer dans l'état D.O.T.S (notes de patch officielles).",
+    "Même mise à jour : la Banshee peut désormais changer de pièce ; le Goryo, lui, ne peut toujours pas changer de pièce favorite."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_misconceptions_goryo_1_r",
+    "tybayn wiki: wiki_known_bugs_goryo",
+    "tybayn wiki: wiki_monkey_paw_h5 / wiki_monkey_paw_p7 (« I wish for sanity » déplace la pièce favorite)",
+    "https://www.kineticgames.co.uk/blog/phasmophobia-chronicle-v013",
+    "https://phasmophobia.fandom.com/wiki/0.13.0",
+    "https://phasmophobia.wiki.fextralife.com/Goryo",
+    "https://phasmopedia.com/en/ghosts/goryo/"
+  ],
+  "uncertain": [
+    "Probabilités exactes d'entrée en D.O.T.S depuis Chronicle (Phasmopedia avance 2/3 en errance contre 1/3 pour les autres entités) : non officielles, donc non reprises.",
+    "Non confirmé que le Goryo soit désormais la seule entité incapable de changer de pièce favorite (la Banshee ayant perdu cette restriction en juin 2025).",
+    "Mythe à ne pas utiliser : l'os dans la pièce favorite ne prouve rien (pur hasard), selon le wiki tybayn."
+  ]
+}

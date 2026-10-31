@@ -1,0 +1,250 @@
+{
+  "id": "thaye",
+  "name": "Thayé",
+  "nameEn": "Thaye",
+  "evidence": ["orbs", "writing", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.0,
+    "max": 2.75,
+    "alt": null,
+    "isRange": true,
+    "los": false,
+    "summary": "2,75 m/s jeune → 1,0 m/s vieux · pas de LdV",
+    "details": [
+      "Ne prend jamais de vitesse en LdV.",
+      "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
+      "Repères (tableau tybayn) : +1 an 2,575 · +2 2,4 · +3 2,225 · +4 2,05 · +5 1,875 · +6 1,7 · +7 1,525 · +8 1,35 · +9 1,175 · +10 1,0 m/s.",
+      "Sa vitesse est constante pendant une chasse et ne peut que baisser d'une chasse à l'autre : il ralentit à chaque chasse s'il a été exposé aux joueurs.",
+      "Compte environ 1 à 2 min de présence près de lui par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
+    ]
+  },
+  "huntSanity": {
+    "normal": 75,
+    "low": 15,
+    "high": 75,
+    "summary": "75 % jeune → 15 % vieux (−6 % par âge)",
+    "details": [
+      "Seuil de 75 % au plus jeune âge, qui baisse de 6 points à chaque vieillissement, jusqu'à 15 % au plus vieux.",
+      "Bug connu : chaque seuil est en réalité 1 % plus bas que prévu (74 % jeune, 14 % vieux).",
+      "Plus il vieillit, plus ses chasses arrivent tard dans la partie."
+    ]
+  },
+  "summary": "Entité qui vieillit au contact des joueurs : très active, précoce et rapide au début, elle s'affaiblit et ralentit au fil de la partie.",
+  "keyTells": [
+    "N'accélère jamais en LdV ; plus lent à chaque chasse (2,75 → 1,0 m/s)",
+    "Au Ouija, l'âge annoncé augmente au fil de la partie",
+    "Chasse dès 75 % quand il est jeune, de plus en plus tard en vieillissant",
+    "Très actif au début, de plus en plus calme quand tu restes près de lui"
+  ],
+  "tells": [
+    {
+      "text": "L'âge donné par la planche Ouija augmente à mesure que le Thayé vieillit.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Vieillit avec le temps (toutes les 1 à 2 min) quand un joueur est à proximité (portée de 3 m, qui traverse même le sol à cause d'un bug).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Plus actif quand il est jeune.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge as-tu ? », 5 % de santé mentale). Après un moment passé près d'elle, repose la question. Si le nombre a augmenté, c'est un Thayé.",
+      "definitive": true
+    },
+    {
+      "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en LdV, c'est un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",
+      "definitive": true
+    },
+    {
+      "text": "Pendant une chasse, si l'entité n'accélère pas en LdV, ça peut être un Thayé.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Pendant une chasse, si l'entité accélère en LdV, ce n'est pas un Thayé."
+    },
+    {
+      "text": "Si l'entité redevient plus rapide qu'à la chasse précédente, ce n'est pas un Thayé : il ne rajeunit jamais."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "moroi",
+      "why": "Le Moroi est lui aussi très rapide, mais il accélère en LdV (jusqu'à 3,71 m/s) et devient plus rapide quand la santé baisse. Le Thayé n'accélère jamais en LdV et ralentit à chaque chasse. Sans LdV, un Moroi ne dépasse pas 2,25 m/s, moins qu'un Thayé jeune."
+    },
+    {
+      "with": "deildegast",
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit selon les objets que vous utilisez et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ne fait que ralentir. Il chasse à 50 %."
+    },
+    {
+      "with": "deogen",
+      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu des Orbes. Pas de LdV non plus, mais sa vitesse varie dans la chasse (3,0 m/s de loin, 0,4 m/s près de toi) ; il chasse à 40 %."
+    },
+    {
+      "with": "obambo",
+      "why": "Obambo : Écriture + D.O.T.S, mais Ultraviolet au lieu des Orbes ; il alterne entre un état calme et un état agressif (environ 1,45 / 1,96 m/s)."
+    },
+    {
+      "with": "aswang",
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu des Orbes ; il accélère très vite en LdV (1,65 × en 8,7 s au lieu de 13 s)."
+    },
+    {
+      "with": "demon",
+      "why": "Le Démon chasse lui aussi très tôt (70 %), mais avec une vitesse standard et l'accélération en LdV ; ses preuves (UV, Écriture, Glaciales) ne partagent que l'Écriture avec le Thayé."
+    },
+    {
+      "with": "mare",
+      "why": "Cauchemar (Mare) : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard et l'accélération en LdV."
+    },
+    {
+      "with": "revenant",
+      "why": "Revenant : Orbes + Écriture, mais Températures glaciales au lieu des D.O.T.S ; pas de LdV non plus, mais il passe de 1,0 à 3,0 m/s dès qu'il te détecte, au sein d'une même chasse."
+    },
+    {
+      "with": "banshee",
+      "why": "Banshee : Orbes + D.O.T.S, mais Ultraviolet au lieu de l'Écriture ; elle chasse selon la santé de sa cible (et ne poursuit qu'elle), avec une vitesse standard."
+    },
+    {
+      "with": "yurei",
+      "why": "Yurei : Orbes + D.O.T.S, mais Températures glaciales au lieu de l'Écriture ; claque les portes et l'encens l'enferme dans sa pièce."
+    },
+    {
+      "with": "yokai",
+      "why": "Yokai : Orbes + D.O.T.S, mais Spirit Box au lieu de l'Écriture ; il peut chasser jusqu'à 80 % si tu parles près de lui."
+    },
+    {
+      "with": "raiju",
+      "why": "Raiju : Orbes + D.O.T.S, mais EMF 5 au lieu de l'Écriture ; 2,5 m/s près de l'électronique active et peut chasser à 65 % près de l'équipement."
+    }
+  ],
+  "observations": [
+    {
+      "text": "L'entité est très active en début de partie (interactions, événements), puis de plus en plus calme à mesure que vous passez du temps près d'elle.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "Une première chasse éclate très tôt, alors que l'équipe est encore vers 75 % de santé mentale, avec une entité très rapide.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Chaque nouvelle chasse est plus lente que la précédente, et l'entité n'accélère jamais quand elle te voit.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Au Ouija, la réponse à « Quel âge as-tu ? » est plus élevée qu'au début de la partie.",
+      "kind": "tell",
+      "strength": "definitive"
+    },
+    {
+      "text": "Les chasses arrivent de plus en plus tard : il faut une santé mentale de plus en plus basse pour qu'elle chasse.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Après avoir longtemps traîné près d'elle, tu n'as presque plus d'événements.",
+      "kind": "event",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "À quel seuil de santé mentale un Thayé chasse-t-il quand il est au plus jeune âge ?",
+      "choices": [
+        "70 %",
+        "75 %",
+        "50 %",
+        "80 %"
+      ],
+      "answer": 1,
+      "explain": "75 % jeune, puis −6 points par vieillissement jusqu'à 15 %. 70 % est le seuil du Démon, 80 % celui du Yokai qu'on fait parler."
+    },
+    {
+      "q": "Quelle description correspond à la vitesse de chasse du Thayé ?",
+      "choices": [
+        "2,75 m/s jeune puis jusqu'à 1,0 m/s, sans accélération en LdV",
+        "2,75 m/s jeune puis jusqu'à 1,0 m/s, avec accélération en LdV",
+        "1,0 m/s jeune puis jusqu'à 2,75 m/s en vieillissant",
+        "3,0 m/s constant tant que personne ne touche d'objet"
+      ],
+      "answer": 0,
+      "explain": "Le Thayé ralentit en vieillissant (−0,175 m/s par âge) et n'accélère jamais en LdV. Le dernier choix décrit le Deildegast."
+    },
+    {
+      "q": "Quelle question au Ouija permet d'identifier un Thayé ?",
+      "choices": [
+        "« Où es-tu ? »",
+        "« Quand es-tu mort ? »",
+        "« Quel âge as-tu ? »",
+        "« Quel est mon niveau de santé mentale ? »"
+      ],
+      "answer": 2,
+      "explain": "« Quel âge as-tu ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, c'est un Thayé. « Quand es-tu mort ? » donne un nombre aléatoire."
+    },
+    {
+      "q": "Qu'est-ce qui fait vieillir un Thayé ?",
+      "choices": [
+        "Chaque chasse qu'il lance",
+        "Le temps qu'un joueur passe près de lui (à moins de 3 m)",
+        "Les lumières allumées dans sa pièce",
+        "Les objets que l'équipe ramasse"
+      ],
+      "answer": 1,
+      "explain": "Il tente de vieillir toutes les 1 à 2 min quand un joueur est près de lui. C'est cette exposition, pas les chasses elles-mêmes, qui le ralentit d'une chasse à l'autre. Les objets ramassés, c'est le Deildegast."
+    },
+    {
+      "q": "En chasse, quel indice distingue un Thayé d'un Moroi ?",
+      "choices": [
+        "Le Thayé est toujours plus lent que le Moroi",
+        "Le Moroi n'accélère jamais en LdV",
+        "Le Thayé ne chasse jamais avant 50 %",
+        "Le Thayé n'accélère jamais en LdV"
+      ],
+      "answer": 3,
+      "explain": "C'est la différence clé : le Moroi accélère en LdV, le Thayé jamais. Un Thayé jeune (2,75 m/s) est d'ailleurs plus rapide qu'un Moroi sans LdV (2,25 m/s max)."
+    },
+    {
+      "q": "Combien de fois un Thayé peut-il vieillir avant d'atteindre sa vitesse et son seuil minimum ?",
+      "choices": [
+        "10 fois",
+        "5 fois",
+        "20 fois",
+        "Sans limite"
+      ],
+      "answer": 0,
+      "explain": "10 vieillissements : 2,75 → 1,0 m/s (−0,175 par âge) et 75 % → 15 % (−6 points par âge)."
+    }
+  ],
+  "changes": [
+    "Aucun changement de mécanique trouvé pour 2025–2026.",
+    "Bugs connus (wiki tybayn actuel) : seuil de chasse 1 % plus bas que prévu ; il peut vieillir à cause d'un joueur situé à l'étage du dessous, car la portée de 3 m traverse le sol."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_thaye_p1, wiki_los_thaye_p2, wiki_los_thaye_p3",
+    "tybayn wiki: wiki_ghost_speed_h10 (tableau des vitesses du Thayé)",
+    "tybayn wiki: wiki_ouija_board_h8, wiki_ouija_board_p12, wiki_ouija_board_p13",
+    "tybayn wiki: wiki_los_p2",
+    "tybayn wiki: wiki_known_bugs_thaye",
+    "https://phasmopedia.com/en/ghosts/thaye/",
+    "Notes de patch v0.9.0.0 (Ascension, 2023), via résumés de recherche"
+  ],
+  "uncertain": [
+    "Selon Phasmopedia, l'âge annoncé au Ouija augmente de 1 à 4 ans à chaque vieillissement, et la première tentative de vieillissement a lieu 1 min après l'ouverture de la porte : non confirmé par tybayn.",
+    "La règle « un joueur mort ne le fait pas vieillir » et « moins d'événements en vieillissant » viennent des notes de patch v0.9.0.0 (2023) relayées par des résumés, pas d'une lecture directe. La règle sur les joueurs morts est retirée du contenu pédagogique faute de confirmation.",
+    "Condition exacte de vieillissement : un guide indique « dans sa pièce ou à moins de 3 m » ; tybayn ne parle que d'un joueur à proximité, avec une portée de 3 m (bug du sol).",
+    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée."
+  ]
+}

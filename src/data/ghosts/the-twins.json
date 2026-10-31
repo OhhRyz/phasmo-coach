@@ -1,0 +1,137 @@
+{
+  "id": "the-twins",
+  "name": "Les Jumeaux",
+  "nameEn": "The Twins",
+  "evidence": ["emf", "spiritbox", "freezing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.5,
+    "max": 1.9,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,5 ou 1,9 m/s selon le jumeau · accélère en LdV",
+    "details": [
+      "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
+      "D'après la sauvegarde tybayn, la vitesse lente correspond à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
+      "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
+      "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer Les Jumeaux."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
+    ]
+  },
+  "summary": "Une seule entité dotée de deux portées d'interaction, capable d'agir à deux endroits presque en même temps et de chasser tantôt lentement, tantôt vite.",
+  "keyTells": [
+    "Deux interactions quasi simultanées, dont une loin de l'entité",
+    "Vitesse de chasse ~1,5 ou ~1,9 m/s, qui change d'une chasse à l'autre",
+    "Capteurs, sel et Spirit Box réagissent seulement à sa position réelle"
+  ],
+  "tells": [
+    { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true },
+    { "text": "En chasse, sa vitesse est d'environ ±10 % de la vitesse normale de 1,7 m/s (≈1,5 m/s ou ≈1,9 m/s).", "zeroEvidence": true }
+  ],
+  "behaviors": [
+    { "text": "Le déclenchement des capteurs de mouvement, les pas dans le sel et les réponses à la Spirit Box ne se produisent qu'à sa position physique réelle.", "zeroEvidence": false },
+    { "text": "Ce n'est pas deux entités distinctes : c'est une seule entité avec deux portées d'interaction, une grande et une petite.", "zeroEvidence": false },
+    { "text": "Portées d'interaction (boîte centrée sur l'entité) : standard 1,5 m de demi-côté (rayon effectif ~2,12 m) sur petite et moyenne carte, 3 m (~4,24 m) sur grande carte ; portée étendue des Jumeaux 6 m (~8,48 m) sur petite et moyenne carte, 12 m (~16,97 m) sur grande carte.", "zeroEvidence": true }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    { "text": "Si la vitesse de l'entité alterne entre une chasse plus lente (~1,5 m/s, -10 %) et une chasse plus rapide (~1,9 m/s, +10 %), ce sont probablement Les Jumeaux. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s).", "definitive": false },
+    { "text": "Si des interactions ont souvent lieu loin de la pièce de l'entité, ça pourrait être Les Jumeaux.", "definitive": false }
+  ],
+  "eliminationTests": [
+    { "text": "Si l'entité chasse avec une vitesse de base standard de 1,7 m/s (avant toute accélération en LdV), ce ne sont pas Les Jumeaux." }
+  ],
+  "confusions": [
+    { "with": "spirit", "why": "Même EMF 5 + Spirit Box, mais l'Esprit a l'écriture au lieu des glaciales ; vitesse standard de 1,7 m/s et 180 s sans chasse après un encens." },
+    { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des glaciales ; il ne marche jamais dans le sel et peut se téléporter vers un joueur en laissant de l'EMF." },
+    { "with": "gallu", "why": "Même EMF 5 + Spirit Box, mais le Gallu a l'UV au lieu des glaciales ; lui aussi change de vitesse (1,7 normal / 1,96 enragé / 1,36 m/s affaibli), mais selon un cycle d'états déclenché par le sel, l'encens et les crucifix (il s'affaiblit après une chasse en état enragé)." },
+    { "with": "dayan", "why": "Même EMF 5 + Spirit Box, mais la Dayan a les orbes au lieu des glaciales ; à moins de 10 m, sa vitesse dépend de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile). Elle est toujours de sexe féminin." },
+    { "with": "jinn", "why": "Même EMF 5 + glaciales, mais le Djinn a l'UV au lieu de la Spirit Box ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m." },
+    { "with": "shade", "why": "Même EMF 5 + glaciales, mais l'Ombre a l'écriture au lieu de la Spirit Box ; elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
+    { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il est plus visible en chasse (il clignote plus souvent) et ne fait jamais l'événement « brume fantomatique »." },
+    { "with": "onryo", "why": "Même Spirit Box + glaciales, mais l'Onryo a les orbes au lieu de l'EMF ; il chasse dès 60 % et tente une chasse après chaque 3e flamme soufflée." },
+    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroï a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors avoir une vitesse proche de celle du jumeau rapide." },
+    { "with": "the-mimic", "why": "Le Mimic a Spirit Box + glaciales (+ UV et de faux orbes) et copie la vitesse de l'entité qu'il imite : trouver de l'UV ou des orbes exclut Les Jumeaux." },
+    { "with": "obambo", "why": "L'Obambo (écriture, UV, D.O.T.S) alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif) : en 0 preuve, ce duo de vitesses ressemble beaucoup à celui des Jumeaux. Ses seuils (10 % calme, 65 % agressif) aident à trancher." },
+    { "with": "aswang", "why": "L'Aswang (D.O.T.S, écriture, glaciales) chasse toujours à 1,53 m/s, comme un jumeau lent, mais sa vitesse de base ne change jamais d'une chasse à l'autre et il accélère bien plus vite en LdV." }
+  ],
+  "observations": [
+    { "text": "Une porte s'ouvre près de toi et, presque au même instant, un objet est projeté plusieurs mètres plus loin, dans une autre pièce.", "kind": "interaction", "strength": "strong" },
+    { "text": "D'une chasse à l'autre, le rythme des pas change : une fois un peu plus lent qu'une entité normale, la suivante un peu plus rapide.", "kind": "hunt", "strength": "strong" },
+    { "text": "Beaucoup d'interactions ont lieu loin de sa pièce, mais les capteurs de mouvement et le sel ne réagissent qu'autour de l'endroit où elle se trouve vraiment.", "kind": "behavior", "strength": "hint" },
+    { "text": "La première chasse arrive vers 50 % de santé mentale et l'entité accélère quand elle te voit.", "kind": "hunt", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les deux vitesses de base possibles des Jumeaux en chasse ?",
+      "choices": ["Environ 1,5 m/s ou 1,9 m/s", "1,7 m/s ou 2,5 m/s", "1,45 m/s ou 1,96 m/s", "1,0 m/s ou 3,0 m/s"],
+      "answer": 0,
+      "explain": "Les Jumeaux chassent à ±0,2 m/s autour des 1,7 m/s standard. 1,7/2,5 m/s évoque le Raiju ou le Djinn, 1,45/1,96 m/s l'Obambo et 1,0/3,0 m/s le Revenant."
+    },
+    {
+      "q": "Quelles sont les preuves des Jumeaux ?",
+      "choices": ["EMF 5, Spirit Box, températures glaciales", "EMF 5, Spirit Box, écriture fantomatique", "EMF 5, Spirit Box, D.O.T.S", "Spirit Box, orbes, températures glaciales"],
+      "answer": 0,
+      "explain": "Les Jumeaux, c'est EMF 5 + Spirit Box + glaciales. Les autres combinaisons sont celles de l'Esprit, du Spectre et de l'Onryo."
+    },
+    {
+      "q": "Vrai ou faux : Les Jumeaux sont deux entités distinctes.",
+      "choices": ["Faux : une seule entité avec deux portées d'interaction", "Vrai : deux entités qui chassent chacune leur tour", "Vrai : deux entités qui peuvent chasser en même temps", "Faux : une entité qui se téléporte à chaque interaction"],
+      "answer": 0,
+      "explain": "C'est une seule entité qui peut interagir dans une petite et une grande portée. Les capteurs, le sel et la Spirit Box ne réagissent qu'à sa vraie position."
+    },
+    {
+      "q": "Où se déclenchent les capteurs de mouvement et les réponses à la Spirit Box avec Les Jumeaux ?",
+      "choices": ["Uniquement à sa position physique réelle", "Aux deux endroits où elle interagit", "Uniquement dans sa portée étendue", "N'importe où sur la carte"],
+      "answer": 0,
+      "explain": "Seules les interactions profitent de la portée étendue ; capteurs de mouvement, sel et Spirit Box ne réagissent qu'à l'endroit où se trouve réellement l'entité."
+    },
+    {
+      "q": "En LdV continue, quelle vitesse maximale atteint le jumeau rapide ?",
+      "choices": ["Environ 3,0 m/s", "Environ 3,14 m/s", "Environ 2,8 m/s", "Environ 3,7 m/s"],
+      "answer": 0,
+      "explain": "Pour Les Jumeaux, l'accélération en LdV part de la vitesse standard : (1,7 × 1,65) + 0,2 ≈ 3,0 m/s. 3,14 m/s serait le calcul « attendu », 2,8 m/s le maximum d'une entité normale et 3,71 m/s celui du Moroï."
+    },
+    {
+      "q": "Une courbe « Twinteraction » sur le tableau d'activité prouve-t-elle qu'il s'agit des Jumeaux ?",
+      "choices": ["Non : n'importe quelle entité peut la produire avec des interactions rapprochées", "Oui, c'est une preuve définitive", "Oui, mais seulement sur les grandes cartes", "Non, car ce motif n'apparaît jamais sur le tableau"],
+      "answer": 0,
+      "explain": "Les Jumeaux produisent plus souvent ce motif grâce à leur capacité, mais toute entité peut le créer en enchaînant plusieurs interactions rapidement."
+    }
+  ],
+  "changes": [
+    "Vitesses : la sauvegarde 2024 indiquait 1,53 / 1,87 m/s (±10 %) ; le wiki tybayn actuel donne 1,5 / 1,9 m/s (±0,2 m/s), tout en parlant encore de ±10 % ailleurs. Affinage des mesures, aucun patch identifié.",
+    "Le wiki tybayn documente désormais une accélération en LdV particulière : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
+    "Portées d'interaction revues par tybayn : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte (la sauvegarde 2024 indiquait 8 m / 16 m, avec les cartes moyennes groupées avec les grandes).",
+    "Winter's Jest v0.15.1.0 (16 décembre 2025) a ajouté l'Obambo (1,45 / 1,96 m/s) et le Gallu : le test de vitesse alternée n'est plus strictement définitif en 0 preuve.",
+    "Player Character Update v0.17.0.0 (2026) : l'accélération en LdV des entités a été modifiée, puis remise à son état d'origine par le patch v0.17.1.4 (2 juin 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_the_twins_los_p1 à p11",
+    "tybayn wiki: wiki_los_twins_p1 à p3",
+    "tybayn wiki: wiki_interaction_p1 à p6",
+    "tybayn wiki: wiki_misconceptions_twins_1_r",
+    "tybayn wiki: wiki_misconceptions_twins_2_r",
+    "https://phasmophobia.wiki.fextralife.com/The_Twins",
+    "https://phasmophobia.fandom.com/wiki/The_Twins",
+    "https://phasmopedia.com/en/ghosts/the-twins/",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
+  ],
+  "uncertain": [
+    "La section « portées d'interaction » est marquée « partiellement non vérifiée » par tybayn.",
+    "Le test d'alternance de vitesse est noté définitif chez tybayn (2024) ; rétrogradé ici à cause de l'Obambo (1,45 / 1,96 m/s), sans test côte à côte.",
+    "Le lien « vitesse lente = chasse lancée depuis la portée standard, rapide = depuis la portée étendue » vient de la sauvegarde 2024 ; le wiki tybayn actuel le rejoint (jumeau « principal » 10 % plus lent, jumeau « errant » 10 % plus rapide), mais Fextralife parlerait d'un tirage à 50/50 à chaque chasse (non relu, site inaccessible pendant l'audit).",
+    "Mention Fandom / Fextralife des valeurs 1,5 / 1,9 m/s : non relue pendant l'audit (sites inaccessibles) ; seule la source tybayn est retenue."
+  ]
+}

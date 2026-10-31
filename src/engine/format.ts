@@ -18,9 +18,9 @@ export function speedText(g: Ghost): string {
 
 export function sanityText(g: Ghost): string {
   const h = g.huntSanity
-  if (h.normal < 0) return '???'
-  const values = new Set([h.low, h.normal, h.high].filter((v) => v >= 0))
-  return [...values].sort((a, b) => a - b).map((v) => `${v} %`).join(' · ')
+  const values = [...new Set([h.low, h.normal, h.high].filter((v) => v >= 0))].sort((a, b) => a - b)
+  if (!values.length) return '???'
+  return values.map((v) => `${v} %`).join(' · ')
 }
 
 export type SpeedClass = 'slow' | 'normal' | 'fast'
@@ -44,7 +44,7 @@ export function speedClasses(g: Ghost): Set<SpeedClass> {
 export function sanityClasses(g: Ghost): Set<SanityClass> {
   const h = g.huntSanity
   const out = new Set<SanityClass>()
-  if (h.normal < 0) return new Set(['late', 'normal', 'early'])
+  if ([h.low, h.normal, h.high].every((v) => v < 0)) return new Set(['late', 'normal', 'early'])
   for (const v of [h.low, h.normal, h.high]) {
     if (v < 0) continue
     if (v < 50) out.add('late')

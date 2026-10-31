@@ -1,0 +1,259 @@
+{
+  "id": "wraith",
+  "name": "Spectre",
+  "nameEn": "Wraith",
+  "evidence": [
+    "emf",
+    "spiritbox",
+    "dots"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "N'est pas ralenti par le sel de rang 3 pendant une chasse, contrairement aux autres entités.",
+      "Il traque et se déplace exactement comme les autres entités : il ne traverse pas les murs."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard."
+    ]
+  },
+  "summary": "Entité qui ne touche jamais au sel et peut se téléporter près d'un joueur pris au hasard en laissant de l'EMF.",
+  "keyTells": [
+    "Ne perturbe jamais le sel : il passe dessus sans le toucher",
+    "Pas ralenti par le sel de rang 3 pendant les chasses",
+    "Se téléporte près d'un joueur au hasard : EMF 2 (ou 5) sans interaction autour de toi"
+  ],
+  "tells": [
+    {
+      "text": "Ne touche pas au sel et n'interagit avec lui d'aucune façon.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "N'est pas ralenti par le sel de rang 3 pendant une chasse.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [
+    {
+      "text": "Peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 ou un EMF 5 à son nouvel emplacement.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 à son nouvel emplacement. C'est la seule entité capable de se téléporter vers un joueur en dehors d'un événement.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Si tu vois l'entité traverser un tas de sel pendant un événement ou une chasse sans le perturber, c'est un Spectre. Depuis l'arrivée du Gallu, ce n'est plus une preuve absolue : un Gallu en état enragé (après encens, sel ou crucifix) ne perturbe pas non plus le sel, et un bug connu fait que seul l'hôte voit parfois un Gallu perturber le sel. Fais faire l'observation par l'hôte.",
+      "definitive": false
+    },
+    {
+      "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre (mêmes réserves : Gallu enragé, et observation à faire par l'hôte).",
+      "definitive": false
+    },
+    {
+      "text": "Pour écarter le Gallu : à la fin d'une chasse, un Gallu n'est jamais enragé (il passe en affaibli ou reste normal), et dans ces deux états il perturbe le premier sel qu'il touche. Si, après une chasse et sans encens ni crucifix utilisé entre-temps, l'entité traverse ton sel sans le perturber (constaté par l'hôte), ce n'est pas un Gallu : avec EMF 5 + Spirit Box, il ne reste que le Spectre.",
+      "definitive": false
+    },
+    {
+      "text": "Si, pendant ton enquête, tu obtiens un EMF 2 sans aucune interaction près de toi, c'est peut-être le Spectre qui s'est téléporté.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité perturbe le sel de quelque façon que ce soit, ce n'est pas un Spectre."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "gallu",
+      "why": "EMF 5 + Spirit Box en commun, et un Gallu enragé traverse le sel sans le perturber. Mais le Gallu perturbe le sel en état normal ou affaibli, et sa vitesse change d'une chasse à l'autre (1,96 m/s enragé, 1,36 m/s affaibli) ; le Spectre ne touche jamais au sel et reste à 1,7 m/s. 3e preuve : D.O.T.S (Spectre) ou UV (Gallu)."
+    },
+    {
+      "with": "phantom",
+      "why": "Spirit Box + D.O.T.S en commun, et le Fantôme peut lui aussi laisser un EMF 2 près d'un joueur (il erre vers lui). Mais le Fantôme disparaît quand tu le prends en photo, est presque invisible en chasse et perturbe le sel. 3e preuve : UV (Fantôme) ou EMF 5 (Spectre)."
+    },
+    {
+      "with": "spirit",
+      "why": "EMF 5 + Spirit Box en commun. L'Esprit perturbe le sel normalement et attend 180 s après l'encens avant de rechasser. 3e preuve : écriture (Esprit) ou D.O.T.S (Spectre)."
+    },
+    {
+      "with": "the-twins",
+      "why": "EMF 5 + Spirit Box en commun. Les Jumeaux chassent à environ 1,5 ou 1,9 m/s et peuvent faire deux interactions en même temps à des endroits différents ; ils perturbent le sel. 3e preuve : températures glaciales vs D.O.T.S."
+    },
+    {
+      "with": "dayan",
+      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; le Spectre garde une vitesse standard. 3e preuve : orbes vs D.O.T.S."
+    },
+    {
+      "with": "oni",
+      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il clignote plus), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brume ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
+    },
+    {
+      "with": "goryo",
+      "why": "EMF 5 + D.O.T.S en commun. Le D.O.T.S du Goryo n'apparaît qu'à la caméra vidéo et jamais si un joueur est dans la pièce ; il quitte rarement sa pièce. 3e preuve : UV vs Spirit Box."
+    },
+    {
+      "with": "raiju",
+      "why": "EMF 5 + D.O.T.S en commun. Le Raiju passe à 2,5 m/s près de l'équipement électronique allumé pendant une chasse et perturbe l'électronique jusqu'à 15 m. 3e preuve : orbes vs Spirit Box."
+    },
+    {
+      "with": "yokai",
+      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce et ne te détecte qu'à 2,5 m pendant une chasse. 3e preuve : orbes vs EMF 5."
+    },
+    {
+      "with": "deogen",
+      "why": "Spirit Box + D.O.T.S en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, chasse à 40 % et peut respirer fort dans la Spirit Box. 3e preuve : écriture vs EMF 5."
+    },
+    {
+      "with": "deildegast",
+      "why": "EMF 5 + D.O.T.S en commun. Le Deildegast chasse jusqu'à 3,0 m/s et ralentit de 0,1 m/s par objet différent manipulé par les joueurs depuis la dernière chasse. 3e preuve : écriture vs Spirit Box."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic peut imiter le comportement du Spectre ; par prudence, considère qu'il peut aussi laisser le sel intact. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; ses vraies preuves sont Spirit Box, UV et températures glaciales."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant une chasse, tu vois l'entité passer sur ton tas de sel : il reste parfaitement intact.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Ton détecteur de mouvement placé au-dessus d'une ligne de sel s'active, mais le sel n'a pas bougé.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant une chasse, l'entité marche sur du sel de rang 3 sans être ralentie.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "De toute la partie, aucun de tes tas de sel n'a jamais été perturbé, alors que l'entité est passée dessus à plusieurs reprises.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "Ton lecteur EMF affiche un niveau 2 près de toi alors qu'aucun objet, aucune porte ni aucune lumière n'a bougé autour de toi.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Comment le Spectre réagit-il au sel ?",
+      "choices": [
+        "Il l'évite et fait demi-tour",
+        "Il ne le perturbe jamais",
+        "Il le perturbe et laisse toujours des empreintes UV",
+        "Il est ralenti davantage que les autres entités"
+      ],
+      "answer": 1,
+      "explain": "Le Spectre n'interagit jamais avec le sel et n'est pas ralenti par le sel de rang 3. Il ne l'évite pas : il se déplace comme les autres entités et passe dessus sans le toucher."
+    },
+    {
+      "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Quelle capacité du Spectre cela peut-il trahir ?",
+      "choices": [
+        "Son passage à travers les murs",
+        "Son accélération en LdV",
+        "Sa téléportation près d'un joueur au hasard",
+        "Son drain de 25 % de santé mentale"
+      ],
+      "answer": 2,
+      "explain": "Le Spectre peut se téléporter près d'un joueur au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Le drain de 25 % est celui du Djinn."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Spectre ?",
+      "choices": [
+        "EMF niveau 5, Spirit Box, Écriture fantomatique",
+        "EMF niveau 5, Ultraviolet, Spirit Box",
+        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
+        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "EMF 5 + Spirit Box + D.O.T.S. Les leurres sont l'Esprit, le Gallu et le Fantôme, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Depuis fin 2025, quelle autre entité à EMF 5 + Spirit Box peut traverser du sel sans le perturber ?",
+      "choices": [
+        "Le Gallu en état enragé",
+        "L'Esprit",
+        "Les Jumeaux",
+        "Le Dayan quand tu restes immobile"
+      ],
+      "answer": 0,
+      "explain": "Le Gallu, ajouté le 16 décembre 2025, ne perturbe pas le sel en état enragé (après encens, sel ou crucifix). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre."
+    },
+    {
+      "q": "Vrai ou faux : le Spectre traverse les murs pendant les chasses.",
+      "choices": [
+        "Vrai, il traverse tous les murs",
+        "Faux : il se déplace exactement comme les autres entités",
+        "Vrai, mais seulement les murs de sa pièce favorite",
+        "Vrai, mais seulement en état D.O.T.S"
+      ],
+      "answer": 1,
+      "explain": "C'est une mauvaise interprétation du texte du journal : le Spectre traque et se déplace comme toutes les autres entités."
+    },
+    {
+      "q": "À quelle vitesse chasse un Spectre ?",
+      "choices": [
+        "1,7 m/s sans aucune accélération en LdV",
+        "2,5 m/s près de l'électronique allumée",
+        "1,0 m/s, puis 3,0 m/s quand il te détecte",
+        "1,7 m/s avec accélération en LdV standard"
+      ],
+      "answer": 3,
+      "explain": "Le Spectre a une vitesse standard. 2,5 m/s près de l'électronique, c'est le Raiju ; 1,0 puis 3,0 m/s, c'est le Revenant."
+    }
+  ],
+  "changes": [
+    "Le Gallu (Winter's Jest v0.15.1.0, 16 décembre 2025 ; EMF 5 + UV + Spirit Box) ne perturbe pas le sel en état enragé : les tests du sel, notés définitifs dans la sauvegarde de 2024, ne sont plus strictement propres au Spectre.",
+    "Nouvelles entités partageant deux preuves : Gallu et Dayan (EMF 5 + Spirit Box, décembre 2025), Deildegast (EMF 5 + D.O.T.S, v0.18.0.0, 21 juillet 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_misconceptions_wraith_1_c",
+    "tybayn wiki: wiki_misconceptions_wraith_1_r",
+    "tybayn wiki: wiki_known_bugs_wraith",
+    "tybayn wiki: wiki_gallu_states_p2",
+    "tybayn wiki: wiki_gallu_states_i5",
+    "tybayn wiki: wiki_gallu_states_i10",
+    "https://www.destructoid.com/how-to-identify-a-gallu-in-phasmophobia/",
+    "https://www.screenhype.co.uk/how-to-identify-dayan-gallu-obambo-ghosts-phasmophobia/",
+    "https://progameguides.com/phasmophobia/how-to-identify-the-wraith-in-phasmophobia-all-strengths-and-weaknesses/",
+    "tybayn wiki: wiki_known_bugs_gallu"
+  ],
+  "uncertain": [
+    "On ne sait pas si un Gallu enragé est ralenti par le sel de rang 3 : l'absence de ralentissement n'est pas confirmée comme propre au Spectre.",
+    "Le statut actuel (définitif ou non) des tests du sel dans les données structurées de tybayn n'est pas connu ; il a été abaissé ici à cause du Gallu.",
+    "Aucun changement direct du Spectre n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
+    "Le test « un Gallu n'est jamais enragé juste après la fin d'une chasse » est déduit du cycle d'états décrit par tybayn (normal > enragé > affaibli), pas vérifié en jeu.",
+    "Aucune source ne dit explicitement si le Mimic reproduit le sel intact du Spectre."
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "id": "mare",
+  "name": "Cauchemar",
+  "nameEn": "Mare",
+  "evidence": [
+    "spiritbox",
+    "orbs",
+    "writing"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Sa vitesse ne dépend pas de la lumière : c'est son seuil de chasse qui en dépend."
+    ]
+  },
+  "huntSanity": {
+    "normal": 60,
+    "low": 40,
+    "high": 60,
+    "summary": "60 % (lumière éteinte) / 40 % (lumière allumée)",
+    "details": [
+      "Ne chasse pas avant 40 % de santé mentale moyenne si l'interrupteur de la pièce où il se trouve est en position allumée (quel que soit l'état du disjoncteur).",
+      "Chasse dès 60 % si cet interrupteur est en position éteinte, ou si les ampoules de la pièce sont cassées (quelle que soit la position de l'interrupteur).",
+      "C'est la pièce où se trouve l'entité qui compte, et c'est la position de l'interrupteur qui compte, pas le courant."
+    ]
+  },
+  "summary": "Entité de l'obscurité : elle éteint les lumières, ne les rallume jamais et chasse plus tôt quand la pièce où elle se trouve est plongée dans le noir.",
+  "keyTells": [
+    "Chasse dès 60 % lumière éteinte, à 40 % seulement si l'interrupteur est allumé",
+    "Éteint aussitôt une lumière que tu allumes à moins de 4 m de lui",
+    "N'allume jamais les lumières (interrupteurs, lampes)",
+    "Erre davantage quand la lumière de sa pièce est allumée"
+  ],
+  "tells": [
+    {
+      "text": "Ne chasse pas avant 40 % de santé mentale moyenne quand l'interrupteur de la pièce où il se trouve est en position allumée (quel que soit l'état du disjoncteur) ; chasse dès 60 % si l'interrupteur est en position éteinte ou si les ampoules sont cassées (quelle que soit la position de l'interrupteur).",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Erre davantage quand les lumières de la pièce où il se trouve sont allumées, ce qui le pousse à en sortir plus souvent, sans préférence particulière pour une pièce sombre.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Préfère les interactions qui éteignent les lumières et celles qui font éclater les ampoules.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut pas allumer les lumières (hors téléviseurs et ordinateurs). Bug connu : en pratique, il ne peut pas non plus allumer téléviseurs et ordinateurs, contrairement à ce qu'annonçaient les notes de patch.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Peut éteindre immédiatement un interrupteur (ou une lampe) qu'un joueur vient d'allumer à moins de 4 m de l'entité.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Toutes les 10 s, chaque joueur peut tenter de déclencher la capacité du Cauchemar en allumant un interrupteur ou une lampe, puis en regardant si l'entité l'éteint aussitôt (une fois par joueur et par interrupteur). Si c'est le cas, ça pourrait être un Cauchemar. Pour tester plus vite, place des détecteurs de mouvement sous les interrupteurs pour savoir où se trouve l'entité par rapport à eux. À noter : le Cauchemar ne peut pas utiliser sa capacité dans une pièce aux ampoules cassées. D'autres entités peuvent sembler le faire par coïncidence : mieux vaut voir la capacité plusieurs fois.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité allume un interrupteur, ce n'est pas un Cauchemar."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "onryo",
+      "why": "Spirit Box + orbes en commun, et l'Onryo chasse lui aussi dès 60 %, mais sans lien avec les lumières ; il souffle les flammes (qui le bloquent comme des crucifix) et tente de chasser après chaque 3e flamme éteinte. 3e preuve : températures glaciales vs écriture."
+    },
+    {
+      "with": "spirit",
+      "why": "Spirit Box + écriture en commun. L'Esprit chasse à 50 % quelle que soit la lumière et attend 180 s après l'encens avant de rechasser. 3e preuve : EMF 5 vs orbes."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Spirit Box + écriture en commun. Le Poltergeist joue surtout avec les objets (un toutes les 0,5 s en chasse, plusieurs d'un coup) et peut allumer les lumières. 3e preuve : UV vs orbes."
+    },
+    {
+      "with": "yokai",
+      "why": "Spirit Box + orbes en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce : une chasse précoce ne vient pas forcément de l'obscurité. En chasse, il ne te détecte qu'à 2,5 m. 3e preuve : D.O.T.S vs écriture."
+    },
+    {
+      "with": "revenant",
+      "why": "Orbes + écriture en commun. Le Revenant est très lent (1,0 m/s) tant qu'il ne te détecte pas, puis fonce à 3,0 m/s. 3e preuve : températures glaciales vs Spirit Box."
+    },
+    {
+      "with": "moroi",
+      "why": "Spirit Box + écriture en commun. Le Moroï maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse. 3e preuve : températures glaciales vs orbes."
+    },
+    {
+      "with": "deogen",
+      "why": "Spirit Box + écriture en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, et ne chasse pas avant 40 %. 3e preuve : D.O.T.S vs orbes."
+    },
+    {
+      "with": "thaye",
+      "why": "Orbes + écriture en commun. Le Thayé jeune chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : D.O.T.S vs Spirit Box."
+    },
+    {
+      "with": "hantu",
+      "why": "Le Hantu coupe volontiers le disjoncteur (et ne peut pas le rallumer) ; le Cauchemar, lui, éteint interrupteurs et lampes un par un. Une seule preuve en commun (orbes)."
+    },
+    {
+      "with": "dayan",
+      "why": "Spirit Box + orbes en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile. 3e preuve : EMF 5 vs écriture."
+    },
+    {
+      "with": "kormos",
+      "why": "Spirit Box + orbes en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : UV vs écriture."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic affiche toujours des orbes (fausse preuve) et a la Spirit Box ; il peut imiter le Cauchemar. Ses vraies preuves sont Spirit Box, UV et températures glaciales : de l'UV ou du froid excluent le Cauchemar."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Tu allumes la lumière de la pièce où se trouve l'entité, et elle l'éteint presque aussitôt, plusieurs fois de suite.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "De toute la partie, l'entité n'a jamais allumé une seule lumière, alors qu'elle en a éteint plusieurs.",
+      "kind": "interaction",
+      "strength": "hint"
+    },
+    {
+      "text": "L'entité fait souvent éclater les ampoules.",
+      "kind": "interaction",
+      "strength": "hint"
+    },
+    {
+      "text": "L'entité chasse alors que la santé moyenne est encore autour de 60 %, depuis une pièce plongée dans le noir.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Tant que la lumière de sa pièce reste allumée, l'entité ne chasse pas avant que la santé moyenne descende vers 40 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Quand tu laisses la lumière de sa pièce allumée, l'entité en sort beaucoup plus souvent.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "À quel seuil chasse le Cauchemar si l'interrupteur de la pièce où il se trouve est allumé ?",
+      "choices": [
+        "60 %",
+        "40 %",
+        "50 %",
+        "35 %"
+      ],
+      "answer": 1,
+      "explain": "Lumière allumée : il attend 40 %. Interrupteur éteint ou ampoules cassées : il chasse dès 60 %."
+    },
+    {
+      "q": "Quel élément détermine le seuil de chasse du Cauchemar ?",
+      "choices": [
+        "L'état du disjoncteur",
+        "La lumière de la pièce où tu te trouves",
+        "Le nombre de lampes allumées dans toute la maison",
+        "La position de l'interrupteur de la pièce où il se trouve (ou des ampoules cassées)"
+      ],
+      "answer": 3,
+      "explain": "Seule compte la pièce où se trouve l'entité : interrupteur allumé = 40 %, éteint ou ampoules cassées = 60 %, quel que soit l'état du disjoncteur."
+    },
+    {
+      "q": "Que peut faire le Cauchemar si tu allumes une lumière à moins de 4 m de lui ?",
+      "choices": [
+        "L'éteindre immédiatement",
+        "Lancer une chasse sur-le-champ",
+        "Faire éclater l'ampoule à coup sûr",
+        "Quitter définitivement sa pièce favorite"
+      ],
+      "answer": 0,
+      "explain": "C'est sa capacité : il éteint aussitôt un interrupteur ou une lampe qu'un joueur vient d'allumer à moins de 4 m de lui (pas dans une pièce aux ampoules cassées)."
+    },
+    {
+      "q": "Quelle observation élimine le Cauchemar ?",
+      "choices": [
+        "L'entité éteint une lampe",
+        "L'entité fait éclater une ampoule",
+        "L'entité allume un interrupteur",
+        "L'entité chasse à 60 %"
+      ],
+      "answer": 2,
+      "explain": "Le Cauchemar ne peut pas allumer les lumières : si l'entité allume un interrupteur, ce n'en est pas un. Éteindre, faire éclater et chasser à 60 % lui correspondent."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Cauchemar ?",
+      "choices": [
+        "Spirit Box, Orbes fantomatiques, Températures glaciales",
+        "Spirit Box, Orbes fantomatiques, Écriture fantomatique",
+        "EMF niveau 5, Spirit Box, Écriture fantomatique",
+        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales"
+      ],
+      "answer": 1,
+      "explain": "Spirit Box + orbes + écriture. Les leurres sont l'Onryo, l'Esprit et le Revenant, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Vrai ou faux : le Cauchemar se dirige exprès vers les pièces sombres.",
+      "choices": [
+        "Vrai : il rejoint toujours la pièce la plus sombre",
+        "Faux : il reste toujours dans sa pièce favorite",
+        "Vrai, mais seulement disjoncteur coupé",
+        "Faux : il erre simplement plus quand sa pièce est éclairée, sans préférence pour le noir"
+      ],
+      "answer": 3,
+      "explain": "Le wiki tybayn actuel corrige cette idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité."
+    }
+  ],
+  "changes": [
+    "Le wiki tybayn actuel corrige l'ancienne fiche : le Cauchemar erre davantage quand sa pièce est éclairée, sans préférence pour les pièces sombres (la sauvegarde de 2024 disait qu'il partait vers les pièces sombres).",
+    "Bug connu (wiki tybayn) : il ne peut pas allumer téléviseurs et ordinateurs, contrairement aux notes de patch.",
+    "Nouvelles entités partageant deux preuves : Dayan (Spirit Box + orbes, décembre 2025) et Kormos (Spirit Box + orbes, mai 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_known_bugs_mare",
+    "tybayn wiki: wiki_misconceptions_mare_1_c",
+    "tybayn wiki: wiki_misconceptions_mare_1_r",
+    "https://www.destructoid.com/how-to-identify-a-kormos-in-phasmophobia/",
+    "https://www.screenhype.co.uk/how-to-identify-dayan-gallu-obambo-ghosts-phasmophobia/"
+  ],
+  "uncertain": [
+    "Aucun changement direct du Cauchemar n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
+    "Le bug « ne peut pas allumer téléviseurs et ordinateurs » pourrait être corrigé un jour : n'utilise pas une télé ou un ordinateur allumé pour éliminer le Cauchemar."
+  ]
+}

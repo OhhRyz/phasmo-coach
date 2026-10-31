@@ -1,0 +1,290 @@
+{
+  "id": "gallu",
+  "name": "Gallu",
+  "nameEn": "Gallu",
+  "evidence": [
+    "emf",
+    "uv",
+    "spiritbox"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.36,
+    "max": 1.96,
+    "alt": 1.7,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 normal · 1,96 enragé · 1,36 m/s affaibli · LdV",
+    "details": [
+      "État normal (état de départ) : 1,7 m/s pendant les chasses.",
+      "État enragé : 1,96 m/s.",
+      "État affaibli : 1,36 m/s.",
+      "Il accélère en LdV ; selon le wiki tybayn, comme les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
+      "Sa vitesse change donc d'une chasse à l'autre selon son état, lui-même lié à ton usage du sel, de l'encens et des crucifix.",
+      "Attention : s'il s'enrage pendant une chasse (encens, sel), il passe en état affaibli dès la fin de cette même chasse ; c'est donc la chasse suivante qui sera lente (1,36 m/s)."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 40,
+    "high": 60,
+    "summary": "50 % normal · 60 % enragé · 40 % affaibli",
+    "details": [
+      "État normal : seuil standard de 50 % de santé mentale moyenne.",
+      "État enragé : 60 % de santé mentale moyenne.",
+      "État affaibli : 40 % de santé mentale moyenne.",
+      "En état normal, un encens hors chasse ou un passage dans le sel l'enrage : il peut alors chasser dès 60 %. Après une chasse en état enragé, il passe en affaibli et attend 40 %."
+    ]
+  },
+  "summary": "Entité qui s'enrage quand tu te défends (sel, encens, crucifix) puis s'épuise : sa vitesse, son seuil de chasse et l'efficacité de tes protections changent selon son état.",
+  "keyTells": [
+    "En état normal, sel, encens ou crucifix l'enragent (1,96 m/s, chasse dès 60 %)",
+    "Après une chasse en état enragé, il s'affaiblit (1,36 m/s, chasse à 40 %)",
+    "Enragé : ne perturbe pas le sel, crucifix -2 m, encens 4 s",
+    "Affaibli : crucifix +1 m, encens 6 s ; sel, encens ou crucifix le remettent en normal"
+  ],
+  "tells": [
+    {
+      "text": "Passe par 3 états qui changent sa vitesse et d'autres comportements, dans cet ordre : normal > enragé > affaibli > normal…",
+      "zeroEvidence": true
+    },
+    {
+      "text": "État normal (état de départ) : 1,7 m/s en chasse, sans autre particularité. S'il marche dans du sel, est encensé ou utilise un crucifix, il passe en état enragé (2 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "État enragé : 1,96 m/s, seuil de 60 % de santé mentale moyenne, aveuglement par l'encens de 4 s, portée du crucifix réduite de 2 m, ne perturbe pas le sel. Il reste enragé jusqu'à la fin d'une chasse, puis passe en état affaibli.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "État affaibli : 1,36 m/s, seuil de 40 %, aveuglement par l'encens de 6 s, portée du crucifix augmentée de 1 m, perturbe le sel. Il reste affaibli jusqu'à ce qu'il marche dans du sel, soit encensé ou utilise un crucifix, puis revient en état normal (3 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Bug connu : dans certaines situations, seul l'hôte voit le Gallu perturber le sel. L'entité peut changer d'état même si un joueur non hôte la voit traverser le sel sans le perturber.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Ses changements d'état se déclenchent avec du sel de n'importe quel rang, l'encens ou un crucifix qu'il utilise. Le ralentissement causé par le sel de rang 3 est un mécanisme totalement différent, sans lien avec sa capacité.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Pose plusieurs lignes de sel espacées sur son trajet, si possible sous l'œil d'une caméra. En état normal, il perturbe la première ligne, devient enragé 2 s plus tard, puis traverse les lignes suivantes sans les perturber. Un sel perturbé puis un sel intact sur le même passage désigne fortement le Gallu (le Spectre, lui, ne perturbe jamais le sel). Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
+      "definitive": false
+    },
+    {
+      "text": "Mesure sa vitesse sur plusieurs chasses. S'il est en état normal (1,7 m/s) et que tu l'encenses hors chasse, qu'il marche dans le sel ou qu'un crucifix bloque une chasse, sa chasse suivante est à 1,96 m/s (enragé) ; à la fin de cette chasse il passe en affaibli et chasse ensuite à 1,36 m/s tant que tu n'utilises ni sel, ni encens, ni crucifix. S'il s'enrage pendant une chasse, il passe en affaibli dès la fin de cette même chasse. Cette séquence liée à tes protections est sa signature (les Jumeaux varient aussi, autour de 1,5 / 1,9 m/s, mais sans lien avec tes protections).",
+      "definitive": false
+    },
+    {
+      "text": "Si, après que tu l'as encensée hors chasse ou qu'elle a marché dans le sel, l'entité chasse alors que la santé moyenne est encore au-dessus de 50 % (jusqu'à 60 %), sans objet maudit, c'est compatible avec un Gallu enragé.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité chasse au-dessus de 60 % de santé mentale moyenne sans objet maudit, ce n'est pas un Gallu."
+    },
+    {
+      "text": "Si sa vitesse de chasse de base (vitesse des entités réglée à 100 %) est nettement différente de 1,36, 1,7 et 1,96 m/s, ce n'est pas un Gallu."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "wraith",
+      "why": "EMF 5 + Spirit Box en commun, et un Gallu enragé traverse le sel sans le perturber. Mais le Gallu perturbe le sel en état normal ou affaibli, alors que le Spectre ne le touche jamais ; le Spectre reste à 1,7 m/s et peut se téléporter près d'un joueur (EMF 2). 3e preuve : UV (Gallu) ou D.O.T.S (Spectre)."
+    },
+    {
+      "with": "the-twins",
+      "why": "EMF 5 + Spirit Box en commun, et leur vitesse varie aussi d'une chasse à l'autre. Les Jumeaux alternent environ 1,5 / 1,9 m/s selon le jumeau qui chasse, sans lien avec le sel, l'encens ou le crucifix. 3e preuve : températures glaciales vs UV."
+    },
+    {
+      "with": "spirit",
+      "why": "EMF 5 + Spirit Box en commun. L'Esprit garde 1,7 m/s et 50 % quoi que tu fasses, et attend 180 s après l'encens avant de rechasser. 3e preuve : écriture vs UV."
+    },
+    {
+      "with": "dayan",
+      "why": "EMF 5 + Spirit Box en commun. Le Dayan change de vitesse selon tes mouvements quand il est à moins de 10 m (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile), pas selon tes protections. 3e preuve : orbes vs UV."
+    },
+    {
+      "with": "phantom",
+      "why": "Spirit Box + UV en commun. Le Fantôme disparaît quand tu le prends en photo, reste presque invisible en chasse et garde une vitesse standard. 3e preuve : D.O.T.S vs EMF 5."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Spirit Box + UV en commun. Le Poltergeist lance énormément d'objets (un toutes les 0,5 s en chasse, plusieurs d'un coup) et garde une vitesse standard. 3e preuve : écriture vs EMF 5."
+    },
+    {
+      "with": "jinn",
+      "why": "EMF 5 + UV en commun. Le Djinn passe à 2,5 m/s quand il te voit à plus de 3 m avec le disjoncteur allumé ; ça ne dépend ni de l'encens ni du sel. 3e preuve : températures glaciales vs Spirit Box."
+    },
+    {
+      "with": "goryo",
+      "why": "EMF 5 + UV en commun. Le D.O.T.S du Goryo n'est visible qu'à la caméra vidéo ; il quitte rarement sa pièce et garde une vitesse standard. 3e preuve : D.O.T.S vs Spirit Box."
+    },
+    {
+      "with": "myling",
+      "why": "EMF 5 + UV en commun. En chasse, les pas et la voix du Myling ne s'entendent pas au-delà de 12 m, et il produit plus de sons au microphone parabolique. 3e preuve : écriture vs Spirit Box."
+    },
+    {
+      "with": "obake",
+      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : orbes vs Spirit Box."
+    },
+    {
+      "with": "kormos",
+      "why": "Spirit Box + UV en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : orbes vs EMF 5."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Spirit Box + UV en commun. Le Mimic copie la vitesse et le comportement d'autres entités, en changeant toutes les 30 s à 2 min : sa vitesse peut donc varier aussi. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; 3e vraie preuve : températures glaciales vs EMF 5."
+    },
+    {
+      "with": "moroi",
+      "why": "Comme un Gallu affaibli, le Moroï est aveuglé plus longtemps que la normale par l'encens, et sa vitesse varie aussi, mais selon la santé moyenne de l'équipe. Une seule preuve en commun (Spirit Box)."
+    },
+    {
+      "with": "obambo",
+      "why": "L'Obambo alterne aussi entre deux états (calme et agressif), mais selon un minuteur, pas selon tes protections. Une seule preuve en commun (UV)."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Sur le même trajet, l'entité perturbe ta première ligne de sel, puis traverse la suivante sans la toucher.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Tu l'as encensée hors chasse alors que sa dernière chasse était à vitesse normale : sa chasse suivante est nettement plus rapide (environ 1,96 m/s).",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "La chasse qui suit cette chasse rapide est au contraire nettement plus lente (environ 1,36 m/s), alors que tu n'as utilisé ni sel, ni encens, ni crucifix entre-temps.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Quand elle est lente, il suffit qu'elle marche dans du sel ou que tu l'encenses pour qu'elle retrouve une vitesse normale à la chasse suivante.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Après que tu l'as encensée hors chasse, l'entité lance une chasse alors que la santé moyenne est encore entre 50 et 60 %, sans objet maudit.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité accélère progressivement quand elle te voit, quelle que soit sa vitesse de départ.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Qu'est-ce qui fait passer un Gallu de l'état normal à l'état enragé ?",
+      "choices": [
+        "La fin d'une chasse",
+        "Une santé moyenne qui passe sous 50 %",
+        "Marcher dans du sel, être encensé ou utiliser un crucifix",
+        "Une lumière allumée dans sa pièce"
+      ],
+      "answer": 2,
+      "explain": "Sel (n'importe quel rang, 2 s de délai), encens ou crucifix utilisé (immédiat) le font enrager. La fin d'une chasse, elle, le fait passer d'enragé à affaibli."
+    },
+    {
+      "q": "À quelle vitesse chasse un Gallu enragé ?",
+      "choices": [
+        "1,96 m/s",
+        "1,36 m/s",
+        "1,7 m/s",
+        "2,5 m/s"
+      ],
+      "answer": 0,
+      "explain": "Enragé : 1,96 m/s. 1,7 m/s correspond à l'état normal et 1,36 m/s à l'état affaibli. 2,5 m/s, c'est le Djinn ou le Raiju dans leurs conditions."
+    },
+    {
+      "q": "À partir de quel seuil de santé mentale moyenne un Gallu enragé peut-il chasser ?",
+      "choices": [
+        "50 %",
+        "60 %",
+        "40 %",
+        "70 %"
+      ],
+      "answer": 1,
+      "explain": "Enragé : 60 %. Normal : 50 %. Affaibli : 40 %."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Gallu ?",
+      "choices": [
+        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
+        "EMF niveau 5, Orbes fantomatiques, Spirit Box",
+        "Spirit Box, Ultraviolet, Écriture fantomatique",
+        "EMF niveau 5, Ultraviolet, Spirit Box"
+      ],
+      "answer": 3,
+      "explain": "EMF 5 + UV + Spirit Box. Les leurres sont le Spectre, le Dayan et le Poltergeist, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Comment évoluent tes protections contre un Gallu affaibli ?",
+      "choices": [
+        "Crucifix -2 m et aveuglement par l'encens de 4 s",
+        "Crucifix +1 m et aveuglement par l'encens de 6 s",
+        "Crucifix et encens n'ont plus aucun effet",
+        "Le crucifix ne peut plus brûler"
+      ],
+      "answer": 1,
+      "explain": "Affaibli, il est plus vulnérable : crucifix +1 m et 6 s d'aveuglement (5 s en standard). Crucifix -2 m et 4 s, c'est l'état enragé."
+    },
+    {
+      "q": "Tu as EMF 5 + Spirit Box, et l'entité traverse une ligne de sel sans la perturber. Qu'est-ce qui désigne un Gallu plutôt qu'un Spectre ?",
+      "choices": [
+        "Elle chasse à 1,7 m/s",
+        "Elle laisse un EMF 2 près d'un joueur sans interaction",
+        "Elle avait perturbé une autre ligne de sel juste avant",
+        "Elle ne chasse jamais au-dessus de 50 %"
+      ],
+      "answer": 2,
+      "explain": "Un Gallu perturbe le sel en état normal puis s'enrage et ne le touche plus ; le Spectre ne le perturbe jamais. 1,7 m/s convient aux deux, l'EMF 2 sans interaction évoque la téléportation du Spectre, et un Gallu enragé peut chasser jusqu'à 60 %."
+    }
+  ],
+  "changes": [
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que le Dayan et l'Obambo : absente de la sauvegarde tybayn de décembre 2024."
+  ],
+  "sources": [
+    "tybayn wiki: wiki_gallu_states_title",
+    "tybayn wiki: wiki_gallu_states_p1",
+    "tybayn wiki: wiki_gallu_states_p2",
+    "tybayn wiki: wiki_gallu_states_i1 à i10",
+    "tybayn wiki: wiki_gallu_states_p3",
+    "tybayn wiki: wiki_gallu_states_p4",
+    "tybayn wiki: wiki_the_twins_los_p11",
+    "tybayn wiki: wiki_known_bugs_gallu",
+    "tybayn wiki: wiki_misconceptions_gallu_1_c",
+    "tybayn wiki: wiki_misconceptions_gallu_1_r",
+    "tybayn wiki: wiki_los_moroi_p2 (aveuglement standard de 5 s)",
+    "https://www.destructoid.com/how-to-identify-a-gallu-in-phasmophobia/",
+    "https://www.keengamer.com/articles/guides/how-to-identify-gallu-in-phasmophobia-evidence-ghost-states-hunt-speed-sanity",
+    "https://www.screenhype.co.uk/how-to-identify-dayan-gallu-obambo-ghosts-phasmophobia/",
+    "https://fandomwire.com/phasmophobia-cheat-sheet-for-all-ghosts/",
+    "https://opencritic.com/news/24863/phasmophobias-winter-update-officially-adds-3-new-ghosts-the-obambo-the-gallu-and-the-dayan",
+    "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/",
+    "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
+  ],
+  "uncertain": [
+    "Aucune preuve forcée (Cauchemar/Démence) n'est attribuée au Gallu par les sources trouvées : forcedEvidence laissé à null sans confirmation officielle.",
+    "L'accélération en LdV calculée depuis la vitesse du moment est une observation du wiki tybayn (« semble »), pas une donnée officielle ; la vitesse maximale en LdV par état n'est pas chiffrée.",
+    "L'effet exact d'un encensement ou d'un crucifix déclenché pendant une chasse sur la vitesse de cette même chasse n'est pas documenté en détail.",
+    "On ne sait pas si un Gallu enragé est ralenti par le sel de rang 3.",
+    "Délai avant nouvelle chasse après l'encens et délai entre deux chasses non documentés (supposés standard, non vérifiés).",
+    "Certains guides tiers décrivent un ralentissement « par épuisement » en cours de chasse : non retenu, car contraire au wiki tybayn (l'état enragé dure jusqu'à la fin de la chasse).",
+    "Une source tierce (résumé de guide) parle d'un passage en enragé « après un délai » quand l'encens est utilisé hors chasse ; le wiki tybayn dit « immédiatement ». Version tybayn retenue.",
+    "Le passage en affaibli à la fin de la chasse même où il s'est enragé découle du texte tybayn (« jusqu'à la fin d'une chasse ») et de guides tiers (« si une chasse se termine alors qu'il est enragé ») ; non testé en jeu."
+  ]
+}

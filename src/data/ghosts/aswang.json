@@ -1,0 +1,139 @@
+{
+  "id": "aswang",
+  "name": "Aswang",
+  "nameEn": "Aswang",
+  "evidence": ["dots", "freezing", "writing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.53,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,53 m/s · accélération en LdV très rapide (8,7 s)",
+    "details": [
+      "Vitesse de base de 1,53 m/s, un peu plus lente qu'une entité standard (1,7 m/s).",
+      "En LdV, il accélère toujours jusqu'à 1,65 fois sa vitesse de base (environ 2,5 m/s), mais il y parvient en 8,667 s de LdV continue au lieu de 13 s, soit une accélération progressive 1,5 fois plus rapide que la normale.",
+      "Sa vitesse de base ne change pas d'une chasse à l'autre."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne (guides concordants)."
+    ]
+  },
+  "summary": "Un chasseur un peu lent au départ qui prend de la vitesse plus vite que les autres quand il te voit, mais dont la chasse s'arrête net s'il te rejoint dans une cachette officielle… et qui s'en souvient à la chasse suivante.",
+  "keyTells": [
+    "Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de LdV (au lieu de 13 s)",
+    "La chasse s'arrête net s'il rejoint dans une cachette officielle le joueur détecté",
+    "Chasse suivante : il fonce droit sur ce joueur, même pendant la période de grâce",
+    "Seule entité avec D.O.T.S + températures glaciales + écriture"
+  ],
+  "tells": [
+    { "text": "Vitesse de base de 1,53 m/s ; en LdV, il atteint 1,65 fois cette vitesse en 8,667 s au lieu de 13 s.", "zeroEvidence": true },
+    { "text": "S'il détecte un joueur puis le rejoint dans une cachette officielle disponible (placard, casier…), la chasse se termine immédiatement, sans mort.", "zeroEvidence": true }
+  ],
+  "behaviors": [
+    { "text": "Après avoir trouvé un joueur caché, il place au début de la chasse suivante un point de passage directement sur la position de ce joueur et s'y rend, même pendant la période de grâce.", "zeroEvidence": true },
+    { "text": "Pour que la chasse s'arrête, il doit atteindre ou entrer dans la même cachette que le joueur détecté : le voir entrer dans une cachette ne suffit pas.", "zeroEvidence": true },
+    { "text": "Cette faiblesse ne fonctionne ni dans les cachettes non officielles, ni quand la difficulté est réglée sans cachettes.", "zeroEvidence": false }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    { "text": "Laisse l'entité te voir pendant une chasse, puis cache-toi dans une cachette officielle. Si elle atteint ta cachette et que la chasse s'arrête aussitôt sans que tu meures, c'est un Aswang. Attention : si ce n'en est pas un, tu meurs.", "definitive": true },
+    { "text": "Chronomètre la prise de vitesse en LdV : si l'entité passe de son allure de base (un peu lente) à sa vitesse maximale en moins de 9 s de LdV continue, au lieu d'environ 13 s, c'est probablement un Aswang.", "definitive": false },
+    { "text": "Si, après t'avoir trouvé caché, l'entité fonce droit vers ta position dès le début de la chasse suivante, ça pourrait être un Aswang.", "definitive": false }
+  ],
+  "eliminationTests": [
+    { "text": "Si la vitesse de base de l'entité change d'une chasse à l'autre, ce n'est pas un Aswang." },
+    { "text": "Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang." },
+    { "text": "Si l'entité chasse à une vitesse de base de 1,7 m/s ou plus (sans LdV), ce n'est pas un Aswang." }
+  ],
+  "confusions": [
+    { "with": "yurei", "why": "Même D.O.T.S + glaciales, mais le Yurei a les orbes au lieu de l'écriture ; il peut claquer une porte (-15 % de santé mentale) et l'encens le piège dans sa pièce pendant 90 s." },
+    { "with": "oni", "why": "Même D.O.T.S + glaciales, mais l'Oni a l'EMF 5 au lieu de l'écriture ; vitesse standard de 1,7 m/s, plus visible en chasse, jamais d'événement « brume fantomatique »." },
+    { "with": "deogen", "why": "Même D.O.T.S + écriture, mais le Deogen a la Spirit Box au lieu des glaciales ; il te voit toujours en chasse (impossible de te cacher), fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi." },
+    { "with": "thaye", "why": "Même D.O.T.S + écriture, mais le Thayé a les orbes au lieu des glaciales ; il n'accélère jamais en LdV et ralentit en vieillissant." },
+    { "with": "obambo", "why": "Même D.O.T.S + écriture, mais l'Obambo a l'UV au lieu des glaciales ; sa vitesse alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif), alors que celle de l'Aswang reste à 1,53 m/s." },
+    { "with": "deildegast", "why": "Même D.O.T.S + écriture, mais le Deildegast a l'EMF 5 au lieu des glaciales ; sa vitesse va de 3,0 à 0,4 m/s selon le nombre d'objets différents utilisés depuis la dernière chasse." },
+    { "with": "revenant", "why": "Même écriture + glaciales, mais le Revenant a les orbes au lieu du D.O.T.S ; il rampe à 1,0 m/s puis passe d'un coup à 3,0 m/s quand il te détecte, au lieu d'accélérer progressivement." },
+    { "with": "shade", "why": "Même écriture + glaciales, mais l'Ombre a l'EMF 5 au lieu du D.O.T.S ; timide, elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
+    { "with": "demon", "why": "Même écriture + glaciales, mais le Démon a l'UV au lieu du D.O.T.S ; il chasse dès 70 % (voire à n'importe quel niveau) et peut rechasser 60 s après un encens." },
+    { "with": "moroi", "why": "Même écriture + glaciales, mais le Moroï a la Spirit Box au lieu du D.O.T.S ; il maudit ceux qui l'entendent à la Spirit Box ou au micro parabolique et devient plus rapide quand la santé mentale baisse." },
+    { "with": "the-twins", "why": "Le jumeau lent (~1,5 m/s) a une vitesse de base proche de celle de l'Aswang, mais la vitesse des Jumeaux change d'une chasse à l'autre et leurs preuves sont EMF 5, Spirit Box et glaciales." }
+  ],
+  "observations": [
+    { "text": "Tu te réfugies dans un placard pendant la chasse ; l'entité ouvre ta cachette… et la chasse s'arrête net, tu es indemne.", "kind": "hunt", "strength": "definitive" },
+    { "text": "Au début de la chasse suivante, l'entité fonce directement vers l'endroit où tu t'étais caché, sans le moindre temps mort.", "kind": "hunt", "strength": "strong" },
+    { "text": "Elle démarre ses chasses un peu plus lentement qu'une entité normale, mais dès qu'elle te voit, elle prend toute sa vitesse en quelques secondes.", "kind": "hunt", "strength": "strong" },
+    { "text": "D'une chasse à l'autre, son allure de base reste exactement la même.", "kind": "hunt", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les preuves de l'Aswang ?",
+      "choices": ["D.O.T.S, températures glaciales, écriture fantomatique", "D.O.T.S, orbes, températures glaciales", "D.O.T.S, Spirit Box, écriture fantomatique", "Orbes, écriture fantomatique, températures glaciales"],
+      "answer": 0,
+      "explain": "L'Aswang est la seule entité avec D.O.T.S + glaciales + écriture. Les autres combinaisons sont celles du Yurei, du Deogen et du Revenant."
+    },
+    {
+      "q": "Que se passe-t-il si l'Aswang rejoint, dans une cachette officielle, le joueur qu'il a détecté ?",
+      "choices": ["La chasse s'arrête immédiatement, sans mort", "Il tue le joueur instantanément", "Il fait demi-tour, mais la chasse continue", "Il bloque la cachette jusqu'à la fin de la chasse"],
+      "answer": 0,
+      "explain": "Si l'Aswang rejoint le joueur qu'il a détecté dans une cachette officielle disponible, la chasse se termine aussitôt, sans mort."
+    },
+    {
+      "q": "En combien de temps de LdV continue l'Aswang atteint-il sa vitesse maximale ?",
+      "choices": ["Environ 8,7 s", "13 s", "3 s", "Jamais : il n'accélère pas en LdV"],
+      "answer": 0,
+      "explain": "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s, contre 13 s pour les entités standards. Les entités sans accélération en LdV sont le Revenant, le Hantu, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse."
+    },
+    {
+      "q": "Quelle est la vitesse de base de l'Aswang en chasse ?",
+      "choices": ["1,53 m/s", "1,7 m/s", "1,4 m/s", "1,96 m/s"],
+      "answer": 0,
+      "explain": "L'Aswang démarre à 1,53 m/s. 1,7 m/s est la vitesse standard, 1,4 m/s celle du Hantu au chaud et 1,96 m/s celle de l'Obambo agressif ou du Gallu enragé."
+    },
+    {
+      "q": "Vrai ou faux : la chasse d'un Aswang s'arrête dès qu'il te voit entrer dans une cachette.",
+      "choices": ["Faux : il doit atteindre ou entrer dans la même cachette que toi", "Vrai, dans tous les cas", "Vrai, mais seulement pour un placard", "Faux : sa chasse ne s'arrête jamais avant la fin du temps"],
+      "answer": 0,
+      "explain": "C'est une idée reçue : l'Aswang doit rejoindre la cachette du joueur détecté pour que la chasse s'arrête."
+    },
+    {
+      "q": "L'Aswang t'a trouvé caché à la chasse précédente. À quoi dois-tu t'attendre à la suivante ?",
+      "choices": ["Il se dirige droit sur ta position dès le début, même pendant la période de grâce", "Il t'ignore pendant toute la chasse", "Il ne peut plus chasser pendant 5 minutes", "Il chasse plus lentement pour te laisser fuir"],
+      "answer": 0,
+      "explain": "Au début de la chasse suivante, l'Aswang place un point de passage sur ta position et s'y rend immédiatement, même pendant la période de grâce. Change de place !"
+    }
+  ],
+  "changes": [
+    "Nouvelle entité ajoutée avec Phasmophobia by Alan Wake v0.17.1.0 (12 mai 2026), avec le Kormos : absente de la sauvegarde tybayn de décembre 2024.",
+    "Patch v0.17.1.4 (2 juin 2026) : les accélérations en LdV modifiées par la Player Character Update (v0.17.0.0) ont été remises à leur état d'origine ; les valeurs retenues ici (×1,65 en 8,667 s) viennent du wiki tybayn mis à jour en octobre 2026."
+  ],
+  "sources": [
+    "tybayn wiki: wiki_los_aswang_p1",
+    "tybayn wiki: wiki_los_sim_p1",
+    "tybayn wiki: wiki_misconceptions_aswang_1_r",
+    "tybayn wiki: wiki_known_bugs_aswang",
+    "https://kineticgames.co.uk/news/phasmophobia-v01710-patch-notes",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes",
+    "https://phasmophobia.fandom.com/wiki/Aswang",
+    "https://phasmophobia.wiki.fextralife.com/Aswang",
+    "https://phasmopedia.com/en/ghosts/aswang/",
+    "https://www.destructoid.com/how-to-identify-an-aswang-in-phasmophobia/",
+    "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
+  ],
+  "uncertain": [
+    "Preuve garantie en Cauchemar et Démence : aucune selon le wiki Fextralife, seule source à l'aborder explicitement.",
+    "Chasse suivante : le wiki Fandom dit qu'il se dirige vers le joueur « même pendant la période de grâce », GameSpot parle d'une chasse « sans période de grâce » ; la formulation retenue reste celle du wiki.",
+    "Seuil de chasse de 50 % : guides concordants (Phasmopedia, Destructoid…), mais aucune donnée tybayn.",
+    "Vitesse maximale en LdV : 1,53 × 1,65 ≈ 2,52 m/s par calcul ; Phasmopedia indique 2,53 m/s.",
+    "Destructoid décrit un gain de 0,0375 × la vitesse de base par seconde (contre 0,025 normalement), soit le même rapport 1,5× que tybayn, mais annonce 17,33 s pour atteindre le maximum : durée incohérente avec tybayn (8,667 s), qui est retenu.",
+    "Cas non vérifiés : plusieurs joueurs cachés en même temps, ou joueur caché qui n'était pas celui que l'Aswang avait détecté."
+  ]
+}

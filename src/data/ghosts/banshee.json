@@ -1,0 +1,304 @@
+{
+  "id": "banshee",
+  "name": "Banshee",
+  "nameEn": "Banshee",
+  "evidence": [
+    "uv",
+    "orbs",
+    "dots"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "En chasse, elle ne poursuit que sa cible (si la cible est à l'intérieur), même si d'autres joueurs sont plus proches."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 12,
+    "high": 87,
+    "summary": "50 % de sa cible · 12 à 87 % en moyenne",
+    "details": [
+      "Chasse quand la santé mentale de sa cible est à 50 % ou moins (même si la cible est dehors) : elle peut donc chasser dès 87 % de santé moyenne de l'équipe, ou seulement à 12 %, selon les conditions.",
+      "La santé des autres joueurs ne compte pas ; seule celle de la cible fixe le moment de la chasse.",
+      "En solo, l'hôte est toujours la cible : le seuil se lit directement sur ta propre santé."
+    ]
+  },
+  "summary": "Entité qui choisit une cible : elle chasse selon la santé mentale de cette cible, ne poursuit qu'elle et peut pousser un cri unique au microphone parabolique.",
+  "keyTells": [
+    "Cri unique au microphone parabolique (33 % de chances)",
+    "Chasse selon la santé de sa cible (≤ 50 %), pas selon la moyenne de l'équipe",
+    "En chasse, ne poursuit que sa cible si celle-ci est à l'intérieur",
+    "Toujours féminine (prénom et modèle) depuis décembre 2025"
+  ],
+  "tells": [
+    {
+      "text": "33 % de chances de produire un cri unique au microphone parabolique.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Chasse en fonction de la santé mentale de sa cible plutôt que de la moyenne de l'équipe.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne poursuit que sa cible pendant une chasse (si la cible est à l'intérieur).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "La cible perd 15 % de santé mentale si elle touche l'entité pendant un événement de chant (10 % normalement).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Depuis la v0.15.1.0 (décembre 2025), la Banshee ne se présente plus que comme féminine : prénom et modèle féminins.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Préfère les événements de chant.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Essaie de se diriger vers sa cible lorsqu'elle est en état D.O.T.S.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Ne peut pas changer de pièce favorite.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ciblage : un joueur est choisi au hasard en début de contrat et reste la cible jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La cible suivante est le premier joueur vivant dans l'ordre du lobby (en commençant par l'hôte) qui n'était pas la cible précédente. En solo, c'est toujours l'hôte.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« I wish for life » : il ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), elle reste la cible même morte. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, elle ne chasserait jamais), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "66 % de chances d'errer vers sa cible sans laisser d'EMF, si la cible est à l'intérieur.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Écoute l'entité au microphone parabolique : si tu entends le cri unique, c'est une Banshee. N'importe quel joueur peut l'entendre, pas seulement la cible.",
+      "definitive": true
+    },
+    {
+      "text": "En multijoueur, que tout le monde soit à l'intérieur quand l'entité chasse. Si elle ne poursuit pas les joueurs qui ne sont pas sa cible, ou si ceux-ci peuvent la toucher sans mourir, c'est une Banshee.",
+      "definitive": true
+    },
+    {
+      "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son : le wiki tybayn le liste comme média « Paranormal Scream » (libellé anglais). Pratique pour garder une trace du cri.",
+      "definitive": false
+    },
+    {
+      "text": "Place des détecteurs de mouvement dans la carte et sers-t'en pour voir si l'entité se dirige souvent vers un même joueur. Si c'est le cas, ça pourrait être une Banshee.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité change de pièce favorite, ce n'est pas une Banshee."
+    },
+    {
+      "text": "Si le prénom de l'entité est masculin ou si son modèle est masculin, ce n'est pas une Banshee (uniquement féminine depuis la v0.15.1.0)."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "phantom",
+      "why": "UV + D.O.T.S en commun. Le Fantôme disparaît quand tu le prends en photo et reste presque invisible en chasse ; il ne cible pas un joueur en particulier. 3e preuve : Spirit Box vs orbes."
+    },
+    {
+      "with": "goryo",
+      "why": "UV + D.O.T.S en commun, et le Goryo ne change jamais de pièce favorite non plus. Mais son D.O.T.S n'est visible qu'à la caméra vidéo, jamais avec un joueur dans la pièce. 3e preuve : EMF 5 vs orbes."
+    },
+    {
+      "with": "yurei",
+      "why": "Orbes + D.O.T.S en commun. Le Yurei est le seul à pouvoir fermer la porte de sortie hors chasse ou événement, et l'encens l'enferme dans sa pièce pendant 90 s. 3e preuve : températures glaciales vs UV."
+    },
+    {
+      "with": "yokai",
+      "why": "Orbes + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce (la Banshee jusqu'à 87 % via sa cible) ; en chasse, il ne te détecte qu'à 2,5 m. 3e preuve : Spirit Box vs UV."
+    },
+    {
+      "with": "raiju",
+      "why": "Orbes + D.O.T.S en commun. Le Raiju accélère à 2,5 m/s près de l'électronique allumée et peut chasser dès 65 % près de l'équipement des joueurs. 3e preuve : EMF 5 vs UV."
+    },
+    {
+      "with": "thaye",
+      "why": "Orbes + D.O.T.S en commun. Le Thayé jeune chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : écriture vs UV."
+    },
+    {
+      "with": "hantu",
+      "why": "UV + orbes en commun. Le Hantu n'accélère pas en LdV, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé. 3e preuve : températures glaciales vs D.O.T.S."
+    },
+    {
+      "with": "obake",
+      "why": "UV + orbes en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : EMF 5 vs D.O.T.S."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic affiche toujours des orbes (fausse preuve) et a l'UV ; il peut imiter la Banshee. Ses vraies preuves sont Spirit Box, UV et températures glaciales : une Spirit Box ou du froid excluent la Banshee."
+    },
+    {
+      "with": "demon",
+      "why": "Une Banshee peut chasser très tôt en moyenne (jusqu'à 87 %) si sa cible a perdu beaucoup de santé : ne conclus pas trop vite au Démon. Une seule preuve en commun (UV)."
+    },
+    {
+      "with": "obambo",
+      "why": "UV + D.O.T.S en commun. L'Obambo alterne entre un état calme et un état agressif selon un minuteur. 3e preuve : écriture vs orbes."
+    },
+    {
+      "with": "kormos",
+      "why": "UV + orbes en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : Spirit Box vs D.O.T.S."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Au microphone parabolique, tu entends un cri strident et unique, différent des sons paranormaux habituels.",
+      "kind": "tell",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant la chasse, ton coéquipier touche l'entité sans mourir, et elle continue de traquer un autre joueur.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "L'entité fait des événements de chant bien plus souvent que les autres types d'événements.",
+      "kind": "event",
+      "strength": "strong"
+    },
+    {
+      "text": "L'entité chasse alors que la santé moyenne de l'équipe est encore autour de 80 %, et elle fonce toujours vers le même joueur.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Tes détecteurs de mouvement s'activent souvent sur le trajet vers le même joueur, sans relevé EMF associé.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "De tout le contrat, la pièce favorite ne change jamais.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "Le modèle de l'entité est féminin et son prénom aussi.",
+      "kind": "tell",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Sur quelle santé mentale la Banshee se base-t-elle pour chasser ?",
+      "choices": [
+        "La moyenne de l'équipe (50 %)",
+        "Celle de sa cible (50 % ou moins)",
+        "La moyenne des joueurs à l'intérieur",
+        "Celle du joueur le plus proche"
+      ],
+      "answer": 1,
+      "explain": "La Banshee chasse quand sa cible est à 50 % ou moins, même si cette cible est dehors. En moyenne d'équipe, ça peut aller de 12 % à 87 %."
+    },
+    {
+      "q": "Quel outil permet d'entendre le cri unique de la Banshee ?",
+      "choices": [
+        "La Spirit Box",
+        "Le lecteur EMF",
+        "Le microphone parabolique",
+        "Le détecteur de mouvement"
+      ],
+      "answer": 2,
+      "explain": "Le cri s'entend au microphone parabolique, avec 33 % de chances. Les respirations dans la Spirit Box, c'est le Deogen."
+    },
+    {
+      "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
+      "choices": [
+        "N'importe quel joueur",
+        "Seulement sa cible",
+        "Seulement l'hôte",
+        "Seulement les joueurs dans la pièce favorite"
+      ],
+      "answer": 0,
+      "explain": "Croire que seule la cible l'entend est une idée reçue : tout joueur avec le microphone parabolique peut l'entendre."
+    },
+    {
+      "q": "Quelles sont les trois preuves de la Banshee ?",
+      "choices": [
+        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
+        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
+        "EMF niveau 5, Ultraviolet, Orbes fantomatiques",
+        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "UV + orbes + D.O.T.S. Les leurres sont le Fantôme, le Yurei et l'Obake, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Le prénom de l'entité est masculin. Quelle entité peux-tu éliminer ?",
+      "choices": [
+        "Le Fantôme",
+        "Le Goryo",
+        "La Banshee",
+        "Le Yurei"
+      ],
+      "answer": 2,
+      "explain": "Depuis la mise à jour Winter's Jest v0.15.1.0 (décembre 2025), la Banshee ne se présente plus que comme féminine (prénom et modèle)."
+    },
+    {
+      "q": "En solo, qui est la cible de la Banshee ?",
+      "choices": [
+        "Toujours toi, l'hôte",
+        "Personne : elle chasse sur la moyenne",
+        "Le joueur le plus proche à chaque chasse",
+        "Une nouvelle cible au hasard à chaque chasse"
+      ],
+      "answer": 0,
+      "explain": "En solo, l'hôte est toujours la cible : c'est donc ta propre santé, à 50 % ou moins, qui déclenche ses chasses."
+    }
+  ],
+  "changes": [
+    "Winter's Jest v0.15.1.0 (16 décembre 2025) : la Banshee ne se présente plus que comme féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
+    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Paranormal Scream » (wiki tybayn).",
+    "Le wiki tybayn actuel détaille le ciblage (choix de la cible, changement après la mort d'un joueur, cas de la patte de singe).",
+    "Nouvelles entités partageant deux preuves : Obambo (UV + D.O.T.S, décembre 2025) et Kormos (UV + orbes, mai 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_banshee_target_p1",
+    "tybayn wiki: wiki_banshee_target_p2",
+    "tybayn wiki: wiki_banshee_target_p3",
+    "tybayn wiki: wiki_banshee_target_p4",
+    "tybayn wiki: wiki_banshee_target_p5",
+    "tybayn wiki: wiki_known_bugs_banshee",
+    "tybayn wiki: wiki_media_sound_a8",
+    "tybayn wiki: wiki_media_sound_l8",
+    "tybayn wiki: wiki_misconceptions_banshee_1_c",
+    "tybayn wiki: wiki_misconceptions_banshee_1_r",
+    "tybayn wiki: wiki_misconceptions_banshee_2_c",
+    "tybayn wiki: wiki_misconceptions_banshee_2_r",
+    "tybayn wiki: wiki_misconceptions_banshee_3_r",
+    "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/",
+    "https://vgtimes.com/gaming-news/141861-phasmophobia-kicks-off-the-winters-jest-event-the-return-of-krampus-and-three-new-ghosts.html",
+    "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
+  ],
+  "uncertain": [
+    "Le libellé français en jeu du média « Paranormal Scream » n'a pas été vérifié (le wiki tybayn FR donne « Cri Paranormal » / « Son de fantôme »).",
+    "La règle « uniquement féminine » vient des notes de patch v0.15.1.0 citées par plusieurs sites (Pro Game Guides, VGTimes, GameSpot) ; la page officielle n'a pas pu être lue directement.",
+    "Le wiki tybayn liste comme bug connu que la Banshee change de cible après la mort de n'importe quel joueur ; si ce bug était corrigé, la cible ne changerait qu'à la mort de la cible."
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "id": "jinn",
+  "name": "Djinn",
+  "nameEn": "Jinn",
+  "evidence": [
+    "emf",
+    "uv",
+    "freezing"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": 2.5,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · 2,5 m/s si disjoncteur allumé, LdV et > 3 m",
+    "details": [
+      "Par défaut, le Djinn chasse à 1,7 m/s avec une accélération en LdV standard.",
+      "Si le disjoncteur est allumé, qu'il a un joueur en ligne de vue et qu'il est à plus de 3 m de lui, il passe immédiatement à 2,5 m/s.",
+      "Une fois à moins de 3 m de ce joueur, il reprend son comportement de chasse normal.",
+      "Pendant ces phases à 2,5 m/s, l'accélération en LdV ne s'applique pas, mais elle continue de s'accumuler en arrière-plan : la vitesse accumulée s'applique dès qu'il perd la LdV ou passe à moins de 3 m du joueur ciblé.",
+      "Disjoncteur coupé, il chasse comme une entité standard."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
+      "Sa capacité (-25 % de santé à un joueur proche, disjoncteur allumé) peut faire baisser la moyenne très vite et avancer ses chasses."
+    ]
+  },
+  "summary": "Entité liée au disjoncteur : tant que le courant est allumé, le Djinn fonce vers toi quand il te voit de loin et peut te faire perdre 25 % de santé mentale d'un coup.",
+  "keyTells": [
+    "Disjoncteur allumé : fonce à 2,5 m/s quand il te voit à plus de 3 m",
+    "Reprend une vitesse normale une fois à moins de 3 m de toi",
+    "Ne coupe jamais le disjoncteur lui-même",
+    "Capacité : -25 % de santé à un joueur proche, avec EMF au disjoncteur"
+  ],
+  "tells": [
+    {
+      "text": "Disjoncteur allumé, le Djinn accélère pendant une chasse si un joueur est dans sa ligne de vue et à plus de 3 m.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Le Djinn ne peut pas couper directement le disjoncteur.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale d'un joueur proche, avec un EMF 2 ou un EMF 5 au disjoncteur.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale des joueurs proches, avec un EMF 2 au disjoncteur.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Pendant une chasse (disjoncteur allumé), place-toi à plus de 3 m de l'entité. Si elle passe de 1,7 m/s à 2,5 m/s quand elle te voit, puis ralentit une fois à moins de 3 m de toi, c'est un Djinn. Méfie-toi de l'électronique allumée, pour ne pas confondre avec l'accélération du Raiju.",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si le disjoncteur est coupé directement par l'entité, ce n'est pas un Djinn."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "raiju",
+      "why": "Le Raiju chasse aussi à 2,5 m/s, mais près de l'équipement électronique allumé (posé ou tenu), sans condition de distance ni de LdV ; le Djinn dépend du disjoncteur allumé, de la LdV et des 3 m. Une seule preuve en commun (EMF 5) : le Raiju a orbes et D.O.T.S."
+    },
+    {
+      "with": "hantu",
+      "why": "UV + températures glaciales en commun. Le Hantu n'accélère pas en LdV, va plus vite dans les pièces froides et coupe volontiers le disjoncteur (sans pouvoir le rallumer) ; le Djinn ne le coupe jamais lui-même. 3e preuve : orbes vs EMF 5."
+    },
+    {
+      "with": "shade",
+      "why": "EMF 5 + températures glaciales en commun. L'Ombre ne chasse pas avant 35 % et jamais dans une pièce où se trouve un joueur. 3e preuve : écriture vs UV."
+    },
+    {
+      "with": "demon",
+      "why": "UV + températures glaciales en commun. Le Démon chasse dès 70 % (voire à n'importe quel seuil) et peut rechasser 60 s après l'encens. 3e preuve : écriture vs EMF 5."
+    },
+    {
+      "with": "oni",
+      "why": "EMF 5 + températures glaciales en commun. L'Oni est plus visible en chasse, draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brume. 3e preuve : D.O.T.S vs UV."
+    },
+    {
+      "with": "the-twins",
+      "why": "EMF 5 + températures glaciales en commun. Les Jumeaux chassent à environ 1,5 ou 1,9 m/s sans lien avec le disjoncteur et peuvent faire deux interactions en même temps. 3e preuve : Spirit Box vs UV."
+    },
+    {
+      "with": "goryo",
+      "why": "EMF 5 + UV en commun. Le D.O.T.S du Goryo n'est visible qu'à la caméra vidéo ; il quitte rarement sa pièce et ne change jamais de pièce favorite. 3e preuve : D.O.T.S vs températures glaciales."
+    },
+    {
+      "with": "myling",
+      "why": "EMF 5 + UV en commun. En chasse, les pas et la voix du Myling ne s'entendent pas au-delà de 12 m, et il produit plus de sons au microphone parabolique. 3e preuve : écriture vs températures glaciales."
+    },
+    {
+      "with": "obake",
+      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : orbes vs températures glaciales."
+    },
+    {
+      "with": "gallu",
+      "why": "EMF 5 + UV en commun. Le Gallu a aussi des vitesses variables (1,36 / 1,7 / 1,96 m/s), mais selon son état (encens, sel, crucifix), pas selon le disjoncteur ni la distance. 3e preuve : Spirit Box vs températures glaciales."
+    },
+    {
+      "with": "dayan",
+      "why": "Le Dayan change aussi de vitesse selon la distance : à moins de 10 m d'un joueur, 2,25 m/s si tu marches, 1,2 m/s si tu restes immobile, sans lien avec le disjoncteur. Une seule preuve en commun (EMF 5)."
+    },
+    {
+      "with": "the-mimic",
+      "why": "UV + températures glaciales en commun, et le Mimic peut imiter le Djinn. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; 3e vraie preuve : Spirit Box vs EMF 5."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Disjoncteur allumé, l'entité qui te voit de loin accélère d'un coup, puis reprend une allure normale une fois tout près de toi.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Ta santé mentale chute d'environ 25 % d'un coup alors que l'entité est proche et que le courant est allumé.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "Juste après cette chute de santé, ton lecteur EMF affiche un niveau 2 au disjoncteur.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Disjoncteur coupé, la chasse paraît tout à fait standard : environ 1,7 m/s et accélération progressive quand l'entité te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "De toute la partie, l'entité n'a jamais coupé le disjoncteur elle-même.",
+      "kind": "behavior",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Dans quelles conditions le Djinn passe-t-il à 2,5 m/s ?",
+      "choices": [
+        "Près d'un équipement électronique allumé",
+        "Disjoncteur allumé, joueur en LdV et à plus de 3 m",
+        "Quand la santé moyenne est sous 25 %",
+        "Disjoncteur coupé et joueur à moins de 3 m"
+      ],
+      "answer": 1,
+      "explain": "Il faut les trois conditions : disjoncteur allumé, LdV et plus de 3 m. 2,5 m/s près de l'électronique allumée, c'est le Raiju."
+    },
+    {
+      "q": "Que ne fait jamais un Djinn ?",
+      "choices": [
+        "Allumer une lumière",
+        "Lancer un objet",
+        "Changer de pièce favorite",
+        "Couper lui-même le disjoncteur"
+      ],
+      "answer": 3,
+      "explain": "Le Djinn ne peut pas couper directement le disjoncteur. S'il le coupe, ce n'est pas un Djinn."
+    },
+    {
+      "q": "Combien de santé mentale fait perdre la capacité du Djinn ?",
+      "choices": [
+        "25 %",
+        "15 %",
+        "20 %",
+        "10 %"
+      ],
+      "answer": 0,
+      "explain": "25 %, disjoncteur allumé. 15 % : porte claquée par le Yurei ; 20 % : événement d'Oni ; 10 % : événement standard."
+    },
+    {
+      "q": "Où apparaît l'EMF quand le Djinn utilise sa capacité ?",
+      "choices": [
+        "À l'endroit où se trouve le joueur",
+        "Dans sa pièce favorite",
+        "Au disjoncteur",
+        "Sur la porte d'entrée"
+      ],
+      "answer": 2,
+      "explain": "La capacité laisse un EMF 2 (ou 5) au disjoncteur, pas là où se trouve l'entité ou le joueur."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Djinn ?",
+      "choices": [
+        "EMF niveau 5, Ultraviolet, Spirit Box",
+        "EMF niveau 5, Ultraviolet, Températures glaciales",
+        "Ultraviolet, Orbes fantomatiques, Températures glaciales",
+        "EMF niveau 5, Écriture fantomatique, Températures glaciales"
+      ],
+      "answer": 1,
+      "explain": "EMF 5 + UV + températures glaciales. Les leurres sont le Gallu, le Hantu et l'Ombre, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Pendant le test de vitesse du Djinn, que dois-tu éviter pour ne pas le confondre avec un Raiju ?",
+      "choices": [
+        "D'avoir de l'électronique allumée près de l'entité",
+        "De laisser le disjoncteur allumé",
+        "De te tenir à plus de 3 m",
+        "De rester dans sa ligne de vue"
+      ],
+      "answer": 0,
+      "explain": "Le Raiju accélère près de l'électronique allumée. Le disjoncteur allumé, la distance de plus de 3 m et la LdV sont justement nécessaires pour déclencher l'accélération du Djinn."
+    }
+  ],
+  "changes": [
+    "Nouvelle entité partageant deux preuves : Gallu (EMF 5 + UV, Winter's Jest v0.15.1.0, 16 décembre 2025)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_jinn_p1",
+    "tybayn wiki: wiki_los_jinn_p2",
+    "tybayn wiki: wiki_known_bugs_jinn",
+    "tybayn wiki: wiki_los_raiju_p1",
+    "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/",
+    "https://progameguides.com/phasmophobia/all-ghost-changes-in-the-phasmophobia-apocalypse-update/"
+  ],
+  "uncertain": [
+    "Aucun changement direct du Djinn n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
+    "La portée exacte de « joueur proche » pour la capacité n'est pas chiffrée par tybayn ; des guides tiers parlent de la même pièce ou de 3 m autour de l'entité.",
+    "Le wiki Fandom indique que le disjoncteur peut quand même sauter avec un Djinn : seule une coupure directe par l'entité l'élimine (non vérifié en jeu)."
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "id": "yurei",
+  "name": "Yurei",
+  "nameEn": "Yurei",
+  "evidence": ["orbs", "freezing", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Son pouvoir ne déclenche pas de chasse, mais il fait baisser la santé mentale des joueurs proches, ce qui rapproche l'équipe du seuil."
+    ]
+  },
+  "summary": "Une entité qui referme les portes d'un coup pour drainer ta santé mentale, la seule capable de toucher à une porte de sortie hors chasse, et que l'encens enferme dans sa pièce.",
+  "keyTells": [
+    "Seule à fermer ou toucher une porte de sortie hors chasse et hors événement",
+    "Pouvoir : ferme une porte et fait perdre 15 % de santé mentale aux joueurs proches",
+    "Encensée, elle reste enfermée dans sa pièce pendant 90 s"
+  ],
+  "tells": [
+    {
+      "text": "Seule entité qui peut fermer une porte de sortie, ou interagir avec elle, en dehors d'une chasse ou d'un événement.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Encenser l'entité la bloque dans sa pièce pendant toute la durée de l'effet de l'encens (90 s).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Bug connu (wiki tybayn) : peut ouvrir partiellement les portes de casier.",
+      "zeroEvidence": false
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Peut fermer une porte et faire baisser de 15 % la santé mentale des joueurs proches, à condition qu'il y ait une porte dans la pièce.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Si une porte de sortie se ferme ou bouge alors qu'aucune chasse ni aucun événement n'est en cours, c'est un Yurei (c'est la seule entité capable de le faire).",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Place des capteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei (sans compter un événement fantôme, pendant lequel une entité peut se téléporter jusqu'à un joueur)."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "revenant",
+      "why": "Mêmes orbes et températures glaciales. Le Revenant chasse à 1,0 m/s puis bondit à 3,0 m/s quand il te détecte, sans LdV standard."
+    },
+    {
+      "with": "hantu",
+      "why": "Mêmes orbes et températures glaciales. Le Hantu va plus vite dans les pièces froides, n'a pas de LdV standard et souffle un air glacé visible en chasse quand le disjoncteur est coupé."
+    },
+    {
+      "with": "onryo",
+      "why": "Mêmes orbes et températures glaciales. L'Onryo chasse à 60 % et peut chasser à toute santé mentale en éteignant des flammes ; il ne fait pas de drain de 15 % via les portes."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic affiche toujours des orbes et partage les températures glaciales ; il peut aussi copier le pouvoir du Yurei. Avec orbes + glaciales, vérifie Spirit Box et UV avant de conclure."
+    },
+    {
+      "with": "banshee",
+      "why": "Mêmes orbes et D.O.T.S. La Banshee s'acharne sur une cible, chasse selon la santé mentale de celle-ci et peut pousser un cri unique au micro parabolique."
+    },
+    {
+      "with": "yokai",
+      "why": "Mêmes orbes et D.O.T.S. Le Yokai n'entend qu'à 2,5 m en chasse et peut chasser jusqu'à 80 % si l'on parle dans sa pièce."
+    },
+    {
+      "with": "raiju",
+      "why": "Mêmes orbes et D.O.T.S. Le Raiju accélère à 2,5 m/s près des appareils électroniques actifs et peut chasser à 65 % à côté d'eux."
+    },
+    {
+      "with": "thaye",
+      "why": "Mêmes orbes et D.O.T.S. Le Thayé vieillit : sa vitesse (2,75 → 1,0 m/s) et son seuil (75 % → 15 %) baissent au fil de la partie, sans LdV standard."
+    },
+    {
+      "with": "oni",
+      "why": "Mêmes températures glaciales et D.O.T.S. L'Oni draine 20 % de santé mentale lors de ses événements (au lieu de 10 %) ; la chute de 15 % accompagnée d'une porte qui se ferme est celle du Yurei."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s)."
+    }
+  ],
+  "observations": [
+    {
+      "text": "La porte d'entrée de la maison se ferme toute seule alors qu'aucune chasse ni aucun événement n'est en cours.",
+      "kind": "interaction",
+      "strength": "definitive"
+    },
+    {
+      "text": "Une porte de la pièce se referme complètement d'un seul coup et ta santé mentale chute d'environ 15 % au même moment.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Après l'encens, les capteurs de mouvement placés aux entrées de sa pièce restent muets pendant une minute et demie : l'entité ne sort pas.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "Ta santé mentale fond par paliers, souvent juste après qu'une porte s'est refermée près de toi.",
+      "kind": "interaction",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Yurei ?",
+      "choices": [
+        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S",
+        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales",
+        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
+        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S"
+      ],
+      "answer": 2,
+      "explain": "Yurei = orbes, températures glaciales, D.O.T.S. EMF 5 + glaciales + D.O.T.S, c'est l'Oni ; orbes + écriture + glaciales, le Revenant ; UV + orbes + D.O.T.S, la Banshee."
+    },
+    {
+      "q": "De combien le pouvoir du Yurei fait-il chuter la santé mentale des joueurs proches ?",
+      "choices": ["10 %", "15 %", "20 %", "25 %"],
+      "answer": 1,
+      "explain": "15 %. Un événement standard coûte 10 %, un événement d'Oni 20 %, et le pouvoir du Djinn 25 %."
+    },
+    {
+      "q": "De quoi le Yurei a-t-il besoin pour utiliser son pouvoir ?",
+      "choices": [
+        "D'une porte dans la pièce où il se trouve",
+        "Du disjoncteur allumé",
+        "D'un joueur qui parle dans sa pièce",
+        "D'une bougie allumée à proximité"
+      ],
+      "answer": 0,
+      "explain": "Il lui faut une porte dans la pièce. Le disjoncteur concerne le Djinn, la voix le Yokai, et les flammes l'Onryo."
+    },
+    {
+      "q": "Tu encenses l'entité ; 40 s plus tard, un capteur de mouvement placé à la porte de sa pièce se déclenche, sans aucun événement en cours. Qu'en conclus-tu ?",
+      "choices": [
+        "C'est forcément un Yurei",
+        "C'est un Démon",
+        "Il faut attendre 180 s pour que le test soit valable",
+        "Ce n'est pas un Yurei"
+      ],
+      "answer": 3,
+      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Le Démon ne se déduit pas de ce test, et 180 s est le délai d'encens de l'Esprit."
+    },
+    {
+      "q": "Laquelle de ces observations est un signe quasi certain de Yurei ?",
+      "choices": [
+        "Une porte claque pendant une chasse",
+        "La porte de sortie se ferme seule, hors chasse et hors événement",
+        "Un interrupteur s'éteint juste après que tu l'as allumé",
+        "Une porte de placard s'entrouvre légèrement"
+      ],
+      "answer": 1,
+      "explain": "Seul le Yurei peut toucher à une porte de sortie hors chasse et hors événement. Toutes les entités bougent les portes en chasse, et éteindre aussitôt une lumière allumée près de lui est le pouvoir du Cauchemar (Mare)."
+    }
+  ],
+  "changes": [
+    "v0.17.1.0 (mai 2026) : correction d'un bug qui empêchait le Yurei de fermer complètement les portes.",
+    "v0.19.0.0 (25 août 2026) : correction d'un son de fermeture de porte joué bien après la fin de l'animation, qui faisait croire à tort à la présence d'un Yurei. Ne prends plus un bruit de porte isolé pour une preuve."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_known_bugs_yurei",
+    "tybayn wiki: wiki_los_p1",
+    "https://phasmophobia.fandom.com/wiki/Yurei",
+    "https://phasmopedia.com/en/ghosts/yurei/",
+    "https://phasmophobia.wiki.fextralife.com/Yurei",
+    "https://kineticgames.zendesk.com/hc/en-gb/articles/6198487814687-Phasmophobia-v0-17-1-0-Patch-Notes",
+    "https://www.playnews.gg/en/guides/phasmophobia-0-19-0-0-the-door-sound-that-got-yurei-wrongly-accused-is-fixed-and-two-traps-await-on-restricted-maps",
+    "https://mp1st.com/title-updates-and-patches/phasmophobia-version-0-19-00-adds-quality-of-life-features-update-1-000-046-august-25"
+  ],
+  "uncertain": [
+    "Rayon du drain de 15 % : environ 7,5 m autour du Yurei selon le wiki Fandom et un guide (allthings.how) ; tybayn dit seulement « joueurs proches ».",
+    "Plusieurs guides affirment que le Yurei ne déplace jamais une porte partiellement (le bug connu sur les casiers va dans ce sens) ; non intégré au contenu faute de confirmation tybayn.",
+    "Un blog mentionne une correction (juillet 2026) empêchant d'autres entités d'imiter la fermeture de porte du Yurei ; non retrouvée dans les notes officielles.",
+    "Dates des correctifs v0.17.1.0 et v0.19.0.0 tirées de sites relayant les notes (le site kineticgames.co.uk était inaccessible depuis cette session)."
+  ]
+}

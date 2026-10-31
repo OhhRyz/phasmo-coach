@@ -1,0 +1,245 @@
+{
+  "id": "obambo",
+  "name": "Obambo",
+  "nameEn": "Obambo",
+  "evidence": ["writing", "uv", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.45,
+    "max": 1.96,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "≈1,45 m/s (calme) / ≈1,96 m/s (agressif) · LdV",
+    "details": [
+      "État calme : environ 1,45 m/s en chasse (1,445 m/s selon les sources les plus précises), plus lent qu'une entité standard.",
+      "État agressif : environ 1,96 m/s en chasse (1,955 m/s), plus rapide qu'une entité standard.",
+      "L'état peut changer en pleine chasse : la vitesse passe alors immédiatement d'une valeur à l'autre, sans transition.",
+      "Il accélère en ligne de vue : d'après le wiki tybayn, l'accélération en LdV des entités récentes à vitesse variable (dont l'Obambo) est calculée directement à partir de leur vitesse actuelle.",
+      "Ces vitesses valent pour une vitesse d'entité de 100 %. Par météo « Lune de sang », toutes les entités sont 15 % plus rapides en chasse : un Obambo calme avance alors à environ 1,66 m/s, presque comme une entité standard, et un Obambo agressif à environ 2,25 m/s."
+    ]
+  },
+  "huntSanity": {
+    "normal": -1,
+    "low": 10,
+    "high": 65,
+    "summary": "10 % (calme) / 65 % (agressif)",
+    "details": [
+      "Pas de seuil unique : tout dépend de l'état de l'entité au moment où elle tente de chasser.",
+      "État calme : ne chasse pas avant 10 % de santé mentale moyenne.",
+      "État agressif : peut chasser dès 65 % de santé mentale moyenne.",
+      "Une chasse lancée en état agressif dure 20 % de moins que la durée de chasse de base, même si l'entité repasse en calme pendant la chasse."
+    ]
+  },
+  "summary": "Une entité à deux humeurs, qui alterne toutes les 2 minutes entre un état calme (lente, ne chasse qu'à 10 %) et un état agressif (rapide, chasse dès 65 %).",
+  "keyTells": [
+    "Calme/agressif : bascule 1 min après l'ouverture de la porte, puis toutes les 2 min",
+    "Calme : ≈1,45 m/s, chasse à 10 % · Agressif : ≈1,96 m/s, chasse à 65 %",
+    "Peut changer d'état en pleine chasse : la vitesse saute d'un coup",
+    "Chasse lancée en état agressif : 20 % plus courte"
+  ],
+  "tells": [
+    {
+      "text": "Commence la partie en état calme, passe en état agressif 1 minute après la première ouverture d'une porte de sortie, puis change d'état toutes les 2 minutes.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "En chasse, avance à environ 1,45 m/s en état calme et à environ 1,96 m/s en état agressif ; si l'état change pendant la chasse, la vitesse change immédiatement.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Si une chasse est démarrée alors que l'entité est dans son état agressif, la durée de chasse est réduite de 20 % de la durée de chasse de base.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [
+    {
+      "text": "Son seuil de chasse dépend de son état : 10 % de santé mentale moyenne en état calme, 65 % en état agressif.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Lance un chronomètre au moment où tu ouvres une porte de sortie (la porte d'entrée) pour la première fois. Les phases agressives vont de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00, etc. Si toutes les chasses au-dessus de 10 % tombent dans ces fenêtres, c'est un fort indice d'Obambo.",
+      "definitive": false
+    },
+    {
+      "text": "Écoute les pas pendant toute une chasse : un passage brutal de pas lents (≈1,45 m/s) à des pas rapides (≈1,96 m/s), ou l'inverse, sans ligne de vue ni autre cause visible, désigne fortement un Obambo.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité tente une chasse naturelle (sans objet maudit) au-dessus de 65 % de santé mentale moyenne, ce n'est pas un Obambo."
+    },
+    {
+      "text": "Si l'entité tente une chasse naturelle au-dessus de 10 % pendant une phase calme (avant 1:00, ou entre 3:00 et 5:00 après l'ouverture de la porte, etc. — garde quelques secondes de marge autour des bascules), ce n'est pas un Obambo."
+    },
+    {
+      "text": "Si toute une chasse se déroule à la vitesse standard de 1,7 m/s sans ligne de vue (mesurée au BPM), ce n'est pas un Obambo. Ne fais pas ce test par Lune de sang : un Obambo calme y avance à environ 1,66 m/s, presque la vitesse standard."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "the-twins",
+      "why": "Aucune preuve commune, mais des vitesses proches : les Jumeaux chassent à environ 1,5 ou 1,9 m/s selon le jumeau qui lance la chasse, et leur vitesse ne bascule pas en cours de chasse."
+    },
+    {
+      "with": "gallu",
+      "why": "Seulement l'UV en commun. Le Gallu change aussi d'état (normal 1,7 m/s, enragé 1,96 m/s, affaibli 1,36 m/s), mais à cause du sel, de l'encens ou du crucifix, pas d'un minuteur."
+    },
+    {
+      "with": "demon",
+      "why": "Mêmes écriture et UV. Une chasse naturelle au-dessus de 65 % exclut l'Obambo et pointe vers le Démon ; le Démon chasse toujours à 1,7 m/s et peut rechasser 60 s après l'encens."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Mêmes écriture et UV. Le Poltergeist chasse à 1,7 m/s et à 50 %, et lance un objet toutes les 0,5 s en chasse."
+    },
+    {
+      "with": "myling",
+      "why": "Mêmes écriture et UV. Le Myling chasse à 1,7 m/s et à 50 % ; ses pas en chasse ne s'entendent qu'à 12 m."
+    },
+    {
+      "with": "deogen",
+      "why": "Mêmes écriture et D.O.T.S. Le Deogen fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi ; seuil 40 %."
+    },
+    {
+      "with": "thaye",
+      "why": "Mêmes écriture et D.O.T.S. Le Thayé ralentit et chasse plus tard en vieillissant, de façon progressive et sans alterner ; il n'a pas de LdV standard."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes écriture et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s), sans saut brutal de vitesse."
+    },
+    {
+      "with": "deildegast",
+      "why": "Mêmes écriture et D.O.T.S. La vitesse du Deildegast (3,0 m/s moins 0,1 m/s par objet utilisé avant la chasse) est figée pendant toute la chasse."
+    },
+    {
+      "with": "goryo",
+      "why": "Mêmes UV et D.O.T.S. Les D.O.T.S du Goryo ne se voient qu'à la caméra et jamais avec un joueur dans la pièce ; il chasse à 1,7 m/s et à 50 %."
+    },
+    {
+      "with": "banshee",
+      "why": "Mêmes UV et D.O.T.S. La Banshee chasse selon la santé mentale de sa cible et ne poursuit qu'elle ; cri unique possible au micro parabolique."
+    },
+    {
+      "with": "phantom",
+      "why": "Mêmes UV et D.O.T.S. Le Fantôme n'apparaît pas en photo et reste invisible plus longtemps en chasse ; il chasse à 1,7 m/s."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant une chasse, les pas passent brutalement de lents à rapides (ou l'inverse) alors que l'entité ne te voit pas.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une chasse se déroule avec des pas un peu plus lents que ceux d'une entité standard.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Une chasse a lieu vers 60 % de santé mentale moyenne, puis l'entité ne chasse plus pendant près de deux minutes alors que vous êtes descendus sous 50 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "En notant l'heure depuis l'ouverture de la porte, tu remarques que les chasses au-dessus de 10 % tombent toutes dans des fenêtres de 2 minutes qui alternent (1:00–3:00, 5:00–7:00…).",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une chasse rapide, lancée tôt dans la partie, se termine plus vite que les autres chasses.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves de l'Obambo ?",
+      "choices": [
+        "Écriture fantomatique, Ultraviolet, Températures glaciales",
+        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S",
+        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
+        "Écriture fantomatique, Ultraviolet, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "Obambo = écriture, UV, D.O.T.S. Écriture + UV + glaciales, c'est le Démon ; Spirit Box + écriture + D.O.T.S, le Deogen ; orbes + écriture + D.O.T.S, le Thayé."
+    },
+    {
+      "q": "À quels seuils de santé mentale moyenne l'Obambo peut-il chasser ?",
+      "choices": [
+        "50 % en calme, 80 % en agressif",
+        "10 % en calme, 65 % en agressif",
+        "40 % en calme, 60 % en agressif",
+        "35 % en calme, 70 % en agressif"
+      ],
+      "answer": 1,
+      "explain": "10 % en état calme, 65 % en état agressif. 40 % / 60 % correspondent aux états affaibli / enragé du Gallu."
+    },
+    {
+      "q": "Quand l'Obambo passe-t-il pour la première fois en état agressif ?",
+      "choices": [
+        "1 minute après la première ouverture d'une porte de sortie",
+        "Dès le début de la partie",
+        "Juste après sa première chasse",
+        "Quand on l'encense ou qu'il marche dans le sel"
+      ],
+      "answer": 0,
+      "explain": "Il commence calme et bascule 1 minute après la première ouverture d'une porte de sortie, puis toutes les 2 minutes. Le sel et l'encens déclenchent les changements d'état du Gallu, pas de l'Obambo."
+    },
+    {
+      "q": "Que se passe-t-il pour une chasse lancée alors que l'Obambo est agressif ?",
+      "choices": [
+        "Elle dure 20 s de plus",
+        "Elle s'arrête dès que l'Obambo repasse en calme",
+        "Elle dure 20 % de moins que la durée de base",
+        "Elle dure deux fois plus longtemps"
+      ],
+      "answer": 2,
+      "explain": "Sa durée est réduite de 20 % de la durée de base, même s'il repasse en calme pendant la chasse. Les 20 s supplémentaires concernent les chasses maudites."
+    },
+    {
+      "q": "En pleine chasse, l'entité passe d'un coup d'environ 1,45 m/s à environ 1,96 m/s sans te voir. Quelle entité suspectes-tu ?",
+      "choices": ["Les Jumeaux", "L'Obambo", "Le Thayé", "Le Démon"],
+      "answer": 1,
+      "explain": "L'Obambo peut changer d'état en pleine chasse, et sa vitesse saute alors immédiatement. La vitesse des Jumeaux est fixée pour la chasse, celle du Thayé dépend de son âge, et le Démon reste à 1,7 m/s."
+    },
+    {
+      "q": "Après la première bascule, combien de temps dure chaque état de l'Obambo ?",
+      "choices": ["30 secondes", "5 minutes", "Jusqu'à la chasse suivante", "2 minutes"],
+      "answer": 3,
+      "explain": "Il alterne toutes les 2 minutes. Le Mimic change de comportement toutes les 30 s à 2 min, et l'état enragé du Gallu dure jusqu'à la fin de la chasse."
+    }
+  ],
+  "changes": [
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest (v0.15.1.0), en décembre 2025, en même temps que le Gallu et le Dayan : aucune donnée dans la sauvegarde tybayn de déc. 2024."
+  ],
+  "sources": [
+    "tybayn wiki: wiki_hunt_duration_p4",
+    "tybayn wiki: wiki_the_twins_los_p11",
+    "tybayn wiki: wiki_known_bugs_obambo",
+    "tybayn wiki: wiki_blood_moon (vitesse des entités +15 % en chasse)",
+    "tybayn wiki: wiki_gallu_states_p1",
+    "https://phasmophobia.fandom.com/wiki/Obambo",
+    "https://phasmophobia.wiki.fextralife.com/Obambo",
+    "https://phasmopedia.com/en/ghosts/obambo/",
+    "https://www.keengamer.com/articles/guides/how-to-identify-obambo-in-phasmophobia-evidence-ghost-states-hunt-speed-sanity/",
+    "https://www.destructoid.com/how-to-identify-an-obambo-in-phasmophobia/",
+    "https://gamerant.com/phasmophobia-how-detect-new-ghosts-omambo-gallu-dayan-evidence/",
+    "https://kineticgames.co.uk/news/phasmophobia-winters-jest-v01510"
+  ],
+  "uncertain": [
+    "Vitesses : 1,445 / 1,955 m/s selon Fextralife et Phasmopedia, arrondies à 1,45 / 1,96 m/s ailleurs ; un tableau de Pro Game Guides indique 1,7–2,4 m/s, valeur jugée erronée.",
+    "Seuil « normal » mis à -1 : l'Obambo n'a pas de seuil unique (10 % ou 65 % selon l'état).",
+    "Activité hors chasse selon l'état : le wiki Fandom / Phasmopedia indiquent une activité interne fixe (90 en calme, 25 en agressif) alors que Game Rant affirme qu'il est plus actif en agressif ; non intégré au contenu.",
+    "Vitesse maximale exacte en LdV non publiée : le calcul « à partir de la vitesse actuelle » vient du wiki tybayn, sans chiffre mesuré.",
+    "Précision du minuteur (marge de quelques secondes autour des bascules) et comportement exact si plusieurs portes de sortie existent non vérifiés.",
+    "Revue : une chasse vers 60 % suivie d'environ 2 minutes sans chasse est passée de strong à hint (beaucoup d'entités peuvent chasser vers 60 %, et l'absence de chasse pendant 2 minutes est fréquente).",
+    "Aucun test confirmé pour l'Obambo dans les données structurées tybayn (entité absente de la sauvegarde) ; les tests proviennent du wiki Fandom, de Phasmopedia et de guides."
+  ]
+}

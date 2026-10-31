@@ -1,0 +1,233 @@
+{
+  "id": "poltergeist",
+  "name": "Poltergeist",
+  "nameEn": "Poltergeist",
+  "evidence": [
+    "spiritbox",
+    "uv",
+    "writing"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Sa vitesse est normale : en chasse, ce sont les objets projetés en rafale qui le trahissent."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
+      "Son explosion d'objets fait perdre 2 % de santé par objet lancé aux joueurs proches, ce qui peut avancer ses chasses."
+    ]
+  },
+  "summary": "Entité obsédée par les objets : elle en lance beaucoup, plus vite et plus loin, et peut en projeter plusieurs d'un coup.",
+  "keyTells": [
+    "En chasse, lance un objet toutes les 0,5 s, avec plus de force",
+    "« Explosion » : projette plusieurs objets d'un coup (-2 % de santé par objet)",
+    "Lance les objets plus vite et plus loin, et interagit plus souvent"
+  ],
+  "tells": [
+    {
+      "text": "Pendant les chasses, le Poltergeist lance un objet toutes les 0,5 s, avec une force accrue.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "A plus de chances de lancer des objets et d'interagir avec eux.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Peut lancer les objets plus vite et plus loin.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Explosion de Poltergeist : lance plusieurs objets en même temps, ce qui fait baisser de 2 % par objet lancé la santé mentale des joueurs proches.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Pose plusieurs objets en ligne sur le sol, là où l'entité devrait passer pendant une chasse. Si tous les objets sont projetés, et loin, c'est un Poltergeist.",
+      "definitive": true
+    },
+    {
+      "text": "Pose plusieurs objets proches les uns des autres (pas empilés), en « tas », dans la pièce favorite. Si tous les objets, ou une bonne partie, sont projetés en même temps, c'est un Poltergeist.",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [],
+  "confusions": [
+    {
+      "with": "phantom",
+      "why": "Spirit Box + UV en commun. Le Fantôme disparaît quand tu le prends en photo et reste presque invisible en chasse ; il n'a pas d'activité d'objets particulière. 3e preuve : D.O.T.S vs écriture."
+    },
+    {
+      "with": "spirit",
+      "why": "Spirit Box + écriture en commun. L'Esprit a une activité d'objets ordinaire ; sa signature est le délai de 180 s après l'encens. 3e preuve : EMF 5 vs UV."
+    },
+    {
+      "with": "mare",
+      "why": "Spirit Box + écriture en commun. Le Cauchemar joue surtout avec les lumières (il les éteint, fait éclater les ampoules, ne les rallume jamais) et chasse dès 60 % dans le noir. 3e preuve : orbes vs UV."
+    },
+    {
+      "with": "demon",
+      "why": "UV + écriture en commun. Le Démon chasse tôt (70 % normalement, voire à n'importe quel seuil), peut rechasser 60 s après l'encens, et la portée du crucifix est augmentée de 50 % contre lui. 3e preuve : températures glaciales vs Spirit Box."
+    },
+    {
+      "with": "myling",
+      "why": "UV + écriture en commun. En chasse, les pas et la voix du Myling ne s'entendent pas au-delà de 12 m et il produit plus de sons au microphone parabolique. 3e preuve : EMF 5 vs Spirit Box."
+    },
+    {
+      "with": "moroi",
+      "why": "Spirit Box + écriture en commun. Le Moroï maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs UV."
+    },
+    {
+      "with": "deogen",
+      "why": "Spirit Box + écriture en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, chasse à 40 % et peut respirer fort dans la Spirit Box. 3e preuve : D.O.T.S vs UV."
+    },
+    {
+      "with": "the-twins",
+      "why": "Les Jumeaux peuvent faire deux interactions en même temps, à deux endroits éloignés ; l'explosion du Poltergeist projette plusieurs objets autour d'un même point. Une seule preuve en commun (Spirit Box)."
+    },
+    {
+      "with": "gallu",
+      "why": "Spirit Box + UV en commun. Le Gallu change de vitesse et de seuil de chasse selon son état (encens, sel, crucifix) ; il n'a pas d'activité d'objets particulière connue. 3e preuve : EMF 5 vs écriture."
+    },
+    {
+      "with": "obambo",
+      "why": "UV + écriture en commun. L'Obambo alterne entre un état calme et un état agressif selon un minuteur. 3e preuve : D.O.T.S vs Spirit Box."
+    },
+    {
+      "with": "kormos",
+      "why": "Spirit Box + UV en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : orbes vs écriture."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Spirit Box + UV en commun, et le Mimic peut imiter le comportement du Poltergeist. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; 3e vraie preuve : températures glaciales vs écriture."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Plusieurs objets que tu avais posés en tas dans la pièce sont projetés tous en même temps.",
+      "kind": "interaction",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant la chasse, tous les objets que tu avais alignés au sol sur son passage sont projetés, et loin.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant la chasse, tu entends des objets voler en rafale, à intervalles très rapprochés.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Les objets lancés par l'entité partent particulièrement vite et atterrissent loin.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Ta santé mentale baisse d'un coup juste après que plusieurs objets ont été projetés près de toi.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "L'entité touche très souvent aux objets de la pièce, bien plus que d'habitude.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Que fait le Poltergeist avec les objets pendant une chasse ?",
+      "choices": [
+        "Il ne lance plus aucun objet",
+        "Il lance un objet toutes les 0,5 s, avec plus de force",
+        "Il éteint toutes les lumières sur son passage",
+        "Il ne lance des objets que vers sa cible"
+      ],
+      "answer": 1,
+      "explain": "En chasse, le Poltergeist lance un objet toutes les 0,5 s avec une force accrue : aligne des objets sur son trajet pour le voir."
+    },
+    {
+      "q": "Combien de santé mentale fait perdre l'explosion de Poltergeist aux joueurs proches ?",
+      "choices": [
+        "10 % d'un coup",
+        "25 % d'un coup",
+        "0,5 % par seconde",
+        "2 % par objet lancé"
+      ],
+      "answer": 3,
+      "explain": "Chaque objet projeté par l'explosion retire 2 % de santé aux joueurs proches. 25 % d'un coup, c'est le Djinn ; 0,5 % par seconde, le Fantôme ; 10 %, un événement standard."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Poltergeist ?",
+      "choices": [
+        "Spirit Box, Ultraviolet, Écriture fantomatique",
+        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
+        "EMF niveau 5, Spirit Box, Écriture fantomatique",
+        "Ultraviolet, Écriture fantomatique, Températures glaciales"
+      ],
+      "answer": 0,
+      "explain": "Spirit Box + UV + écriture. Les leurres sont le Fantôme, l'Esprit et le Démon, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Quel test confirme le mieux un Poltergeist ?",
+      "choices": [
+        "Poser du sel et vérifier qu'il n'est pas perturbé",
+        "Allumer la lumière et voir si elle s'éteint aussitôt",
+        "Poser plusieurs objets en tas dans sa pièce et voir s'ils sont projetés en même temps",
+        "Encenser l'entité et chronométrer 180 s"
+      ],
+      "answer": 2,
+      "explain": "L'explosion d'objets est propre au Poltergeist. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, les 180 s après l'encens l'Esprit."
+    },
+    {
+      "q": "Tu as Spirit Box + écriture, et plusieurs objets posés en tas sont projetés d'un coup. Parmi ces entités, laquelle est la bonne ?",
+      "choices": [
+        "Esprit",
+        "Cauchemar",
+        "Deogen",
+        "Poltergeist"
+      ],
+      "answer": 3,
+      "explain": "Les quatre ont Spirit Box + écriture, mais seule l'explosion de Poltergeist projette plusieurs objets en même temps."
+    }
+  ],
+  "changes": [
+    "Nouvelles entités partageant deux preuves : Gallu (Spirit Box + UV) et Obambo (UV + écriture), toutes deux en décembre 2025 (v0.15.1.0), puis Kormos (Spirit Box + UV, mai 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_known_bugs_poltergeist",
+    "tybayn wiki: wiki_los_normal_p1",
+    "https://progameguides.com/phasmophobia/how-to-identify-a-poltergeist-in-phasmophobia-all-evidence-and-tips/",
+    "https://www.destructoid.com/how-to-identify-an-obambo-in-phasmophobia/",
+    "https://www.destructoid.com/how-to-identify-a-kormos-in-phasmophobia/"
+  ],
+  "uncertain": [
+    "Aucun changement direct du Poltergeist n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
+    "Le rythme d'un objet toutes les 0,5 s en chasse vient de tybayn ; une seule source tierce le recoupe."
+  ]
+}

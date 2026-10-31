@@ -1,0 +1,137 @@
+{
+  "id": "onryo",
+  "name": "Onryo",
+  "nameEn": "Onryo",
+  "evidence": ["spiritbox", "orbs", "freezing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard de 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+    ]
+  },
+  "huntSanity": {
+    "normal": 60,
+    "low": 60,
+    "high": 100,
+    "summary": "60 % · n'importe quel niveau via sa capacité",
+    "details": [
+      "Chasse normalement à partir de 60 % de santé mentale moyenne.",
+      "Sa capacité lui permet de tenter une chasse à n'importe quel niveau de santé mentale après chaque 3e flamme éteinte."
+    ]
+  },
+  "summary": "Une entité liée au feu : chaque 3e flamme soufflée déclenche une tentative de chasse, et une flamme allumée près d'elle bloque ses chasses comme un crucifix.",
+  "keyTells": [
+    "Tente de chasser à n'importe quelle santé mentale après chaque 3e flamme éteinte",
+    "Une flamme à moins de 4 m agit comme un crucifix : elle la souffle au lieu de chasser",
+    "Utilise les flammes en priorité sur les crucifix pour empêcher ses chasses",
+    "Seuil de chasse normal à 60 %"
+  ],
+  "tells": [
+    { "text": "Tentera de chasser à n'importe quel niveau de santé mentale après avoir éteint chaque 3e flamme.", "zeroEvidence": true }
+  ],
+  "behaviors": [
+    { "text": "Les flammes agissent comme des crucifix : si l'entité tente de chasser à moins de 4 m d'une flamme, elle la souffle à la place. Elle donne la priorité aux flammes sur les crucifix pour empêcher une chasse.", "zeroEvidence": true },
+    { "text": "Plus il y a de joueurs morts, plus elle a de chances d'éteindre une flamme.", "zeroEvidence": true },
+    { "text": "Contrairement au texte du journal, elle n'évite pas les flammes et ne s'en éloigne pas : elle souffle simplement une flamme au lieu d'utiliser un crucifix quand elle tente de chasser à portée.", "zeroEvidence": false },
+    { "text": "Règles générales des lumières à feu : après le premier allumage, aucune entité ne peut tenter de l'éteindre pendant 30 s ; ensuite, chaque allumage applique un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais grâce à ses mécanismes de prévention de chasse.", "zeroEvidence": false },
+    { "text": "Une fois le délai écoulé, toute entité a 66,67 % de chances (2 sur 3) de souffler une lumière à feu allumée à moins de 5 m. Une lumière à feu de rang II (trois bougies) est soufflée dans environ 96,30 % des cas, mais compte pour une seule flamme pour l'Onryo.", "zeroEvidence": false },
+    { "text": "Souffler une lumière à feu produit un EMF 2 (ou 5) et un bruit d'extinction ; les rangs I et II dégagent aussi de la fumée. Les flammes soufflées pendant une chasse comptent aussi pour le compteur de l'Onryo. Les entités ne peuvent pas rallumer une lumière à feu.", "zeroEvidence": false }
+  ],
+  "abilities": [
+    { "text": "Pour utiliser sa capacité, elle doit éteindre la flamme en dehors d'une chasse, puis terminer un état d'inactivité hors d'un minuteur d'encens ou d'un temps de recharge de chasse. Ces conditions sont généralement réunies, d'où la tentative de chasse observée après chaque 3e flamme éteinte.", "zeroEvidence": true },
+    { "text": "Le compteur se réinitialise quand une tentative de chasse due à la capacité a lieu, ou quand il atteint 3 pendant qu'un minuteur d'encens est actif ou que la flamme est éteinte pendant une chasse.", "zeroEvidence": false },
+    { "text": "Si un crucifix, une bougie ou le minuteur de préparation annule la chasse, cela se produit après que la capacité a déjà réinitialisé le compteur et tenté de lancer la chasse.", "zeroEvidence": false },
+    { "text": "Si la flamme est éteinte pendant un temps de recharge de chasse, la chasse de la capacité est retardée jusqu'à la fin de ce temps de recharge ; les flammes soufflées pendant ce délai ne comptent pas pour le cycle suivant.", "zeroEvidence": false },
+    { "text": "Si tu l'encenses après que le compteur a atteint 3 mais avant qu'elle utilise sa capacité, celle-ci est retardée plutôt que réinitialisée : des encens répétés peuvent la repousser de plusieurs minutes.", "zeroEvidence": false }
+  ],
+  "confirmationTests": [
+    { "text": "Si ta santé mentale est au-dessus de 75 % : pose une bougie sur un crucifix de rang 1 ou 2. Si le crucifix est utilisé après que la bougie a été éteinte 3 fois, ça pourrait être un Onryo.", "definitive": false },
+    { "text": "Si ta santé mentale est sous 35 % : place une ou plusieurs bougies dans la pièce de l'entité et garde-les allumées en permanence. Si l'entité n'a ni chassé ni utilisé de crucifix au bout d'un long moment, ça pourrait être un Onryo.", "definitive": false }
+  ],
+  "eliminationTests": [
+    { "text": "Pose une bougie sur un crucifix (attention : le crucifix de rang 3 a une portée plus grande que la bougie pour empêcher une chasse d'Onryo, il te faudra peut-être plusieurs bougies pour tout couvrir). Si le crucifix est utilisé alors que la bougie est encore allumée, ce n'est pas un Onryo." }
+  ],
+  "confusions": [
+    { "with": "the-mimic", "why": "Le Mimic montre de faux orbes en plus de la Spirit Box, de l'UV et des glaciales : Spirit Box + orbes + glaciales peut donc être un Mimic. Trouver de l'UV exclut l'Onryo." },
+    { "with": "mare", "why": "Même Spirit Box + orbes, mais le Cauchemar a l'écriture au lieu des glaciales ; il chasse dès 60 % si la lumière de la pièce où il se trouve est éteinte (40 % si elle est allumée), éteint vite les lumières que tu allumes près de lui et ne peut pas en allumer." },
+    { "with": "yokai", "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu des glaciales ; il peut chasser jusqu'à 80 % si tu parles dans sa pièce et, en chasse, ne t'entend qu'à 2,5 m." },
+    { "with": "dayan", "why": "Même Spirit Box + orbes, mais la Dayan a l'EMF 5 au lieu des glaciales ; à moins de 10 m, sa vitesse et son seuil dépendent de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile). Elle est toujours de sexe féminin." },
+    { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu des glaciales ; quasi aveugle, il te repère à tes pas et peut chasser plus tôt si un joueur sprinte près de lui." },
+    { "with": "the-twins", "why": "Même Spirit Box + glaciales, mais Les Jumeaux ont l'EMF 5 au lieu des orbes ; leur vitesse de chasse est de ~1,5 ou ~1,9 m/s selon la chasse et ils peuvent faire deux interactions en même temps." },
+    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroï a l'écriture au lieu des orbes ; il maudit ceux qui l'entendent à la Spirit Box ou au micro parabolique et devient plus rapide quand la santé mentale baisse." },
+    { "with": "hantu", "why": "Mêmes orbes + glaciales, mais le Hantu a l'UV au lieu de la Spirit Box ; il souffle une buée glacée en chasse disjoncteur coupé et sa vitesse dépend de la température, sans accélération en LdV." },
+    { "with": "revenant", "why": "Mêmes orbes + glaciales, mais le Revenant a l'écriture au lieu de la Spirit Box ; il rampe à 1,0 m/s tant qu'il ne te détecte pas, puis fonce à 3,0 m/s." },
+    { "with": "yurei", "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S au lieu de la Spirit Box ; il peut claquer une porte en faisant perdre 15 % de santé mentale, et l'encens le piège dans sa pièce pendant 90 s." },
+    { "with": "demon", "why": "Le Démon peut lui aussi chasser très tôt (70 %, et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo." }
+  ],
+  "observations": [
+    { "text": "Juste après qu'une troisième bougie a été soufflée, une chasse démarre alors que toute l'équipe est encore presque à 100 % de santé mentale.", "kind": "hunt", "strength": "strong" },
+    { "text": "Le crucifix posé sous une bougie allumée reste intact ; il ne brûle qu'une fois la bougie soufflée à plusieurs reprises.", "kind": "interaction", "strength": "strong" },
+    { "text": "La bougie posée près de l'entité s'éteint d'un coup, et aucune chasse ne démarre alors que l'équipe est bien sous le seuil.", "kind": "interaction", "strength": "hint" },
+    { "text": "Les chasses commencent alors que la santé mentale moyenne est encore autour de 60 %.", "kind": "hunt", "strength": "hint" },
+    { "text": "Plus tes coéquipiers meurent, plus les bougies et les lumières à feu sont soufflées souvent.", "kind": "behavior", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "Après combien de flammes éteintes l'Onryo tente-t-il une chasse grâce à sa capacité ?",
+      "choices": ["Après chaque 3e flamme", "Après chaque flamme", "Une seule fois, après les 3 premières", "Après 5 flammes"],
+      "answer": 0,
+      "explain": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée, puis le compteur repart. Ce n'est ni à chaque flamme ni une seule fois dans la partie."
+    },
+    {
+      "q": "Quel est le seuil de chasse normal de l'Onryo ?",
+      "choices": ["60 %", "50 %", "70 %", "35 %"],
+      "answer": 0,
+      "explain": "L'Onryo chasse normalement dès 60 %. 50 % est le seuil standard, 70 % celui du Démon et 35 % celui de l'Ombre."
+    },
+    {
+      "q": "Que fait un Onryo qui tente de chasser à moins de 4 m d'une flamme allumée ?",
+      "choices": ["Il souffle la flamme au lieu de chasser", "Il s'éloigne de la flamme pour chasser ailleurs", "Il chasse quand même, mais plus lentement", "Il brûle d'abord le crucifix, puis souffle la flamme"],
+      "answer": 0,
+      "explain": "Pour l'Onryo, une flamme agit comme un crucifix, et il l'utilise en priorité. Il n'évite pas activement les flammes : c'est une idée reçue tirée du journal."
+    },
+    {
+      "q": "Une bougie est posée sur un crucifix de rang 1. Le crucifix brûle alors que la bougie est encore allumée. Que peux-tu en conclure ?",
+      "choices": ["Ce n'est pas un Onryo", "C'est un Onryo", "C'est forcément un Démon", "Le test ne prouve rien"],
+      "answer": 0,
+      "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo, sans pour autant prouver qu'il s'agit d'un Démon."
+    },
+    {
+      "q": "Tu as Spirit Box, orbes et températures glaciales. Quelle autre entité que l'Onryo peut afficher ces trois preuves ?",
+      "choices": ["Le Mimic", "Le Hantu", "Le Cauchemar", "Le Yokai"],
+      "answer": 0,
+      "explain": "Le Mimic a Spirit Box, UV et glaciales, et affiche toujours de faux orbes. Le Hantu n'a pas la Spirit Box, et ni le Cauchemar ni le Yokai n'ont de glaciales."
+    },
+    {
+      "q": "Que se passe-t-il si tu encenses un Onryo après que son compteur a atteint 3, mais avant qu'il utilise sa capacité ?",
+      "choices": ["La capacité est retardée, pas réinitialisée", "Le compteur repart à zéro", "Il chasse immédiatement", "Rien : l'encens n'a aucun effet sur lui"],
+      "answer": 0,
+      "explain": "L'encens repousse la chasse de la capacité sans remettre le compteur à zéro ; en encensant à répétition, tu peux la retarder de plusieurs minutes."
+    }
+  ],
+  "changes": [
+    "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé dans les mises à jour 2025–2026.",
+    "Le wiki tybayn actuel détaille la mécanique de la capacité (conditions, réinitialisation du compteur, retard par l'encens) et des lumières à feu (30 s puis 20–80 s de délai, 66,67 % de chances de souffle à moins de 5 m) : ce sont des précisions documentaires, pas un patch identifié."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_onryo_ability_p1 à p9",
+    "tybayn wiki: wiki_misconceptions_onryo_1_r",
+    "tybayn wiki: wiki_misconceptions_onryo_2_r",
+    "https://phasmopedia.com/en/ghosts/onryo/",
+    "https://allthings.how/phasmophobia-how-to-identify-the-onryo/",
+    "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/"
+  ],
+  "uncertain": [
+    "Aucune note de patch 2025–2026 ne mentionne l'Onryo ; un ajustement mineur non documenté n'est pas exclu.",
+    "La portée de 4 m (flamme qui empêche une chasse) vient de la sauvegarde 2024 ; le wiki actuel ne donne que la portée de 5 m du souffle normal des lumières à feu."
+  ]
+}

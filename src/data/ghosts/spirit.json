@@ -1,0 +1,239 @@
+{
+  "id": "spirit",
+  "name": "Esprit",
+  "nameEn": "Spirit",
+  "evidence": [
+    "emf",
+    "spiritbox",
+    "writing"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : sa vitesse augmente progressivement pendant 13 s de ligne de vue continue, jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s).",
+      "Après avoir perdu la LdV, elle garde cette vitesse jusqu'à la dernière position connue du joueur, puis ralentit très progressivement.",
+      "Aucune particularité de vitesse : en chasse, rien ne la distingue d'une entité standard."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
+      "Sa particularité ne porte pas sur le seuil mais sur le délai après l'encens : 180 s au lieu de 90 s."
+    ]
+  },
+  "summary": "Entité sans comportement visible particulier : sa seule vraie signature est d'attendre 180 s avant de pouvoir rechasser après avoir été encensée.",
+  "keyTells": [
+    "Encensée, elle ne peut pas rechasser avant 180 s (90 s pour une entité standard)",
+    "Si elle chasse moins de 180 s après l'encens, ce n'est pas un Esprit",
+    "Double encens (2e à 150–170 s) puis chasse en moins de 60 s : c'est un Esprit"
+  ],
+  "tells": [
+    {
+      "text": "Attend 180 s après avoir été encensée avant de tenter une nouvelle chasse, au lieu des 90 s standard.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Après avoir encensé l'entité une première fois, attends 150 à 170 s puis encense-la de nouveau (ce qui lance un nouveau minuteur d'encens). Si l'entité chasse dans les 60 s qui suivent le second encensement (le plus tôt qu'un Démon pourrait chasser), c'est un Esprit. Attention : ce test peut échouer si l'entité n'a pas vraiment été touchée par l'encens la seconde fois.",
+      "definitive": true
+    },
+    {
+      "text": "Si l'entité ne rechasse pas pendant 180 s après l'encens, c'est compatible avec un Esprit, mais ça ne prouve rien : n'importe quelle entité peut attendre aussi longtemps, seul l'Esprit y est obligé.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Lance un chrono dès que l'entité a été encensée. Si elle chasse avant 180 s, ce n'est pas un Esprit."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "demon",
+      "why": "Les deux se testent au chrono après l'encens : le Démon peut rechasser dès 60 s, une entité standard dès 90 s, l'Esprit seulement après 180 s. Une seule preuve en commun (écriture) : le Démon a UV et températures glaciales, l'Esprit EMF 5 et Spirit Box."
+    },
+    {
+      "with": "wraith",
+      "why": "EMF 5 + Spirit Box en commun. Le Spectre ne perturbe jamais le sel (et n'est pas ralenti par le sel de rang 3) ; l'Esprit le perturbe normalement. 3e preuve : D.O.T.S pour le Spectre, écriture pour l'Esprit."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Spirit Box + écriture en commun. Le Poltergeist lance énormément d'objets (un toutes les 0,5 s en chasse, plusieurs d'un coup) ; l'Esprit a une activité d'objets ordinaire. 3e preuve : UV pour le Poltergeist, EMF 5 pour l'Esprit."
+    },
+    {
+      "with": "mare",
+      "why": "Spirit Box + écriture en commun. Le Cauchemar chasse dès 60 % quand sa pièce est dans le noir (40 % lumière allumée) et éteint aussitôt une lumière que tu allumes près de lui ; l'Esprit chasse à 50 % quelle que soit la lumière. 3e preuve : orbes vs EMF 5."
+    },
+    {
+      "with": "shade",
+      "why": "EMF 5 + écriture en commun. L'Ombre ne chasse pas avant 35 % et jamais dans une pièce où se trouve un joueur ; l'Esprit chasse à 50 %. 3e preuve : températures glaciales vs Spirit Box."
+    },
+    {
+      "with": "myling",
+      "why": "EMF 5 + écriture en commun. En chasse, les pas et la voix du Myling ne s'entendent pas au-delà de 12 m (20 m normalement) et il produit plus de sons au microphone parabolique. 3e preuve : UV vs Spirit Box."
+    },
+    {
+      "with": "the-twins",
+      "why": "EMF 5 + Spirit Box en commun. Les Jumeaux chassent à environ 1,5 ou 1,9 m/s selon le jumeau (±10 %) et peuvent faire deux interactions en même temps à des endroits différents ; l'Esprit reste à 1,7 m/s. 3e preuve : températures glaciales vs écriture."
+    },
+    {
+      "with": "moroi",
+      "why": "Spirit Box + écriture en commun. Le Moroï maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
+    },
+    {
+      "with": "deogen",
+      "why": "Spirit Box + écriture en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, chasse à 40 % et peut respirer fort dans la Spirit Box. 3e preuve : D.O.T.S vs EMF 5."
+    },
+    {
+      "with": "gallu",
+      "why": "EMF 5 + Spirit Box en commun. Le Gallu change d'état quand tu l'encenses, qu'il marche dans le sel ou qu'il utilise un crucifix : 1,96 m/s et seuil de 60 % (enragé), puis 1,36 m/s et 40 % (affaibli). L'Esprit garde 1,7 m/s et 50 %. 3e preuve : UV vs écriture."
+    },
+    {
+      "with": "dayan",
+      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; l'Esprit garde une vitesse standard. 3e preuve : orbes vs écriture."
+    },
+    {
+      "with": "deildegast",
+      "why": "EMF 5 + écriture en commun. Le Deildegast chasse jusqu'à 3,0 m/s et ralentit de 0,1 m/s par objet différent manipulé par les joueurs depuis la dernière chasse ; l'Esprit reste à 1,7 m/s. 3e preuve : D.O.T.S vs Spirit Box."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans aucun objet maudit utilisé, elle lance une chasse moins d'une minute après ce second encensement.",
+      "kind": "tell",
+      "strength": "definitive"
+    },
+    {
+      "text": "Après que tu l'as encensée, l'entité ne relance aucune chasse pendant au moins 3 minutes, alors que la santé de l'équipe est basse.",
+      "kind": "tell",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "La première chasse arrive alors que la santé mentale moyenne de l'équipe est à 50 % ou moins, sans objet maudit.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "L'entité est passée sur ton tas de sel : il est perturbé.",
+      "kind": "interaction",
+      "strength": "hint"
+    },
+    {
+      "text": "Pendant la chasse, l'entité clignote de façon tout à fait ordinaire : ni presque invisible, ni plus visible que d'habitude.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Tu prends l'entité en photo pendant un événement : elle reste visible et apparaît bien sur la photo, classée comme photo de l'entité dans le journal.",
+      "kind": "event",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Combien de temps un Esprit doit-il attendre après avoir été encensé avant de pouvoir rechasser ?",
+      "choices": [
+        "90 s",
+        "180 s",
+        "60 s",
+        "120 s"
+      ],
+      "answer": 1,
+      "explain": "L'Esprit doit attendre 180 s, contre 90 s pour une entité standard et 60 s pour un Démon."
+    },
+    {
+      "q": "Tu encenses l'entité et elle chasse 150 s plus tard. Que peux-tu en conclure ?",
+      "choices": [
+        "C'est forcément un Démon",
+        "C'est forcément un Esprit",
+        "Ce n'est pas un Esprit",
+        "Rien : l'encens ne change pas le délai avant la chasse suivante"
+      ],
+      "answer": 2,
+      "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Ce n'est pas pour autant un Démon : une entité standard peut rechasser dès 90 s."
+    },
+    {
+      "q": "Quelles sont les trois preuves de l'Esprit ?",
+      "choices": [
+        "EMF niveau 5, Spirit Box, Écriture fantomatique",
+        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
+        "Spirit Box, Ultraviolet, Écriture fantomatique",
+        "Spirit Box, Orbes fantomatiques, Écriture fantomatique"
+      ],
+      "answer": 0,
+      "explain": "EMF 5 + Spirit Box + écriture. Les leurres sont le Spectre, le Poltergeist et le Cauchemar, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Tu hésites entre un Esprit et un Spectre (EMF 5 + Spirit Box). Quel test simple les départage sans troisième preuve ?",
+      "choices": [
+        "Mesurer la vitesse de chasse : l'Esprit est plus rapide",
+        "Écouter au microphone parabolique pour un cri unique",
+        "Allumer la lumière de sa pièce et voir si elle l'éteint",
+        "Poser du sel sur son passage : le Spectre ne le perturbe jamais"
+      ],
+      "answer": 3,
+      "explain": "Le Spectre ne touche jamais au sel ; l'Esprit le perturbe normalement. Les deux chassent à 1,7 m/s ; le cri au microphone parabolique est propre à la Banshee et l'extinction immédiate de la lumière évoque le Cauchemar."
+    },
+    {
+      "q": "À quel seuil de santé mentale moyenne un Esprit peut-il chasser ?",
+      "choices": [
+        "35 %",
+        "60 %",
+        "50 %",
+        "70 %"
+      ],
+      "answer": 2,
+      "explain": "L'Esprit a le seuil standard de 50 %. 35 % correspond à l'Ombre, 60 % à l'Onryo (ou au Cauchemar dans le noir), 70 % au seuil habituel du Démon."
+    },
+    {
+      "q": "Pour le test du double encensement, quand fais-tu le second encensement ?",
+      "choices": [
+        "Entre 150 et 170 s après le premier",
+        "Entre 30 et 50 s après le premier",
+        "Entre 60 et 80 s après le premier",
+        "Plus de 200 s après le premier"
+      ],
+      "answer": 0,
+      "explain": "On encense une deuxième fois 150 à 170 s après le premier, puis on regarde si l'entité chasse dans les 60 s qui suivent : si oui, c'est un Esprit."
+    }
+  ],
+  "changes": [
+    "Nouvelles entités partageant deux preuves avec l'Esprit : Gallu et Dayan (EMF 5 + Spirit Box, Winter's Jest v0.15.1.0, 16 décembre 2025) et Deildegast (EMF 5 + écriture, v0.18.0.0, 21 juillet 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_misconceptions_spirit_1_c",
+    "tybayn wiki: wiki_misconceptions_spirit_1_r",
+    "tybayn wiki: wiki_xp_grinding_p10",
+    "tybayn wiki: wiki_los_p1",
+    "tybayn wiki: wiki_los_normal_p1",
+    "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/",
+    "https://kineticgames.co.uk/news/phasmophobia-winters-jest-v01510",
+    "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
+  ],
+  "uncertain": [
+    "Aucun changement de preuves, de vitesse, de seuil ou de capacité de l'Esprit n'a été trouvé dans les notes de patch 2025–2026 consultées (via recherche, pages de patch non lisibles en entier).",
+    "Les délais après encens des entités ajoutées en 2025–2026 (Gallu, Dayan, Obambo, Aswang, Kormos, Deildegast) ne sont pas documentés : le test du double encensement, jugé définitif par tybayn, n'a pas été revérifié face à elles.",
+    "Le test du double encensement suppose qu'aucun objet maudit ne force de chasse pendant la fenêtre de 60 s (une chasse maudite fausserait le test)."
+  ]
+}

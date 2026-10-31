@@ -1,0 +1,249 @@
+{
+  "id": "obake",
+  "name": "Obake",
+  "nameEn": "Obake",
+  "evidence": ["emf", "uv", "orbs"],
+  "forcedEvidence": "uv",
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : avec 13 s de LdV continue sur toi, il monte jusqu'à 1,65 × sa vitesse de base (environ 2,8 m/s).",
+      "Une fois la LdV rompue, il garde sa vitesse jusqu'à ta dernière position connue, puis la perd très lentement s'il ne te revoit pas."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : il peut chasser dès que la santé mentale moyenne de l'équipe passe sous 50 %.",
+      "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
+    ]
+  },
+  "summary": "Entité métamorphe : pendant les chasses, elle change de modèle le temps d'un clignotement, et ses empreintes UV peuvent être anormales (main à six doigts).",
+  "keyTells": [
+    "Change de modèle le temps d'un seul clignotement pendant les chasses",
+    "Empreintes spéciales : main à 6 doigts, double empreinte sur un interrupteur",
+    "25 % de chances de ne pas laisser d'UV ; empreintes qui disparaissent 2× plus vite",
+    "UV garanti en difficulté Cauchemar et Démence"
+  ],
+  "tells": [
+    {
+      "text": "Peut laisser des empreintes spéciales : une main à 6 doigts (portes, fenêtres, glacières), une double empreinte digitale (interrupteurs, au lieu d'une seule) ou 5 empreintes digitales (claviers, portes de cellule, au lieu de 4).",
+      "zeroEvidence": false
+    },
+    {
+      "text": "A 25 % de chances de ne pas laisser de preuve UV lors d'une interaction.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Change de modèle le temps d'un seul clignotement pendant les chasses, au moins une fois par chasse de durée normale. Les changements tombent sur des clignotements prédéterminés (12e, 27e, 39e, 54e, 62e, 80e, 105e, 120e et 132e) : une chasse plus courte qu'environ 8 s n'en contient donc pas forcément.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Les transformations suivent un ordre fixe qui ne se réinitialise pas entre les chasses. Modèles masculins : Boucher, Batte / Pêcheur, Barbe grise, Nu, Nerd, Squelette, Brute (puis on recommence). Modèles féminins : Enfant, Grand-mère, Patient 07, Femme (puis on recommence). Un modèle masculin ne devient que d'autres modèles masculins, et inversement.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Quand son propre modèle est le suivant dans l'ordre, il se transforme en lui-même : ça se voit en général par une posture qui se réinitialise d'un coup.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [
+    {
+      "text": "Peut faire disparaître les empreintes deux fois plus vite.",
+      "zeroEvidence": false
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Trouve un endroit où tu peux faire tourner l'entité en boucle tout en gardant son modèle en vue en permanence. Si, pendant la boucle, tu vois le modèle changer le temps d'un seul clignotement, c'est un Obake.",
+      "definitive": true
+    },
+    {
+      "text": "Passe la lampe UV sur les portes, fenêtres, glacières, interrupteurs et claviers touchés par l'entité. Une main à 6 doigts, une double empreinte sur un interrupteur (au lieu d'une) ou 5 empreintes sur un clavier ou une porte de cellule (au lieu de 4) désignent l'Obake (ou un Mimic en train de l'imiter, qui a lui aussi l'UV).",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité n'accélère pas du tout alors qu'elle te garde en LdV pendant plusieurs secondes, ce n'est pas un Obake."
+    },
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Obake."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic peut copier la transformation de l'Obake (et, comme il a l'UV, ses empreintes spéciales en l'imitant). Mais il ne donne jamais l'EMF niveau 5 : si tu as l'EMF 5, ce n'est pas le Mimic ; s'il y a Spirit Box ou Températures glaciales, ce n'est pas l'Obake."
+    },
+    {
+      "with": "banshee",
+      "why": "Banshee : Ultraviolet + Orbes aussi, mais Projecteur D.O.T.S au lieu de l'EMF 5. Elle ne poursuit que sa cible et peut pousser un cri unique au micro parabolique ; l'Obake, lui, se transforme pendant les chasses."
+    },
+    {
+      "with": "hantu",
+      "why": "Hantu : Ultraviolet + Orbes, mais Températures glaciales au lieu de l'EMF 5. Pas d'accélération en LdV, plus rapide dans les pièces froides et souffle visible en chasse quand le disjoncteur est coupé."
+    },
+    {
+      "with": "kormos",
+      "why": "Kormos : Ultraviolet + Orbes, mais Spirit Box au lieu de l'EMF 5. Quasi aveugle en chasse : il ne te repère pas si tu restes immobile et silencieux, alors que l'Obake te voit normalement."
+    },
+    {
+      "with": "jinn",
+      "why": "Djinn : EMF 5 + Ultraviolet, mais Températures glaciales au lieu des Orbes. Disjoncteur allumé, il fonce à 2,5 m/s quand il te voit à plus de 3 m et peut faire chuter la santé de 25 %."
+    },
+    {
+      "with": "goryo",
+      "why": "Goryo : EMF 5 + Ultraviolet, mais D.O.T.S au lieu des Orbes ; ses D.O.T.S ne se voient qu'à la caméra, sans personne dans la pièce, et il quitte rarement sa pièce."
+    },
+    {
+      "with": "myling",
+      "why": "Myling : EMF 5 + Ultraviolet, mais Écriture au lieu des Orbes ; en chasse, ses pas et sa voix ne s'entendent qu'à 12 m (au lieu de 20 m)."
+    },
+    {
+      "with": "gallu",
+      "why": "Gallu : EMF 5 + Ultraviolet, mais Spirit Box au lieu des Orbes. Il change d'état quand il marche dans le sel, est encensé ou utilise un crucifix, ce qui change sa vitesse (1,96 m/s enragé, 1,36 m/s affaibli)."
+    },
+    {
+      "with": "raiju",
+      "why": "Raiju : EMF 5 + Orbes, mais D.O.T.S au lieu de l'UV ; 2,5 m/s près de l'électronique active et peut chasser à 65 % près de l'équipement."
+    },
+    {
+      "with": "dayan",
+      "why": "Dayan : EMF 5 + Orbes, mais Spirit Box au lieu de l'UV ; à moins de 10 m d'un joueur, sa vitesse dépend de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu es immobile)."
+    },
+    {
+      "with": "oni",
+      "why": "Autre entité reconnaissable à son clignotement : l'Oni est plus visible que les autres pendant les chasses, mais il ne change jamais de modèle."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant une chasse, au détour d'un clignotement, l'entité prend l'apparence d'un autre modèle du même genre l'espace d'un instant, puis reprend la sienne.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Lors d'un clignotement en chasse, la posture de l'entité se réinitialise d'un coup, sans que son apparence change.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "En chasse, l'entité démarre à vitesse normale puis accélère progressivement tant qu'elle te garde en vue.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "La première chasse survient alors que la santé mentale moyenne vient de passer sous 50 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves de l'Obake ?",
+      "choices": [
+        "EMF niveau 5, Ultraviolet, Projecteur D.O.T.S",
+        "EMF niveau 5, Ultraviolet, Orbes fantomatiques",
+        "Ultraviolet, Orbes fantomatiques, Températures glaciales",
+        "EMF niveau 5, Orbes fantomatiques, Projecteur D.O.T.S"
+      ],
+      "answer": 1,
+      "explain": "L'Obake donne EMF 5, Ultraviolet et Orbes. Les autres combinaisons sont celles du Goryo, du Hantu et du Raiju."
+    },
+    {
+      "q": "Pendant une chasse, combien de temps faut-il environ pour être sûr que l'Obake se soit transformé au moins une fois ?",
+      "choices": [
+        "Environ 8 s (12e clignotement)",
+        "Dès le tout premier clignotement",
+        "Environ 30 s",
+        "Ce n'est jamais garanti : 25 % de chances par clignotement"
+      ],
+      "answer": 0,
+      "explain": "Les transformations tombent sur des clignotements fixes : 12, 27, 39, 54… La première arrive au 12e clignotement, soit environ 8 s de chasse."
+    },
+    {
+      "q": "En difficulté Cauchemar ou Démence, quelle preuve l'Obake donne-t-il toujours ?",
+      "choices": [
+        "EMF niveau 5",
+        "Orbes fantomatiques",
+        "Ultraviolet",
+        "Aucune, toutes peuvent être retirées"
+      ],
+      "answer": 2,
+      "explain": "L'Ultraviolet est garanti en Cauchemar et Démence, malgré ses 25 % de chances de ne pas laisser d'empreinte à chaque interaction."
+    },
+    {
+      "q": "Quelle affirmation sur les empreintes de l'Obake est vraie ?",
+      "choices": [
+        "Ses empreintes durent deux fois plus longtemps que la normale",
+        "Il laisse toujours une main à 6 doigts",
+        "Il a 25 % de chances de ne pas laisser d'empreinte UV lors d'une interaction",
+        "Ses empreintes n'apparaissent que sur les interrupteurs"
+      ],
+      "answer": 2,
+      "explain": "L'Obake peut ne pas laisser d'UV (25 %), peut faire disparaître les empreintes deux fois plus vite et n'a qu'une chance de laisser une empreinte spéciale."
+    },
+    {
+      "q": "Lors de la dernière chasse, la dernière transformation de l'Obake était la Grand-mère. En quoi se transformera-t-il en premier à la chasse suivante ?",
+      "choices": [
+        "L'Enfant",
+        "La Femme",
+        "Le Boucher",
+        "Le Patient 07"
+      ],
+      "answer": 3,
+      "explain": "L'ordre féminin est Enfant, Grand-mère, Patient 07, Femme, et il ne se réinitialise pas entre les chasses : après la Grand-mère vient le Patient 07."
+    },
+    {
+      "q": "Sur quel objet l'Obake peut-il laisser une double empreinte digitale ?",
+      "choices": [
+        "Un interrupteur",
+        "Une porte",
+        "Un clavier",
+        "Une glacière"
+      ],
+      "answer": 0,
+      "explain": "Double empreinte sur les interrupteurs ; main à 6 doigts sur les portes, fenêtres et glacières ; 5 empreintes sur les claviers et portes de cellule."
+    }
+  ],
+  "changes": [
+    "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé pour 2025–2026.",
+    "Chronicle Patch v0.13.1.0 (juillet 2025) : la transformation de l'Obake peut être filmée comme preuve vidéo (« Changement de forme »).",
+    "Winter's Jest v0.15.1.0 (16 décembre 2025) : correction d'un bug majeur qui faisait laisser des empreintes d'Obake à toutes les entités.",
+    "Précision du wiki tybayn actuel : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses.",
+    "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_obake_blinking_*",
+    "tybayn wiki: wiki_obake_fingerprints_*",
+    "tybayn wiki: wiki_flickering_p3",
+    "tybayn wiki: wiki_los_p1, wiki_los_normal_p1",
+    "tybayn wiki: wiki_known_bugs_obake, wiki_known_bugs_mimic",
+    "tybayn wiki: wiki_media_video_a28",
+    "https://kineticgames.co.uk/news/phasmophobia-chronicle-v01310",
+    "https://patched.gg/games/phasmophobia/phasmophobia-winters-jest-v01510",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes",
+    "https://phasmopedia.com/en/ghosts/obake/"
+  ],
+  "uncertain": [
+    "Fréquence des empreintes spéciales : environ 1 sur 6 selon Phasmopedia (dérivé du wiki Fandom), non chiffrée par tybayn.",
+    "On ne sait pas si les clignotements prédéterminés sont un changement de jeu récent ou une simple documentation plus précise d'un comportement existant.",
+    "La mise à jour « Horror 2.0 » annoncée pour 2026 (chasses, événements, interactions) pourrait modifier ces comportements ; sa sortie n'a pas été confirmée.",
+    "Un aperçu des mises à jour « Quality of Life » de 2026 annonce que la transformation compte désormais pour l'objectif « vidéo de l'entité » : version exacte (v0.18.0.0 ou v0.19.0.0) non confirmée dans les notes finales.",
+    "Selon un résumé de patch (mai 2025), l'Obake peut aussi se transformer pendant les événements saisonniers qui remplacent son modèle : non vérifié dans les notes officielles.",
+    "Les valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) viennent de guides web concordants, pas de tybayn, qui ne donne que le nombre d'empreintes de l'Obake."
+  ]
+}

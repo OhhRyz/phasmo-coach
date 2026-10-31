@@ -1,0 +1,255 @@
+{
+  "id": "shade",
+  "name": "Ombre",
+  "nameEn": "Shade",
+  "evidence": ["emf", "writing", "freezing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue ; après avoir perdu la LdV, elle garde cette vitesse jusqu'à ta dernière position connue, puis la perd très lentement."
+    ]
+  },
+  "huntSanity": {
+    "normal": 35,
+    "low": 35,
+    "high": 35,
+    "summary": "35 % · jamais depuis la pièce où tu te trouves",
+    "details": [
+      "Ne chasse pas avant 35 % de santé mentale moyenne.",
+      "Ne lance pas de chasse si elle se trouve dans la même pièce qu'un joueur, que ce soit sa pièce favorite ou non.",
+      "Elle peut en revanche sortir de la pièce et lancer la chasse depuis une pièce adjacente."
+    ]
+  },
+  "summary": "L'entité la plus timide : elle ne fait presque rien quand tu es dans sa pièce, ne chasse pas avant 35 % de santé mentale et préfère se montrer sous forme d'ombre.",
+  "keyTells": [
+    "Seule à apparaître en ombre au cercle, à la boîte à musique ou à la patte de singe",
+    "Aucune interaction, aucun événement, aucune chasse depuis la pièce où tu es",
+    "Seuil de chasse bas : 35 %",
+    "Aucun événement tant que la santé mentale moyenne est à 100 %"
+  ],
+  "tells": [
+    {
+      "text": "Seule entité qui peut apparaître sous forme d'ombre ou de modèle translucide lors de l'événement du cercle d'invocation ; d'après le wiki tybayn actuel, c'est aussi la seule à pouvoir apparaître en ombre pendant les événements de la boîte à musique et de la patte de singe.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Préfère le modèle d'ombre lors des événements.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne chasse pas si elle se trouve dans la même pièce qu'un joueur.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne fait pas d'événement dans la même pièce qu'un joueur (mais elle peut démarrer un événement hors de la pièce et se téléporter jusqu'au joueur).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne fait pas d'interaction donnant EMF 2, EMF 3 ou EMF 5 lorsqu'elle est dans la même pièce que le joueur, y compris l'écriture fantomatique et souffler des flammes (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Ne fait pas d'interaction donnant EMF 2 ou EMF 3 lorsqu'elle est dans la même pièce que le joueur, y compris souffler des flammes (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Fait davantage d'événements quand la santé mentale moyenne est basse (aucun événement possible à 100 % de santé mentale).",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît sous forme d'ombre ou de modèle translucide, c'est une Ombre.",
+      "definitive": true
+    },
+    {
+      "text": "Pendant l'événement de la boîte à musique ou de la patte de singe, si l'entité apparaît sous forme d'ombre, c'est une Ombre.",
+      "definitive": true
+    },
+    {
+      "text": "Une fois la pièce favorite connue, place un crucifix qui couvre toute la pièce et des capteurs de mouvement à toutes ses entrées. Suis la position de l'entité grâce aux capteurs : si elle ne fait rien pendant qu'elle est dans la pièce (alors que tu y es aussi), ça peut être une Ombre.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité fait une interaction ou un événement donnant EMF 2, 3 ou 4 dans la même pièce qu'un joueur, ce n'est pas une Ombre."
+    },
+    {
+      "text": "Si l'entité tente de lancer ou lance une chasse alors qu'elle est dans la même pièce qu'un joueur, ce n'est pas une Ombre."
+    },
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 35 % de santé mentale moyenne (chasse naturelle, sans objet maudit), ce n'est pas une Ombre."
+    },
+    {
+      "text": "Si l'entité fait un événement alors que la santé mentale moyenne est à 100 %, ce n'est pas une Ombre."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "spirit",
+      "why": "Mêmes EMF 5 et écriture. L'Esprit chasse dès 50 %, interagit normalement quand tu es dans sa pièce et attend 180 s après l'encens avant de rechasser."
+    },
+    {
+      "with": "myling",
+      "why": "Mêmes EMF 5 et écriture. Le Myling chasse à 50 % et, en chasse, ses pas et sa voix ne s'entendent qu'à 12 m (au lieu de 20 m)."
+    },
+    {
+      "with": "deildegast",
+      "why": "Mêmes EMF 5 et écriture. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet utilisé ; l'Ombre est toujours à 1,7 m/s."
+    },
+    {
+      "with": "jinn",
+      "why": "Mêmes EMF 5 et températures glaciales. Le Djinn chasse à 50 %, fonce à 2,5 m/s en LdV (disjoncteur allumé, à plus de 3 m) et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF au disjoncteur)."
+    },
+    {
+      "with": "oni",
+      "why": "Mêmes EMF 5 et températures glaciales, mais tempérament opposé : l'Oni est très actif (surtout avec plusieurs joueurs), plus visible en chasse et chasse dès 50 %."
+    },
+    {
+      "with": "the-twins",
+      "why": "Mêmes EMF 5 et températures glaciales. Les Jumeaux peuvent faire deux interactions à la fois et chassent à environ 1,5 ou 1,9 m/s, dès 50 %."
+    },
+    {
+      "with": "revenant",
+      "why": "Mêmes écriture et températures glaciales. Le Revenant chasse à 1,0 m/s puis bondit à 3,0 m/s quand il te détecte, dès 50 %."
+    },
+    {
+      "with": "demon",
+      "why": "Mêmes écriture et températures glaciales, mais c'est l'opposé : le Démon chasse dès 70 %, voire à toute santé mentale. Toute chasse naturelle au-dessus de 35 % exclut l'Ombre."
+    },
+    {
+      "with": "moroi",
+      "why": "Mêmes écriture et températures glaciales. Le Moroï maudit le joueur entendu à la Spirit Box ou au micro parabolique et accélère quand la santé mentale baisse."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s)."
+    },
+    {
+      "with": "goryo",
+      "why": "Autre entité « timide » : les D.O.T.S du Goryo ne se voient qu'à la caméra et jamais avec un joueur dans la pièce, mais il chasse à 50 % et n'a pas les restrictions d'interaction de l'Ombre."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant l'invocation au cercle (ou l'événement de la boîte à musique ou de la patte de singe), l'entité apparaît comme une silhouette noire et floue, ou translucide, au lieu de son apparence complète.",
+      "kind": "event",
+      "strength": "definitive"
+    },
+    {
+      "text": "Tant que tu restes dans sa pièce, l'activité s'arrête presque complètement ; dès que tu en sors, les objets et les portes recommencent à bouger.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "La santé mentale moyenne est descendue à 40 % et l'entité n'a encore jamais chassé.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Lors des événements, l'entité se montre surtout comme une silhouette noire plutôt qu'avec son apparence complète.",
+      "kind": "event",
+      "strength": "hint"
+    },
+    {
+      "text": "Aucun événement en tout début de partie, puis de plus en plus d'événements à mesure que la santé mentale de l'équipe baisse.",
+      "kind": "event",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves de l'Ombre ?",
+      "choices": [
+        "EMF niveau 5, Écriture fantomatique, Spirit Box",
+        "Ultraviolet, Écriture fantomatique, Températures glaciales",
+        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
+        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S"
+      ],
+      "answer": 2,
+      "explain": "Ombre = EMF 5, écriture, températures glaciales. EMF 5 + écriture + Spirit Box, c'est l'Esprit ; UV + écriture + glaciales, le Démon ; EMF 5 + glaciales + D.O.T.S, l'Oni."
+    },
+    {
+      "q": "À partir de quel seuil de santé mentale moyenne une Ombre peut-elle chasser ?",
+      "choices": ["35 %", "50 %", "40 %", "70 %"],
+      "answer": 0,
+      "explain": "L'Ombre ne chasse pas avant 35 %. 50 % est le seuil standard, 40 % celui du Deogen (ou du Cauchemar lumière allumée), 70 % celui du Démon."
+    },
+    {
+      "q": "Tu es dans la pièce favorite d'une Ombre. Que peut-elle quand même faire ?",
+      "choices": [
+        "Lancer une chasse alors qu'elle est dans la pièce avec toi",
+        "Sortir de la pièce et lancer une chasse depuis une pièce voisine",
+        "Lancer une chasse naturelle alors que la santé mentale moyenne est encore à 60 %",
+        "Souffler la bougie que tu tiens pendant qu'elle est dans la pièce"
+      ],
+      "answer": 1,
+      "explain": "Elle ne lance ni chasse ni interaction EMF (écriture, flammes soufflées…) depuis la pièce où tu te trouves, mais elle peut en sortir et chasser depuis une pièce adjacente, ou interagir avec la pièce depuis l'extérieur. Et elle ne chasse jamais naturellement au-dessus de 35 %."
+    },
+    {
+      "q": "Quel test est définitif pour identifier une Ombre ?",
+      "choices": [
+        "Constater qu'elle ne chasse pas au-dessus de 50 %",
+        "Mesurer qu'elle chasse à 1,7 m/s",
+        "Obtenir un EMF 5 près d'un objet lancé",
+        "Allumer le cercle d'invocation et la voir apparaître sous forme d'ombre"
+      ],
+      "answer": 3,
+      "explain": "Seule l'Ombre peut apparaître en ombre ou en modèle translucide au cercle d'invocation. Les autres propositions sont compatibles avec beaucoup d'entités."
+    },
+    {
+      "q": "La santé mentale moyenne est encore à 100 % et un événement fantôme se produit. Qu'en conclus-tu ?",
+      "choices": [
+        "C'est sûrement une Ombre",
+        "C'est forcément un Démon",
+        "Ce n'est pas une Ombre",
+        "Rien du tout"
+      ],
+      "answer": 2,
+      "explain": "L'Ombre ne peut pas faire d'événement à 100 % de santé mentale moyenne : l'événement l'élimine. Il ne désigne pas pour autant une entité précise."
+    },
+    {
+      "q": "Pourquoi l'idée « une Ombre ne chasse pas si tu es dans sa pièce favorite » est-elle incomplète ?",
+      "choices": [
+        "Parce que la règle vaut pour n'importe quelle pièce où elle se trouve avec un joueur",
+        "Parce qu'elle chasse quand même dans sa pièce favorite sous 35 %",
+        "Parce que la règle ne s'applique qu'en difficulté Démence",
+        "Parce qu'elle ne chasse jamais dans sa pièce favorite, même vide"
+      ],
+      "answer": 0,
+      "explain": "Le wiki tybayn le précise : ce comportement ne se limite pas à la pièce favorite. L'Ombre ne fait rien qui donne de l'EMF et ne lance pas de chasse dans toute pièce où elle se trouve avec un joueur."
+    }
+  ],
+  "changes": [
+    "Précision apportée par le wiki tybayn actuel (pas forcément un changement de jeu) : la forme d'ombre est propre à l'Ombre pendant les événements du cercle d'invocation, de la boîte à musique et de la patte de singe ; la sauvegarde de déc. 2024 ne citait que le cercle."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_summoning_circle_p8",
+    "tybayn wiki: wiki_music_box_p10",
+    "tybayn wiki: wiki_monkey_paw_p23",
+    "tybayn wiki: wiki_misconceptions_shade_1_c",
+    "tybayn wiki: wiki_misconceptions_shade_1_r",
+    "tybayn wiki: wiki_known_bugs_shade",
+    "tybayn wiki: wiki_los_p1",
+    "https://phasmophobia.fandom.com/wiki/Shade",
+    "https://phasmopedia.com/en/ghosts/shade/"
+  ],
+  "uncertain": [
+    "Aucun changement de l'Ombre trouvé dans les notes de mise à jour 2025–2026 (v0.13 à v0.19).",
+    "Certains guides affirment que l'Ombre peut écrire dans le livre en présence d'un joueur ; on suit tybayn (pas d'écriture dans la même pièce que le joueur). Revue : ce point n'est plus utilisé comme leurre de quiz, pour qu'aucune réponse fausse ne repose sur lui.",
+    "Proportions de forme d'ombre (environ 2/3 lors des événements, environ 50 % au cercle selon Phasmopedia) non reprises faute de seconde source."
+  ]
+}

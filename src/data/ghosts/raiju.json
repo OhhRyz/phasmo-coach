@@ -1,0 +1,135 @@
+{
+  "id": "raiju",
+  "name": "Raiju",
+  "nameEn": "Raiju",
+  "evidence": ["emf", "orbs", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": 2.5,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · 2,5 m/s près de l'électronique active",
+    "details": [
+      "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération en LdV standard.",
+      "Près d'un équipement électronique actif du joueur, posé ou tenu en main, il passe aussitôt à une vitesse fixe de 2,5 m/s (à 100 % de vitesse d'entité).",
+      "Sur un relevé de vitesse, cela donne des « plateaux » plats autour de 2,5 m/s qui interrompent une courbe de chasse standard : c'est son plus gros indice. En quittant la zone, il reprend la vitesse de son accélération en LdV et peut continuer d'accélérer jusqu'à son maximum."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 65,
+    "summary": "50 % · 65 % près de l'électronique active",
+    "details": [
+      "Seuil normal : 50 % de santé mentale moyenne.",
+      "Peut chasser dès 65 % quand il se trouve près d'un équipement électronique actif du joueur."
+    ]
+  },
+  "summary": "Une entité électrique qui fonce à 2,5 m/s près de ton équipement électronique allumé et perturbe tes appareils de plus loin que les autres.",
+  "keyTells": [
+    "Vitesse fixe de 2,5 m/s près d'un appareil électronique actif (posé ou tenu)",
+    "Perturbe l'électronique à 15 m en chasse (10 m d'habitude)",
+    "Peut chasser dès 65 % près d'un appareil électronique actif"
+  ],
+  "tells": [
+    { "text": "Pendant une chasse, provoque des perturbations électroniques dans un rayon de 15 m au lieu de 10 m.", "zeroEvidence": true },
+    { "text": "Vitesse accrue près d'un équipement électronique actif pendant les chasses.", "zeroEvidence": true },
+    { "text": "Peut chasser à 65 % lorsqu'il est près d'un équipement électronique actif.", "zeroEvidence": true }
+  ],
+  "behaviors": [
+    { "text": "Bug connu (wiki tybayn) : le rayon des battements de cœur est actuellement de 15 m au lieu de 10 m.", "zeroEvidence": true },
+    { "text": "Seul l'équipement électronique du joueur compte, qu'il soit posé ou tenu en main ; un appareil éteint ne déclenche rien.", "zeroEvidence": false }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    { "text": "Place des appareils électroniques actifs près de la pièce de l'entité. Pendant une chasse, cache-toi et écoute-la passer près des appareils : si elle est rapide près d'eux mais ralentit en s'en éloignant, c'est un Raiju.", "definitive": true },
+    { "text": "Pendant qu'elle chasse à proximité, allume et éteins un appareil électronique (tenu en main ou posé au sol ; posé au sol, tu ne trahis pas ta position). Si sa vitesse augmente et diminue en fonction de l'appareil, c'est un Raiju. Préfère l'appareil posé : tenu en main, il peut te faire repérer, et un Revenant (3,0 m/s) ou un Kormos (2,21 m/s) qui te détecte accélère aussi, sans revenir aussitôt à sa vitesse quand tu l'éteins.", "definitive": true },
+    { "text": "Si l'entité chasse tôt, entre 50 % et 65 %, ça pourrait être un Raiju.", "definitive": false }
+  ],
+  "eliminationTests": [
+    { "text": "Si l'entité n'accélère pas près de l'électronique pendant une chasse, ce n'est pas un Raiju." }
+  ],
+  "confusions": [
+    { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu du D.O.T.S ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse, sans lien avec l'électronique." },
+    { "with": "dayan", "why": "Même EMF 5 + orbes, mais la Dayan a la Spirit Box au lieu du D.O.T.S ; elle accélère (2,25 m/s) quand tu bouges à moins de 10 m et ralentit (1,2 m/s) quand tu restes immobile, appareils allumés ou non." },
+    { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu des orbes ; il ne marche jamais dans le sel et se téléporte vers les joueurs." },
+    { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu des orbes ; plus visible pendant les chasses, il ne fait jamais l'événement « brume fantomatique »." },
+    { "with": "goryo", "why": "Même EMF 5 + D.O.T.S, mais le Goryo a l'UV au lieu des orbes ; son D.O.T.S n'apparaît qu'à la caméra et il ne change jamais de pièce favorite." },
+    { "with": "deildegast", "why": "Même EMF 5 + D.O.T.S, mais le Deildegast a l'écriture au lieu des orbes ; il peut être très rapide (jusqu'à 3,0 m/s), mais sa vitesse dépend du nombre d'objets différents utilisés depuis la dernière chasse et reste fixe pendant la chasse, sans lien avec l'électronique." },
+    { "with": "banshee", "why": "Mêmes orbes + D.O.T.S, mais la Banshee a l'UV au lieu de l'EMF ; elle ne poursuit que sa cible et peut pousser un cri unique au micro parabolique." },
+    { "with": "yurei", "why": "Mêmes orbes + D.O.T.S, mais le Yurei a des températures glaciales au lieu de l'EMF ; il peut claquer une porte en faisant perdre 15 % de santé mentale." },
+    { "with": "yokai", "why": "Mêmes orbes + D.O.T.S, mais le Yokai a la Spirit Box au lieu de l'EMF ; il peut chasser jusqu'à 80 % si tu parles dans sa pièce et, en chasse, ne t'entend qu'à 2,5 m." },
+    { "with": "thaye", "why": "Mêmes orbes + D.O.T.S, mais le Thayé a l'écriture au lieu de l'EMF ; très rapide quand il est jeune (2,75 m/s), il n'accélère jamais en LdV et ralentit en vieillissant." },
+    { "with": "jinn", "why": "Le Djinn (EMF, UV, glaciales) passe lui aussi à 2,5 m/s, mais seulement disjoncteur allumé, quand il te voit à plus de 3 m : l'électronique n'y change rien." },
+    { "with": "revenant", "why": "Le Revenant (orbes, écriture, glaciales) fonce à 3,0 m/s dès qu'il te détecte (voix, électronique active, vue) et rampe à 1,0 m/s sinon." }
+  ],
+  "observations": [
+    { "text": "Pendant la chasse, l'entité file à toute vitesse en passant près de l'appareil électronique allumé que tu as laissé au sol, puis ralentit nettement une fois éloignée.", "kind": "hunt", "strength": "definitive" },
+    { "text": "En pleine chasse, tu allumes ton micro parabolique alors que l'entité est proche : ses pas s'accélèrent aussitôt, puis ralentissent quand tu l'éteins.", "kind": "hunt", "strength": "strong" },
+    { "text": "Ta lampe torche et tes appareils se mettent à grésiller alors que l'entité semble encore loin de toi.", "kind": "hunt", "strength": "strong" },
+    { "text": "Une chasse démarre alors que l'équipe est encore autour de 60 % de santé mentale, avec plusieurs appareils allumés dans la pièce de l'entité.", "kind": "hunt", "strength": "hint" },
+    { "text": "Tu entends les battements de cœur de la chasse alors que l'entité est encore assez loin de toi.", "kind": "hunt", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "Quelle vitesse atteint le Raiju près d'un équipement électronique actif ?",
+      "choices": ["2,5 m/s, vitesse fixe", "1,7 m/s", "3,0 m/s", "2,25 m/s"],
+      "answer": 0,
+      "explain": "Près de l'électronique active, le Raiju se déplace à 2,5 m/s fixes. 1,7 m/s est sa vitesse normale, 3,0 m/s évoque le Revenant ou un Deildegast « neuf », 2,25 m/s la Dayan quand tu bouges près d'elle."
+    },
+    {
+      "q": "À partir de quel niveau de santé mentale moyenne le Raiju peut-il chasser près de l'électronique active ?",
+      "choices": ["65 %", "50 %", "70 %", "80 %"],
+      "answer": 0,
+      "explain": "Le Raiju chasse normalement à 50 %, mais dès 65 % près d'un appareil électronique actif. 70 % est le seuil du Démon, 80 % celui du Yokai quand tu parles près de lui."
+    },
+    {
+      "q": "À quelle distance le Raiju perturbe-t-il tes appareils électroniques pendant une chasse ?",
+      "choices": ["15 m", "10 m", "20 m", "5 m"],
+      "answer": 0,
+      "explain": "Le Raiju perturbe l'électronique à 15 m au lieu des 10 m standard. 20 m est la portée d'audition normale des pas."
+    },
+    {
+      "q": "Depuis Chronicle (v0.13, juin 2025), quel équipement déclenche l'accélération du Raiju ?",
+      "choices": ["L'électronique active, posée ou tenue en main", "Uniquement l'électronique posée au sol", "Uniquement les lumières de la maison", "Uniquement la caméra vidéo"],
+      "answer": 0,
+      "explain": "Chronicle a corrigé un bug qui empêchait le Raiju d'accélérer près de l'électronique tenue en main. Désormais, tout équipement électronique actif du joueur, posé ou tenu, compte."
+    },
+    {
+      "q": "Quelles sont les preuves du Raiju ?",
+      "choices": ["EMF 5, orbes, D.O.T.S", "EMF 5, ultraviolet, D.O.T.S", "Orbes, écriture fantomatique, D.O.T.S", "Spirit Box, orbes, D.O.T.S"],
+      "answer": 0,
+      "explain": "Le Raiju, c'est EMF 5 + orbes + D.O.T.S. Les autres combinaisons sont celles du Goryo, du Thayé et du Yokai."
+    },
+    {
+      "q": "Disjoncteur allumé, une entité passe à 2,5 m/s quand elle te voit de loin, alors qu'aucun appareil n'est allumé près d'elle. Laquelle est-ce plutôt ?",
+      "choices": ["Le Djinn", "Le Raiju", "Le Revenant", "Le Myling"],
+      "answer": 0,
+      "explain": "Le Djinn passe à 2,5 m/s disjoncteur allumé quand il te voit à plus de 3 m. Le Raiju a besoin d'électronique active, le Revenant fonce à 3,0 m/s et le Myling a une vitesse standard."
+    }
+  ],
+  "changes": [
+    "Chronicle v0.13 (24 juin 2025) : correction d'un bug qui empêchait le Raiju d'accélérer près de l'équipement électronique tenu en main ; il accélère désormais près de l'électronique posée ou tenue.",
+    "Wiki tybayn actuel : bug connu, le rayon des battements de cœur du Raiju est de 15 m au lieu de 10 m.",
+    "Player Character Update v0.17.0.0 (2026) : l'accélération en LdV des entités a été modifiée, puis remise à son état d'origine par le patch v0.17.1.4 (2 juin 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_raiju_p1 à p3",
+    "tybayn wiki: wiki_known_bugs_raiju",
+    "tybayn wiki: wiki_xp_grinding_p4",
+    "https://insider-gaming.com/phasmophobia-chronicle-update-v0-13-patch-notes/",
+    "https://phasmophobia.wiki.fextralife.com/Raiju",
+    "https://phasmopedia.com/en/ghosts/raiju/",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
+  ],
+  "uncertain": [
+    "Portée de l'accélération (souvent citée : 6 / 8 / 10 m selon la taille de la carte) : seulement une antisèche communautaire non officielle, absente des données tybayn ; retirée du contenu enseigné.",
+    "Kormos et Revenant qui accélèrent quand ils détectent un appareil tenu en main : déduit du wiki tybayn (détection par l'électronique), pas testé côte à côte avec un Raiju.",
+    "Que l'accélération en LdV continue de s'accumuler pendant qu'il est près de l'électronique : déduit du graphique tybayn, pas confirmé explicitement.",
+    "La liste exacte des appareils considérés comme « électronique active » (par exemple la radio globale ou les capteurs posés) n'a pas été vérifiée."
+  ]
+}

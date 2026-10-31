@@ -1,0 +1,219 @@
+{
+  "id": "revenant",
+  "name": "Revenant",
+  "nameEn": "Revenant",
+  "evidence": ["orbs", "writing", "freezing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.0,
+    "max": 3.0,
+    "alt": null,
+    "isRange": false,
+    "los": false,
+    "summary": "1,0 m/s · 3,0 m/s dès qu'il te détecte · pas de LdV",
+    "details": [
+      "Vitesse de base en chasse : 1,0 m/s tant qu'il n'a détecté aucun joueur.",
+      "Dès qu'il détecte un joueur (par la vue, la voix ou l'utilisation d'un appareil électronique), il accélère immédiatement à 3,0 m/s.",
+      "Il garde ces 3,0 m/s jusqu'à ce qu'il ne puisse plus te détecter ET qu'il ait atteint ta dernière position connue ; ensuite, il ralentit progressivement jusqu'à 1,0 m/s.",
+      "Il n'a pas l'accélération standard en ligne de vue : sa vitesse ne monte pas peu à peu pendant 13 s, elle saute d'un coup.",
+      "Ces vitesses valent pour une vitesse d'entité de 100 %. Par météo « Lune de sang », toutes les entités sont 15 % plus rapides en chasse : le Revenant passe alors à environ 1,15 et 3,45 m/s."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Aucun pouvoir connu ne modifie ce seuil."
+    ]
+  },
+  "summary": "Une entité qui rampe à 1,0 m/s tant qu'elle ne te détecte pas, puis fonce à 3,0 m/s dès qu'elle te repère : face à elle, c'est la cachette qui te sauve, pas la course.",
+  "keyTells": [
+    "En chasse : 1,0 m/s sans cible, 3,0 m/s dès qu'il te détecte",
+    "Accélération instantanée, jamais progressive (pas de LdV standard)",
+    "Ralentit peu à peu une fois arrivé à ta dernière position connue"
+  ],
+  "tells": [
+    {
+      "text": "Pendant une chasse, le Revenant est lent (1,0 m/s) jusqu'à ce qu'il détecte un joueur (voix, équipement électronique actif ou ligne de vue) : il accélère alors immédiatement à 3,0 m/s et garde cette vitesse jusqu'à atteindre la dernière position connue du joueur, où il ralentit progressivement.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si elle est lente, accélère brusquement quand tu la laisses te détecter, puis ralentit ensuite, c'est un Revenant (il sera plus rapide qu'un Djinn ou un Raiju : compare avec les exemples de vitesses des fiches).",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si elle n'est ni à 1,0 m/s ni à 3,0 m/s (en dehors de la courte phase où il ralentit progressivement), ce n'est pas un Revenant. Vitesses valables à vitesse d'entité 100 % et hors Lune de sang (+15 %)."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "mare",
+      "why": "Mêmes orbes et écriture. Le Cauchemar (Mare) chasse à 1,7 m/s avec l'accélération standard en LdV et son seuil dépend des lumières (60 % lumière éteinte, 40 % allumée). Le Revenant, lui, traîne à 1,0 m/s puis bondit à 3,0 m/s."
+    },
+    {
+      "with": "thaye",
+      "why": "Mêmes orbes et écriture, et pas de LdV standard non plus. Mais la vitesse du Thayé dépend de son âge (2,75 m/s jeune, 1,0 m/s vieux) : il ne bondit pas à 3,0 m/s quand il te détecte."
+    },
+    {
+      "with": "hantu",
+      "why": "Mêmes orbes et températures glaciales, sans LdV standard. La vitesse du Hantu dépend de la température (plus rapide au froid) et il a un souffle glacé visible en chasse quand le disjoncteur est coupé."
+    },
+    {
+      "with": "yurei",
+      "why": "Mêmes orbes et températures glaciales. Le Yurei chasse à 1,7 m/s avec l'accélération standard en LdV ; il peut fermer une porte en faisant chuter la santé mentale de 15 %."
+    },
+    {
+      "with": "onryo",
+      "why": "Mêmes orbes et températures glaciales. L'Onryo chasse à 1,7 m/s, normalement à 60 %, et peut chasser à toute santé mentale après avoir éteint des flammes."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic affiche toujours des orbes en plus de ses vraies preuves et partage les températures glaciales ; il peut aussi copier la vitesse d'un Revenant. Avec orbes + températures glaciales, vérifie Spirit Box et UV (preuves du Mimic) avant de conclure."
+    },
+    {
+      "with": "shade",
+      "why": "Mêmes écriture et températures glaciales. L'Ombre chasse à 1,7 m/s avec LdV et seulement sous 35 % de santé mentale moyenne."
+    },
+    {
+      "with": "demon",
+      "why": "Mêmes écriture et températures glaciales. Le Démon chasse à 1,7 m/s avec LdV, très tôt (70 %), et peut rechasser 60 s après l'encens."
+    },
+    {
+      "with": "moroi",
+      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroï augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en LdV) et monte progressivement en LdV ; il ne descend jamais à 1,0 m/s."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes écriture et températures glaciales. L'Aswang a une base de 1,53 m/s et accélère progressivement en LdV (en 8,667 s au lieu de 13 s), sans saut instantané."
+    },
+    {
+      "with": "jinn",
+      "why": "Accélère aussi d'un coup, mais le Djinn part de 1,7 m/s et ne saute qu'à 2,5 m/s (disjoncteur allumé, en LdV, à plus de 3 m du joueur)."
+    },
+    {
+      "with": "raiju",
+      "why": "Accélère aussi d'un coup, mais le Raiju part de 1,7 m/s et passe à 2,5 m/s près d'appareils électroniques actifs."
+    },
+    {
+      "with": "deildegast",
+      "why": "Le Deildegast peut chasser à 3,0 m/s, mais à vitesse figée pendant toute la chasse, même sans te détecter ; elle baisse de 0,1 m/s par objet utilisé avant la chasse."
+    },
+    {
+      "with": "dayan",
+      "why": "Seulement les orbes en commun, mais le Dayan change aussi de vitesse d'un coup près des joueurs : à moins de 10 m, 1,2 m/s si tu restes immobile et 2,25 m/s si tu bouges ; plus loin, 1,7 m/s avec LdV standard. Il ne descend pas à 1,0 m/s et ne monte pas à 3,0 m/s."
+    }
+  ],
+  "observations": [
+    {
+      "text": "En chasse, tu entends des pas extrêmement lents, bien plus lents que d'habitude, tant que l'entité ne t'a pas repéré.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "À l'instant où l'entité te repère, ces pas très lents deviennent d'un coup très rapides, sans aucune montée progressive.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une fois arrivée à l'endroit où elle t'a perdu de vue, l'entité ralentit peu à peu jusqu'à redevenir très lente.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Même quand elle te garde longtemps en vue dans un couloir, sa vitesse n'augmente plus : elle était déjà au maximum dès le premier instant.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Revenant ?",
+      "choices": [
+        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
+        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales",
+        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
+        "Spirit Box, Orbes fantomatiques, Écriture fantomatique"
+      ],
+      "answer": 1,
+      "explain": "Revenant = orbes, écriture, températures glaciales. Orbes + écriture + D.O.T.S, c'est le Thayé ; EMF 5 + écriture + glaciales, l'Ombre ; Spirit Box + orbes + écriture, le Cauchemar (Mare)."
+    },
+    {
+      "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
+      "choices": ["1,7 m/s", "0,4 m/s", "1,0 m/s", "2,5 m/s"],
+      "answer": 2,
+      "explain": "Il rampe à 1,0 m/s. 1,7 m/s est la vitesse standard, 0,4 m/s celle d'un Deogen tout près de toi, 2,5 m/s celle d'un Djinn ou d'un Raiju quand ils accélèrent."
+    },
+    {
+      "q": "Que fait un Revenant au moment où il détecte un joueur ?",
+      "choices": [
+        "Il accélère progressivement pendant 13 s jusqu'à 1,65 fois sa vitesse",
+        "Il ralentit à mesure qu'il se rapproche du joueur",
+        "Il passe à 2,5 m/s, seulement si le disjoncteur est allumé",
+        "Il passe instantanément à 3,0 m/s"
+      ],
+      "answer": 3,
+      "explain": "Le Revenant saute immédiatement à 3,0 m/s. L'accélération progressive sur 13 s est la LdV standard (qu'il n'a pas), le ralentissement à l'approche est propre au Deogen, et le disjoncteur concerne le Djinn."
+    },
+    {
+      "q": "Quand un Revenant commence-t-il à ralentir après t'avoir pris en chasse ?",
+      "choices": [
+        "Quand il ne te détecte plus et qu'il a atteint ta dernière position connue",
+        "Dès que tu brises la ligne de vue",
+        "Après 13 secondes de poursuite",
+        "Uniquement à la fin de la chasse"
+      ],
+      "answer": 0,
+      "explain": "Il garde ses 3,0 m/s jusqu'à ne plus te détecter ET avoir atteint ta dernière position connue, puis ralentit progressivement jusqu'à 1,0 m/s. Briser la LdV ne suffit donc pas à le ralentir tout de suite."
+    },
+    {
+      "q": "Pendant toute une chasse, l'entité se déplace à une vitesse constante d'environ 1,7 m/s sans t'avoir détecté. Qu'en conclus-tu ?",
+      "choices": [
+        "C'est forcément un Revenant",
+        "Ce n'est pas un Revenant",
+        "C'est un Revenant en train de ralentir",
+        "Ce test ne permet rien de conclure sur le Revenant"
+      ],
+      "answer": 1,
+      "explain": "Un Revenant qui ne te détecte pas est à 1,0 m/s ; une vitesse stable à 1,7 m/s ne correspond ni à 1,0 ni à 3,0 m/s, donc ce n'est pas un Revenant. Son ralentissement ne dure que le temps de redescendre de 3,0 à 1,0 m/s."
+    },
+    {
+      "q": "Dans quel groupe AUCUNE entité n'a l'accélération standard en ligne de vue ?",
+      "choices": [
+        "Revenant, Djinn, Raiju, Moroï",
+        "Revenant, Ombre, Démon, Yurei",
+        "Revenant, Hantu, Deogen, Thayé",
+        "Revenant, Les Jumeaux, Obambo, Gallu"
+      ],
+      "answer": 2,
+      "explain": "D'après le wiki tybayn, le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroï l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; Les Jumeaux ont une LdV particulière, mais en ont une."
+    }
+  ],
+  "changes": [],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_p1",
+    "tybayn wiki: wiki_los_p2",
+    "tybayn wiki: wiki_los_revenant_p1",
+    "tybayn wiki: wiki_known_bugs_revenant",
+    "tybayn wiki: wiki_blood_moon (vitesse des entités +15 % en chasse)",
+    "https://phasmophobia.fandom.com/wiki/Revenant",
+    "https://phasmophobia.fandom.com/wiki/Hunt",
+    "https://phasmopedia.com/en/ghosts/revenant/",
+    "https://phasmophobia.wiki.fextralife.com/Revenant"
+  ],
+  "uncertain": [
+    "Rythme du ralentissement après la dernière position connue : le wiki Fandom (page Hunt) parle d'environ 0,75 m/s² (≈ 2,7 s pour redescendre à 1,0 m/s) ; non repris dans le contenu faute de seconde source (tybayn dit seulement « progressivement »).",
+    "Aucun changement du Revenant trouvé dans les notes de mise à jour 2025–2026 ; un guide (Blueprinted) lui attribue des vitesses 2,25 / 1,2 m/s qui sont en réalité celles du Dayan.",
+    "Revue : l'observation « pas très lents qui deviennent d'un coup très rapides » est passée de definitive à strong, car le Dayan (1,2 → 2,25 m/s près d'un joueur), le Djinn et le Raiju (1,7 → 2,5 m/s) produisent aussi des sauts de vitesse instantanés ; seul l'écart 1,0 → 3,0 m/s, mesuré, est propre au Revenant."
+  ]
+}

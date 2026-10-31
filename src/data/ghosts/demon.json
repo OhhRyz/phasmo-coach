@@ -1,0 +1,213 @@
+{
+  "id": "demon",
+  "name": "Démon",
+  "nameEn": "Demon",
+  "evidence": ["uv", "writing", "freezing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+    ]
+  },
+  "huntSanity": {
+    "normal": 70,
+    "low": 70,
+    "high": 100,
+    "summary": "70 % · peut chasser à toute santé mentale",
+    "details": [
+      "Seuil de chasse normal : 70 % de santé mentale moyenne (au lieu des 50 % standard).",
+      "Grâce à son pouvoir, il peut lancer une chasse à n'importe quel niveau de santé mentale, même à 100 %."
+    ]
+  },
+  "summary": "L'entité la plus agressive : elle chasse tôt (70 %), voire à n'importe quelle santé mentale, et se remet plus vite que les autres après l'encens, une chasse ou un crucifix.",
+  "keyTells": [
+    "Peut rechasser 60 s après l'encens (au lieu de 90 s)",
+    "Peut rechasser 20 s après une chasse ou un crucifix (au lieu de 25 s)",
+    "Seuil 70 %, et capable de chasser à toute santé mentale",
+    "Portée du crucifix +50 % : 4,5 / 6 / 7,5 m"
+  ],
+  "tells": [
+    {
+      "text": "Peut chasser 60 s après avoir été encensé, au lieu des 90 s standard.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Peut chasser 20 s après la fin de la chasse précédente ou après avoir utilisé un crucifix, au lieu des 25 s standard.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "La portée du crucifix est augmentée de 50 % à chaque niveau (respectivement 4,5 m, 6 m et 7,5 m).",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Peut chasser à n'importe quel niveau de santé mentale.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Lance un chronomètre après avoir encensé l'entité. Si elle chasse de nouveau avant 90 s (chasse naturelle, sans objet maudit), c'est un Démon.",
+      "definitive": true
+    },
+    {
+      "text": "Lance un chronomètre à la fin d'une chasse ou après l'utilisation d'un crucifix. Si elle chasse de nouveau avant 25 s (chasse naturelle, sans objet maudit), c'est un Démon.",
+      "definitive": true
+    },
+    {
+      "text": "Si une entité chasse naturellement (sans objet maudit) au-dessus de 80 % de santé mentale, qu'aucun joueur n'a individuellement moins de 50 % et qu'aucune bougie n'a été allumée, c'est un Démon (à Sunny Meadows, un Onryo peut chasser tôt car les bougies de la chapelle sont déjà allumées).",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [],
+  "confusions": [
+    {
+      "with": "spirit",
+      "why": "Le test de l'encens les sépare : l'Esprit attend 180 s avant de rechasser, une entité standard 90 s, le Démon seulement 60 s. Une chasse entre 60 et 90 s après l'encens désigne le Démon."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Mêmes UV et écriture. Le Poltergeist chasse à 50 % et, en chasse, lance un objet toutes les 0,5 s ; il peut aussi projeter plusieurs objets d'un coup."
+    },
+    {
+      "with": "myling",
+      "why": "Mêmes UV et écriture. Le Myling chasse à 50 % et ses pas en chasse ne s'entendent qu'à 12 m."
+    },
+    {
+      "with": "obambo",
+      "why": "Mêmes UV et écriture. L'Obambo peut chasser tôt (65 %) en état agressif, mais jamais au-dessus, et sa vitesse alterne entre environ 1,45 et 1,96 m/s ; le Démon reste à 1,7 m/s."
+    },
+    {
+      "with": "hantu",
+      "why": "Mêmes UV et températures glaciales. Le Hantu n'a pas de LdV standard, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé."
+    },
+    {
+      "with": "jinn",
+      "why": "Mêmes UV et températures glaciales. Le Djinn chasse à 50 % et fonce à 2,5 m/s en LdV quand le disjoncteur est allumé."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic partage UV et températures glaciales et peut copier les comportements du Démon (chasses précoces, délais d'encens). Il affiche toujours des orbes en plus : si tu vois des orbes, méfie-toi."
+    },
+    {
+      "with": "shade",
+      "why": "Mêmes écriture et températures glaciales, mais c'est l'opposé : l'Ombre ne chasse pas au-dessus de 35 %."
+    },
+    {
+      "with": "revenant",
+      "why": "Mêmes écriture et températures glaciales. Le Revenant chasse à 1,0 m/s puis 3,0 m/s quand il te détecte ; le Démon est à 1,7 m/s avec LdV standard."
+    },
+    {
+      "with": "moroi",
+      "why": "Mêmes écriture et températures glaciales. Le Moroï maudit via la Spirit Box ou le micro parabolique, accélère quand la santé mentale baisse et reste aveuglé plus longtemps par l'encens en chasse (7 s au lieu de 5 s)."
+    },
+    {
+      "with": "aswang",
+      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV."
+    },
+    {
+      "with": "onryo",
+      "why": "Autre chasseur précoce : l'Onryo chasse normalement à 60 % et peut chasser à toute santé mentale en éteignant des flammes (toutes les 3 flammes)."
+    },
+    {
+      "with": "banshee",
+      "why": "Autre chasseur précoce : la Banshee chasse selon la santé mentale de sa cible (50 % ou moins), donc parfois jusqu'à 87 % de moyenne."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Une chasse démarre environ une minute après que tu as encensé l'entité, bien avant les 90 secondes habituelles, sans qu'aucun objet maudit ait été utilisé.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Une nouvelle chasse commence à peine 20 secondes après la fin de la précédente, sans qu'aucun objet maudit ait été utilisé.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "L'entité chasse alors que toute l'équipe est encore au-dessus de 80 % de santé mentale, qu'aucune bougie n'a été allumée et qu'aucun objet maudit n'a été utilisé.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Ton crucifix de niveau 3 brûle alors que l'entité a lancé sa chasse à environ 7 m de lui, bien au-delà de la portée habituelle.",
+      "kind": "interaction",
+      "strength": "strong"
+    },
+    {
+      "text": "Les chasses commencent très tôt dans la partie, dès que la santé mentale moyenne passe sous 70 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Démon ?",
+      "choices": [
+        "Ultraviolet, Écriture fantomatique, Spirit Box",
+        "Ultraviolet, Écriture fantomatique, Températures glaciales",
+        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
+        "Ultraviolet, Orbes fantomatiques, Températures glaciales"
+      ],
+      "answer": 1,
+      "explain": "Démon = UV, écriture, températures glaciales. UV + écriture + Spirit Box, c'est le Poltergeist ; EMF 5 + écriture + glaciales, l'Ombre ; UV + orbes + glaciales, le Hantu."
+    },
+    {
+      "q": "Combien de temps après l'encens un Démon peut-il chasser de nouveau ?",
+      "choices": ["90 s", "180 s", "20 s", "60 s"],
+      "answer": 3,
+      "explain": "60 s pour le Démon, contre 90 s pour une entité standard et 180 s pour l'Esprit. 20 s, c'est son délai minimum entre deux chasses."
+    },
+    {
+      "q": "Quel est le délai minimum entre deux chasses pour un Démon ?",
+      "choices": ["20 s", "25 s", "60 s", "10 s"],
+      "answer": 0,
+      "explain": "Le Démon peut rechasser 20 s après la fin d'une chasse (ou après avoir utilisé un crucifix), contre 25 s pour les autres entités."
+    },
+    {
+      "q": "Quelle est la portée d'un crucifix de niveau 2 contre un Démon ?",
+      "choices": ["4 m", "4,5 m", "6 m", "7,5 m"],
+      "answer": 2,
+      "explain": "La portée est augmentée de 50 % à chaque niveau : 4,5 m (niveau 1), 6 m (niveau 2), 7,5 m (niveau 3). 4 m est la portée standard d'un crucifix de niveau 2."
+    },
+    {
+      "q": "Une entité chasse à 85 % de santé mentale moyenne, sans objet maudit. Aucun joueur n'est sous 50 % et aucune bougie n'a été allumée. De quelle entité s'agit-il ?",
+      "choices": ["Un Yokai", "Une Banshee", "Un Onryo", "Un Démon"],
+      "answer": 3,
+      "explain": "Le Yokai plafonne à 80 % (et seulement si l'on parle dans sa pièce), la Banshee a besoin d'une cible à 50 % ou moins, l'Onryo a besoin d'éteindre des flammes. Reste le Démon, qui peut chasser à toute santé mentale."
+    },
+    {
+      "q": "Quel est le seuil de chasse normal du Démon ?",
+      "choices": ["50 %", "70 %", "60 %", "65 %"],
+      "answer": 1,
+      "explain": "70 % (en plus de son pouvoir de chasse à toute santé mentale). 60 % correspond à l'Onryo, 65 % à l'Obambo agressif ou au Raiju près d'appareils électroniques."
+    }
+  ],
+  "changes": [],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_known_bugs_demon",
+    "tybayn wiki: wiki_xp_grinding_p10",
+    "tybayn wiki: wiki_los_p1",
+    "https://phasmophobia.fandom.com/wiki/Demon",
+    "https://phasmopedia.com/en/ghosts/demon/",
+    "https://phasmophobia.wiki.fextralife.com/Demon"
+  ],
+  "uncertain": [
+    "Aucun changement du Démon trouvé dans les notes de mise à jour 2025–2026 (seuil 70 %, encens 60 s et crucifix +50 % confirmés par Phasmopedia et le wiki Fandom).",
+    "La fréquence de son pouvoir de chasse à toute santé mentale n'est pas chiffrée par tybayn.",
+    "Le test « chasse au-dessus de 80 % » date de 2024 : le seuil de l'Aswang (ajouté en mai 2026) n'a pas pu être vérifié. Le Mimic peut aussi copier les comportements du Démon (il montre toujours des orbes)."
+  ]
+}

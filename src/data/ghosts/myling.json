@@ -1,0 +1,112 @@
+{
+  "id": "myling",
+  "name": "Myling",
+  "nameEn": "Myling",
+  "evidence": ["emf", "uv", "writing"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard de 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
+    ]
+  },
+  "summary": "Une entité silencieuse en chasse — tu ne l'entends qu'à 12 m au lieu de 20 m — mais bavarde au micro parabolique.",
+  "keyTells": [
+    "En chasse, pas et voix inaudibles au-delà de 12 m (20 m normalement)",
+    "Plus de sons paranormaux au micro parabolique",
+    "Vitesse et seuil de chasse standards (1,7 m/s, 50 %)"
+  ],
+  "tells": [
+    { "text": "Ses pas et ses sons vocaux ne s'entendent pas à plus de 12 m pendant les chasses (contre 20 m normalement).", "zeroEvidence": true },
+    { "text": "Produit davantage de sons au micro parabolique.", "zeroEvidence": true }
+  ],
+  "behaviors": [
+    { "text": "Contrairement à une idée reçue, le Myling émet bien des sons vocaux pendant les chasses ; c'est sa portée d'audition réduite (12 m au lieu de 20 m) qui le rend aussi un peu plus discret qu'une entité normale à distance égale.", "zeroEvidence": false }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true }
+  ],
+  "eliminationTests": [
+    { "text": "Si tu entends l'entité entre 12 m et 20 m de toi pendant une chasse, ce n'est pas un Myling." }
+  ],
+  "confusions": [
+    { "with": "spirit", "why": "Même EMF 5 + écriture, mais l'Esprit a la Spirit Box au lieu de l'UV ; après un encens, il attend 180 s avant de pouvoir rechasser (au lieu de 90 s)." },
+    { "with": "shade", "why": "Même EMF 5 + écriture, mais l'Ombre a des températures glaciales au lieu de l'UV ; elle ne chasse pas avant 35 % et ne chasse pas si tu es dans la même pièce qu'elle." },
+    { "with": "deildegast", "why": "Même EMF 5 + écriture, mais le Deildegast a le D.O.T.S au lieu de l'UV ; sa vitesse part de 3,0 m/s et baisse de 0,1 m/s par objet différent utilisé depuis la dernière chasse." },
+    { "with": "jinn", "why": "Même EMF 5 + UV, mais le Djinn a des températures glaciales au lieu de l'écriture ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m." },
+    { "with": "goryo", "why": "Même EMF 5 + UV, mais le Goryo a le D.O.T.S au lieu de l'écriture, visible seulement à la caméra, et il ne change jamais de pièce favorite." },
+    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu de l'écriture ; il peut laisser des empreintes à 6 doigts et change de modèle le temps d'un clignotement en chasse." },
+    { "with": "gallu", "why": "Même EMF 5 + UV, mais le Gallu a la Spirit Box au lieu de l'écriture ; le sel, l'encens ou un crucifix modifient son état et sa vitesse (1,96 m/s enragé, 1,36 m/s affaibli)." },
+    { "with": "poltergeist", "why": "Même UV + écriture, mais le Poltergeist a la Spirit Box au lieu de l'EMF ; il lance beaucoup d'objets et, en chasse, en projette un toutes les 0,5 s." },
+    { "with": "demon", "why": "Même UV + écriture, mais le Démon a des températures glaciales au lieu de l'EMF ; il peut chasser dès 70 % (et à n'importe quel niveau grâce à sa capacité) et rechasser 60 s après un encens." },
+    { "with": "obambo", "why": "Même UV + écriture, mais l'Obambo a le D.O.T.S au lieu de l'EMF ; il alterne entre un état calme et un état agressif qui changent sa vitesse (1,45 / 1,96 m/s) et son seuil de chasse (10 % / 65 %)." }
+  ],
+  "observations": [
+    { "text": "Pendant une chasse, l'entité traverse une grande pièce dégagée à une quinzaine de mètres de toi, et tu n'entends ni ses pas ni sa voix.", "kind": "hunt", "strength": "definitive" },
+    { "text": "Les chasses te paraissent étonnamment silencieuses : les pas surgissent d'un coup, alors que l'entité est déjà assez proche.", "kind": "hunt", "strength": "strong" },
+    { "text": "Au micro parabolique, tu captes nettement plus de sons paranormaux que d'habitude autour de sa pièce.", "kind": "behavior", "strength": "hint" },
+    { "text": "En chasse, elle se déplace à une vitesse normale et accélère quand elle te voit ; la première chasse arrive vers 50 % de santé mentale.", "kind": "hunt", "strength": "hint" }
+  ],
+  "quiz": [
+    {
+      "q": "À quelle distance maximale entends-tu les pas d'un Myling en chasse ?",
+      "choices": ["12 m", "20 m", "10 m", "2,5 m"],
+      "answer": 0,
+      "explain": "Le Myling n'est audible qu'à 12 m en chasse, contre 20 m pour une entité normale. 10 m est la portée standard des perturbations électroniques, et 2,5 m la portée de détection du Yokai."
+    },
+    {
+      "q": "Quelles sont les preuves du Myling ?",
+      "choices": ["EMF 5, ultraviolet, écriture fantomatique", "EMF 5, Spirit Box, écriture fantomatique", "Ultraviolet, écriture fantomatique, températures glaciales", "EMF 5, ultraviolet, températures glaciales"],
+      "answer": 0,
+      "explain": "Le Myling, c'est EMF 5 + UV + écriture. Les autres combinaisons sont celles de l'Esprit, du Démon et du Djinn."
+    },
+    {
+      "q": "Vrai ou faux : le Myling n'émet aucun son vocal pendant une chasse.",
+      "choices": ["Faux : il en émet, mais on ne l'entend qu'à 12 m", "Vrai : il est totalement muet en chasse", "Vrai, sauf au micro parabolique", "Faux : il est même plus bruyant que les autres"],
+      "answer": 0,
+      "explain": "C'est une idée reçue : le Myling fait des sons vocaux comme les autres, mais sa portée d'audition réduite à 12 m le rend plus discret."
+    },
+    {
+      "q": "Pendant une chasse, tu entends clairement l'entité marcher à 16 m de toi. Laquelle peux-tu éliminer ?",
+      "choices": ["Le Myling", "L'Esprit", "L'Ombre", "Le Poltergeist"],
+      "answer": 0,
+      "explain": "Au-delà de 12 m, un Myling est inaudible. L'entendre à 16 m l'élimine ; les trois autres s'entendent normalement jusqu'à 20 m."
+    },
+    {
+      "q": "Avec quel équipement entends-tu plus de sons quand l'entité est un Myling ?",
+      "choices": ["Le micro parabolique", "La Spirit Box", "Le lecteur EMF", "Le projecteur D.O.T.S"],
+      "answer": 0,
+      "explain": "Le Myling produit davantage de sons au micro parabolique. Il n'a pas la Spirit Box comme preuve, et l'EMF ou le D.O.T.S ne captent pas de sons."
+    }
+  ],
+  "changes": [
+    "Aucun changement trouvé pour le Myling dans les mises à jour 2025–2026 : preuves, vitesse, seuil et particularités identiques à la sauvegarde de décembre 2024."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_misconceptions_myling_1_r",
+    "tybayn wiki: wiki_known_bugs_myling",
+    "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/"
+  ],
+  "uncertain": [
+    "Aucune note de patch 2025–2026 ne mentionne le Myling ; un ajustement mineur non documenté n'est pas exclu.",
+    "La perception réelle de la distance de 12 m dépend des murs et de l'atténuation du son : en pratique, fais le test dans une zone dégagée."
+  ]
+}

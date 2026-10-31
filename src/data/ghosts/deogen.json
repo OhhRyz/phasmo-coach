@@ -1,0 +1,242 @@
+{
+  "id": "deogen",
+  "name": "Deogen",
+  "nameEn": "Deogen",
+  "evidence": ["spiritbox", "writing", "dots"],
+  "forcedEvidence": "spiritbox",
+  "fakeEvidence": null,
+  "speed": {
+    "min": 0.4,
+    "max": 3.0,
+    "alt": null,
+    "isRange": false,
+    "los": false,
+    "summary": "3,0 m/s de loin → 0,4 m/s tout près · pas de LdV",
+    "details": [
+      "Pas d'accélération en LdV : il sait en permanence où se trouve sa cible.",
+      "Il fonce à 3,0 m/s tant qu'il est loin du joueur ciblé, puis ralentit jusqu'à 0,4 m/s quand il arrive tout près de lui.",
+      "Conséquence : impossible de te cacher, mais une fois sur toi il est très lent. Fais-le tourner autour d'un obstacle (table, îlot, meuble) plutôt que de courir en ligne droite."
+    ]
+  },
+  "huntSanity": {
+    "normal": 40,
+    "low": 40,
+    "high": 40,
+    "summary": "40 %",
+    "details": [
+      "Ne chasse pas tant que la santé mentale moyenne de l'équipe n'est pas descendue sous 40 % (au lieu des 50 % standard).",
+      "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
+    ]
+  },
+  "summary": "Entité qui te trouve où que tu sois : très rapide de loin, elle ralentit énormément une fois arrivée sur toi.",
+  "keyTells": [
+    "Fonce à 3,0 m/s puis ralentit à 0,4 m/s en arrivant sur toi",
+    "Te trouve toujours en chasse : se cacher ne sert à rien",
+    "Respiration lourde à la Spirit Box à moins d'1 m (33 % de chances)",
+    "Seuil de chasse 40 % · Spirit Box garantie en Cauchemar et Démence"
+  ],
+  "tells": [
+    {
+      "text": "33 % de chances de donner une respiration lourde à la Spirit Box quand tu es à moins d'1 m de l'entité.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Vitesse de chasse très élevée, mais il ralentit en approchant du joueur ciblé.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Plus visible pendant les chasses.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "A toujours une LdV sur le joueur pendant les chasses : tu ne peux pas te cacher d'un Deogen.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Si, pendant une chasse, tu entends l'entité foncer vers toi puis ralentir nettement une fois près de toi, c'est un Deogen.",
+      "definitive": true
+    },
+    {
+      "text": "Pose des questions à la Spirit Box à moins d'1 m de l'entité : si tu entends une respiration lourde au lieu d'une réponse, c'est un Deogen.",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 40 % de santé mentale moyenne, ce n'est pas un Deogen."
+    },
+    {
+      "text": "Si l'entité accélère progressivement quand elle te garde en LdV, ce n'est pas un Deogen."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "revenant",
+      "why": "Le Revenant alterne aussi lent et rapide (1,0 ↔ 3,0 m/s), mais à l'inverse : il est rapide quand il te détecte et lent sinon. Le Deogen, lui, ralentit justement quand il est sur toi."
+    },
+    {
+      "with": "deildegast",
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu de la Spirit Box. Même plage de vitesse (0,4 à 3,0 m/s) sans LdV, mais sa vitesse est fixe pendant toute la chasse (réglée par les objets utilisés avant) : il ne ralentit pas en arrivant sur toi. Il chasse à 50 %."
+    },
+    {
+      "with": "thaye",
+      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de la Spirit Box. Lui aussi n'a pas de LdV et peut être très rapide (2,75 m/s jeune), mais sa vitesse est constante pendant la chasse et baisse d'une chasse à l'autre ; il chasse dès 75 % quand il est jeune."
+    },
+    {
+      "with": "moroi",
+      "why": "Moroi : Spirit Box + Écriture (Spirit Box garantie aussi), mais Températures glaciales au lieu des D.O.T.S. Il accélère en LdV et devient plus rapide quand la santé baisse ; il chasse à 50 %."
+    },
+    {
+      "with": "spirit",
+      "why": "Esprit : Spirit Box + Écriture, mais EMF 5 au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en LdV, et il attend 180 s après un encens avant de pouvoir rechasser."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Poltergeist : Spirit Box + Écriture, mais Ultraviolet au lieu des D.O.T.S ; vitesse standard et lancers d'objets en rafale."
+    },
+    {
+      "with": "mare",
+      "why": "Cauchemar (Mare) : Spirit Box + Écriture, mais Orbes au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard."
+    },
+    {
+      "with": "wraith",
+      "why": "Spectre : Spirit Box + D.O.T.S, mais EMF 5 au lieu de l'Écriture ; ne touche jamais au sel et peut se téléporter près d'un joueur."
+    },
+    {
+      "with": "phantom",
+      "why": "Fantôme : Spirit Box + D.O.T.S, mais Ultraviolet au lieu de l'Écriture ; c'est l'inverse du Deogen en chasse : il reste invisible plus longtemps entre deux clignotements, et il disparaît quand tu le photographies."
+    },
+    {
+      "with": "yokai",
+      "why": "Yokai : Spirit Box + D.O.T.S, mais Orbes au lieu de l'Écriture ; en chasse il ne t'entend (voix, électronique) qu'à 2,5 m, et il peut chasser jusqu'à 80 % si tu parles près de lui."
+    },
+    {
+      "with": "obambo",
+      "why": "Obambo : Écriture + D.O.T.S, mais Ultraviolet au lieu de la Spirit Box ; il alterne entre un état calme et un état agressif qui change sa vitesse (environ 1,45 / 1,96 m/s)."
+    },
+    {
+      "with": "aswang",
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de la Spirit Box ; base de 1,53 m/s avec une accélération en LdV très rapide."
+    },
+    {
+      "with": "oni",
+      "why": "Autre entité plus visible que la normale pendant les chasses. L'Oni a toutefois une vitesse standard avec accélération en LdV, et ses preuves (EMF 5, Températures glaciales, D.O.T.S) ne partagent que les D.O.T.S avec le Deogen."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse, puis elle avance presque au ralenti une fois tout près.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Tu te caches dans un placard : l'entité vient droit sur ta cachette, à chaque chasse.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une fois l'entité collée à toi, tu arrives facilement à la tenir à distance en tournant autour d'une table.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant la chasse, l'entité reste visible bien plus souvent que d'habitude.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Aucune chasse tant que la santé mentale moyenne n'est pas descendue sous 40 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "À partir de quel seuil de santé mentale moyenne le Deogen peut-il chasser ?",
+      "choices": [
+        "50 %",
+        "40 %",
+        "35 %",
+        "75 %"
+      ],
+      "answer": 1,
+      "explain": "Le Deogen ne chasse pas avant 40 % de santé moyenne. 35 % est le seuil de l'Ombre, 75 % celui du Thayé jeune."
+    },
+    {
+      "q": "Comment se comporte la vitesse du Deogen pendant une chasse ?",
+      "choices": [
+        "1,0 m/s, puis 3,0 m/s dès qu'il te détecte",
+        "2,75 m/s, puis plus lent à chaque chasse",
+        "3,0 m/s de loin, puis 0,4 m/s une fois près de toi",
+        "1,7 m/s avec accélération en LdV"
+      ],
+      "answer": 2,
+      "explain": "Il fonce à 3,0 m/s vers sa cible et ralentit à 0,4 m/s tout près. Le premier choix décrit le Revenant, le deuxième le Thayé."
+    },
+    {
+      "q": "Dans quelles conditions peux-tu entendre la respiration du Deogen à la Spirit Box ?",
+      "choices": [
+        "À moins d'1 m de lui, avec 33 % de chances par question",
+        "À moins de 3 m, à chaque question",
+        "N'importe où dans sa pièce, 33 % de chances",
+        "Uniquement pendant une chasse"
+      ],
+      "answer": 0,
+      "explain": "La respiration lourde n'arrive qu'à moins d'1 m de l'entité, avec 33 % de chances, à la place d'une réponse normale."
+    },
+    {
+      "q": "Quelle est la meilleure façon de survivre à une chasse de Deogen ?",
+      "choices": [
+        "Te cacher dans un placard",
+        "Rester immobile et silencieux",
+        "Le faire tourner autour d'un obstacle une fois qu'il est sur toi",
+        "Courir en ligne droite vers le camion"
+      ],
+      "answer": 2,
+      "explain": "Il te trouve toujours, donc te cacher ou rester immobile ne sert à rien, et de loin il fonce à 3,0 m/s. Tout près, il tombe à 0,4 m/s : en tournant autour d'un obstacle, tu le tiens à distance."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Deogen ?",
+      "choices": [
+        "Spirit Box, Écriture fantomatique, Températures glaciales",
+        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
+        "EMF niveau 5, Écriture fantomatique, Projecteur D.O.T.S",
+        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "Deogen = Spirit Box, Écriture, D.O.T.S. Les autres sont le Moroi, le Thayé et le Deildegast."
+    },
+    {
+      "q": "L'entité tente une chasse alors que la santé moyenne de l'équipe est à 45 % (sans objet maudit). Qu'en déduis-tu ?",
+      "choices": [
+        "Ce n'est pas un Deogen",
+        "C'est forcément un Deogen",
+        "C'est forcément une Ombre",
+        "Cela ne permet rien d'exclure"
+      ],
+      "answer": 0,
+      "explain": "Le Deogen ne chasse qu'en dessous de 40 % : une tentative à 45 % l'élimine (l'Ombre, à 35 %, est exclue aussi)."
+    }
+  ],
+  "changes": [
+    "Aucun changement trouvé pour 2025–2026 : les données de la sauvegarde de déc. 2024 sont confirmées par le wiki tybayn actuel (vitesse 3,0 → 0,4 m/s, pas de LdV, plus visible en chasse)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_deogen_p1",
+    "tybayn wiki: wiki_los_p2",
+    "tybayn wiki: wiki_flickering_p1",
+    "tybayn wiki: wiki_known_bugs_deogen",
+    "tybayn wiki: wiki_media_sound_a2",
+    "https://phasmopedia.com/en/ghosts/deogen/"
+  ],
+  "uncertain": [
+    "Formule de vitesse selon Phasmopedia (dérivée du wiki Fandom) : 0,15 m/s × 2^(distance − 1), soit 3,0 m/s au-delà d'environ 5,3 m et 0,4 m/s sous environ 2,4 m ; non documentée par tybayn.",
+    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée."
+  ]
+}

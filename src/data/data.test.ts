@@ -35,8 +35,9 @@ describe('fiches des entités', () => {
         if (h.normal >= 0) {
           expect(h.low).toBeLessThanOrEqual(h.normal)
           expect(h.high).toBeGreaterThanOrEqual(h.normal)
-          expect(h.high).toBeLessThanOrEqual(100)
         }
+        if (h.low >= 0 && h.high >= 0) expect(h.low).toBeLessThanOrEqual(h.high)
+        expect(h.high).toBeLessThanOrEqual(100)
         expect(s.summary.length).toBeGreaterThan(0)
         expect(h.summary.length).toBeGreaterThan(0)
       })

@@ -1,0 +1,271 @@
+{
+  "id": "kormos",
+  "name": "Kormos",
+  "nameEn": "Kormos",
+  "evidence": ["orbs", "spiritbox", "uv"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": 2.21,
+    "alt": 3.65,
+    "isRange": false,
+    "los": false,
+    "summary": "1,7 m/s · 2,21 m/s vers un bruit · LdV à < 5 m",
+    "details": [
+      "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
+      "S'il te détecte à plus de 5 m (bruit de pas, voix, électronique), il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",
+      "Pseudo-LdV : il ne te voit, et ne gagne de la vitesse en LdV, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
+      "Si tu sors de ces 5 m et qu'il ne te détecte plus, il arrête d'accélérer et perd peu à peu la vitesse accumulée.",
+      "La vitesse de LdV accumulée se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
+      "Il n'a donc pas l'accélération en LdV standard : ne l'élimine pas pour autant si tu l'as vu accélérer alors que tu bougeais tout près de lui."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 70,
+    "summary": "50 % · 70 % si quelqu'un sprinte dans sa pièce",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Le seuil monte à 70 % si un joueur sprinte dans la même pièce que lui."
+    ]
+  },
+  "summary": "Entité quasi aveugle qui chasse à l'oreille : elle entend tes pas de loin mais ne te voit que si tu bouges tout près d'elle.",
+  "keyTells": [
+    "Immobile et silencieux, il ne te détecte pas (sauf s'il te percute par hasard)",
+    "Entend tes pas : 10 m accroupi, 15 m en marchant, 30 m en sprintant",
+    "Ne te voit que si tu bouges à moins de 5 m de lui",
+    "Peut chasser dès 70 % si quelqu'un sprinte dans sa pièce"
+  ],
+  "tells": [
+    {
+      "text": "Presque aveugle : en chasse, il ne voit un joueur (et ne gagne de la vitesse en LdV) que si ce joueur bouge à moins de 5 m de lui.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Détecte la voix et les appareils électroniques à portée normale, et entend en plus les déplacements : 10 m si tu bouges accroupi, 15 m en marchant normalement, 30 m en sprintant.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Si tu restes complètement immobile sans faire de bruit au micro, il ne peut pas te détecter (tu peux quand même mourir s'il passe sur toi par hasard).",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Après avoir détecté un joueur, il se déplace à la vitesse correspondante jusqu'à la dernière position connue de ce joueur.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne fait jamais l'événement où l'entité apparaît et marche vers un joueur.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [
+    {
+      "text": "Son seuil de chasse passe de 50 % à 70 % si un joueur sprinte dans la même pièce que lui.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Pendant une chasse, avant qu'il ne t'ait repéré, reste totalement immobile et silencieux (micro coupé, aucun appareil électronique actif) dans un endroit dégagé. Si l'entité passe à proximité sans se diriger vers toi, puis te trouve dès que tu te remets à marcher, c'est un Kormos.",
+      "definitive": true
+    },
+    {
+      "text": "Si une chasse démarre juste après qu'un joueur a sprinté dans la pièce de l'entité, alors que la santé moyenne est entre 50 % et 70 %, ça peut être un Kormos.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si tu trouves les Températures glaciales, ce n'est pas un Kormos (mais ça peut être le Mimic, qui montre aussi Orbes, Spirit Box et UV)."
+    },
+    {
+      "text": "Si l'entité te repère et te prend en chasse alors que tu étais déjà immobile, silencieux, sans électronique active et à plus de 5 m d'elle, ce n'est pas un Kormos."
+    },
+    {
+      "text": "Si l'entité fait l'événement où elle apparaît et marche vers un joueur, ce n'est pas un Kormos."
+    },
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 70 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Kormos."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic peut montrer exactement les mêmes preuves (Orbes + Spirit Box + UV) avant que tu trouves ses Températures glaciales, et il peut imiter le Kormos. Cherche les Températures glaciales et surveille un comportement qui change d'une chasse à l'autre."
+    },
+    {
+      "with": "dayan",
+      "why": "Dayan : Orbes + Spirit Box, mais EMF 5 au lieu de l'UV. Elle aussi réagit à tes mouvements, autrement : à moins de 10 m, elle va à 2,25 m/s si tu marches et ralentit à 1,2 m/s si tu es immobile, mais sa détection reste normale (elle te voit). Le Kormos, lui, ne détecte pas un joueur immobile et silencieux."
+    },
+    {
+      "with": "yokai",
+      "why": "Yokai : Orbes + Spirit Box, mais D.O.T.S au lieu de l'UV. Lui aussi entend mal en chasse (voix et électronique à 2,5 m seulement), mais il te voit normalement : immobile en pleine vue, il te poursuit. Il peut chasser à 80 % si tu parles près de lui."
+    },
+    {
+      "with": "mare",
+      "why": "Cauchemar (Mare) : Orbes + Spirit Box, mais Écriture au lieu de l'UV ; chasse à 60 % lumière éteinte dans sa pièce et te voit normalement."
+    },
+    {
+      "with": "onryo",
+      "why": "Onryo : Orbes + Spirit Box, mais Températures glaciales au lieu de l'UV ; chasse à 60 % et ses flammes agissent comme des crucifix."
+    },
+    {
+      "with": "obake",
+      "why": "Obake : Orbes + UV, mais EMF 5 au lieu de la Spirit Box ; vitesse standard avec LdV et changement de modèle pendant les chasses."
+    },
+    {
+      "with": "banshee",
+      "why": "Banshee : Orbes + UV, mais D.O.T.S au lieu de la Spirit Box ; elle ne poursuit que sa cible et chasse selon la santé de celle-ci."
+    },
+    {
+      "with": "hantu",
+      "why": "Hantu : Orbes + UV, mais Températures glaciales au lieu de la Spirit Box ; plus rapide dans le froid, sans accélération en LdV."
+    },
+    {
+      "with": "phantom",
+      "why": "Fantôme : Spirit Box + UV, mais D.O.T.S au lieu des Orbes ; moins visible pendant les chasses et disparaît quand tu le photographies."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Poltergeist : Spirit Box + UV, mais Écriture au lieu des Orbes ; lance énormément d'objets."
+    },
+    {
+      "with": "gallu",
+      "why": "Gallu : Spirit Box + UV, mais EMF 5 au lieu des Orbes ; change d'état (et de vitesse) quand il marche dans le sel, est encensé ou utilise un crucifix."
+    },
+    {
+      "with": "revenant",
+      "why": "Le Revenant aussi passe d'une allure lente à une allure rapide quand il te détecte (1,0 → 3,0 m/s), mais il te détecte aussi à la vue : rester immobile en pleine vue ne te protège pas de lui."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Tu restes figé et silencieux en pleine vue : l'entité passe tout près de toi sans réagir, puis fonce sur toi dès que tu fais un pas.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Un coéquipier sprinte à une vingtaine de mètres, hors de sa vue, et l'entité se précipite vers l'endroit où il courait.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Quelqu'un sprinte dans la pièce de l'entité et une chasse démarre alors que l'équipe est encore au-dessus de 50 % de santé mentale.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Quand elle fonce vers un bruit lointain, l'entité avance plus vite que la normale, puis reprend son allure une fois sur place.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Malgré plusieurs événements, l'entité n'apparaît jamais pour marcher vers toi.",
+      "kind": "event",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Kormos ?",
+      "choices": [
+        "Orbes fantomatiques, Ultraviolet, Températures glaciales",
+        "Spirit Box, Ultraviolet, Températures glaciales",
+        "Orbes fantomatiques, Spirit Box, Ultraviolet",
+        "EMF niveau 5, Orbes fantomatiques, Spirit Box"
+      ],
+      "answer": 2,
+      "explain": "Kormos = Orbes, Spirit Box, Ultraviolet. Les autres sont le Hantu, les vraies preuves du Mimic et la Dayan."
+    },
+    {
+      "q": "À quelle distance le Kormos entend-il un joueur qui sprinte ?",
+      "choices": [
+        "5 m",
+        "10 m",
+        "15 m",
+        "30 m"
+      ],
+      "answer": 3,
+      "explain": "30 m en sprintant, 15 m en marchant normalement, 10 m en se déplaçant accroupi. Les 5 m correspondent à sa vue."
+    },
+    {
+      "q": "Quel est le seuil de chasse du Kormos si un joueur sprinte dans sa pièce ?",
+      "choices": [
+        "70 %",
+        "50 %",
+        "80 %",
+        "60 %"
+      ],
+      "answer": 0,
+      "explain": "50 % normalement, 70 % si un joueur sprinte dans la même pièce que lui."
+    },
+    {
+      "q": "Une chasse de Kormos commence et il ne t'a pas encore repéré. Que fais-tu ?",
+      "choices": [
+        "Tu sprintes pour mettre de la distance",
+        "Tu te caches et tu préviens l'équipe au micro",
+        "Tu allumes ta lampe torche pour l'aveugler",
+        "Tu t'immobilises, micro coupé, électronique éteinte"
+      ],
+      "answer": 3,
+      "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux."
+    },
+    {
+      "q": "Tu as Orbes, Spirit Box et UV. Quelle preuve supplémentaire exclurait le Kormos tout en gardant le Mimic ?",
+      "choices": [
+        "EMF niveau 5",
+        "Températures glaciales",
+        "Écriture fantomatique",
+        "Projecteur D.O.T.S"
+      ],
+      "answer": 1,
+      "explain": "Le Mimic montre Spirit Box, UV, Températures glaciales et faux orbes : les Températures glaciales désignent le Mimic. EMF, Écriture et D.O.T.S excluraient les deux."
+    },
+    {
+      "q": "À quelle vitesse le Kormos file-t-il vers un joueur qu'il a détecté à plus de 5 m (sans bonus de LdV) ?",
+      "choices": [
+        "1,7 m/s",
+        "2,21 m/s",
+        "3,0 m/s",
+        "1,0 m/s"
+      ],
+      "answer": 1,
+      "explain": "2,21 m/s, soit 1,3 × sa vitesse de base de 1,7 m/s ; avec un bonus de LdV accumulé, ça peut monter à 3,65 m/s."
+    }
+  ],
+  "changes": [
+    "Nouvelle entité (absente de la sauvegarde de déc. 2024) : ajoutée avec l'Aswang lors de la mise à jour « Phasmophobia by Alan Wake » (v0.17.1.0, vers le 12 mai 2026).",
+    "Hotfix v0.17.1.1 (13 mai 2026) : ne détecte plus et ne tente plus de tuer les joueurs déjà morts.",
+    "v0.17.1.4 (2 juin 2026) : ne peut plus tuer à travers les sols ni tuer des joueurs à l'extérieur ; annulation du ralentissement de l'accélération en LdV introduit en v0.17.0.0.",
+    "v0.18.0.0 (21 juillet 2026) : ne peut plus entendre les joueurs pendant la période de grâce après une chasse, ni tuer à travers les murs ou de plus loin que prévu."
+  ],
+  "sources": [
+    "tybayn wiki: wiki_kormos_detection_*",
+    "tybayn wiki: wiki_kormos_pseudo_los_*",
+    "tybayn wiki: wiki_known_bugs_kormos",
+    "tybayn wiki: tableau de simulation LdV (Kormos 1,7 / 2,21 m/s, sans LdV standard)",
+    "https://phasmophobia.wiki.fextralife.com/Kormos",
+    "https://phasmopedia.com/en/ghosts/kormos/",
+    "https://phasmophobia.fandom.com/wiki/Kormos",
+    "https://www.destructoid.com/how-to-identify-a-kormos-in-phasmophobia/",
+    "https://www.keengamer.com/articles/guides/phasmophobia-new-ghosts-guide-how-to-identify-kormos-and-aswang/",
+    "https://kineticgames.co.uk/news/phasmophobia-by-alan-wake---v01710",
+    "https://kineticgames.co.uk/news/phasmophobia-hotfix-v01711",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes",
+    "https://kineticgames.co.uk/news/phasmophobia-v01800-patch-notes"
+  ],
+  "uncertain": [
+    "Version exacte d'ajout : les sources la rattachent à la mise à jour Alan Wake (v0.17.1.0, 12 mai 2026), mais les notes officielles n'ont pas pu être lues directement.",
+    "Portée de mise à mort : 0,5 m sans LdV selon les wikis Fandom et Fextralife (au lieu de 1,1 m pour les autres), contre 1,5 m à travers les obstacles dans d'anciens guides (comportement probablement corrigé).",
+    "Fextralife indique qu'il poursuit toujours en priorité un joueur qui sprinte : non confirmé par une deuxième source.",
+    "Effet de l'encens sur le Kormos (aveuglement standard de 5 s ?) : non documenté clairement.",
+    "Selon Fextralife, ses seuls événements seraient l'événement de lumières et l'apparition dans sa pièce : seule l'absence de l'événement « apparaît et marche vers un joueur » est confirmée par deux sources.",
+    "Le classement « sans LdV standard » (los: false) reprend la table LdV de tybayn ; il peut pourtant accélérer en LdV si tu bouges à moins de 5 m.",
+    "Condition exacte du seuil de 70 % : « un joueur sprinte dans la même pièce » selon Destructoid, « un joueur proche sprinte » selon GameSpot ; tybayn ne documente pas ce seuil.",
+    "Selon le wiki Fandom, il ne ferait pas non plus l'événement en forme de brume : une seule source, donc non retenu dans les tests."
+  ]
+}

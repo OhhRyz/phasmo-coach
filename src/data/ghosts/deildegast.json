@@ -1,0 +1,259 @@
+{
+  "id": "deildegast",
+  "name": "Deildegast",
+  "nameEn": "Deildegast",
+  "evidence": ["emf", "writing", "dots"],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 0.4,
+    "max": 3.0,
+    "alt": null,
+    "isRange": true,
+    "los": false,
+    "summary": "3,0 → 0,4 m/s selon les objets utilisés · pas de LdV",
+    "details": [
+      "Sa vitesse de chasse dépend du nombre d'objets différents utilisés ou ramassés par les joueurs depuis la dernière chasse (ou tentative de chasse).",
+      "Départ à 3,0 m/s ; chaque action retire 0,1 m/s, jusqu'à 0,4 m/s au minimum (26 actions). Repères : 9 objets = 2,1 m/s · 13 = 1,7 m/s · 20 = 1,0 m/s.",
+      "Comptent : ramasser un objet hors équipement (joueur vivant ou mort), interagir avec un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
+      "Chaque objet ne compte qu'une fois (une chaussure ramassée et lâchée plusieurs fois = 1), mais il peut être n'importe où sur la carte, même hors de la zone d'enquête ou dans le camion.",
+      "Vitesse verrouillée dès le début de la chasse : pas d'accélération en LdV, pas de ralentissement à l'approche, et ce que tu touches pendant la chasse ne compte pas.",
+      "Après chaque chasse ou tentative de chasse, retour à 3,0 m/s ; les objets déjà utilisés peuvent alors recompter."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
+    ]
+  },
+  "summary": "Entité ultra-rapide que tu ralentis en manipulant des objets : chaque objet différent utilisé entre deux chasses lui retire 0,1 m/s.",
+  "keyTells": [
+    "3,0 m/s si personne n'a rien touché depuis la dernière chasse",
+    "Chaque objet différent utilisé ou ramassé : −0,1 m/s (minimum 0,4 m/s)",
+    "Vitesse fixe pendant toute la chasse : aucune accélération en LdV",
+    "Revient à 3,0 m/s après chaque chasse ou tentative de chasse"
+  ],
+  "tells": [
+    {
+      "text": "Sa vitesse de chasse dépend du nombre d'objets différents utilisés ou ramassés par les joueurs depuis la dernière chasse : 3,0 m/s au départ, −0,1 m/s par action, minimum 0,4 m/s (26 actions).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "N'accélère pas en LdV : sa vitesse est verrouillée pendant toute la chasse.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Comptent pour le ralentir : ramasser un objet hors équipement (joueur vivant ou mort), interagir avec un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Chaque objet ne compte qu'une fois, mais il peut être n'importe où sur la carte, y compris hors de la zone d'enquête ou dans le camion.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Après une chasse ou une tentative de chasse, sa vitesse revient à 3,0 m/s et les objets déjà utilisés peuvent recompter.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Les objets qu'il lance lui-même ne le ralentissent pas : seuls ceux manipulés par les joueurs comptent.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Repère la vitesse d'une première chasse sans avoir touché à rien (environ 3,0 m/s, constante). Avant la chasse suivante, ramasse ou utilise une quinzaine d'objets différents (hors équipement). Si l'entité est alors nettement plus lente (environ 1,5 m/s) et garde cette vitesse toute la chasse, ça peut être un Deildegast. Un Thayé qui a vieilli entre les deux chasses peut donner le même résultat : confirme avec le test suivant.",
+      "definitive": false
+    },
+    {
+      "text": "Après une chasse lente, ne touche plus à rien : si la chasse suivante redevient très rapide (3,0 m/s) et que cette vitesse ne change pas de toute la chasse, c'est un Deildegast (un Thayé, lui, ne redevient jamais plus rapide).",
+      "definitive": true
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité accélère progressivement quand elle te garde en LdV, ce n'est pas un Deildegast."
+    },
+    {
+      "text": "Si sa vitesse change au cours d'une même chasse (ralentit en arrivant sur toi, accélère d'un coup quand elle te détecte), ce n'est pas un Deildegast."
+    },
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Deildegast."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "deogen",
+      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu de l'EMF 5. Même plage de vitesse (0,4 à 3,0 m/s) sans LdV, mais elle dépend de la distance : il ralentit en arrivant sur toi, alors que le Deildegast garde la même vitesse toute la chasse. Le Deogen chasse à 40 %."
+    },
+    {
+      "with": "thaye",
+      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de l'EMF 5. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit avec le temps passé près de lui (et non avec les objets) et ne redevient jamais plus rapide ; il chasse dès 75 % quand il est jeune."
+    },
+    {
+      "with": "revenant",
+      "why": "Le Revenant n'est à 3,0 m/s que quand il te détecte et retombe à 1,0 m/s sinon ; le Deildegast, lui, garde la même vitesse toute la chasse, qu'il te voie ou non."
+    },
+    {
+      "with": "obambo",
+      "why": "Obambo : Écriture + D.O.T.S, mais Ultraviolet au lieu de l'EMF 5 ; il alterne entre un état calme et un état agressif (environ 1,45 / 1,96 m/s)."
+    },
+    {
+      "with": "aswang",
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de l'EMF 5 ; base de 1,53 m/s et accélération en LdV très rapide."
+    },
+    {
+      "with": "spirit",
+      "why": "Esprit : EMF 5 + Écriture, mais Spirit Box au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en LdV."
+    },
+    {
+      "with": "shade",
+      "why": "Ombre : EMF 5 + Écriture, mais Températures glaciales au lieu des D.O.T.S ; chasse seulement sous 35 %, vitesse standard."
+    },
+    {
+      "with": "myling",
+      "why": "Myling : EMF 5 + Écriture, mais Ultraviolet au lieu des D.O.T.S ; en chasse, ses pas ne s'entendent qu'à 12 m."
+    },
+    {
+      "with": "wraith",
+      "why": "Spectre : EMF 5 + D.O.T.S, mais Spirit Box au lieu de l'Écriture ; ne touche jamais au sel et peut se téléporter près d'un joueur."
+    },
+    {
+      "with": "oni",
+      "why": "Oni : EMF 5 + D.O.T.S, mais Températures glaciales au lieu de l'Écriture ; plus visible pendant les chasses, vitesse standard avec LdV."
+    },
+    {
+      "with": "goryo",
+      "why": "Goryo : EMF 5 + D.O.T.S, mais Ultraviolet au lieu de l'Écriture ; ses D.O.T.S ne se voient qu'à la caméra, sans personne dans la pièce."
+    },
+    {
+      "with": "raiju",
+      "why": "Raiju : EMF 5 + D.O.T.S, mais Orbes au lieu de l'Écriture ; 2,5 m/s seulement près de l'électronique active, 1,7 m/s sinon."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Première chasse alors que personne n'a encore rien touché : l'entité est extrêmement rapide dès le départ.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Entre deux chasses, l'équipe a ramassé et utilisé plein d'objets différents : la chasse suivante est nettement plus lente.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant toute la chasse, sa vitesse ne bouge pas : elle n'accélère pas quand elle te voit et ne ralentit pas en arrivant sur toi.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Après une chasse lente, personne ne touche plus à rien… et la chasse suivante redevient ultra-rapide, à vitesse constante.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "La première chasse survient alors que la santé mentale moyenne vient de passer sous 50 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Deildegast ?",
+      "choices": [
+        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
+        "EMF niveau 5, Écriture fantomatique, Projecteur D.O.T.S",
+        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S",
+        "EMF niveau 5, Écriture fantomatique, Températures glaciales"
+      ],
+      "answer": 1,
+      "explain": "Deildegast = EMF 5, Écriture, D.O.T.S. Les autres combinaisons sont celles du Thayé, du Deogen et de l'Ombre."
+    },
+    {
+      "q": "Quelles sont la vitesse de départ et la vitesse minimale du Deildegast ?",
+      "choices": [
+        "1,7 m/s, jusqu'à 0,4 m/s",
+        "3,0 m/s, jusqu'à 1,0 m/s",
+        "3,0 m/s, jusqu'à 0,4 m/s",
+        "2,75 m/s, jusqu'à 1,0 m/s"
+      ],
+      "answer": 2,
+      "explain": "Il part de 3,0 m/s et perd 0,1 m/s par action, jusqu'à 0,4 m/s après 26 actions. 2,75 → 1,0 m/s, c'est le Thayé."
+    },
+    {
+      "q": "Entre deux chasses, tu ramasses et lâches la même chaussure 5 fois. Combien d'actions cela compte-t-il ?",
+      "choices": [
+        "1",
+        "5",
+        "0",
+        "2"
+      ],
+      "answer": 0,
+      "explain": "Chaque objet ne compte qu'une fois jusqu'à la prochaine chasse : il faut varier les objets pour le ralentir."
+    },
+    {
+      "q": "Lequel de ces gestes ne ralentit PAS le Deildegast ?",
+      "choices": [
+        "Actionner un interrupteur",
+        "Ouvrir un robinet",
+        "Un joueur mort qui ramasse un objet",
+        "Un objet lancé par l'entité elle-même"
+      ],
+      "answer": 3,
+      "explain": "Seuls les objets manipulés par les joueurs (vivants ou morts) comptent ; ce que l'entité lance elle-même ne change pas sa vitesse."
+    },
+    {
+      "q": "Que devient la vitesse du Deildegast après une chasse ?",
+      "choices": [
+        "Elle reste au niveau atteint",
+        "Elle revient à 3,0 m/s et les mêmes objets peuvent recompter",
+        "Elle baisse encore de 0,1 m/s",
+        "Elle revient à 1,7 m/s"
+      ],
+      "answer": 1,
+      "explain": "Après chaque chasse ou tentative de chasse, le compteur repart de zéro : 3,0 m/s, et tu peux réutiliser les mêmes objets."
+    },
+    {
+      "q": "Combien d'objets différents faut-il utiliser pour ramener le Deildegast à la vitesse standard de 1,7 m/s ?",
+      "choices": [
+        "9",
+        "13",
+        "17",
+        "26"
+      ],
+      "answer": 1,
+      "explain": "3,0 − 13 × 0,1 = 1,7 m/s. Avec 9 objets il est à 2,1 m/s, avec 26 il atteint son minimum de 0,4 m/s."
+    }
+  ],
+  "changes": [
+    "Nouvelle entité (absente de la sauvegarde de déc. 2024) : ajoutée avec la mise à jour v0.18.0.0 « 13 Willow Street Rework & Quality of Life #1 » (21 juillet 2026)."
+  ],
+  "sources": [
+    "tybayn wiki: wiki_deildegast_speed_*",
+    "tybayn wiki: wiki_ghost_speed_h0 (tableau des vitesses du Deildegast)",
+    "tybayn wiki: tableau de simulation LdV (Deildegast 0,4–3,0 m/s, sans LdV)",
+    "tybayn wiki: wiki_misconceptions_deildegast_1, wiki_misconceptions_deildegast_2, wiki_misconceptions_deildegast_3",
+    "tybayn wiki: wiki_known_bugs_deildegast",
+    "https://phasmopedia.com/en/ghosts/deildegast/",
+    "https://phasmophobia.wiki.fextralife.com/Deildegast",
+    "https://www.playnews.gg/en/guides/phasmophobia-the-complete-deildegast-guide-the-fastest-entity-in-the-game-and-how-to-slow-it-down-to-0-4-m-s",
+    "https://www.destructoid.com/how-to-identify-a-deildegast-in-phasmophobia/",
+    "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
+  ],
+  "uncertain": [
+    "Seuil de chasse de 50 % : donné par Phasmopedia et un autre guide, pas documenté par tybayn.",
+    "Version et date d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source agrégatrice les relie explicitement au Deildegast.",
+    "Fextralife précise que les portes, l'équipement et les objets maudits ne comptent pas ; tybayn exclut l'équipement mais ne mentionne ni les portes ni les objets maudits.",
+    "Pas de preuve garantie selon les wikis (n'importe laquelle des trois peut être retirée) ; un guide Steam isolé affirme le contraire pour une autre combinaison de preuves, donc écarté.",
+    "Les tests de confirmation sont déduits des mécanismes documentés par tybayn (aucun test officiel tybayn n'a pu être lu). Le second est noté définitif parce qu'un Thayé ne redevient jamais plus rapide ; un Hantu, dont la vitesse suit la température des pièces, pourrait en théorie brouiller une mesure faite à l'oreille.",
+    "Effet de l'encens et du crucifix : supposé standard, non documenté (Fextralife indique qu'un crucifix qui empêche une chasse réinitialise aussi le compteur, ce qui correspond à la « tentative de chasse » de tybayn)."
+  ]
+}

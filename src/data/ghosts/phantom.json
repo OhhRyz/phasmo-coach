@@ -1,0 +1,258 @@
+{
+  "id": "phantom",
+  "name": "Fantôme",
+  "nameEn": "Phantom",
+  "evidence": [
+    "spiritbox",
+    "uv",
+    "dots"
+  ],
+  "forcedEvidence": null,
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.7,
+    "max": null,
+    "alt": null,
+    "isRange": false,
+    "los": true,
+    "summary": "1,7 m/s · accélère en LdV",
+    "details": [
+      "Vitesse de chasse standard : 1,7 m/s.",
+      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Sa vitesse est normale : ce qui le trahit en chasse, c'est sa visibilité (longues phases d'invisibilité entre deux clignotements)."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
+      "Il fait baisser la santé plus vite autour de lui pendant les chasses et les événements (0,5 % par seconde dans la portée des battements de cœur), ce qui peut avancer ses chasses."
+    ]
+  },
+  "summary": "Entité insaisissable : elle disparaît quand tu la prends en photo, n'apparaît pas sur la photo et reste presque invisible pendant les chasses.",
+  "keyTells": [
+    "Une photo de l'entité la fait disparaître, et elle n'est pas visible sur la photo",
+    "Presque invisible en chasse : longues phases d'invisibilité entre les clignotements",
+    "Te draine 0,5 %/s de santé à portée de battements de cœur (chasses et événements)",
+    "Peut errer vers un joueur pris au hasard et laisser un EMF 2"
+  ],
+  "tells": [
+    {
+      "text": "N'apparaît pas sur les photos de l'entité (y compris les photos de sa silhouette D.O.T.S).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "La prendre en photo la fait disparaître (y compris en état D.O.T.S).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Moins visible pendant les chasses : elle reste invisible plus longtemps entre deux clignotements.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Le joueur perd 0,5 % de santé mentale par seconde tant qu'il est dans la portée des battements de cœur de l'entité, pendant les chasses et les événements.",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [],
+  "abilities": [
+    {
+      "text": "Peut errer vers un joueur choisi au hasard, en laissant un EMF 2 à l'endroit où elle se rend.",
+      "zeroEvidence": true
+    }
+  ],
+  "confirmationTests": [
+    {
+      "text": "Prends l'entité en photo pendant un événement ou quand elle est visible dans le D.O.T.S. Si elle disparaît (alors que les sons de l'événement continuent) et qu'elle n'apparaît pas sur la photo « Fantôme » du journal, c'est un Fantôme.",
+      "definitive": true
+    },
+    {
+      "text": "Observe l'entité pendant une chasse : si elle paraît presque invisible, c'est un Fantôme.",
+      "definitive": true
+    },
+    {
+      "text": "Si, pendant ton enquête, tu obtiens un EMF 2 sans aucune interaction près de toi, c'est peut-être le Fantôme qui a utilisé sa capacité d'errance.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité apparaît sur une photo étiquetée « Fantôme » (photo de l'entité) dans le journal, ce n'est pas un Fantôme. Ne te fie qu'à cette photo : un bug connu laisse le Fantôme visible sur la pellicule des vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse »."
+    },
+    {
+      "text": "Si l'entité clignote normalement, ou plus souvent que la normale, pendant une chasse, ce n'est pas un Fantôme."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "wraith",
+      "why": "Spirit Box + D.O.T.S en commun, et le Spectre peut aussi laisser un EMF 2 près d'un joueur (il s'y téléporte). Mais le Spectre apparaît sur les photos, clignote normalement en chasse et ne touche jamais au sel. 3e preuve : EMF 5 (Spectre) ou UV (Fantôme)."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Spirit Box + UV en commun. Le Poltergeist lance énormément d'objets (un toutes les 0,5 s en chasse, plusieurs d'un coup) et apparaît normalement en photo. 3e preuve : écriture vs D.O.T.S."
+    },
+    {
+      "with": "banshee",
+      "why": "UV + D.O.T.S en commun. La Banshee peut pousser un cri unique au microphone parabolique, ne poursuit que sa cible en chasse et apparaît en photo. 3e preuve : orbes vs Spirit Box."
+    },
+    {
+      "with": "goryo",
+      "why": "UV + D.O.T.S en commun. Le D.O.T.S du Goryo n'est visible qu'à la caméra vidéo et jamais avec un joueur dans la pièce ; il apparaît en photo. 3e preuve : EMF 5 vs Spirit Box."
+    },
+    {
+      "with": "yokai",
+      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce et ne te détecte qu'à 2,5 m pendant une chasse. 3e preuve : orbes vs UV."
+    },
+    {
+      "with": "deogen",
+      "why": "Spirit Box + D.O.T.S en commun. C'est l'inverse du Fantôme en chasse : le Deogen est plus visible, fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible. 3e preuve : écriture vs UV."
+    },
+    {
+      "with": "oni",
+      "why": "Clignotement opposé : l'Oni est plus visible en chasse, le Fantôme presque invisible. Une seule preuve en commun (D.O.T.S)."
+    },
+    {
+      "with": "gallu",
+      "why": "Spirit Box + UV en commun. Le Gallu change de vitesse et de seuil de chasse selon son état (encens, sel, crucifix) et apparaît normalement en photo. 3e preuve : EMF 5 vs D.O.T.S."
+    },
+    {
+      "with": "obambo",
+      "why": "UV + D.O.T.S en commun. L'Obambo alterne entre un état calme et un état agressif selon un minuteur ; il n'a pas les particularités photo du Fantôme. 3e preuve : écriture vs Spirit Box."
+    },
+    {
+      "with": "kormos",
+      "why": "Spirit Box + UV en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : orbes vs D.O.T.S."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Spirit Box + UV en commun, et le Mimic peut imiter le comportement du Fantôme. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; 3e vraie preuve : températures glaciales vs D.O.T.S."
+    }
+  ],
+  "observations": [
+    {
+      "text": "Tu prends l'entité en photo pendant un événement : elle disparaît aussitôt, alors que les sons de l'événement continuent.",
+      "kind": "event",
+      "strength": "definitive"
+    },
+    {
+      "text": "Dans le journal, ta photo est bien classée comme photo de l'entité, mais l'entité n'y apparaît pas.",
+      "kind": "event",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant la chasse, tu ne vois presque pas l'entité : elle reste invisible longtemps entre deux clignotements.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Ta santé mentale chute vite pendant les événements et les chasses quand l'entité est proche de toi.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "Ton lecteur EMF affiche un niveau 2 près de toi alors qu'aucun objet n'a bougé autour de toi.",
+      "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Que se passe-t-il quand tu prends un Fantôme en photo pendant un événement ?",
+      "choices": [
+        "Il lance immédiatement une chasse",
+        "Il disparaît, mais les sons de l'événement continuent",
+        "Il apparaît plus nettement sur la photo",
+        "L'événement s'arrête et il réapparaît dans sa pièce favorite"
+      ],
+      "answer": 1,
+      "explain": "Une photo fait disparaître le Fantôme (même en état D.O.T.S), et il n'apparaît pas sur la photo « Fantôme » du journal, alors que les sons de l'événement continuent."
+    },
+    {
+      "q": "Quelle photo prouve que ce n'est PAS un Fantôme ?",
+      "choices": [
+        "Une photo d'empreintes UV",
+        "Une photo d'un crucifix brûlé",
+        "Une photo étiquetée « Fantôme » où l'entité est visible",
+        "Une photo d'os"
+      ],
+      "answer": 2,
+      "explain": "Le Fantôme n'apparaît jamais sur une photo étiquetée « Fantôme ». Les empreintes UV font partie de ses preuves ; le crucifix brûlé et l'os ne disent rien du type d'entité."
+    },
+    {
+      "q": "Comment reconnaître un Fantôme pendant une chasse ?",
+      "choices": [
+        "Il est presque invisible, avec de longues phases d'invisibilité",
+        "Il clignote plus souvent et reste plus visible",
+        "Il change de modèle le temps d'un clignotement",
+        "Il a un souffle glacé visible"
+      ],
+      "answer": 0,
+      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
+    },
+    {
+      "q": "Quelles sont les trois preuves du Fantôme ?",
+      "choices": [
+        "Spirit Box, Ultraviolet, Écriture fantomatique",
+        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
+        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S",
+        "Spirit Box, Ultraviolet, Projecteur D.O.T.S"
+      ],
+      "answer": 3,
+      "explain": "Spirit Box + UV + D.O.T.S. Les leurres sont le Poltergeist, le Spectre et la Banshee, qui partagent chacun deux de ces preuves."
+    },
+    {
+      "q": "Combien de santé mentale perds-tu près d'un Fantôme pendant une chasse ou un événement ?",
+      "choices": [
+        "25 % d'un coup",
+        "2 % par objet lancé",
+        "0,5 % par seconde dans la portée des battements de cœur",
+        "15 % si tu le touches"
+      ],
+      "answer": 2,
+      "explain": "Le Fantôme draine 0,5 % par seconde dans la portée des battements de cœur. 25 % d'un coup, c'est le Djinn ; 2 % par objet, l'explosion du Poltergeist ; 15 % au toucher, la Banshee pendant son chant."
+    },
+    {
+      "q": "Quelle capacité du Fantôme peut laisser un EMF 2 près d'un joueur ?",
+      "choices": [
+        "Il erre vers un joueur pris au hasard",
+        "Il se téléporte sur un joueur pris au hasard",
+        "Il fait sauter le disjoncteur",
+        "Il lance plusieurs objets d'un coup"
+      ],
+      "answer": 0,
+      "explain": "Le Fantôme erre (marche) vers un joueur au hasard et laisse un EMF 2 là où il arrive. La téléportation vers un joueur, c'est le Spectre."
+    }
+  ],
+  "changes": [
+    "v0.18.0.0 (21 juillet 2026) : un agrégateur de notes de patch (patched.gg) mentionne la correction du bug qui permettait au Fantôme d'utiliser sa capacité sur des joueurs morts ou à l'extérieur ; non confirmé, car le wiki tybayn (28/10/2026) le liste encore comme bug connu.",
+    "Depuis la refonte des médias (Chronicle, v0.13, juin 2025), il existe des médias vidéo : bug connu, le Fantôme reste visible sur la pellicule de certaines vidéos. Seule la photo « Fantôme » compte pour le test.",
+    "Nouvelles entités partageant deux preuves : Gallu (Spirit Box + UV) et Obambo (UV + D.O.T.S), toutes deux en décembre 2025, puis Kormos (Spirit Box + UV, mai 2026)."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_flickering_p1",
+    "tybayn wiki: wiki_flickering_p2",
+    "tybayn wiki: wiki_known_bugs_phantom",
+    "tybayn wiki: wiki_misconceptions_phantom_1_c",
+    "tybayn wiki: wiki_misconceptions_phantom_1_r",
+    "tybayn wiki: wiki_known_bugs_raiju (portée standard des battements de cœur : 10 m)",
+    "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1",
+    "https://patchbot.io/games/phasmophobia/articles/879-v01800-13-willow-street-rework-quality-of-life-1",
+    "https://www.destructoid.com/how-to-identify-a-kormos-in-phasmophobia/",
+    "https://www.destructoid.com/how-to-identify-an-obambo-in-phasmophobia/"
+  ],
+  "uncertain": [
+    "La correction v0.18.0.0 de la capacité du Fantôme (joueurs morts ou dehors) n'a été vue que dans un agrégateur de notes de patch ; le wiki tybayn (28/10/2026) la liste toujours comme bug connu.",
+    "Le bug de la pellicule vidéo est tiré du wiki tybayn ; non vérifié en jeu.",
+    "Les preuves du Kormos (orbes, UV, Spirit Box) viennent de guides tiers concordants (Destructoid, GameSpot), sans source officielle lue."
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "id": "moroi",
+  "name": "Moroi",
+  "nameEn": "Moroi",
+  "evidence": ["spiritbox", "writing", "freezing"],
+  "forcedEvidence": "spiritbox",
+  "fakeEvidence": null,
+  "speed": {
+    "min": 1.5,
+    "max": 2.25,
+    "alt": 3.71,
+    "isRange": true,
+    "los": true,
+    "summary": "1,5 → 2,25 m/s selon la santé · LdV jusqu'à 3,71",
+    "details": [
+      "Sa vitesse dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, puis environ +0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %.",
+      "Repères (tableau tybayn) : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
+      "Sa vitesse suit la santé en pleine chasse : si l'équipe prend des pilules, il ralentit.",
+      "Il a l'accélération en LdV : jusqu'à 1,65 × sa vitesse actuelle après 13 s de LdV continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
+      "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit."
+    ]
+  },
+  "huntSanity": {
+    "normal": 50,
+    "low": 50,
+    "high": 50,
+    "summary": "50 %",
+    "details": [
+      "Seuil de chasse standard : 50 % de santé mentale moyenne.",
+      "Sa malédiction fait chuter la santé plus vite, donc les chasses peuvent arriver plus tôt dans la partie, mais le seuil reste 50 %."
+    ]
+  },
+  "summary": "Entité qui maudit ceux qui l'entendent et qui devient de plus en plus rapide à mesure que la santé mentale de l'équipe chute.",
+  "keyTells": [
+    "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
+    "Peut atteindre 3,71 m/s : l'entité la plus rapide du jeu",
+    "Encens en chasse : aveuglé 7 s au lieu de 5 s",
+    "Malédiction via Spirit Box ou micro parabolique : santé qui baisse 2× plus vite"
+  ],
+  "tells": [
+    {
+      "text": "Maudit le joueur qui l'entend à la Spirit Box ou au micro parabolique : sa santé mentale baisse alors passivement deux fois plus vite.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Maudit le joueur qui l'entend au micro parabolique : la malédiction fait baisser sa santé mentale deux fois plus vite.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "L'aveuglement à l'encens pendant les chasses dure plus longtemps : 7 s au lieu de 5 s avec un encens de rang 1 (les notes de patch annonçaient +50 %, soit 7,5 s, mais c'est 7 s en jeu).",
+      "zeroEvidence": true
+    }
+  ],
+  "behaviors": [
+    {
+      "text": "Plus rapide quand la santé mentale moyenne est basse ; peut atteindre 3,71 m/s en LdV.",
+      "zeroEvidence": true
+    }
+  ],
+  "abilities": [],
+  "confirmationTests": [
+    {
+      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse) tout en ayant l'accélération en LdV, ça peut être un Moroi. Attention : les Jumeaux, le Gallu (état enragé) et l'Obambo (état agressif) changent aussi de vitesse d'une chasse à l'autre avec une LdV standard.",
+      "definitive": false
+    },
+    {
+      "text": "Après avoir encensé l'entité (encens de rang 1) pendant une chasse, si elle met plus de 5 s à revenir vers toi (en supposant qu'elle puisse encore te détecter), ça peut être un Moroi (7 s). Attention : un Gallu en état affaibli (1,36 m/s) reste lui aussi aveuglé 6 s.",
+      "definitive": false
+    },
+    {
+      "text": "Si, après avoir entendu un murmure au micro parabolique, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une (petite) pièce éclairée, c'est un Moroi.",
+      "definitive": true
+    },
+    {
+      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse ensuite, c'est un Moroi.",
+      "definitive": true
+    },
+    {
+      "text": "Si, après avoir entendu un murmure au micro parabolique, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroi.",
+      "definitive": false
+    }
+  ],
+  "eliminationTests": [
+    {
+      "text": "Si l'entité n'accélère pas du tout alors qu'elle te garde en LdV pendant plusieurs secondes, ce n'est pas un Moroi."
+    },
+    {
+      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Moroi."
+    }
+  ],
+  "confusions": [
+    {
+      "with": "thaye",
+      "why": "Le Thayé est lui aussi très rapide (2,75 m/s jeune), mais il n'accélère jamais en LdV et ralentit à chaque chasse. Le Moroi, lui, accélère en LdV et devient plus rapide quand la santé baisse. Sans LdV, un Moroi plafonne à 2,25 m/s."
+    },
+    {
+      "with": "deogen",
+      "why": "Deogen : Spirit Box + Écriture aussi (Spirit Box garantie chez les deux), mais D.O.T.S au lieu des Températures glaciales. Il chasse à 40 %, fonce à 3,0 m/s de loin puis ralentit à 0,4 m/s près de toi, sans accélération en LdV."
+    },
+    {
+      "with": "spirit",
+      "why": "Esprit : Spirit Box + Écriture, mais EMF 5 au lieu des Températures glaciales. Vitesse standard de 1,7 m/s, et après un encens il attend 180 s (au lieu de 90 s) avant de pouvoir rechasser."
+    },
+    {
+      "with": "poltergeist",
+      "why": "Poltergeist : Spirit Box + Écriture, mais Ultraviolet au lieu des Températures glaciales ; il lance énormément d'objets, un toutes les 0,5 s en chasse."
+    },
+    {
+      "with": "mare",
+      "why": "Cauchemar (Mare) : Spirit Box + Écriture, mais Orbes au lieu des Températures glaciales ; chasse à 60 % lumière éteinte dans sa pièce, 40 % lumière allumée, et éteint les lumières."
+    },
+    {
+      "with": "onryo",
+      "why": "Onryo : Spirit Box + Températures glaciales, mais Orbes au lieu de l'Écriture ; chasse à 60 % et ses flammes agissent comme des crucifix."
+    },
+    {
+      "with": "the-twins",
+      "why": "Jumeaux : Spirit Box + Températures glaciales, mais EMF 5 au lieu de l'Écriture ; vitesse de base de 1,53 ou 1,87 m/s selon le jumeau (avec accélération en LdV), qui ne dépend pas de la santé."
+    },
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic a Spirit Box + Températures glaciales (+ UV et faux orbes) mais jamais l'Écriture. Il peut imiter le Moroi : des orbes ou l'UV le trahissent."
+    },
+    {
+      "with": "revenant",
+      "why": "Revenant : Écriture + Températures glaciales, mais Orbes au lieu de la Spirit Box ; 1,0 m/s puis 3,0 m/s d'un coup dès qu'il te détecte, sans accélération progressive en LdV."
+    },
+    {
+      "with": "shade",
+      "why": "Ombre : Écriture + Températures glaciales, mais EMF 5 au lieu de la Spirit Box ; chasse seulement sous 35 % et reste très discrète quand tu es dans sa pièce."
+    },
+    {
+      "with": "demon",
+      "why": "Démon : Écriture + Températures glaciales, mais Ultraviolet au lieu de la Spirit Box ; chasse dès 70 % et peut rechasser 60 s après un encens."
+    },
+    {
+      "with": "aswang",
+      "why": "Aswang : Écriture + Températures glaciales, mais D.O.T.S au lieu de la Spirit Box ; base de 1,53 m/s et accélération en LdV très rapide (1,65 × en 8,7 s au lieu de 13 s)."
+    },
+    {
+      "with": "gallu",
+      "why": "Gallu : seule la Spirit Box en commun (EMF 5 + UV au lieu de l'Écriture et des Températures glaciales), mais il imite deux tests du Moroi : en état affaibli, l'encens l'aveugle 6 s, et sa vitesse change d'une chasse à l'autre (1,7 / 1,96 / 1,36 m/s). Ses changements suivent le sel, l'encens et le crucifix, pas la santé mentale."
+    }
+  ],
+  "observations": [
+    {
+      "text": "D'une chasse à l'autre, l'entité est de plus en plus rapide à mesure que la santé de l'équipe baisse, et elle accélère encore quand elle te voit.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Tu l'encenses en pleine chasse : elle met nettement plus longtemps que d'habitude à revenir vers toi (environ 7 s).",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Après avoir entendu un murmure au micro parabolique, ta santé mentale continue de baisser même quand tu restes dans une pièce éclairée.",
+      "kind": "tell",
+      "strength": "definitive"
+    },
+    {
+      "text": "L'équipe est sous 40 % et tu prends des pilules en pleine chasse : l'entité ralentit juste après.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Avec une équipe presque à 0 % de santé et une longue LdV, l'entité atteint une vitesse folle, bien plus rapide que toi.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Tant que l'équipe est en bonne santé, l'entité chasse un peu plus lentement que la normale.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Quelles sont les trois preuves du Moroi ?",
+      "choices": [
+        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S",
+        "Spirit Box, Orbes fantomatiques, Températures glaciales",
+        "Spirit Box, Écriture fantomatique, Températures glaciales",
+        "Écriture fantomatique, Températures glaciales, Orbes fantomatiques"
+      ],
+      "answer": 2,
+      "explain": "Moroi = Spirit Box, Écriture, Températures glaciales. Les autres combinaisons sont celles du Deogen, de l'Onryo et du Revenant."
+    },
+    {
+      "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
+      "choices": [
+        "3,71 m/s",
+        "3,0 m/s",
+        "2,75 m/s",
+        "2,5 m/s"
+      ],
+      "answer": 0,
+      "explain": "À 0 % de santé il part de 2,25 m/s, et 13 s de LdV continue le font monter à 1,65 × cette vitesse : 3,71 m/s, le record du jeu."
+    },
+    {
+      "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 pendant une chasse ?",
+      "choices": [
+        "5 s",
+        "7 s",
+        "12 s",
+        "3 s"
+      ],
+      "answer": 1,
+      "explain": "7 s au lieu des 5 s standard (les notes de patch annonçaient 7,5 s, mais le jeu applique 7 s)."
+    },
+    {
+      "q": "Comment un joueur se fait-il maudire par un Moroi ?",
+      "choices": [
+        "En le prenant en photo",
+        "En marchant dans son sel",
+        "En entendant sa réponse à la Spirit Box ou un murmure au micro parabolique",
+        "En restant dans sa pièce favorite"
+      ],
+      "answer": 2,
+      "explain": "La malédiction tombe sur celui qui l'entend à la Spirit Box ou au micro parabolique : sa santé baisse ensuite 2× plus vite, même dans la lumière."
+    },
+    {
+      "q": "Santé moyenne sous 40 % : tu prends des pilules en pleine chasse et l'entité ralentit aussitôt. De quelle entité s'agit-il ?",
+      "choices": [
+        "Un Thayé",
+        "Un Deogen",
+        "Un Revenant",
+        "Un Moroi"
+      ],
+      "answer": 3,
+      "explain": "Seul le Moroi règle sa vitesse sur la santé mentale moyenne en temps réel : remonter la santé le ralentit."
+    },
+    {
+      "q": "En difficulté Cauchemar ou Démence, quelle preuve le Moroi donne-t-il toujours ?",
+      "choices": [
+        "Écriture fantomatique",
+        "Spirit Box",
+        "Températures glaciales",
+        "Aucune, toutes peuvent être retirées"
+      ],
+      "answer": 1,
+      "explain": "La Spirit Box est garantie chez le Moroi (comme chez le Deogen) dès qu'au moins une preuve est donnée."
+    }
+  ],
+  "changes": [
+    "Aucun changement de mécanique trouvé pour 2025–2026.",
+    "Correction par rapport à la sauvegarde de déc. 2024 : l'aveuglement à l'encens dure 7 s en jeu (bug connu du wiki tybayn actuel), et non 7,5 s comme l'annonçaient la sauvegarde et les notes de patch.",
+    "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités (+5 %/s → +2,5 %/s) ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
+  ],
+  "sources": [
+    "tybayn backup b0.11.1.1",
+    "tybayn wiki: wiki_los_moroi_p1, wiki_los_moroi_p2",
+    "tybayn wiki: wiki_ghost_speed_h6 (tableau des vitesses du Moroi)",
+    "tybayn wiki: wiki_los_thaye_p1, wiki_los_thaye_p3",
+    "tybayn wiki: wiki_the_twins_los_p11",
+    "tybayn wiki: wiki_known_bugs_moroi",
+    "tybayn wiki: wiki_gallu_states_* (aveuglement de 6 s en état affaibli)",
+    "https://phasmopedia.com/en/ghosts/moroi/",
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
+  ],
+  "uncertain": [
+    "Selon Phasmopedia, les pilules de santé mentale lèvent la malédiction et une tentative de capture au magnétophone pourrait aussi maudire : non confirmé par tybayn.",
+    "Le pas exact de +2,5 %/s pendant la parenthèse v0.17.0.0 vient d'un changelog communautaire ; l'annulation, elle, figure dans les notes officielles v0.17.1.4.",
+    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée.",
+    "Test des pilules (définitif selon tybayn) : un Obambo qui repasse en état calme en pleine chasse ralentit aussi aussitôt (1,96 → 1,45 m/s). Une coïncidence de timing reste possible : refais le test si tu as un doute.",
+    "Durée d'aveuglement avec un encens de rang 2 ou 3 : tybayn ne documente les 7 s qu'avec un encens de rang 1.",
+    "Les tests « plus rapide d'une chasse à l'autre avec LdV » et « plus de 5 s pour revenir après l'encens » sont notés définitifs dans la sauvegarde tybayn de déc. 2024. Ils sont ici rétrogradés en non définitifs, car le Gallu (aveuglé 6 s en état affaibli, vitesses 1,36 / 1,7 / 1,96 m/s) et l'Obambo (1,45 / 1,96 m/s), ajoutés depuis, peuvent les reproduire. La version actuelle des tests tybayn n'a pas pu être lue (zero-network.net inaccessible)."
+  ]
+}
