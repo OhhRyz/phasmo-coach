@@ -72,7 +72,7 @@
       "definitive": true
     },
     {
-      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse ensuite, c'est un Moroi.",
+      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroi. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit lui aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (preuves, ou chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
       "definitive": true
     },
     {
@@ -144,12 +144,12 @@
   ],
   "observations": [
     {
-      "text": "D'une chasse à l'autre, l'entité est de plus en plus rapide à mesure que la santé de l'équipe baisse, et elle accélère encore quand elle te voit.",
+      "text": "D'une chasse à l'autre, l'entité devient de plus en plus rapide à mesure que la santé mentale de l'équipe baisse, et elle accélère encore quand elle te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Tu l'encenses en pleine chasse : elle met nettement plus longtemps que d'habitude à revenir vers toi (environ 7 s).",
+      "text": "En pleine chasse, tu l'encenses (encens de rang 1) : elle reste désorientée nettement plus longtemps que d'habitude, environ 7 s au lieu de 5, avant de reprendre sa traque.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -159,17 +159,23 @@
       "strength": "definitive"
     },
     {
-      "text": "L'équipe est sous 40 % et tu prends des pilules en pleine chasse : l'entité ralentit juste après.",
+      "text": "La Spirit Box t'a répondu ; depuis, ta santé mentale continue de baisser même quand tu restes dans une pièce éclairée.",
+      "kind": "tell",
+      "strength": "definitive",
+      "requires": "spiritbox"
+    },
+    {
+      "text": "La santé mentale de l'équipe est déjà bien entamée ; tu prends des pilules en pleine chasse et l'entité ralentit juste après.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Avec une équipe presque à 0 % de santé et une longue LdV, l'entité atteint une vitesse folle, bien plus rapide que toi.",
+      "text": "L'équipe n'a presque plus de santé mentale ; l'entité, qui te garde en vue dans un long couloir, finit par atteindre une vitesse folle, près de 3,7 m/s.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Tant que l'équipe est en bonne santé, l'entité chasse un peu plus lentement que la normale.",
+      "text": "Ses premières chasses, quand la santé mentale moyenne vient tout juste de passer sous la moitié, sont un peu plus lentes que la normale.",
       "kind": "hunt",
       "strength": "hint"
     }
@@ -243,7 +249,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de mécanique trouvé pour 2025–2026.",
     "Correction par rapport à la sauvegarde de déc. 2024 : l'aveuglement à l'encens dure 7 s en jeu (bug connu du wiki tybayn actuel), et non 7,5 s comme l'annonçaient la sauvegarde et les notes de patch.",
     "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités (+5 %/s → +2,5 %/s) ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
   ],

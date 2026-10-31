@@ -170,29 +170,45 @@
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, ton coéquipier touche l'entité sans mourir, et elle continue de traquer un autre joueur.",
+      "text": "Pendant la chasse, ton coéquipier se retrouve au contact de l'entité et survit : elle le dépasse et continue de traquer un autre joueur.",
       "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "En multijoueur, à chaque chasse, l'entité ignore les joueurs qu'elle croise et va toujours traquer le même joueur.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une chasse démarre alors que la santé mentale moyenne de l'équipe est encore vers 85 %, sans objet maudit ; seul l'un de tes coéquipiers était descendu sous les 50 %.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant un événement de chant, ton coéquipier touche l'entité et perd d'un coup environ 15 points de santé mentale, au lieu des 10 habituels.",
+      "kind": "event",
       "strength": "strong"
     },
     {
       "text": "L'entité fait des événements de chant bien plus souvent que les autres types d'événements.",
       "kind": "event",
-      "strength": "strong"
+      "strength": "hint"
     },
     {
-      "text": "L'entité chasse alors que la santé moyenne de l'équipe est encore autour de 80 %, et elle fonce toujours vers le même joueur.",
-      "kind": "hunt",
-      "strength": "strong"
-    },
-    {
-      "text": "Tes détecteurs de mouvement s'activent souvent sur le trajet vers le même joueur, sans relevé EMF associé.",
+      "text": "Tes détecteurs de mouvement s'activent souvent sur le trajet vers le même joueur, sans aucun relevé EMF associé.",
       "kind": "behavior",
       "strength": "hint"
     },
     {
-      "text": "Le modèle de l'entité est féminin et son prénom aussi.",
+      "text": "Le modèle de l'entité est féminin, et son prénom aussi.",
       "kind": "tell",
       "strength": "hint"
+    },
+    {
+      "text": "Dans le faisceau du projecteur D.O.T.S, la silhouette de l'entité se dirige à chaque fois vers le même joueur.",
+      "kind": "behavior",
+      "strength": "hint",
+      "requires": "dots"
     }
   ],
   "quiz": [

@@ -68,10 +68,36 @@
     { "with": "the-twins", "why": "Le jumeau lent (~1,5 m/s) a une vitesse de base proche de celle de l'Aswang, mais la vitesse des Jumeaux change d'une chasse à l'autre et leurs preuves sont EMF 5, Spirit Box et glaciales." }
   ],
   "observations": [
-    { "text": "Tu te réfugies dans un placard pendant la chasse ; l'entité ouvre ta cachette… et la chasse s'arrête net, tu es indemne.", "kind": "hunt", "strength": "definitive" },
-    { "text": "Au début de la chasse suivante, l'entité fonce directement vers l'endroit où tu t'étais caché, sans le moindre temps mort.", "kind": "hunt", "strength": "strong" },
-    { "text": "Elle démarre ses chasses un peu plus lentement qu'une entité normale, mais dès qu'elle te voit, elle prend toute sa vitesse en quelques secondes.", "kind": "hunt", "strength": "strong" },
-    { "text": "D'une chasse à l'autre, son allure de base reste exactement la même.", "kind": "hunt", "strength": "hint" }
+    {
+      "text": "Pendant la chasse, l'entité t'a repéré et tu te réfugies dans un placard ; elle arrive jusqu'à ta cachette… et la chasse s'arrête net : tu es indemne.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant une chasse, ton coéquipier poursuivi par l'entité se cache dans un casier ; elle l'y rejoint et la chasse prend fin aussitôt, sans victime.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Dès le début d'une chasse, l'entité file droit vers le joueur qu'elle avait trouvé caché à la chasse précédente, là où il se trouve.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Ses chasses démarrent à un pas un peu lent (environ 1,5 m/s), mais quand elle te garde en vue, elle atteint sa vitesse maximale en moins de 9 s, au lieu d'environ 13 s d'habitude.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "À chaque chasse, ses pas de départ sont un peu plus lents que la normale, toujours exactement au même rythme.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Même après t'avoir longtemps gardé en vue, sa pointe de vitesse reste un peu en dessous de celle d'une entité ordinaire lancée à pleine allure.",
+      "kind": "hunt",
+      "strength": "hint"
+    }
   ],
   "quiz": [
     {

@@ -133,33 +133,38 @@
   ],
   "observations": [
     {
-      "text": "L'entité est très active en début de partie (interactions, événements), puis de plus en plus calme à mesure que l'équipe passe du temps près d'elle.",
+      "text": "L'entité est très active en début de partie, puis interagit de moins en moins à mesure que l'équipe passe du temps près d'elle.",
       "kind": "behavior",
-      "strength": "strong"
+      "strength": "hint"
     },
     {
-      "text": "Une première chasse éclate très tôt, alors que l'équipe est encore vers 75 % de santé mentale, avec une entité très rapide.",
+      "text": "La première chasse éclate très tôt, alors que l'équipe est encore vers 75 % de santé mentale, et l'entité file à toute vitesse sans jamais accélérer davantage quand elle te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Chaque nouvelle chasse est plus lente que la précédente, et l'entité n'accélère jamais quand elle te voit.",
+      "text": "Alors que l'équipe ne touche à aucun objet, interrupteur, disjoncteur ni robinet entre les chasses, chaque nouvelle chasse est plus lente que la précédente, à allure constante du début à la fin et sans jamais accélérer quand l'entité te voit.",
       "kind": "hunt",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
-      "text": "Au Ouija, la réponse à « Quel âge avez-vous ? » est plus élevée qu'au début de la partie.",
+      "text": "Au Ouija, la réponse à « Quel âge avez-vous ? » est plus élevée qu'en début de partie.",
       "kind": "tell",
       "strength": "definitive"
     },
     {
-      "text": "Les chasses arrivent de plus en plus tard : il faut une santé mentale de plus en plus basse pour qu'elle chasse.",
+      "text": "Les chasses arrivent de plus en plus tard : à chaque fois, il faut une santé mentale moyenne plus basse pour qu'elle chasse.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Après avoir longtemps traîné près d'elle, tu n'as presque plus d'événements.",
-      "kind": "event",
+      "text": "Une chasse se fait à une allure très rapide (environ 2,75 m/s) qui ne change pas d'un bout à l'autre, même quand l'entité te garde longtemps en vue.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Après une vingtaine de minutes passées près d'elle, l'entité chasse à pas très lents (environ 1 m/s), sans accélérer quand elle te voit.",
+      "kind": "hunt",
       "strength": "hint"
     }
   ],
@@ -232,7 +237,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de mécanique trouvé pour 2025–2026.",
     "Bugs connus (wiki tybayn actuel) : seuil de chasse 1 % plus bas que prévu ; il peut vieillir à cause d'un joueur situé à l'étage du dessous, car la portée de 3 m traverse le sol."
   ],
   "sources": [

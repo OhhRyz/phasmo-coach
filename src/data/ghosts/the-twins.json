@@ -67,10 +67,12 @@
     { "with": "poltergeist", "why": "L'explosion du Poltergeist projette plusieurs objets d'un coup autour d'un même point, alors que les Jumeaux agissent à deux endroits éloignés. Une seule preuve en commun (Spirit Box)." }
   ],
   "observations": [
-    { "text": "Une porte s'ouvre près de toi et, presque au même instant, un objet est projeté plusieurs mètres plus loin, dans une autre pièce.", "kind": "interaction", "strength": "strong" },
-    { "text": "D'une chasse à l'autre, le rythme des pas change : une fois un peu plus lent qu'une entité normale, la suivante un peu plus rapide.", "kind": "hunt", "strength": "strong" },
-    { "text": "Beaucoup d'interactions ont lieu loin de sa pièce, mais les capteurs de mouvement et le sel ne réagissent qu'autour de l'endroit où elle se trouve vraiment.", "kind": "behavior", "strength": "hint" },
-    { "text": "La première chasse arrive vers 50 % de santé mentale et l'entité accélère quand elle te voit.", "kind": "hunt", "strength": "hint" }
+    { "text": "Une porte s'ouvre près de toi et, presque au même instant, un objet est projeté à plusieurs mètres de là, dans une autre pièce.", "kind": "interaction", "strength": "strong" },
+    { "text": "Un interrupteur bascule à côté de toi et, à la même seconde, ton coéquipier voit une porte bouger dans la pièce voisine, à six ou sept mètres de là.", "kind": "interaction", "strength": "strong" },
+    { "text": "Une chasse se fait à environ 1,5 m/s, une autre à environ 1,9 m/s : la vitesse de base change d'une chasse à l'autre, et l'entité accélère chaque fois qu'elle te voit.", "kind": "hunt", "strength": "strong" },
+    { "text": "Beaucoup d'interactions (portes, objets, lumières) ont lieu dans les pièces voisines de sa pièce favorite, à plusieurs mètres de l'endroit où l'entité semble se tenir.", "kind": "behavior", "strength": "hint" },
+    { "text": "Tes capteurs de mouvement ne se déclenchent qu'autour de sa pièce, alors que des objets bougent à plusieurs mètres de là, hors de leur champ.", "kind": "behavior", "strength": "hint" },
+    { "text": "Une chasse se déroule à environ 1,9 m/s, un peu plus vite qu'une entité normale, et l'entité accélère encore quand elle te voit.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
     {

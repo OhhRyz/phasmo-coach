@@ -11,6 +11,7 @@
     "alt": 3.65,
     "isRange": false,
     "los": false,
+    "losVaries": true,
     "summary": "1,7 m/s · 2,21 m/s vers un bruit · accélère en LdV à < 5 m",
     "details": [
       "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
@@ -144,22 +145,27 @@
   ],
   "observations": [
     {
-      "text": "Tu restes figé et silencieux en pleine vue : l'entité passe tout près de toi sans réagir, puis fonce sur toi dès que tu fais un pas.",
+      "text": "Pendant une chasse, tu restes figé et silencieux en pleine vue : l'entité passe tout près de toi sans réagir, puis fonce sur toi dès que tu fais un pas.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Un coéquipier sprinte à une vingtaine de mètres, hors de sa vue, et l'entité se précipite vers l'endroit où il courait.",
+      "text": "Pendant une chasse, un coéquipier silencieux, sans appareil allumé, sprinte à une vingtaine de mètres, hors de vue de l'entité : elle se précipite vers l'endroit où il courait.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Quelqu'un sprinte dans la pièce de l'entité et une chasse démarre alors que l'équipe est encore au-dessus de 50 % de santé mentale.",
+      "text": "Pendant une chasse, tu avances accroupi à une douzaine de mètres de l'entité sans qu'elle réagisse ; dès que tu te relèves pour marcher normalement, elle file vers l'endroit où tu étais.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Quand elle fonce vers un bruit lointain, l'entité avance plus vite que la normale, puis reprend son allure une fois sur place.",
+      "text": "Quelqu'un sprinte dans la pièce de l'entité et une chasse démarre peu après, alors que la santé mentale moyenne est encore vers 65 %, sans objet maudit.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Quand elle fonce vers un bruit lointain, l'entité avance plus vite que la normale (environ 2,2 m/s), puis reprend son allure habituelle une fois sur place.",
       "kind": "hunt",
       "strength": "strong"
     },

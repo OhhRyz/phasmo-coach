@@ -119,23 +119,33 @@
   ],
   "observations": [
     {
-      "text": "Une chasse démarre alors que l'équipe discutait dans sa pièce et que la santé mentale moyenne était encore autour de 70 %.",
+      "text": "Tu discutes à voix haute avec tes coéquipiers dans la pièce de l'entité, et une chasse démarre alors que la santé mentale moyenne de l'équipe est encore vers 75 %.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "En chasse, caché hors de sa vue, tu parles à environ 4 m de l'entité et elle ne réagit pas du tout.",
+      "text": "Pendant une chasse, caché hors de sa vue, tu parles à voix haute à environ 4 m de l'entité : elle ne vient pas vers toi et poursuit son chemin ; un peu plus tard, elle t'aperçoit au bout d'un couloir et fonce aussitôt sur toi.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant une chasse, l'entité passe à environ 4 m de ta cachette, sans te voir, et n'est pas attirée par l'appareil électronique allumé que tu tiens en main.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "En chasse, l'entité passe à quelques mètres de ta cachette sans être attirée par l'appareil électronique allumé dans ta main.",
+      "text": "Pendant une chasse, hors de vue de l'entité, ton coéquipier appuie sur le bouton de sa radio et parle à environ 4 m d'elle : elle ne se tourne pas vers lui et poursuit son chemin.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Les interactions (objets, portes, lumières) se multiplient dès que quelqu'un parle près de sa pièce.",
+      "text": "Les interactions (objets, portes, lumières) se multiplient dès que quelqu'un parle près de sa pièce, puis retombent quand l'équipe se tait.",
       "kind": "behavior",
+      "strength": "hint"
+    },
+    {
+      "text": "Pendant les chasses, l'entité ne semble te trouver que lorsqu'elle te voit ou passe presque sur toi : ta voix ne l'attire jamais de loin.",
+      "kind": "hunt",
       "strength": "hint"
     }
   ],

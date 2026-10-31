@@ -73,11 +73,12 @@
     { "with": "demon", "why": "Le Démon peut lui aussi chasser très tôt (70 %, et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo." }
   ],
   "observations": [
-    { "text": "Juste après qu'une troisième bougie a été soufflée, une chasse démarre alors que toute l'équipe est encore presque à 100 % de santé mentale.", "kind": "hunt", "strength": "strong" },
-    { "text": "Le crucifix posé sous une bougie allumée reste intact ; il ne brûle qu'une fois la bougie soufflée à plusieurs reprises.", "kind": "interaction", "strength": "strong" },
-    { "text": "La bougie posée près de l'entité s'éteint d'un coup, et aucune chasse ne démarre alors que l'équipe est bien sous le seuil.", "kind": "interaction", "strength": "hint" },
-    { "text": "Les chasses commencent alors que la santé mentale moyenne est encore autour de 60 %.", "kind": "hunt", "strength": "hint" },
-    { "text": "Plus tes coéquipiers meurent, plus les bougies et les lumières à feu sont soufflées souvent.", "kind": "behavior", "strength": "hint" }
+    { "text": "Trois flammes ont été soufflées l'une après l'autre ; juste après la troisième, une chasse démarre alors que toute l'équipe est encore au-dessus de 80 % de santé mentale.", "kind": "hunt", "strength": "strong" },
+    { "text": "Alors que la santé mentale moyenne est encore au-dessus de 75 %, la bougie posée sur ton crucifix est soufflée à trois reprises (tu la rallumes à chaque fois) ; peu après la troisième, alors qu'elle est encore éteinte, le crucifix brûle.", "kind": "interaction", "strength": "strong" },
+    { "text": "Une chasse démarre à plus de 80 % de santé mentale moyenne, sans aucun objet maudit, peu après que tu as entendu une bougie s'éteindre près de l'entité.", "kind": "hunt", "strength": "strong" },
+    { "text": "Tu viens de compter une troisième flamme soufflée et tu encenses aussitôt l'entité : aucune chasse pendant l'effet de l'encens, puis une chasse démarre peu après sa dissipation, alors que la santé mentale moyenne est encore au-dessus de 80 %.", "kind": "hunt", "strength": "strong" },
+    { "text": "Tu rallumes la bougie que l'entité vient de souffler : quelques secondes plus tard, elle est de nouveau soufflée, alors qu'une flamme qu'on vient de rallumer ne peut d'habitude pas être soufflée avant au moins 20 s.", "kind": "interaction", "strength": "strong" },
+    { "text": "Plus tes coéquipiers meurent, plus les bougies et les lumières à feu sont soufflées souvent.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
     {
@@ -118,7 +119,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé dans les mises à jour 2025–2026.",
     "Le wiki tybayn actuel détaille la mécanique de la capacité (conditions, réinitialisation du compteur, retard par l'encens) et des lumières à feu (30 s puis 20–80 s de délai, 66,67 % de chances de souffle à moins de 5 m) : ce sont des précisions documentaires, pas un patch identifié."
   ],
   "sources": [

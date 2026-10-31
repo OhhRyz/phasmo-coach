@@ -134,29 +134,35 @@
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse, puis, une fois tout près, elle avance presque au ralenti, que tu bouges ou non.",
+      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse ; une fois tout près, elle avance presque au ralenti, que tu bouges ou non.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Tu te caches dans un placard : l'entité vient droit sur ta cachette, à chaque chasse.",
+      "text": "Où que tu te caches, l'entité vient droit sur ta cachette à chaque chasse, même quand elle ne t'a pas vu y entrer.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Une fois l'entité collée à toi, tu arrives facilement à la tenir à distance en tournant autour d'une table.",
+      "text": "Une fois l'entité tout près de toi, tu la tiens facilement à distance en tournant autour d'une table ou d'un meuble.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Pendant la chasse, l'entité reste visible bien plus souvent que d'habitude.",
+      "text": "Pendant la chasse, l'entité reste visible nettement plus longtemps que d'habitude entre deux clignotements : tu la suis facilement des yeux.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Aucune chasse tant que la santé mentale moyenne n'est pas descendue sous 40 %.",
+      "text": "La première chasse n'éclate qu'une fois la santé mentale moyenne descendue vers 40 %, plus tard que d'habitude.",
       "kind": "hunt",
       "strength": "hint"
+    },
+    {
+      "text": "À la Spirit Box, à moins d'un mètre de l'entité, tu entends une respiration lourde au lieu d'une réponse.",
+      "kind": "tell",
+      "strength": "definitive",
+      "requires": "spiritbox"
     }
   ],
   "quiz": [
@@ -227,9 +233,7 @@
       "explain": "Le Deogen ne chasse qu'en dessous de 40 % : une tentative à 45 % l'élimine (l'Ombre, à 35 %, est exclue aussi)."
     }
   ],
-  "changes": [
-    "Aucun changement trouvé pour 2025–2026 : les données de la sauvegarde de déc. 2024 sont confirmées par le wiki tybayn actuel (vitesse 3,0 → 0,4 m/s, pas de LdV, plus visible en chasse)."
-  ],
+  "changes": [],
   "sources": [
     "tybayn backup b0.11.1.1",
     "tybayn wiki: wiki_los_deogen_p1",

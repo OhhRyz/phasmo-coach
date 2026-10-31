@@ -11,6 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
+    "losVaries": true,
     "summary": "Copie la vitesse de l'entité imitée",
     "details": [
       "Copie la vitesse de chasse de l'entité qu'il imite : le Mimic est capable de N'IMPORTE quel schéma de chasse.",
@@ -126,19 +127,42 @@
   ],
   "observations": [
     {
-      "text": "D'une chasse à l'autre, l'entité semble changer d'identité : une fois très rapide sans jamais accélérer, la fois suivante à vitesse normale avec accélération quand elle te voit.",
+      "text": "D'une chasse à l'autre, l'entité semble changer du tout au tout : une fois très rapide sans jamais accélérer, la fois suivante à vitesse normale, avec une accélération quand elle te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Son activité change de nature au fil de la partie : par moments très calme, puis soudain portée sur des interactions qu'elle ne faisait pas avant.",
+      "text": "Dans le même contrat, une chasse se déroule à pas très lents (environ 1 m/s) jusqu'à ce que l'entité te repère, puis d'un coup à environ 3 m/s ; lors d'une autre chasse, elle fonce droit sur toi à environ 3 m/s puis avance presque au ralenti (environ 0,4 m/s) une fois collée à toi.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Son activité change de nature au fil de la partie : par moments très calme, puis soudain portée sur des interactions qu'elle ne faisait pas jusque-là.",
       "kind": "behavior",
       "strength": "hint"
     },
     {
-      "text": "Les chasses ne se déclenchent pas toujours au même niveau de santé mentale moyenne.",
+      "text": "Les chasses ne se déclenchent pas toujours au même niveau de santé mentale moyenne : certaines arrivent très tôt, d'autres bien plus tard.",
       "kind": "hunt",
       "strength": "hint"
+    },
+    {
+      "text": "La Spirit Box t'a répondu ; pourtant, en chasse, l'entité erre à pas très lents (environ 1 m/s), puis passe d'un coup à environ 3 m/s à l'instant où elle te repère, sans aucune montée progressive.",
+      "kind": "hunt",
+      "strength": "definitive",
+      "requires": "spiritbox"
+    },
+    {
+      "text": "Tu as relevé des empreintes à la lampe UV ; pourtant, en chasse, l'entité fonce sur toi à environ 3 m/s, puis avance presque au ralenti (environ 0,4 m/s) une fois tout près, que tu bouges ou non.",
+      "kind": "hunt",
+      "strength": "definitive",
+      "requires": "uv"
+    },
+    {
+      "text": "Tu as relevé des températures glaciales ; pourtant, quand tu restes figé et silencieux en pleine vue pendant une chasse, l'entité passe tout près de toi sans réagir, puis fonce sur toi dès que tu fais un pas.",
+      "kind": "hunt",
+      "strength": "definitive",
+      "requires": "freezing"
     }
   ],
   "quiz": [
@@ -210,7 +234,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de mécanique du Mimic trouvé pour 2025–2026.",
     "Premier hotfix de la mise à jour Chronicle (27 juin 2025) : correction d'un bug où le Mimic pouvait donner les D.O.T.S en imitant un Goryo ; il ne montre de nouveau que ses propres preuves.",
     "Nouvelle confusion à connaître : le Kormos (ajouté en mai 2026, Orbes + Spirit Box + UV) a, comme le Hantu et l'Onryo, toutes ses preuves comprises dans celles du Mimic.",
     "Bug connu (wiki tybayn actuel) : comportement désynchronisé en chasse ; le clignotement altéré, les transformations d'Obake, etc. ne sont visibles que par l'hôte."

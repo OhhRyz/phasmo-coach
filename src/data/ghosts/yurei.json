@@ -110,17 +110,27 @@
   ],
   "observations": [
     {
-      "text": "La porte d'entrée de la maison se ferme toute seule alors qu'aucune chasse ni aucun événement n'est en cours.",
+      "text": "La porte principale par laquelle l'équipe est entrée se referme toute seule, alors qu'aucune chasse ni aucun événement n'est en cours.",
       "kind": "interaction",
       "strength": "definitive"
     },
     {
-      "text": "Une porte de la pièce se referme complètement d'un seul coup et ta santé mentale chute d'environ 15 % au même moment.",
+      "text": "Tu vois la porte de sortie, restée ouverte, pivoter toute seule de quelques degrés alors qu'aucune chasse ni aucun événement n'est en cours.",
+      "kind": "interaction",
+      "strength": "definitive"
+    },
+    {
+      "text": "Une porte de la pièce de l'entité se referme complètement d'un seul coup et, au même instant, ta santé mentale chute d'environ 15 points.",
       "kind": "interaction",
       "strength": "strong"
     },
     {
-      "text": "Après l'encens, les capteurs de mouvement placés aux entrées de sa pièce restent muets pendant une minute et demie : l'entité ne sort pas.",
+      "text": "À plusieurs reprises, ta santé mentale perd d'un coup environ 15 points pendant que tu enquêtes dans la pièce de l'entité, sans aucun événement ni objet maudit.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "Tu encenses l'entité dans sa pièce : pendant une minute et demie, les capteurs de mouvement placés à toutes ses entrées restent muets.",
       "kind": "behavior",
       "strength": "hint"
     },

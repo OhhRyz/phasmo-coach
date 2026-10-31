@@ -65,8 +65,12 @@
     { "with": "shade", "why": "L'Ombre est elle aussi « timide » : elle n'interagit pas et ne chasse pas dans une pièce où se trouve un joueur, et ne chasse pas avant 35 %. Une seule preuve en commun (EMF 5)." }
   ],
   "observations": [
-    { "text": "Toute la partie, l'activité reste concentrée dans la même pièce : l'entité n'en change jamais et s'aventure rarement loin.", "kind": "behavior", "strength": "hint" },
-    { "text": "En chasse, rien d'inhabituel : vitesse normale, accélération quand elle te voit, première chasse vers 50 % de santé mentale.", "kind": "hunt", "strength": "hint" }
+    { "text": "Les capteurs de mouvement que tu as placés dans les couloirs autour de sa pièce ne se déclenchent presque jamais hors chasse, alors que la pièce elle-même est très active.", "kind": "behavior", "strength": "strong" },
+    { "text": "Toutes les interactions (portes, objets, lumières) ont lieu dans la même pièce ou juste à ses abords ; rien ne bouge à l'autre bout de la carte.", "kind": "behavior", "strength": "strong" },
+    { "text": "Chaque fois que tu vérifies, la pièce favorite de l'entité est toujours la même : elle ne s'est jamais déplacée.", "kind": "behavior", "strength": "hint" },
+    { "text": "La silhouette verte n'apparaît qu'à l'écran de la caméra vidéo pointée sur le projecteur D.O.T.S ; quand tu regardes toi-même depuis la pièce, tu ne la vois jamais.", "kind": "tell", "strength": "strong", "requires": "dots" },
+    { "text": "Tant que quelqu'un reste dans la pièce du projecteur D.O.T.S, aucune silhouette n'apparaît ; dès que tout le monde en sort, elle passe à la caméra.", "kind": "tell", "strength": "strong", "requires": "dots" },
+    { "text": "À la caméra, la silhouette verte traverse le champ du projecteur D.O.T.S très souvent, bien plus que d'habitude.", "kind": "tell", "strength": "hint", "requires": "dots" }
   ],
   "quiz": [
     {

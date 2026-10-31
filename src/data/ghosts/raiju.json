@@ -11,6 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
+    "losVaries": true,
     "summary": "1,7 m/s · accélère en LdV · 2,5 m/s près de l'électronique",
     "details": [
       "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération en LdV standard.",
@@ -67,11 +68,12 @@
     { "with": "revenant", "why": "Le Revenant (orbes, écriture, glaciales) fonce à 3,0 m/s dès qu'il te détecte (voix, électronique active, vue) et rampe à 1,0 m/s sinon." }
   ],
   "observations": [
-    { "text": "Pendant la chasse, l'entité file à toute vitesse en passant près de l'appareil électronique allumé que tu as laissé au sol, puis ralentit nettement une fois éloignée.", "kind": "hunt", "strength": "definitive" },
-    { "text": "En pleine chasse, tu allumes ton micro parabolique alors que l'entité est proche : ses pas s'accélèrent aussitôt, puis ralentissent quand tu l'éteins.", "kind": "hunt", "strength": "strong" },
-    { "text": "Ta lampe torche et tes appareils se mettent à grésiller alors que l'entité semble encore loin de toi.", "kind": "hunt", "strength": "strong" },
-    { "text": "Une chasse démarre alors que l'équipe est encore autour de 60 % de santé mentale, avec plusieurs appareils allumés dans la pièce de l'entité.", "kind": "hunt", "strength": "hint" },
-    { "text": "Tu entends les battements de cœur de la chasse alors que l'entité est encore assez loin de toi.", "kind": "hunt", "strength": "hint" }
+    { "text": "Pendant une chasse, caché, tu entends les pas de l'entité devenir nettement plus rapides quand elle passe près de l'appareil électronique allumé que tu as laissé au sol, puis ralentir une fois qu'elle s'en éloigne.", "kind": "hunt", "strength": "definitive" },
+    { "text": "En pleine chasse, alors que l'entité passe non loin, tu allumes et éteins plusieurs fois le micro parabolique posé au sol à côté de toi : ses pas accélèrent chaque fois que tu l'allumes et ralentissent dès que tu l'éteins.", "kind": "hunt", "strength": "definitive" },
+    { "text": "Près de tes appareils électroniques allumés, l'entité avance à une vitesse fixe d'environ 2,5 m/s, qui ne bouge plus tant qu'elle reste à côté d'eux, même quand elle te voit.", "kind": "hunt", "strength": "strong" },
+    { "text": "Pendant une chasse, ta lampe torche se met à grésiller alors que l'entité est encore à une douzaine de mètres de toi, plus loin que d'habitude.", "kind": "hunt", "strength": "strong" },
+    { "text": "Pendant une chasse, tu entends les battements de cœur alors que l'entité est encore à une douzaine de mètres de toi.", "kind": "hunt", "strength": "hint" },
+    { "text": "Une chasse démarre alors que la santé mentale moyenne est encore vers 63 %, avec plusieurs appareils électroniques allumés posés dans la pièce de l'entité.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
     {

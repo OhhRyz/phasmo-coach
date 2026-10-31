@@ -130,7 +130,7 @@
   ],
   "observations": [
     {
-      "text": "Pendant une chasse, au détour d'un clignotement, l'entité prend l'apparence d'un autre modèle du même genre l'espace d'un instant, puis reprend la sienne.",
+      "text": "Pendant une chasse, au détour d'un clignotement, l'entité prend l'apparence d'un autre personnage du même sexe l'espace d'un instant, puis reprend la sienne.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -140,14 +140,39 @@
       "strength": "strong"
     },
     {
-      "text": "En chasse, l'entité démarre à vitesse normale puis accélère progressivement tant qu'elle te garde en vue.",
+      "text": "Tu filmes la chasse à la caméra vidéo et le journal enregistre une vidéo de changement de forme de l'entité.",
       "kind": "hunt",
-      "strength": "hint"
+      "strength": "definitive"
     },
     {
-      "text": "La première chasse survient alors que la santé mentale moyenne vient de passer sous 50 %.",
-      "kind": "hunt",
-      "strength": "hint"
+      "text": "À la lampe UV, tu trouves sur une porte une empreinte de main à six doigts.",
+      "kind": "interaction",
+      "strength": "definitive",
+      "requires": "uv"
+    },
+    {
+      "text": "À la lampe UV, l'interrupteur que l'entité vient de basculer porte une double empreinte digitale.",
+      "kind": "interaction",
+      "strength": "definitive",
+      "requires": "uv"
+    },
+    {
+      "text": "À la lampe UV, le clavier touché par l'entité porte cinq empreintes digitales.",
+      "kind": "interaction",
+      "strength": "definitive",
+      "requires": "uv"
+    },
+    {
+      "text": "Les empreintes UV laissées par l'entité s'effacent bien plus vite que d'habitude.",
+      "kind": "interaction",
+      "strength": "hint",
+      "requires": "uv"
+    },
+    {
+      "text": "L'entité ouvre une porte sans y laisser la moindre empreinte UV, alors que ses autres interactions en laissent.",
+      "kind": "interaction",
+      "strength": "hint",
+      "requires": "uv"
     }
   ],
   "quiz": [
@@ -219,7 +244,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé pour 2025–2026.",
     "Chronicle Patch v0.13.1.0 (juillet 2025) : la transformation de l'Obake peut être filmée comme preuve vidéo (« Changement de forme »).",
     "Winter's Jest v0.15.1.0 (16 décembre 2025) : correction d'un bug majeur qui faisait laisser des empreintes d'Obake à toutes les entités.",
     "Précision du wiki tybayn actuel : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses.",

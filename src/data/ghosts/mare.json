@@ -134,6 +134,21 @@
       "strength": "strong"
     },
     {
+      "text": "La première chasse éclate vers 58 % de santé moyenne, depuis la pièce de l'entité plongée dans le noir ; une fois cette lumière rallumée et laissée allumée, plus aucune chasse tant que la moyenne n'est pas tombée vers 40 %.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "L'entité chasse alors que la santé mentale moyenne est encore autour de 60 %, depuis une pièce plongée dans le noir.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Tant que la lumière de sa pièce reste allumée, l'entité ne chasse pas avant que la santé mentale moyenne descende vers 40 %.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
       "text": "De toute la partie, l'entité n'a jamais allumé une seule lumière, alors qu'elle en a éteint plusieurs.",
       "kind": "interaction",
       "strength": "hint"
@@ -144,23 +159,8 @@
       "strength": "hint"
     },
     {
-      "text": "L'entité chasse alors que la santé moyenne est encore autour de 60 %, depuis une pièce plongée dans le noir.",
-      "kind": "hunt",
-      "strength": "hint"
-    },
-    {
-      "text": "Tant que la lumière de sa pièce reste allumée, l'entité ne chasse pas avant que la santé moyenne descende vers 40 %.",
-      "kind": "hunt",
-      "strength": "hint"
-    },
-    {
       "text": "Quand tu laisses la lumière de sa pièce allumée, l'entité en sort beaucoup plus souvent.",
       "kind": "behavior",
-      "strength": "hint"
-    },
-    {
-      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
-      "kind": "hunt",
       "strength": "hint"
     }
   ],

@@ -114,27 +114,22 @@
   ],
   "observations": [
     {
-      "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans aucun objet maudit utilisé, elle lance une chasse moins d'une minute après ce second encensement.",
-      "kind": "tell",
+      "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans qu'aucun objet maudit ait été utilisé, elle lance une chasse moins d'une minute après ce second encensement.",
+      "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Après que tu l'as encensée, l'entité ne relance aucune chasse pendant au moins 3 minutes, alors que la santé de l'équipe est basse.",
+      "text": "Tu encenses l'entité une première fois, puis une seconde fois environ 2 min 40 plus tard : une chasse démarre une vingtaine de secondes après le second encensement, sans aucun objet maudit.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Après que tu l'as encensée, l'entité ne lance aucune chasse pendant au moins 3 minutes, alors que la santé de l'équipe est basse.",
       "kind": "tell",
       "strength": "hint"
     },
     {
-      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
-      "kind": "hunt",
-      "strength": "hint"
-    },
-    {
-      "text": "La première chasse arrive alors que la santé mentale moyenne de l'équipe est à 50 % ou moins, sans objet maudit.",
-      "kind": "hunt",
-      "strength": "hint"
-    },
-    {
-      "text": "L'entité est passée sur ton tas de sel : il est perturbé.",
+      "text": "Ton tas de sel a été perturbé : l'entité a marché dedans.",
       "kind": "interaction",
       "strength": "hint"
     },

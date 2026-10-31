@@ -133,27 +133,32 @@
   ],
   "observations": [
     {
-      "text": "Pendant une chasse, les pas passent brutalement de lents à rapides (ou l'inverse) alors que l'entité ne te voit pas.",
+      "text": "Pendant une chasse, alors que tu restes caché sans bouger ni parler, loin de tout appareil allumé, les pas de l'entité passent d'un coup d'un rythme un peu lent à un rythme nettement rapide (environ 1,45 puis 1,96 m/s), ou l'inverse.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Une chasse se déroule avec des pas un peu plus lents que ceux d'une entité standard.",
+      "text": "Une chasse a lieu vers 60 % de santé mentale moyenne ; ensuite, alors que l'équipe est descendue sous la moitié, l'entité ne chasse plus pendant près de deux minutes.",
       "kind": "hunt",
       "strength": "hint"
     },
     {
-      "text": "Une chasse a lieu vers 60 % de santé mentale moyenne, puis l'entité ne chasse plus pendant près de deux minutes alors que l'équipe est descendue sous 50 %.",
-      "kind": "hunt",
-      "strength": "hint"
-    },
-    {
-      "text": "En notant l'heure depuis l'ouverture de la porte, tu remarques que les chasses au-dessus de 10 % tombent toutes dans des fenêtres de 2 minutes qui alternent (1:00–3:00, 5:00–7:00…).",
+      "text": "En notant l'heure depuis la première ouverture de la porte d'entrée, tu remarques que toutes les chasses tombent dans des fenêtres de 2 minutes qui alternent : de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00…",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Une chasse rapide, lancée tôt dans la partie, se termine plus vite que les autres chasses.",
+      "text": "Une chasse lancée à une allure nettement plus rapide que la normale (environ 1,96 m/s) dure environ un cinquième de moins qu'une chasse habituelle sur cette carte et à cette difficulté, sans mort ni objet maudit.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Une chasse démarre vers 62 % de santé mentale moyenne, sans objet maudit, et l'entité y avance d'emblée nettement plus vite que la normale (environ 1,96 m/s).",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Dans la même partie, certaines chasses se font à pas un peu lents et d'autres à pas un peu rapides, et l'entité accélère chaque fois qu'elle te voit.",
       "kind": "hunt",
       "strength": "hint"
     }

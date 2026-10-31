@@ -139,7 +139,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Dans le journal, ta photo est bien classée comme photo de l'entité, mais l'entité n'y apparaît pas.",
+      "text": "Tu photographies l'entité pendant un événement : dans le journal, la photo est bien classée comme photo de l'entité, mais l'entité n'y apparaît pas.",
       "kind": "event",
       "strength": "definitive"
     },
@@ -149,18 +149,19 @@
       "strength": "definitive"
     },
     {
-      "text": "Ta santé mentale chute vite pendant les événements et les chasses quand l'entité est proche de toi.",
+      "text": "Tu prends en photo la silhouette de l'entité dans le faisceau du projecteur D.O.T.S : elle disparaît aussitôt et n'apparaît pas sur la photo.",
+      "kind": "tell",
+      "strength": "definitive",
+      "requires": "dots"
+    },
+    {
+      "text": "Pendant les événements et les chasses, ta santé mentale baisse vite et sans interruption tant que l'entité est proche de toi.",
       "kind": "behavior",
       "strength": "hint"
     },
     {
-      "text": "Ton lecteur EMF affiche un niveau 2 près de toi alors qu'aucun objet n'a bougé autour de toi.",
+      "text": "Ton lecteur EMF affiche un niveau 2 tout près de toi, alors qu'aucun objet n'a bougé autour de toi.",
       "kind": "behavior",
-      "strength": "hint"
-    },
-    {
-      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
-      "kind": "hunt",
       "strength": "hint"
     }
   ],

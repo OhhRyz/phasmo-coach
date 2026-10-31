@@ -123,22 +123,32 @@
   ],
   "observations": [
     {
-      "text": "En chasse, tu entends des pas extrêmement lents, bien plus lents que d'habitude, tant que l'entité ne t'a pas repéré.",
+      "text": "En chasse, l'entité erre loin de toi à pas très lents (environ 1 m/s), puis, à l'instant où elle te repère, passe d'un coup à une allure très rapide (environ 3 m/s), sans aucune montée progressive.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "En chasse, tu entends des pas extrêmement lents, bien plus lents que d'habitude, tant que l'entité n'a repéré personne.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "À l'instant où l'entité te repère, ces pas très lents deviennent d'un coup très rapides, sans aucune montée progressive.",
+      "text": "Caché hors de sa vue, tu parles à voix haute ou allumes un appareil électronique : les pas de l'entité, jusque-là très lents, deviennent aussitôt très rapides.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Une fois arrivée à l'endroit où elle t'a perdu de vue, l'entité ralentit peu à peu jusqu'à redevenir très lente.",
+      "text": "Une fois arrivée là où elle t'a perdu, l'entité ralentit peu à peu jusqu'à retrouver un pas très lent.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
       "text": "Même quand elle te garde longtemps en vue dans un couloir, sa vitesse n'augmente plus : elle était déjà au maximum dès le premier instant.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Caché, immobile et silencieux, tu entends l'entité passer non loin de toi sans changer de rythme : ses pas restent très lents.",
       "kind": "hunt",
       "strength": "hint"
     }

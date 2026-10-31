@@ -144,7 +144,12 @@
   ],
   "observations": [
     {
-      "text": "Pendant l'invocation au cercle (ou l'événement de la boîte à musique ou de la patte de singe), l'entité apparaît comme une silhouette noire et floue, ou translucide, au lieu de son apparence complète.",
+      "text": "Tu allumes les bougies du cercle d'invocation : l'entité apparaît sous la forme d'une silhouette noire et floue, ou translucide, au lieu de son apparence complète.",
+      "kind": "event",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant l'événement de la boîte à musique ou de la patte de singe, l'entité se montre sous la forme d'une silhouette noire et floue.",
       "kind": "event",
       "strength": "definitive"
     },
@@ -154,7 +159,12 @@
       "strength": "strong"
     },
     {
-      "text": "La santé mentale moyenne est descendue à 40 % et l'entité n'a encore jamais chassé.",
+      "text": "Tant que quelqu'un reste dans la pièce de l'entité, aucune chasse ne part de cette pièce, même quand la santé de l'équipe est très basse.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "L'entité n'a tenté aucune chasse tant que la santé mentale moyenne n'était pas descendue bien en dessous de la moitié.",
       "kind": "hunt",
       "strength": "hint"
     },
@@ -166,6 +176,11 @@
     {
       "text": "Aucun événement en tout début de partie, puis de plus en plus d'événements à mesure que la santé mentale de l'équipe baisse.",
       "kind": "event",
+      "strength": "hint"
+    },
+    {
+      "text": "Tant que tu restes dans sa pièce, la bougie que tu y as allumée n'est jamais soufflée.",
+      "kind": "interaction",
       "strength": "hint"
     }
   ],

@@ -11,6 +11,7 @@
     "alt": 1.7,
     "isRange": false,
     "los": true,
+    "losVaries": true,
     "summary": "1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile",
     "details": [
       "À plus de 10 m de tout joueur : 1,7 m/s avec une accélération en LdV standard.",
@@ -69,10 +70,36 @@
     { "with": "revenant", "why": "Le Revenant change aussi de vitesse d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, que tu bouges ou non. Une seule preuve en commun (orbes)." }
   ],
   "observations": [
-    { "text": "Pendant la chasse, l'entité est tout près ; tu t'arrêtes net et elle passe aussitôt à un pas très lent. Dès que tu repars, elle accélère brusquement.", "kind": "hunt", "strength": "definitive" },
-    { "text": "De loin, elle accélère normalement quand elle te voit ; mais une fois à moins d'une dizaine de mètres, elle ne gagne plus de vitesse et avance à un rythme fixe.", "kind": "hunt", "strength": "strong" },
-    { "text": "Une chasse démarre très tôt, vers 60 % de santé mentale, juste au moment où un coéquipier faisait des allers-retours près de sa pièce.", "kind": "hunt", "strength": "hint" },
-    { "text": "Le nom de l'entité et son apparence sont féminins.", "kind": "tell", "strength": "hint" }
+    {
+      "text": "Pendant la chasse, l'entité est à quelques mètres de toi : tu t'arrêtes net et elle passe aussitôt à un pas très lent ; dès que tu repars, elle accélère brusquement.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "De loin, l'entité accélère normalement quand elle te voit ; mais une fois à moins d'une dizaine de mètres de toi, elle ne gagne plus de vitesse et avance à un rythme fixe.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant la chasse, tu marches à quelques mètres de l'entité : elle fonce sur toi à une allure fixe, bien plus rapide que la normale (environ 2,25 m/s), sans accélérer davantage.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Pendant la chasse, tu restes parfaitement immobile à quelques mètres de l'entité : elle avance très lentement (environ 1,2 m/s), même en te voyant.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Une chasse démarre très tôt, vers 60 % de santé mentale moyenne, juste au moment où un coéquipier faisait des allers-retours à quelques mètres de l'entité.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Le nom de l'entité et son apparence sont féminins.",
+      "kind": "tell",
+      "strength": "hint"
+    }
   ],
   "quiz": [
     {

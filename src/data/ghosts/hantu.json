@@ -71,8 +71,10 @@
   "observations": [
     { "text": "Pendant une chasse, alors que le disjoncteur est coupé, tu vois une buée blanche s'échapper de l'entité à intervalles réguliers.", "kind": "hunt", "strength": "definitive" },
     { "text": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis devient nettement plus rapide en entrant dans une pièce bien plus froide, sans que tu fasses quoi que ce soit.", "kind": "hunt", "strength": "strong" },
+    { "text": "En pleine chasse, l'entité sort de sa pièce, la plus froide de toutes, et ralentit nettement en entrant dans un couloir plus chaud, alors qu'elle te voit.", "kind": "hunt", "strength": "strong" },
+    { "text": "Tu relèves les températures : dans une pièce à plus de 15 °C, l'entité chasse lentement, vers 1,4 m/s ; dans une pièce vers 5 °C, elle file à environ 2,4 m/s.", "kind": "hunt", "strength": "strong" },
     { "text": "L'entité te poursuit sur toute la longueur d'un couloir en te gardant en vue, mais elle ne prend jamais de vitesse.", "kind": "hunt", "strength": "hint" },
-    { "text": "Le disjoncteur se coupe à plusieurs reprises au cours de la partie, et il ne se rallume jamais sans qu'un joueur s'en charge.", "kind": "interaction", "strength": "hint" }
+    { "text": "Le disjoncteur se coupe tout seul à plusieurs reprises au cours de la partie, et il ne se rallume jamais sans qu'un joueur s'en charge.", "kind": "interaction", "strength": "hint" }
   ],
   "quiz": [
     {
@@ -113,7 +115,6 @@
     }
   ],
   "changes": [
-    "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé dans les mises à jour 2025–2026.",
     "Chronicle v0.13 (24 juin 2025) : correction d'un bug où la buée du Hantu restait visible après la mort du joueur quand l'option « les morts prolongent la chasse » était activée (sans effet sur l'identification).",
     "Le test « changements de vitesse aléatoires » n'est plus définitif : l'Obambo (décembre 2025) peut lui aussi changer de vitesse en pleine chasse."
   ],

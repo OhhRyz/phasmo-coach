@@ -60,9 +60,11 @@
   ],
   "observations": [
     { "text": "Pendant une chasse, l'entité traverse une grande pièce dégagée à une quinzaine de mètres de toi, et tu n'entends ni ses pas ni sa voix.", "kind": "hunt", "strength": "definitive" },
+    { "text": "Pendant une chasse, ton coéquipier, qui voit l'entité, t'annonce qu'elle est à une quinzaine de mètres de toi dans le même couloir ; tu n'entends pourtant rien.", "kind": "hunt", "strength": "definitive" },
     { "text": "Les chasses te paraissent étonnamment silencieuses : les pas surgissent d'un coup, alors que l'entité est déjà assez proche.", "kind": "hunt", "strength": "strong" },
+    { "text": "Pendant une chasse, tu ne commences à entendre les pas de l'entité qu'un instant avant que ta lampe torche se mette à grésiller.", "kind": "hunt", "strength": "strong" },
     { "text": "Au micro parabolique, tu captes nettement plus de sons paranormaux que d'habitude autour de sa pièce.", "kind": "behavior", "strength": "hint" },
-    { "text": "En chasse, elle se déplace à une vitesse normale et accélère quand elle te voit ; la première chasse arrive vers 50 % de santé mentale.", "kind": "hunt", "strength": "hint" }
+    { "text": "Pendant les chasses, l'entité te surprend souvent au détour d'un couloir : tu ne l'as pas entendue arriver de loin.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
     {
@@ -96,9 +98,7 @@
       "explain": "Le Myling produit davantage de sons au micro parabolique. Il n'a pas la Spirit Box comme preuve, et l'EMF ou le D.O.T.S ne captent pas de sons."
     }
   ],
-  "changes": [
-    "Aucun changement trouvé pour le Myling dans les mises à jour 2025–2026 : preuves, vitesse, seuil et particularités identiques à la sauvegarde de décembre 2024."
-  ],
+  "changes": [],
   "sources": [
     "tybayn backup b0.11.1.1",
     "tybayn wiki: wiki_misconceptions_myling_1_r",

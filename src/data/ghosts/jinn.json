@@ -15,6 +15,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
+    "losVaries": true,
     "summary": "1,7 m/s · 2,5 m/s si disjoncteur allumé, LdV et > 3 m",
     "details": [
       "Par défaut, le Djinn chasse à 1,7 m/s avec une accélération en LdV standard.",
@@ -130,28 +131,34 @@
   ],
   "observations": [
     {
-      "text": "Disjoncteur allumé, l'entité qui te voit de loin accélère d'un coup, puis reprend une allure normale une fois tout près de toi.",
+      "text": "Disjoncteur allumé, l'entité qui te voit de loin passe d'un coup à une allure très rapide (environ 2,5 m/s), puis reprend une allure normale une fois à moins de 3 m de toi.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Ta santé mentale chute d'environ 25 % d'un coup alors que l'entité est proche et que le courant est allumé.",
-      "kind": "behavior",
-      "strength": "strong"
-    },
-    {
-      "text": "Juste après cette chute de santé, ton lecteur EMF affiche un niveau 2 au disjoncteur.",
-      "kind": "interaction",
-      "strength": "strong"
-    },
-    {
-      "text": "Disjoncteur coupé, la chasse paraît tout à fait standard : environ 1,7 m/s et accélération progressive quand l'entité te voit.",
+      "text": "Disjoncteur allumé, l'entité qui te voit depuis l'autre bout d'un long couloir garde une allure rapide et constante tant qu'elle reste à distance, sans accélérer davantage.",
       "kind": "hunt",
       "strength": "hint"
     },
     {
-      "text": "De toute la partie, l'entité n'a jamais coupé le disjoncteur elle-même.",
+      "text": "Courant allumé, tu perds d'un coup environ 25 points de santé mentale alors que l'entité est proche, et un lecteur EMF posé au disjoncteur affiche au même moment un niveau 2, sans que personne y ait touché.",
       "kind": "behavior",
+      "strength": "definitive"
+    },
+    {
+      "text": "Alors que le courant est allumé, qu'aucune chasse ni aucun événement n'est en cours et que personne n'utilise d'objet maudit, tu perds d'un coup environ 25 points de santé mentale près de l'entité.",
+      "kind": "behavior",
+      "strength": "strong"
+    },
+    {
+      "text": "Un lecteur EMF posé au disjoncteur grimpe au niveau 5 alors que personne n'y a touché et que le disjoncteur est resté allumé.",
+      "kind": "interaction",
+      "strength": "strong",
+      "requires": "emf"
+    },
+    {
+      "text": "De toute la partie, l'entité n'a jamais coupé le disjoncteur elle-même.",
+      "kind": "interaction",
       "strength": "hint"
     }
   ],

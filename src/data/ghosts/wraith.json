@@ -134,34 +134,35 @@
   ],
   "observations": [
     {
-      "text": "Pendant une chasse, tu vois l'entité passer sur ton tas de sel : il reste parfaitement intact.",
+      "text": "Pendant une chasse, tu vois l'entité marcher sur ton tas de sel : il reste parfaitement intact.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Ton détecteur de mouvement placé au-dessus d'une ligne de sel s'active, mais le sel n'a pas bougé.",
+      "text": "Ton détecteur de mouvement, placé juste au-dessus d'une ligne de sel qui barre tout le passage, s'active, mais le sel n'a pas bougé.",
       "kind": "interaction",
       "strength": "strong"
     },
     {
-      "text": "Pendant une chasse, l'entité marche sur du sel de rang 3 sans être ralentie.",
+      "text": "De toute la partie, aucun de tes tas de sel n'a été perturbé, alors que tu as vu l'entité passer dessus à plusieurs reprises, pendant des événements et au cours de plusieurs chasses.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "De toute la partie, aucun de tes tas de sel n'a jamais été perturbé, alors que l'entité est passée dessus à plusieurs reprises.",
-      "kind": "behavior",
+      "text": "Pendant une chasse, l'entité traverse du sel de rang 3 sans ralentir le moins du monde.",
+      "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Ton lecteur EMF affiche un niveau 2 près de toi alors qu'aucun objet, aucune porte ni aucune lumière n'a bougé autour de toi.",
+      "text": "Ton lecteur EMF affiche un niveau 2 tout près de toi, alors qu'aucun objet, aucune porte ni aucune lumière n'a bougé autour de toi.",
       "kind": "behavior",
       "strength": "hint"
     },
     {
-      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
-      "kind": "hunt",
-      "strength": "hint"
+      "text": "Ton lecteur EMF grimpe au niveau 5 juste à côté de toi, loin de sa pièce, alors que rien n'a bougé autour de toi.",
+      "kind": "behavior",
+      "strength": "hint",
+      "requires": "emf"
     }
   ],
   "quiz": [

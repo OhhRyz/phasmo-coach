@@ -140,12 +140,12 @@
   ],
   "observations": [
     {
-      "text": "Première chasse alors que personne n'a encore rien touché : l'entité est extrêmement rapide dès le départ.",
+      "text": "Personne n'a touché au moindre objet, interrupteur, disjoncteur ou robinet depuis le début de la partie, et la première chasse est extrêmement rapide (environ 3 m/s) du début à la fin.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Entre deux chasses, l'équipe a ramassé et utilisé plein d'objets différents : la chasse suivante est nettement plus lente.",
+      "text": "Entre deux chasses, l'équipe a ramassé ou utilisé une quinzaine d'objets différents (objets du décor, interrupteurs, robinets) : la chasse suivante est nettement plus lente, et sa vitesse ne change pas de toute la chasse, même quand l'entité te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -155,12 +155,17 @@
       "strength": "strong"
     },
     {
-      "text": "Après une chasse lente, personne ne touche plus à rien… et la chasse suivante redevient ultra-rapide, à vitesse constante.",
+      "text": "Après une chasse lente, plus personne ne touche à rien : la chasse suivante redevient ultra-rapide (environ 3 m/s), à vitesse constante du début à la fin.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Même mort, ton coéquipier a ramassé une quinzaine d'objets différents entre deux chasses : la chasse suivante tombe à environ 1,5 m/s et garde cette allure du début à la fin, sans accélérer quand l'entité te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "La première chasse survient alors que la santé mentale moyenne vient de passer sous 50 %.",
+      "text": "Lors d'une chasse, l'entité avance à pas très lents mais parfaitement réguliers, sans accélérer quand elle te voit.",
       "kind": "hunt",
       "strength": "hint"
     }

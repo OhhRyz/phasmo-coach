@@ -123,7 +123,7 @@
   ],
   "observations": [
     {
-      "text": "Plusieurs objets que tu avais posés en tas dans la pièce sont projetés tous en même temps.",
+      "text": "Plusieurs objets que tu avais regroupés côte à côte dans sa pièce sont projetés tous en même temps.",
       "kind": "interaction",
       "strength": "definitive"
     },
@@ -133,28 +133,23 @@
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, tu entends des objets voler en rafale, à intervalles très rapprochés.",
+      "text": "Pendant la chasse, tu entends des objets voler en rafale, à intervalles très rapprochés (à peu près deux par seconde).",
       "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Ta santé mentale baisse d'un coup, juste au moment où plusieurs objets sont projetés ensemble près de toi.",
+      "kind": "interaction",
       "strength": "strong"
     },
     {
       "text": "Les objets lancés par l'entité partent particulièrement vite et atterrissent loin.",
       "kind": "interaction",
-      "strength": "strong"
-    },
-    {
-      "text": "Ta santé mentale baisse d'un coup juste après que plusieurs objets ont été projetés près de toi.",
-      "kind": "interaction",
-      "strength": "strong"
+      "strength": "hint"
     },
     {
       "text": "L'entité touche très souvent aux objets de la pièce, bien plus que d'habitude.",
       "kind": "behavior",
-      "strength": "hint"
-    },
-    {
-      "text": "En chasse, l'entité avance à une vitesse normale (environ 1,7 m/s) et accélère progressivement quand elle te voit.",
-      "kind": "hunt",
       "strength": "hint"
     }
   ],

@@ -145,17 +145,22 @@
       "strength": "definitive"
     },
     {
-      "text": "L'entité chasse alors que toute l'équipe est encore au-dessus de 80 % de santé mentale, qu'aucune bougie n'a été allumée et qu'aucun objet maudit n'a été utilisé.",
+      "text": "Ton crucifix vient de brûler en empêchant une chasse, et une chasse démarre à peine 20 secondes plus tard, sans objet maudit.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Ton crucifix de niveau 3 brûle alors que l'entité a lancé sa chasse à environ 7 m de lui, bien au-delà de la portée habituelle.",
+      "text": "L'entité chasse alors que chaque membre de l'équipe est encore au-dessus de 80 % de santé mentale, sans qu'aucune flamme (bougie, briquet, lumière à feu) ait brûlé de la partie ni qu'aucun objet maudit ait été utilisé.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Ton crucifix de rang 3 brûle alors que l'entité a tenté de chasser à environ 7 m de lui, bien au-delà de la portée habituelle de 5 m.",
       "kind": "interaction",
       "strength": "strong"
     },
     {
-      "text": "Les chasses commencent très tôt dans la partie, dès que la santé mentale moyenne passe sous 70 %.",
+      "text": "Une chasse démarre alors que la santé mentale moyenne vient tout juste de passer sous 70 %, sans objet maudit.",
       "kind": "hunt",
       "strength": "hint"
     }

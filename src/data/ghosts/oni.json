@@ -127,27 +127,32 @@
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps entre deux clignotements que d'habitude : tu la suis facilement des yeux.",
-      "kind": "hunt",
-      "strength": "strong"
-    },
-    {
-      "text": "Juste après un événement de l'entité, l'écran de santé mentale montre que tu as perdu 20 % d'un coup.",
+      "text": "Juste après un événement de l'entité, l'écran de santé mentale du camion montre que tu as perdu 20 points d'un coup, au lieu des 10 habituels.",
       "kind": "event",
       "strength": "definitive"
     },
     {
-      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète qu'en silhouette sombre.",
+      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et elle avance à un pas normal qui ne ralentit pas quand elle arrive sur toi.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Pendant la chasse, tu suis facilement l'entité des yeux : entre deux clignotements, elle reste visible nettement plus longtemps qu'une entité ordinaire.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète qu'en silhouette noire.",
       "kind": "event",
       "strength": "hint"
     },
     {
-      "text": "L'activité (portes, objets, événements) augmente nettement quand plusieurs joueurs sont près de sa pièce.",
+      "text": "L'activité (portes, objets, événements) augmente nettement quand plusieurs joueurs se tiennent près de sa pièce.",
       "kind": "behavior",
       "strength": "hint"
     },
     {
-      "text": "Malgré de nombreux événements, tu n'as jamais vu de bulle d'air ni de brouillard fantomatique.",
+      "text": "Malgré beaucoup d'événements, tu n'as jamais vu de bulle d'air ni de nuage de brume.",
       "kind": "event",
       "strength": "hint"
     }

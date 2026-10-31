@@ -161,27 +161,32 @@
       "strength": "strong"
     },
     {
-      "text": "Tu l'as encensée hors chasse alors que sa dernière chasse était à vitesse normale : sa chasse suivante est nettement plus rapide (environ 1,96 m/s).",
+      "text": "Peu après que tu l'as encensée hors chasse ou qu'elle a marché dans ton sel, sa chasse suivante est nettement plus rapide que la précédente, qui était à vitesse normale (environ 1,96 m/s contre 1,7).",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "La chasse qui suit cette chasse rapide est au contraire nettement plus lente (environ 1,36 m/s), alors que tu n'as utilisé ni sel, ni encens, ni crucifix entre-temps.",
+      "text": "Juste après une chasse plus rapide que la normale, la chasse suivante est au contraire nettement plus lente (environ 1,36 m/s), alors que tu n'as utilisé ni sel, ni encens, ni crucifix entre-temps.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Quand elle est lente, il suffit qu'elle marche dans du sel ou que tu l'encenses pour qu'elle retrouve une vitesse normale à la chasse suivante.",
+      "text": "Après une chasse très lente (environ 1,36 m/s), tu l'encenses hors chasse ou elle marche dans ton sel : sa chasse suivante retrouve une allure tout à fait normale.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Après que tu l'as encensée hors chasse, l'entité lance une chasse alors que la santé moyenne est encore entre 50 et 60 %, sans objet maudit.",
+      "text": "En pleine chasse, alors qu'elle avance nettement plus lentement que la normale, ton encens de rang 1 la désoriente environ 6 s, un peu plus longtemps que d'habitude.",
       "kind": "hunt",
-      "strength": "hint"
+      "strength": "strong"
     },
     {
-      "text": "En chasse, l'entité accélère progressivement quand elle te voit, quelle que soit sa vitesse de départ.",
+      "text": "En pleine chasse, alors qu'elle avance nettement plus vite que la normale, ton encens de rang 1 ne la désoriente qu'environ 4 s, moins longtemps que d'habitude.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "Après que tu l'as encensée hors chasse, l'entité finit par lancer une chasse alors que la santé mentale moyenne est encore vers 58 %, sans objet maudit.",
       "kind": "hunt",
       "strength": "hint"
     }
