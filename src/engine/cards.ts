@@ -63,7 +63,7 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
   const cards: Card[] = []
   const evNames = g.evidence.map((e) => EVIDENCE[e].label)
   const evExtra: string[] = []
-  if (g.forcedEvidence) evExtra.push(`Preuve forcée (toujours présente avec moins de preuves) : ${EVIDENCE[g.forcedEvidence].label}.`)
+  if (g.forcedEvidence) evExtra.push(`Preuve forcée (toujours présente en Cauchemar et en Démence) : ${EVIDENCE[g.forcedEvidence].label}.`)
   if (g.fakeEvidence) evExtra.push(`Fausse preuve en plus : ${EVIDENCE[g.fakeEvidence].label} (ne compte pas dans les 3).`)
 
   cards.push({
@@ -123,7 +123,7 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
       deck: 'ghost',
       kind: 'forced',
       ghostId: g.id,
-      front: `En Cauchemar ou en Démence, quelle preuve est toujours présente avec ${le(g.name)} ?`,
+      front: `En difficulté Cauchemar ou Démence, quelle preuve est toujours présente avec ${le(g.name)} ?`,
       back: EVIDENCE[g.forcedEvidence].label,
       evidence: [g.forcedEvidence],
       order: base + KIND_ORDER.forced,
@@ -194,7 +194,7 @@ export function noteCards(notes: CoachNote[]): Card[] {
     const answer = n.answer?.trim()
     const body = n.body?.trim() ?? ''
     // sans question explicite, on demande de se souvenir du contenu de la note
-    const front = question || `Que retenir de « ${n.title} » ?`
+    const front = question || `Que retenir de «\u202f${n.title}\u202f»\u202f?`
     const back = answer || body
     if (!back) return
     out.push({
@@ -217,20 +217,25 @@ export function buildDeck(ghosts: Ghost[], mechanics: Mechanics, notes: CoachNot
 
 /* ---- petites aides de français ---- */
 
-const VOWEL = /^[aeiouyhâàéèêîïôûAEIOUYHÂÀÉÈÊÎÏÔÛ]/
+// Pas de y ni de h : « du Yokai », « du Yurei », « du Hantu » (h aspiré).
+const VOWEL = /^[aeiouâàéèêîïôûAEIOUÂÀÉÈÊÎÏÔÛ]/
+/** Entités dites au féminin par les joueurs francophones. */
+const FEMININE = new Set(['Banshee'])
 
-/** « du Démon », « de l'Onryo », « des Jumeaux », « du Mimic » */
+/** « du Démon », « de l’Onryo », « des Jumeaux », « du Mimic », « de la Banshee » */
 export function de(name: string): string {
   if (name.startsWith('Les ')) return `des ${name.slice(4)}`
   if (name.startsWith('Le ')) return `du ${name.slice(3)}`
   if (name.startsWith('La ')) return `de la ${name.slice(3)}`
   if (VOWEL.test(name)) return `de l’${name}`
+  if (FEMININE.has(name)) return `de la ${name}`
   return `du ${name}`
 }
 
-/** « le Démon », « l'Onryo », « les Jumeaux » */
+/** « le Démon », « l’Onryo », « les Jumeaux », « la Banshee » */
 export function le(name: string): string {
   if (/^(Le|La|Les) /.test(name)) return name.charAt(0).toLowerCase() + name.slice(1)
   if (VOWEL.test(name)) return `l’${name}`
+  if (FEMININE.has(name)) return `la ${name}`
   return `le ${name}`
 }

@@ -25,6 +25,7 @@ export function applyTheme(choice: ThemeChoice) {
   const dark = choice === 'dark' || (choice === 'system' && systemDark())
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a0c0b' : '#33413a')
+  listeners.forEach((l) => l())
 }
 
 function setTheme(choice: ThemeChoice) {
@@ -35,7 +36,6 @@ function setTheme(choice: ThemeChoice) {
     /* stockage indisponible */
   }
   applyTheme(choice)
-  listeners.forEach((l) => l())
 }
 
 function subscribe(l: () => void) {
@@ -57,4 +57,13 @@ export function useTheme(): [ThemeChoice, (t: ThemeChoice) => void] {
   }, [choice])
 
   return [choice, setTheme]
+}
+
+/** Le thème réellement affiché (jour ou nuit), y compris quand il suit l'appareil. */
+export function useIsDark(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => document.documentElement.dataset.theme === 'dark',
+    () => false,
+  )
 }

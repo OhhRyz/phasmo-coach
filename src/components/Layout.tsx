@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { buildReviewQueue } from '../engine/progress'
 import { useStore } from '../store/store'
-import { useTheme } from '../theme'
+import { useIsDark, useTheme } from '../theme'
 import { InkFilter } from './journal/Journal'
 import { roughEllipse, roughRng } from './journal/rough'
 
@@ -115,6 +115,7 @@ function Ambient() {
 /** Le disjoncteur du jeu : bascule entre jour et nuit, avec une brève coupure de courant. */
 function Breaker() {
   const [, setTheme] = useTheme()
+  const dark = useIsDark()
   const flip = () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
     const blackout = document.querySelector('.blackout')
@@ -124,7 +125,6 @@ function Breaker() {
     blackout.classList.add('on')
     window.setTimeout(() => setTheme(next), 120)
   }
-  const dark = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
   return (
     <button className="breaker" type="button" aria-pressed={dark} aria-label="Disjoncteur : passer en thème clair ou sombre" onClick={flip}>
       <span className="breaker-box">
@@ -143,7 +143,7 @@ function CountCircle({ n }: { n: number }) {
   const w = 12 + label.length * 9
   const d = roughEllipse(w, 20, roughRng('count'), 0.05, 0.1)
   return (
-    <b className="count" aria-label={`${n} cartes à réviser`}>
+    <b className="count" aria-label={`${n} carte${n > 1 ? 's' : ''} à réviser`}>
       {label}
       <svg className="draw" viewBox={`0 0 ${w + 14} 32`} aria-hidden>
         <path d={d} transform="translate(7 6)" pathLength={1} strokeWidth={1.6} style={{ ['--d' as string]: '1.2s' }} />
@@ -172,9 +172,9 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="brand-sub">Carnet d’enquête{state.profile.name ? ` de ${state.profile.name}` : ''}</span>
         </Link>
         <div className="desk-tools">
-          <Link to="/profil" className="who">
+          <Link to="/profil" className="who" aria-current={current(pathname.startsWith('/profil'))}>
             <b>{state.profile.name || 'Profil'}</b>
-            {state.profile.role === 'coach' ? 'coach' : state.profile.coachName ? `coachée par ${state.profile.coachName}` : 'réglages'}
+            <span>{state.profile.role === 'coach' ? 'carnet du coach' : state.profile.coachName ? `coach : ${state.profile.coachName}` : 'réglages'}</span>
           </Link>
           <Breaker />
         </div>
@@ -194,7 +194,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="long">Codex</span>
           <span className="short">Codex</span>
         </Link>
-        <Link className="tab" to="/entrainement" aria-current={current(trainActive)}>
+        {/* sur téléphone l'onglet Mécaniques est masqué : l'onglet Exercices s'allume à sa place */}
+        <Link className={`tab${pathname.startsWith('/mecaniques') ? ' also-current' : ''}`} to="/entrainement" aria-current={current(trainActive)}>
           <span className="long">S’entraîner</span>
           <span className="short">Exercices</span>
         </Link>

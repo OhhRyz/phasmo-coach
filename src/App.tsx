@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
 import { ToastProvider } from './components/Toast'
 import { StoreProvider } from './store/store'
@@ -33,6 +34,11 @@ function QuizRoute() {
   return <Quiz key={search} />
 }
 
+function SafeRoutes({ children }: { children: React.ReactNode }) {
+  const { pathname, search } = useLocation()
+  return <ErrorBoundary resetKey={pathname + search}>{children}</ErrorBoundary>
+}
+
 export function App() {
   return (
     <StoreProvider>
@@ -40,6 +46,7 @@ export function App() {
         <HashRouter>
           <ScrollToTop />
           <Layout>
+            <SafeRoutes>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/codex" element={<Codex />} />
@@ -57,6 +64,7 @@ export function App() {
               <Route path="/a-propos" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </SafeRoutes>
           </Layout>
         </HashRouter>
       </ToastProvider>

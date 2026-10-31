@@ -1,3 +1,4 @@
+import { requestPersistentStorage } from '../engine/device'
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { GHOSTS, MECHANICS } from '../data'
 import { buildDeck, type Card, type CoachNote } from '../engine/cards'
@@ -127,6 +128,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const t = window.setTimeout(flush, 150)
     return () => window.clearTimeout(t)
   }, [state, flush])
+
+  // un carnet ouvert demande au navigateur de ne pas effacer ses données
+  useEffect(() => {
+    if (state.onboarded) void requestPersistentStorage()
+  }, [state.onboarded])
 
   // fermeture de l'onglet ou mise en arrière-plan de l'app : on enregistre tout de suite
   useEffect(() => {

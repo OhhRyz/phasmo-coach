@@ -123,7 +123,15 @@ export function Modal({
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
-      back?.focus?.()
+      // le déclencheur a pu disparaître (note supprimée) : on rend le focus au titre de la page
+      if (back?.isConnected) back.focus()
+      else {
+        const h1 = document.querySelector<HTMLElement>('main h1')
+        if (h1) {
+          if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1')
+          h1.focus()
+        }
+      }
     }
   }, [open])
   if (!open) return null

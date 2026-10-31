@@ -1,5 +1,6 @@
 import type { Ghost, Mechanics } from './types'
 import mechanicsJson from './mechanics.json'
+import { fr } from '../engine/format'
 
 /** Ordre canonique (ordre du journal du jeu, puis ajouts récents). */
 export const GHOST_ORDER = [
@@ -10,6 +11,20 @@ export const GHOST_ORDER = [
 ]
 
 const modules = import.meta.glob<Ghost>('./ghosts/*.json', { eager: true, import: 'default' })
+
+/** Champs techniques à ne jamais retoucher (identifiants, preuves, sources). */
+const RAW_KEYS = new Set(['id', 'with', 'evidence', 'forcedEvidence', 'fakeEvidence', 'requires', 'kind', 'sources', 'nameEn', 'icon'])
+
+/** Applique la typographie française (apostrophes courbes, espaces fines) à tous les textes des données. */
+function typeset<T>(value: T, key = ''): T {
+  if (RAW_KEYS.has(key)) return value
+  if (typeof value === 'string') return fr(value) as T
+  if (Array.isArray(value)) return value.map((v) => typeset(v)) as T
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, typeset(v, k)])) as T
+  }
+  return value
+}
 
 function normalize(g: Ghost): Ghost {
   return {
@@ -39,7 +54,7 @@ const rank = (id: string) => {
 }
 
 export const GHOSTS: Ghost[] = Object.values(modules)
-  .map(normalize)
+  .map((g) => typeset(normalize(g)))
   .sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name, 'fr'))
 
 export const GHOST_BY_ID: Record<string, Ghost> = Object.fromEntries(GHOSTS.map((g) => [g.id, g]))
@@ -48,7 +63,7 @@ export function getGhost(id: string): Ghost | undefined {
   return GHOST_BY_ID[id]
 }
 
-export const MECHANICS = mechanicsJson as Mechanics
+export const MECHANICS = typeset(mechanicsJson as Mechanics)
 
 export const DATA_INFO = {
   ghostCount: GHOSTS.length,

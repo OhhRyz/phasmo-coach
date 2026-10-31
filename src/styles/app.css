@@ -18,7 +18,15 @@
   font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .04em; color: var(--desk-ink-2);
 }
 .desk-foot a { color: var(--desk-ink); }
-@media (max-width: 759px) { .desk-foot { padding: 4px 18px 26px; } }
+@media (max-width: 759px) {
+  .desk-foot { padding: 4px 18px 26px; }
+  .desk-foot a { display: inline-flex; align-items: center; min-height: 40px; }
+  /* cibles tactiles d'au moins 40 px */
+  .paper-btn, .opt, .modal .link, .link-btn.link, .pager a { min-height: 40px; }
+  .paper-btn { display: inline-flex; align-items: center; }
+  .opt { display: inline-flex; align-items: center; }
+  .pager a, .modal .link { display: inline-flex; align-items: center; }
+}
 
 .save-warning {
   max-width: 1320px; margin: 0 auto 10px; padding: 10px 18px;

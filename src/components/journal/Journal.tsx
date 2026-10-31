@@ -164,8 +164,22 @@ export function Page({
 }
 
 /** Le carnet ouvert : une double page (deux enfants) ou une seule page (single). */
-export function Notebook({ children, single, className = '' }: { children: ReactNode; single?: boolean; className?: string }) {
-  return <main className={`notebook${single ? ' notebook--single' : ''} ${className}`}>{children}</main>
+/**
+ * Le carnet ouvert. Rendu en <main> ; un deuxième carnet sur le même écran (suite d'une fiche) passe
+ * `as="section"` pour ne pas créer deux zones principales.
+ */
+export function Notebook({
+  children,
+  single,
+  className = '',
+  as: Tag = 'main',
+}: {
+  children: ReactNode
+  single?: boolean
+  className?: string
+  as?: 'main' | 'section' | 'div'
+}) {
+  return <Tag className={`notebook${single ? ' notebook--single' : ''} ${className}`}>{children}</Tag>
 }
 
 /** En-tête de dossier tapé à la machine. */
@@ -309,9 +323,27 @@ export function IndexCard({
 }
 
 /** Post-it du coach (vraies notes seulement). */
-export function Sticky({ meta, sign, rotate = 1.4, delay = 0, children }: { meta?: ReactNode; sign?: ReactNode; rotate?: number; delay?: number; children: ReactNode }) {
+/**
+ * Post-it. `hand="coach"` (défaut) : écrit au stylo rouge, réservé aux vraies notes du coach.
+ * `hand="mine"` : une note de la personne qui tient le carnet, à l'encre ordinaire.
+ */
+export function Sticky({
+  meta,
+  sign,
+  rotate = 1.4,
+  delay = 0,
+  hand = 'coach',
+  children,
+}: {
+  meta?: ReactNode
+  sign?: ReactNode
+  rotate?: number
+  delay?: number
+  hand?: 'coach' | 'mine'
+  children: ReactNode
+}) {
   return (
-    <div className="sticky settle" style={{ '--r': `${rotate}deg`, '--d': `${delay}s` } as Style}>
+    <div className={`sticky settle sticky--${hand}`} style={{ '--r': `${rotate}deg`, '--d': `${delay}s` } as Style}>
       {meta && <span className="meta">{meta}</span>}
       {children}
       {sign && <span className="sign">{sign}</span>}

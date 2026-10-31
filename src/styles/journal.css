@@ -510,6 +510,10 @@ a.polaroid:hover { transform: rotate(calc(var(--r) * .4)) translateY(-4px) scale
   content: ""; position: absolute; right: 0; bottom: 0; width: 34px; height: 34px;
   background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,.10) 50%, rgba(255,255,255,.25) 64%, rgba(0,0,0,.05));
 }
+.sticky--coach { color: var(--red-pen); }
+.sticky--coach .meta, .sticky--coach .sign { color: var(--red-pen); }
+.sticky--mine { color: var(--sticky-ink); }
+.sticky, .torn-paper, .note-ttl, .note-body, .note-qa { overflow-wrap: anywhere; min-width: 0; }
 .sticky .meta { display: block; margin-bottom: 6px; font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; font-weight: 700; }
 .sticky .sign { display: block; text-align: right; margin-top: 6px; font-weight: 700; }
 
@@ -561,8 +565,7 @@ a.polaroid:hover { transform: rotate(calc(var(--r) * .4)) translateY(-4px) scale
 }
 .envelope .label strong { display: block; font-family: "Elite", monospace; font-weight: 400; font-size: 21px; letter-spacing: .04em; line-height: 1.1; }
 .envelope .label span { display: block; margin-top: 4px; font-size: 14.5px; line-height: 1.38; color: var(--ink-2); }
-.envelope .hand { margin-top: 10px; font-size: 22px; color: var(--kraft-ink); }
-:root:not([data-theme="dark"]) .envelope .hand { color: #7a1a10; }
+.envelope .hand { margin-top: 10px; font-size: 22px; color: var(--kraft-ink); opacity: .78; } /* crayon sur kraft */
 
 /* ---------- encre et dessins à la main ---------- */
 .rough { position: absolute; overflow: visible; pointer-events: none; }
@@ -692,7 +695,7 @@ html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) 
 .chart .tick { stroke: var(--ink-2); stroke-width: 1; }
 .chart .lbl { font-family: "Courier Prime", monospace; font-size: 12px; fill: var(--ink-2); }
 .chart .lbl-b { font-family: "Courier Prime", monospace; font-size: 12.5px; font-weight: 700; fill: var(--ink); }
-.chart .hand-t { font-family: "Caveat", cursive; font-size: 21px; font-weight: 600; fill: var(--red-pen); }
+.chart .hand-t { font-family: "Caveat", cursive; font-size: 21px; font-weight: 600; fill: var(--pencil); }
 .chart .halo { paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
 .chart .red { stroke: var(--red-pen); fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .chart .redfill { fill: var(--red-pen); }
@@ -759,7 +762,7 @@ html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) 
 .conf .flag-note { position: absolute; right: -104px; top: 4px; width: 96px; font-family: "Caveat", cursive; font-weight: 600; font-size: 21px; line-height: 1; color: var(--red-pen); transform: rotate(4deg); }
 .conf-more { display: none; }
 
-.sources { margin-top: 44px; padding-top: 10px; border-top: 1px solid var(--ink-3); font-family: "Courier Prime", monospace; font-size: 12px; line-height: 1.55; color: var(--ink-3); }
+.sources { margin-top: 44px; padding-top: 10px; border-top: 1px solid var(--ink-3); font-family: "Courier Prime", monospace; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
 
 /* écriture fantomatique dans la marge */
 .ghost-writing { position: absolute; color: var(--ev-writing); opacity: .55; pointer-events: none; mix-blend-mode: var(--blend); }
@@ -795,6 +798,10 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .conf .flag-note { right: auto; left: -110px; }
 }
 
+@media (min-width: 760px) and (max-width: 1320px) {
+  .notebook { overflow-x: clip; overflow-clip-margin: 0px; }
+}
+
 /* ==========================================================================
    Téléphone : le carnet de reporter à spirale
    ========================================================================== */
@@ -804,8 +811,12 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .brand { flex-direction: column; gap: 2px; }
   .brand-name { font-size: 25px; }
   .brand-sub { font-size: 10.5px; }
-  .who { display: none; }
-  .breaker { padding: 0; gap: 8px; }
+  html { scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .desk-tools { gap: 12px; }
+  .who { display: inline-flex; flex-direction: column; justify-content: center; min-height: 44px; font-size: 10.5px; max-width: 110px; }
+  .who b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .breaker { padding: 0; gap: 8px; min-height: 44px; }
   .breaker-box { width: 24px; height: 36px; }
   .breaker-box::before { left: 8px; top: 6px; height: 24px; }
   .breaker-lever { left: 5px; top: 5px; width: 14px; height: 12px; }
@@ -838,7 +849,7 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
     clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 100%, 0 100%);
     transform: translateY(5px);
   }
-  .tab[aria-current="page"] { transform: translateY(-3px); padding-bottom: 14px; }
+  .tab[aria-current="page"], .tab.also-current { transform: translateY(-3px); padding-bottom: 14px; z-index: 3; filter: none; }
   .tab:nth-child(5) { display: none; }
   .tab .long { display: none; }
   .tab .short { display: inline; }
@@ -930,10 +941,10 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
 .notebook--cont .page { border-top: 0; }
 .turn {
   position: absolute; right: 8px; bottom: 60px; width: 90px; z-index: 6;
-  font-family: "Caveat", cursive; font-weight: 600; font-size: 21px; line-height: 1.05; color: var(--red-pen);
+  font-family: "Caveat", cursive; font-weight: 600; font-size: 21px; line-height: 1.05; color: var(--pencil);
   transform: rotate(-6deg);
 }
-.turn svg { display: block; margin: 4px 0 0 20px; color: var(--red-pen); overflow: visible; }
+.turn svg { display: block; margin: 4px 0 0 20px; color: var(--pencil); overflow: visible; }
 
 .grade { text-align: center; }
 .grade-n { display: inline-block; position: relative; font-size: 36px; font-weight: 700; line-height: 1; padding: 4px 2px; }

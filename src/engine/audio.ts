@@ -17,6 +17,15 @@ let noise: AudioBuffer | null = null
 
 function audio(): AudioContext {
   if (!ctx) {
+    // Sur iPhone, le Web Audio suit le bouton silencieux, sauf en session « lecture » (Safari 16.4+)
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession
+    if (session) {
+      try {
+        session.type = 'playback'
+      } catch {
+        /* non pris en charge */
+      }
+    }
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     ctx = new Ctor()
   }

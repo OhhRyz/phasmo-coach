@@ -73,7 +73,32 @@ export function masteryLevel(m: number): MasteryLevel {
   if (m < 0.35) return { label: 'Découverte', tone: 'low' }
   if (m < 0.6) return { label: 'En cours', tone: 'mid' }
   if (m < 0.85) return { label: 'Solide', tone: 'good' }
-  return { label: 'Maîtrisée', tone: 'max' }
+  return { label: 'Acquise', tone: 'max' }
+}
+
+/** Nombre d'entités « les moins maîtrisées » proposées partout (accueil, quiz, mise en situation). */
+export const WEAK_COUNT = 6
+
+/**
+ * Les entités les moins maîtrisées. On ne classe que celles déjà travaillées (au moins une carte vue ou
+ * une réponse) : une entité jamais ouverte n'est pas un point faible. S'il n'y en a aucune, on renvoie
+ * les premières entités à découvrir avec started = false.
+ */
+export function weakestGhosts(
+  ghostIds: string[],
+  mastery: Record<string, number>,
+  deck: Card[],
+  state: PersistedState,
+  n = WEAK_COUNT,
+): { ids: string[]; started: boolean } {
+  const touched = (id: string) =>
+    !!state.answers[`ghost:${id}`]?.recent?.length || deck.some((c) => c.ghostId === id && c.deck === 'ghost' && state.cards[c.id])
+  const started = ghostIds.filter((id) => touched(id) && (mastery[id] ?? 0) < 0.85)
+  if (started.length) {
+    const ids = [...started].sort((a, b) => (mastery[a] ?? 0) - (mastery[b] ?? 0)).slice(0, n)
+    return { ids, started: true }
+  }
+  return { ids: ghostIds.filter((id) => !touched(id)).slice(0, n), started: false }
 }
 
 export function learnedCount(deck: Card[], cards: Record<string, CardState>): number {

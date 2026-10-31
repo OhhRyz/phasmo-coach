@@ -31,6 +31,8 @@ export interface Settings {
   /** entités à travailler en priorité (null = toutes) */
   focus: string[] | null
   includeMechanics: boolean
+  /** dernier partage du carnet par lien (pour n'envoyer ensuite que les notes nouvelles ou modifiées) */
+  lastSharedAt?: number
 }
 
 export interface Profile {
@@ -86,11 +88,13 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
     const title = str(n.title).slice(0, 200)
     const body = str(n.body).slice(0, 8000)
     if (!title && !body) continue
-    const createdAt = typeof n.createdAt === 'number' ? n.createdAt : Date.now()
+    // dates bornées : une valeur absurde venue d'un lien ou d'un fichier ne doit rien casser à l'affichage
+    const time = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 && v < 4102444800000 ? v : null)
+    const createdAt = time(n.createdAt) ?? Date.now()
     out.push({
       id: n.id.slice(0, 64),
       createdAt,
-      updatedAt: typeof n.updatedAt === 'number' ? n.updatedAt : createdAt,
+      updatedAt: time(n.updatedAt) ?? createdAt,
       ghostId: typeof n.ghostId === 'string' ? n.ghostId : null,
       title: title || body.slice(0, 60),
       body,

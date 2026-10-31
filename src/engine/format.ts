@@ -2,6 +2,24 @@ import type { Ghost } from '../data/types'
 
 const nf = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
 
+/** Espace fine insécable (avant ? ! ; : et à l'intérieur des « »). */
+export const NNBSP = '\u202f'
+/** Espace insécable (entre un nombre et son unité). */
+export const NBSP = '\u00a0'
+
+/**
+ * Typographie française pour les textes de l'app et des fiches : apostrophe courbe, espace fine
+ * insécable avant ? ! ; : et dans les guillemets, espace insécable entre un nombre et son unité.
+ * Ne jamais l'appliquer aux notes du coach (son texte reste tel qu'il l'a écrit).
+ */
+export function fr(text: string): string {
+  return text
+    .replace(/(\p{L})'(?=\p{L})/gu, '$1’')
+    .replace(/[ \u00a0]+([?!;:»])/g, `${NNBSP}$1`)
+    .replace(/«[ \u00a0]+/g, `«${NNBSP}`)
+    .replace(/(\d)[ ](%|m\/s|°C|min|s|j|h|pts|m)(?![\p{L}\d])/gu, `$1${NBSP}$2`)
+}
+
 export function num(n: number): string {
   return nf.format(n)
 }
@@ -10,8 +28,8 @@ export function speedText(g: Ghost): string {
   const s = g.speed
   if (s.min < 0) return 'Inconnue'
   const parts = [`${num(s.min)}`]
-  if (s.max != null) parts.push(s.isRange ? `– ${num(s.max)}` : `| ${num(s.max)}`)
-  let out = `${parts.join(' ')} m/s`
+  if (s.max != null) parts.push(s.isRange ? `– ${num(s.max)}` : `ou ${num(s.max)}`)
+  let out = `${parts.join(' ')}${NBSP}m/s`
   if (s.alt != null) out += ` (${num(s.alt)})`
   return out
 }
@@ -20,7 +38,7 @@ export function sanityText(g: Ghost): string {
   const h = g.huntSanity
   const values = [...new Set([h.low, h.normal, h.high].filter((v) => v >= 0))].sort((a, b) => a - b)
   if (!values.length) return '???'
-  return values.map((v) => `${v} %`).join(' · ')
+  return values.map((v) => `${v}${NBSP}%`).join(' · ')
 }
 
 export type SpeedClass = 'slow' | 'normal' | 'fast'
@@ -60,7 +78,7 @@ export function plural(n: number, one: string, many: string): string {
 
 export function relativeDays(ts: number, now = Date.now()): string {
   const d = Math.round((startOfDay(ts) - startOfDay(now)) / 86_400_000)
-  if (d === 0) return "aujourd'hui"
+  if (d === 0) return 'aujourd’hui'
   if (d === 1) return 'demain'
   if (d === -1) return 'hier'
   if (d > 1) return `dans ${d} jours`
@@ -79,7 +97,22 @@ export function dayKey(ts: number): string {
 }
 
 export function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return safeDate(new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }), ts)
+}
+
+/** Un horodatage utilisable (nombre fini, date valide), sinon null. */
+export function validTime(t: unknown): number | null {
+  if (typeof t !== 'number' || !Number.isFinite(t)) return null
+  return Number.isNaN(new Date(t).getTime()) ? null : t
+}
+
+/**
+ * Formate une date sans jamais planter : un lien de partage ou une sauvegarde peut contenir n'importe
+ * quoi, et Intl.DateTimeFormat.format lève une erreur sur une date invalide.
+ */
+export function safeDate(f: Intl.DateTimeFormat, t: unknown, fallback = '—'): string {
+  const v = validTime(t)
+  return v == null ? fallback : f.format(v)
 }
 
 /** Remplace le nom de l'entité dans un texte pour ne pas souffler la réponse. */
