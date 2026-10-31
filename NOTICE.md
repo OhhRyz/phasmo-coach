@@ -17,6 +17,9 @@ https://github.com/tybayn/phasmo-cheat-sheet — GNU AGPL v3.
   mécaniques ;
 - la relation vitesse → cadence des pas du métronome (`scripts-v10/metronome-v7.js`).
 
+Les fiches ont ensuite été comparées, en octobre 2026, au site public de la Cheat Sheet (version du jeu
+v0.19.1.0), consulté comme une page web ordinaire, sans utiliser son API.
+
 Conformément à la demande de l’auteur, aucune URL externe présente dans son code (API, fichiers hébergés)
 n’est utilisée par Phasmo Coach, et aucun de ses visuels n’est repris.
 
@@ -28,5 +31,10 @@ Games. Il s’agit d’un outil éducatif de fan.
 
 ## Polices
 
-Inter (Rasmus Andersson), Fraunces (Undercase Type) et JetBrains Mono (JetBrains) — SIL Open Font
-License 1.1. Les licences sont incluses dans `src/assets/fonts/`.
+Les polices sont embarquées dans `src/assets/fonts/`, avec leurs licences :
+
+- IM Fell English (Igino Marini) — SIL Open Font License 1.1 ;
+- Libre Caslon Text (Pablo Impallari, Rodrigo Fuenzalida) — SIL Open Font License 1.1 ;
+- Courier Prime (Quote-Unquote Apps) — SIL Open Font License 1.1 ;
+- Caveat (Impallari Type) — SIL Open Font License 1.1 ;
+- Special Elite (Astigmatic) — Apache License 2.0.
