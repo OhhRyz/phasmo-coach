@@ -669,7 +669,7 @@ export function Notebook() {
                 .filter((grp) => grp.notes.length || (!filtering && grp.key === 'coach'))
                 .map((grp) => (
                   <section key={grp.key} className="carnet-group" aria-labelledby={`h-${grp.key}`}>
-                    <h3 className="carnet-group-h" id={`h-${grp.key}`}>
+                    <h3 className="carnet-group-h" id={`h-${grp.key}`} tabIndex={-1}>
                       <span>{grp.title}</span>
                       <span className="h-count">{grp.notes.length ? plural(grp.notes.length, 'note', 'notes') : 'aucune note'}</span>
                     </h3>
@@ -680,7 +680,13 @@ export function Notebook() {
                             ? `Ton coach est noté « ${coach} ». Si ces notes viennent de lui, dis-le : elles passeront au stylo rouge.`
                             : 'Ton coach n’est pas encore noté. Si ces notes viennent de lui, dis-le : elles passeront au stylo rouge.',
                         )}{' '}
-                        <PaperButton onClick={() => dispatch({ type: 'profile', profile: { coachName: grp.author! } })}>
+                        <PaperButton
+                          onClick={() => {
+                            dispatch({ type: 'profile', profile: { coachName: grp.author! } })
+                            // le groupe devient « De … » du coach : le focus suit
+                            requestAnimationFrame(() => document.getElementById('h-coach')?.focus())
+                          }}
+                        >
                           {`${grp.author} est mon coach`}
                         </PaperButton>
                       </p>

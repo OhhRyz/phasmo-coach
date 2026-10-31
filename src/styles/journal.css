@@ -847,16 +847,18 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .tab {
     flex: 1 1 0; justify-content: center; margin: 0; padding: 12px 2px 11px; min-width: 0;
     font-size: 12px; letter-spacing: 0;
-    clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 100%, 0 100%);
+    clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 100%, 0 100%);
     transform: translateY(5px);
   }
   .tab[aria-current="page"], .tab.also-current { transform: translateY(-3px); padding-bottom: 14px; z-index: 3; filter: none; }
   .tab:nth-child(5) { display: none; }
   .tab .long { display: none; }
   .tab .short { display: inline; }
-  .tab .count { position: static; margin-left: 1px; font-size: 15px; padding: 0 1px; }
+  .tab .count { position: static; margin-left: 2px; font-size: 11px; padding: 0; letter-spacing: -.02em; }
   .tab .count svg { display: none; }
-  .tab { gap: 3px; }
+  .tab { gap: 2px; }
+  @media (max-width: 370px) { .tab { font-size: 11px; } }
+  @media (max-width: 340px) { .tab { font-size: 10.5px; padding-left: 0; padding-right: 0; } .tab .count { font-size: 10px; margin-left: 1px; } }
 
   .filehead { font-size: 11px; gap: 2px 12px; margin-bottom: 20px; }
   .h { font-size: 29px; }
