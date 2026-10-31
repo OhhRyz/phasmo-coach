@@ -157,7 +157,7 @@ export function MechanicsPage() {
                       className="slip-q"
                       onClick={() => setShown((s) => ({ ...s, [f.id]: !s[f.id] }))}
                       aria-expanded={!!shown[f.id]}
-                      aria-controls={`slip-a-${f.id}`}
+                      aria-controls={shown[f.id] ? `slip-a-${f.id}` : undefined}
                     >
                       <span className="slip-tag" aria-hidden>
                         Q.

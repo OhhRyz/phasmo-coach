@@ -155,9 +155,13 @@ const text = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, ma
 const count = (v: unknown, max = 1e6) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(0, Math.round(v))) : 0)
 
 /** Valide un carnet reçu (lien ou fichier) : null s'il n'en est pas un ou ne contient aucune note lisible. */
+/** Nombre maximal de notes lues dans un lien ou un fichier de notes. */
+export const MAX_SHARED_NOTES = 500
+
 export function readNotesPayload(raw: unknown): NotesPayload | null {
   if (!isObj(raw) || raw.kind !== 'phasmo-coach/notes') return null
-  const notes = sanitizeNotes(raw.notes)
+  // un lien raisonnable tient en quelques dizaines de notes : au-delà, on coupe
+  const notes = sanitizeNotes(Array.isArray(raw.notes) ? raw.notes.slice(0, MAX_SHARED_NOTES) : raw.notes)
   if (!notes.length) return null
   return { kind: 'phasmo-coach/notes', from: text(raw.from, 80).trim(), at: validTime(raw.at), notes }
 }

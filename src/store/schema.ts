@@ -1,3 +1,4 @@
+import { GHOST_BY_ID } from '../data'
 import type { CoachNote } from '../engine/cards'
 import type { CardState, Grade } from '../engine/srs'
 
@@ -101,7 +102,7 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
       id: n.id.slice(0, 64),
       createdAt,
       updatedAt: time(n.updatedAt) ?? createdAt,
-      ghostId: typeof n.ghostId === 'string' ? n.ghostId : null,
+      ghostId: typeof n.ghostId === 'string' && GHOST_BY_ID[n.ghostId] ? n.ghostId : null,
       title: title || firstLine(body),
       body,
       asCard: n.asCard !== false,

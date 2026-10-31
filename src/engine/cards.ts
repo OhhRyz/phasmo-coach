@@ -194,7 +194,8 @@ export function noteCards(notes: CoachNote[]): Card[] {
     const answer = n.answer?.trim()
     const body = n.body?.trim() ?? ''
     // sans question explicite, on demande de se souvenir du contenu de la note
-    const front = question || `Que retenir de «\u202f${n.title}\u202f»\u202f?`
+    const title = n.title.trim()
+    const front = question || (/[?!…]$/.test(title) ? `Que retenir de «\u202f${title}\u202f»` : `Que retenir de «\u202f${title}\u202f»\u202f?`)
     const back = answer || body
     if (!back) return
     out.push({

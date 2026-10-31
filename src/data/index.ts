@@ -58,7 +58,11 @@ export const GHOSTS: Ghost[] = Object.values(modules)
   .map((g) => typeset(normalize(g)))
   .sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name, 'fr'))
 
-export const GHOST_BY_ID: Record<string, Ghost> = Object.fromEntries(GHOSTS.map((g) => [g.id, g]))
+/** Sans prototype : un identifiant venu d'un lien (« constructor », « __proto__ »…) ne trouve rien. */
+export const GHOST_BY_ID: Record<string, Ghost> = Object.assign(
+  Object.create(null) as Record<string, Ghost>,
+  Object.fromEntries(GHOSTS.map((g) => [g.id, g])),
+)
 
 export function getGhost(id: string): Ghost | undefined {
   return GHOST_BY_ID[id]

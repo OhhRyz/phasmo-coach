@@ -74,7 +74,7 @@ function useLicence() {
       .catch(() => setFailed(true))
   }
   const modal = (
-    <Modal open={!!open} onClose={() => setOpen(null)} title={open ? `Licence : ${open.name}` : 'Licence'} actions={<TypedLink onClick={() => setOpen(null)}>Fermer</TypedLink>}>
+    <Modal open={!!open} onClose={() => setOpen(null)} title={open ? `Licence\u202f: ${open.name}` : 'Licence'} actions={<TypedLink onClick={() => setOpen(null)}>Fermer</TypedLink>}>
       {failed ? (
         <p className="modal-text">
           {fr(`Le texte n’a pas pu être chargé (hors ligne ?). Il est aussi dans le code source, dossier public/licences : ${open?.file ?? ''}.`)}

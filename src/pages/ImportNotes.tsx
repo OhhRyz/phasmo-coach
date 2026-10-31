@@ -187,7 +187,7 @@ export function ImportNotes() {
             <>
               <TapeButton
                 onClick={() => {
-                  dispatch({ type: 'notes:import', notes: data.notes })
+                  dispatch({ type: 'notes:import', notes: data.notes, from: data.from })
                   toast(importSummary(fresh, updated))
                   navigate('/carnet')
                 }}

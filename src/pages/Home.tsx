@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   CheckLine,
   Envelope,
@@ -9,7 +9,6 @@ import {
   MarginNote,
   Notebook,
   Page,
-  PaperButton,
   Polaroid,
   RoughCircle,
   Stamp,
@@ -44,12 +43,6 @@ const piece = (n: number) => `Pièce n°${NBSP}${n}`
 /** Sur iPhone, l'app installée ne reprend pas ce qui a été noté dans l'onglet de Safari. */
 const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
 const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord ta sauvegarde, puis importe-la dedans (page profil).'
-
-/** Chemin interne d'un lien de bilan collé (…#/rapport?d=…), sinon null. */
-function reportPath(text: string): string | null {
-  const m = text.trim().match(/#(\/rapport\?d=[^\s#]+)/)
-  return m ? m[1] : null
-}
 
 function Welcome() {
   const { dispatch } = useStore()
@@ -94,6 +87,7 @@ function Welcome() {
           style={{ '--gap': '26px' } as Style}
           onSubmit={(e) => {
             e.preventDefault()
+            if (!name.trim()) return
             dispatch({ type: 'onboard', profile: { name: name.trim(), coachName: coachName.trim(), role } })
           }}
         >
@@ -111,7 +105,7 @@ function Welcome() {
           </div>
           <label className="field">
             <span>Ton prénom</span>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus />
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus required maxLength={40} />
           </label>
           {role === 'student' && (
             <label className="field">
@@ -128,7 +122,7 @@ function Welcome() {
             J’ai compris que tout est enregistré sur cet appareil.
           </CheckLine>
           <div>
-            <TapeButton type="submit" disabled={!ok}>
+            <TapeButton type="submit" disabled={!ok || !name.trim()}>
               Ouvrir le carnet
             </TapeButton>
           </div>
@@ -141,11 +135,6 @@ function Welcome() {
 /** Côté coach : écrire, partager, lire le bilan reçu. */
 function CoachCard() {
   const { state } = useStore()
-  const navigate = useNavigate()
-  const [reading, setReading] = useState(false)
-  const [link, setLink] = useState('')
-  const [bad, setBad] = useState(false)
-
   const mine = state.notes.filter((n) => isCoachNote(n, state.profile))
   const asCards = mine.filter(makesCard).length
   const lastShared = validTime(state.settings.lastSharedAt)
@@ -172,60 +161,11 @@ function CoachCard() {
       <div className="plan-actions">
         <TapeButton to="/carnet">Écrire une note</TapeButton>
         <TypedLink to="/carnet?partager=1">Partager le carnet</TypedLink>
-        <button
-          type="button"
-          className="link link-btn"
-          aria-expanded={reading}
-          aria-controls="coach-report"
-          onClick={() => {
-            setReading((r) => !r)
-            setBad(false)
-          }}
-        >
-          Lire un bilan reçu
-        </button>
+        <TypedLink to="/carnet?coller=1">Coller un bilan reçu</TypedLink>
       </div>
-      {reading && (
-        <form
-          id="coach-report"
-          className="coach-report"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const path = reportPath(link)
-            if (path) navigate(path)
-            else setBad(true)
-          }}
-        >
-          <p className="pencil-note">
-            {fr('Le lien de bilan que ton élève t’envoie s’ouvre tout seul : il suffit de l’ouvrir. S’il est arrivé en simple texte, colle-le ici.')}
-          </p>
-          <label className="field">
-            <span>Lien du bilan</span>
-            <input
-              className="input"
-              value={link}
-              onChange={(e) => {
-                setLink(e.target.value)
-                setBad(false)
-              }}
-              placeholder="https://…#/rapport?d=…"
-              inputMode="url"
-              autoComplete="off"
-              autoFocus
-            />
-          </label>
-          {bad && (
-            <p className="pencil-note coach-report-bad" role="alert">
-              {fr('Ce n’est pas un lien de bilan. Copie le lien en entier, tel que tu l’as reçu.')}
-            </p>
-          )}
-          <div>
-            <PaperButton type="submit" disabled={!link.trim()}>
-              Lire le bilan
-            </PaperButton>
-          </div>
-        </form>
-      )}
+      <p className="pencil-note">
+        {fr('Un lien de bilan s’ouvre tout seul ; s’il est arrivé en simple texte, colle-le dans le carnet.')}
+      </p>
     </IndexCard>
   )
 }
@@ -493,7 +433,7 @@ export function Home() {
           </section>
 
           <section className="notes" aria-labelledby="h-notes">
-            <H id="h-notes">{coach ? `Mots de ${coach}` : 'Mots du coach'}</H>
+            <H id="h-notes">{state.profile.role === 'coach' ? 'Mes notes' : coach ? `Mots de ${coach}` : 'Mots du coach'}</H>
             {notes.length > 0 ? (
               notes.map((n, i) => {
                 const ghost = n.ghostId ? getGhost(n.ghostId) : undefined

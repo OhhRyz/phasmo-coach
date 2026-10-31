@@ -40,7 +40,8 @@ export function NoteEditor({
   const { state, dispatch } = useStore()
   const toast = useToast()
   const [open, setOpen] = useState(!compact || !!note)
-  const [title, setTitle] = useState(note?.title ?? '')
+  // un titre tiré de la première ligne n'a pas été écrit : on le laisse vide pour qu'il suive le texte
+  const [title, setTitle] = useState(note && note.title !== noteTitle('', note.body) ? note.title : '')
   const [body, setBody] = useState(note?.body ?? '')
   const [ghost, setGhost] = useState<string | null>(note?.ghostId ?? ghostId)
   const [asCard, setAsCard] = useState(note?.asCard ?? true)

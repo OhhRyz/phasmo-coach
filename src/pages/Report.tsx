@@ -24,17 +24,21 @@ function noteDetail(n: ReportNote): string {
   return fr(parts.join(' · '))
 }
 
+/** À reprendre : la dernière réponse était fausse ou hésitante, ou la note a déjà été oubliée. */
+const isRedo = (n: ReportNote) => !isKept(n) && n.phase !== 'new' && (n.grade === 1 || n.grade === 2 || (n.grade == null && n.lapses > 0))
+
 /** Le mot du correcteur, au stylo, en face d'une note à reprendre. */
 function redoMark(n: ReportNote): string {
-  if (n.grade === 1) return 'à revoir'
   if (n.grade === 2) return 'difficile'
-  return 'en cours'
+  return 'à revoir'
 }
 
 function NotesBlock({ notes, name }: { notes: ReportNote[]; name: string }) {
   const kept = notes.filter(isKept)
   const fresh = notes.filter((n) => n.phase === 'new')
-  const redo = notes.filter((n) => !isKept(n) && n.phase !== 'new')
+  const redo = notes.filter(isRedo)
+  // bien répondu mais encore en apprentissage : ni retenue, ni à reprendre
+  const learning = notes.filter((n) => !isKept(n) && !isRedo(n) && n.phase !== 'new')
   return (
     <section className="rp-notes" aria-labelledby="h-rp-notes">
       <H
@@ -71,6 +75,22 @@ function NotesBlock({ notes, name }: { notes: ReportNote[]; name: string }) {
                 {redo.map((n, i) => (
                   <li key={i} className="is-redo">
                     <span className="rp-mark hand">{redoMark(n)}</span>
+                    <span className="rp-t">{n.title}</span>
+                    {noteDetail(n) && <span className="pencil-note rp-d">{noteDetail(n)}</span>}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+          {learning.length > 0 && (
+            <>
+              <h3 className="pencil-note rp-label">en cours d’apprentissage</h3>
+              <ol className="rp-list is-fresh">
+                {learning.map((n, i) => (
+                  <li key={i}>
+                    <span className="rp-mark" aria-hidden>
+                      –
+                    </span>
                     <span className="rp-t">{n.title}</span>
                     {noteDetail(n) && <span className="pencil-note rp-d">{noteDetail(n)}</span>}
                   </li>
@@ -281,7 +301,7 @@ export function Report() {
           <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
             Les {GHOSTS.length} entités
           </H>
-          <p className="registry-legend">La maîtrise est surlignée ; les entités acquises sont entourées.</p>
+          <p className="registry-legend">{fr('La maîtrise est surlignée ; les entités acquises sont entourées.')}</p>
           <ol className="registry">
             {GHOSTS.map((g, i) => {
               const m = (data.mastery[g.id] ?? 0) / 100
@@ -317,7 +337,7 @@ export function Report() {
 
         {weak.length > 0 && (
           <section aria-labelledby="h-weak">
-            <H id="h-weak" count={started.length ? `les ${weak.length} plus fragiles` : `${weak.length} à découvrir`}>
+            <H id="h-weak" count={started.length ? (weak.length === 1 ? 'la plus fragile' : `les ${weak.length} plus fragiles`) : `${weak.length} à découvrir`}>
               {started.length ? 'À retravailler' : 'À découvrir'}
             </H>
             <ol className="weak-list">

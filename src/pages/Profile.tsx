@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
@@ -27,6 +27,28 @@ function importText(nCards: number, nNotes: number): string {
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const NEW_MIN = 3
 const NEW_MAX = 40
+
+/** Prénom : enregistré quand on quitte le champ (ou Entrée), jamais vide ; il signe les notes. */
+function NameInput({ value, onCommit }: { value: string; onCommit: (name: string) => void }) {
+  const [draft, setDraft] = useState(value)
+  useEffect(() => setDraft(value), [value])
+  const commit = () => {
+    const name = draft.trim().slice(0, 40)
+    if (!name) setDraft(value)
+    else if (name !== value) onCommit(name)
+  }
+  return (
+    <input
+      className="input"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+      required
+      maxLength={40}
+    />
+  )
+}
 
 export function Profile() {
   const { state, deck, dispatch } = useStore()
@@ -103,7 +125,7 @@ export function Profile() {
               <div className="idcard-fields">
                 <label className="field">
                   <span>Prénom ou pseudo</span>
-                  <input className="input" value={state.profile.name} onChange={(e) => dispatch({ type: 'profile', profile: { name: e.target.value } })} />
+                  <NameInput value={state.profile.name} onCommit={(name) => dispatch({ type: 'profile', profile: { name } })} />
                 </label>
                 <label className="field">
                   <span>Coach</span>
@@ -270,7 +292,7 @@ export function Profile() {
               seed="pf-mechanics"
               hint="Chasses, encens, équipement…"
             >
-              Inclure les cartes « Mécaniques »
+              {fr('Inclure les cartes « Mécaniques »')}
             </CheckLine>
 
             <div className="field focus-field">
@@ -297,8 +319,7 @@ export function Profile() {
                 })}
               </div>
               <p className="pencil-note settings-hint">
-                les nouvelles cartes ne viendront que des entités entourées (les notes du coach et les mécaniques restent incluses) ;
-                aucune entourée = toutes
+                {fr('les nouvelles cartes ne viendront que des entités entourées (les notes du coach et les mécaniques restent incluses) ; aucune entourée = toutes')}
               </p>
             </div>
           </section>
@@ -326,7 +347,7 @@ export function Profile() {
       <Modal
         open={confirm !== null}
         onClose={() => setConfirm(null)}
-        title={confirm === 'import' ? 'Remplacer par cette sauvegarde ?' : confirm === 'all' ? 'Tout effacer ?' : 'Réinitialiser la progression ?'}
+        title={fr(confirm === 'import' ? 'Remplacer par cette sauvegarde ?' : confirm === 'all' ? 'Tout effacer ?' : 'Réinitialiser la progression ?')}
         actions={
           <>
             <TypedLink onClick={() => setConfirm(null)}>Annuler</TypedLink>

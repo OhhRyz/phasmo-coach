@@ -174,7 +174,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="desk-tools">
           <Link to="/profil" className="who" aria-current={current(pathname.startsWith('/profil'))}>
             <b>{state.profile.name || 'Profil'}</b>
-            <span>{state.profile.role === 'coach' ? 'carnet du coach' : state.profile.coachName ? `coach : ${state.profile.coachName}` : 'réglages'}</span>
+            <span>{state.profile.role === 'coach' ? 'carnet du coach' : state.profile.coachName ? `coach\u202f: ${state.profile.coachName}` : 'réglages'}</span>
           </Link>
           <Breaker />
         </div>

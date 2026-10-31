@@ -200,8 +200,6 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 .sc-notes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; align-items: start; }
 .sc-notes-row .sticky { font-size: 22px; padding: 18px 18px 16px; }
 .sc-notes-row .sticky:only-child { max-width: 300px; }
-.sc-sticky-title { display: block; font-weight: 700; }
-.sc-sticky-body { display: block; margin-top: 6px; font-size: .88em; }
 
 .sc-actions--end { margin-top: 34px; }
 

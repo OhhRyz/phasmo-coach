@@ -250,7 +250,7 @@ export function Notebook() {
     const p = readNotesPayload(raw)
     if (!p) return setPasteError(bad)
     const { fresh, updated } = importCounts(state.notes, p.notes)
-    dispatch({ type: 'notes:import', notes: p.notes })
+    dispatch({ type: 'notes:import', notes: p.notes, from: p.from })
     toast(importSummary(fresh, updated))
     setPasteText('')
     foldPaste()
@@ -314,7 +314,7 @@ export function Notebook() {
       const p = readNotesPayload(JSON.parse(await file.text()))
       if (!p) throw new Error('format')
       const { fresh, updated } = importCounts(state.notes, p.notes)
-      dispatch({ type: 'notes:import', notes: p.notes })
+      dispatch({ type: 'notes:import', notes: p.notes, from: p.from })
       toast(importSummary(fresh, updated))
     } catch {
       toast('Fichier non reconnu')
@@ -335,7 +335,7 @@ export function Notebook() {
 
   // élève : « De Ryz » (au stylo rouge) puis « Mes notes » ; coach : ses notes ; puis les notes d'autres carnets
   const groups = useMemo(() => {
-    const out: { key: string; title: string; notes: CoachNote[] }[] = []
+    const out: { key: string; title: string; notes: CoachNote[]; author?: string }[] = []
     const fromCoach = shown.filter((n) => isCoachNote(n, profile))
     const mine = shown.filter((n) => !isCoachNote(n, profile) && (isOwnNote(n, profile) || !n.author))
     if (isCoach) out.push({ key: 'mine', title: 'Mes notes', notes: shown.filter((n) => isCoachNote(n, profile) || isOwnNote(n, profile) || !n.author) })
@@ -348,7 +348,7 @@ export function Notebook() {
       if (isCoachNote(n, profile) || isOwnNote(n, profile) || !n.author) continue
       others.set(n.author, [...(others.get(n.author) ?? []), n])
     }
-    for (const [author, notes] of others) out.push({ key: `from-${author}`, title: `De ${author}`, notes })
+    for (const [author, notes] of others) out.push({ key: `from-${author}`, title: `De ${author}`, notes, author })
     return out
   }, [shown, profile, isCoach, coach])
 
@@ -405,7 +405,7 @@ export function Notebook() {
             {status}
           </span>
           <span className="carnet-actions">
-            <TypedLink onClick={() => dispatch({ type: 'note:upsert', note: { ...n, pinned: !n.pinned, updatedAt: Date.now() } })}>
+            <TypedLink onClick={() => dispatch({ type: 'note:upsert', note: { ...n, pinned: !n.pinned } })}>
               {n.pinned ? 'Désépingler' : 'Épingler'}
               {named}
             </TypedLink>
@@ -673,6 +673,18 @@ export function Notebook() {
                       <span>{grp.title}</span>
                       <span className="h-count">{grp.notes.length ? plural(grp.notes.length, 'note', 'notes') : 'aucune note'}</span>
                     </h3>
+                    {grp.author && !isCoach && (
+                      <p className="pencil-note carnet-group-coach">
+                        {fr(
+                          coach
+                            ? `Ton coach est noté « ${coach} ». Si ces notes viennent de lui, dis-le : elles passeront au stylo rouge.`
+                            : 'Ton coach n’est pas encore noté. Si ces notes viennent de lui, dis-le : elles passeront au stylo rouge.',
+                        )}{' '}
+                        <PaperButton onClick={() => dispatch({ type: 'profile', profile: { coachName: grp.author! } })}>
+                          {`${grp.author} est mon coach`}
+                        </PaperButton>
+                      </p>
+                    )}
                     {grp.notes.length ? (
                       <ol className="carnet-board">{grp.notes.map(renderNote)}</ol>
                     ) : (
@@ -692,7 +704,7 @@ export function Notebook() {
       <Modal
         open={!!deleting}
         onClose={() => setDeleting(null)}
-        title="Supprimer cette note ?"
+        title={'Supprimer cette note\u202f?'}
         actions={
           <>
             <TypedLink onClick={() => setDeleting(null)}>Annuler</TypedLink>

@@ -19,9 +19,6 @@
   font-family: "Courier Prime", monospace; font-size: 14.5px; letter-spacing: .03em; color: var(--ink-2);
 }
 .home .coach-card .plan-actions { margin-top: 20px; }
-.home .coach-report { display: grid; gap: 12px; margin-top: 22px; max-width: 30em; }
-.home .coach-report .pencil-note { font-size: 21px; }
-.home .coach-report .coach-report-bad { color: var(--pencil); }
 
 /* révision : rien à revoir */
 .home .plan-n--none { height: auto; min-height: 84px; align-items: center; }

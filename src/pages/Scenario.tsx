@@ -39,6 +39,7 @@ import {
 } from '../engine/scenario'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
+import { NoteText } from './Notebook'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -444,8 +445,7 @@ export function Scenario() {
                     meta={safeDate(SHORT, n.createdAt, '')}
                     sign={`— ${n.author}`}
                   >
-                    <strong className="sc-sticky-title">{n.title}</strong>
-                    {n.body && <span className="pre sc-sticky-body">{n.body}</span>}
+                    <NoteText note={n} />
                   </Sticky>
                 ))}
               </div>

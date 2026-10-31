@@ -148,10 +148,10 @@ export function Modal({
   )
 }
 
-export function Empty({ title, children }: { title: string; children?: ReactNode }) {
+export function Empty({ title, children, as }: { title: string; children?: ReactNode; as?: 'h1' | 'h2' }) {
   return (
     <div className="empty-note">
-      <H>{title}</H>
+      <H as={as}>{title}</H>
       {children}
     </div>
   )

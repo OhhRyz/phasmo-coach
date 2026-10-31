@@ -37,7 +37,12 @@ function loadSession(): { filter: FilterState; query: string } {
 }
 
 function normalizeText(s: string) {
-  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+  return s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[’‘ʼ]/g, "'")
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .toLowerCase()
 }
 
 /** Choix multiple : chaque option retenue est entourée au stylo (comme Seg). */

@@ -6,8 +6,6 @@
 .ghost-file .conf li p { display: block; margin-top: 4px; }
 .ghost-file .mimic-note { margin-top: 18px; font-size: 14.5px; font-style: italic; color: var(--ink-3); }
 .ghost-file .listen { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
-.ghost-file .sticky-title { display: block; font-weight: 700; }
-.ghost-file .sticky-body { display: block; margin-top: 6px; font-size: .9em; }
 .ghost-file .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 30px; }
 .ghost-file .pager .link { display: inline-flex; align-items: center; min-height: 40px; }
 .ghost-file .measure-head .val { font-size: 22px; }

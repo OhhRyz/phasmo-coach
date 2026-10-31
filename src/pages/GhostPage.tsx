@@ -19,6 +19,7 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { NoteEditor } from '../components/NoteEditor'
+import { NoteText } from './Notebook'
 import { Empty } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
@@ -26,7 +27,7 @@ import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import type { CoachNote } from '../engine/cards'
 import { NBSP, NNBSP, num, safeDate, validTime } from '../engine/format'
-import { coachNameOf, coachNotes, isCoachNote, makesCard, sortNotes } from '../engine/notes'
+import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
 import { masteryLevel } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -123,7 +124,7 @@ export function GhostPage() {
     return (
       <Notebook single>
         <Page section="3">
-          <Empty title="Fiche introuvable">
+          <Empty title="Fiche introuvable" as="h1">
             <p>
               <TypedLink to="/codex">Retour au codex</TypedLink>
             </p>
@@ -473,8 +474,7 @@ export function GhostPage() {
               <div className="ghost-notes">
                 {fromCoach.map((n, k) => (
                   <Sticky key={n.id} hand="coach" rotate={k % 2 ? 1.6 : -1.8} meta={noteMeta(n)} sign={n.author ? `— ${n.author}` : undefined}>
-                    <strong className="sticky-title">{n.title}</strong>
-                    {n.body && <span className="pre sticky-body">{n.body}</span>}
+                    <NoteText note={n} />
                   </Sticky>
                 ))}
                 {isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}
@@ -489,9 +489,15 @@ export function GhostPage() {
               </H>
               <div className="ghost-notes">
                 {mine.map((n, k) => (
-                  <Sticky key={n.id} hand="mine" rotate={k % 2 ? -1.2 : 1.4} meta={noteMeta(n)}>
-                    <strong className="sticky-title">{n.title}</strong>
-                    {n.body && <span className="pre sticky-body">{n.body}</span>}
+                  <Sticky
+                    key={n.id}
+                    hand="mine"
+                    rotate={k % 2 ? -1.2 : 1.4}
+                    meta={noteMeta(n)}
+                    // une note d'une autre personne garde sa signature
+                    sign={n.author && !isOwnNote(n, state.profile) ? `— ${n.author}` : undefined}
+                  >
+                    <NoteText note={n} />
                   </Sticky>
                 ))}
                 {!isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}

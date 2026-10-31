@@ -293,10 +293,11 @@ button { font: inherit; color: inherit; }
 .tab:nth-child(4) { --c: var(--tab-4); }
 .tab:nth-child(5) { --c: var(--tab-5); }
 .tab:nth-child(6) { --c: var(--tab-6); }
-.tab .count {
-  position: relative; margin-left: 4px; font-family: "Caveat", cursive; font-weight: 700; font-size: 20px; line-height: 1;
-  color: var(--red-pen); padding: 0 3px;
+.tab .count { /* compteur tapé, entouré au crayon : ce n'est ni une note du coach ni une correction */
+  position: relative; margin-left: 6px; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 14px; line-height: 1;
+  color: var(--ink); padding: 0 3px;
 }
+.tab .count svg { color: var(--pencil); stroke: var(--pencil); }
 .tab .count svg { position: absolute; inset: -6px -7px; width: calc(100% + 14px); height: calc(100% + 12px); overflow: visible; }
 .tab .short { display: none; }
 

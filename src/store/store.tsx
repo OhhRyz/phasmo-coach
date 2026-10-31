@@ -28,7 +28,7 @@ type Action =
   | { type: 'onboard'; profile: Partial<Profile> }
   | { type: 'note:upsert'; note: CoachNote }
   | { type: 'note:delete'; id: string }
-  | { type: 'notes:import'; notes: CoachNote[] }
+  | { type: 'notes:import'; notes: CoachNote[]; from?: string }
   | { type: 'replace'; state: PersistedState }
   | { type: 'reset-progress' }
   | { type: 'reset-all' }
@@ -57,8 +57,15 @@ function reducer(state: PersistedState, action: Action): PersistedState {
     }
     case 'activity':
       return { ...state, activity: [...state.activity, action.activity].slice(-MAX_ACTIVITY) }
-    case 'profile':
-      return { ...state, profile: { ...state.profile, ...action.profile } }
+    case 'profile': {
+      const profile = { ...state.profile, ...action.profile }
+      // le prénom change : les notes écrites sous l'ancien prénom (ou sans prénom) restent les siennes
+      const before = state.profile.name.trim()
+      const after = profile.name.trim()
+      if (!before || !after || before === after) return { ...state, profile }
+      const notes = state.notes.map((n) => (n.author.trim() === before ? { ...n, author: after } : n))
+      return { ...state, profile, notes }
+    }
     case 'settings':
       return { ...state, settings: { ...state.settings, ...action.settings } }
     case 'onboard':
@@ -79,9 +86,18 @@ function reducer(state: PersistedState, action: Action): PersistedState {
       const byId = new Map(state.notes.map((n) => [n.id, n]))
       for (const n of sanitizeNotes(action.notes)) {
         const cur = byId.get(n.id)
-        if (!cur || cur.updatedAt < n.updatedAt) byId.set(n.id, n)
+        // l'épinglage est propre à chaque appareil : on garde celui d'ici
+        if (!cur) byId.set(n.id, { ...n, pinned: false })
+        else if (cur.updatedAt < n.updatedAt) byId.set(n.id, { ...n, pinned: cur.pinned })
       }
-      return { ...state, notes: [...byId.values()].sort((a, b) => b.createdAt - a.createdAt) }
+      const notes = [...byId.values()].sort((a, b) => b.createdAt - a.createdAt)
+      // une élève sans nom de coach : celui qui envoie le lien devient son coach
+      const from = action.from?.trim().slice(0, 80)
+      const profile =
+        from && state.profile.role === 'student' && !state.profile.coachName.trim() && from !== state.profile.name.trim()
+          ? { ...state.profile, coachName: from }
+          : state.profile
+      return { ...state, notes, profile }
     }
     case 'replace':
       return action.state
