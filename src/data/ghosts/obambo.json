@@ -169,15 +169,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves de l'Obambo ?",
+      "q": "Une chasse entière se déroule à 1,7 m/s sans ligne de vue (vitesse des entités à 100 %, pas de Lune de sang). Peut-il s'agir d'un Obambo ?",
       "choices": [
-        "Écriture fantomatique, Ultraviolet, Températures glaciales",
-        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
-        "Écriture fantomatique, Ultraviolet, Projecteur D.O.T.S"
+        "Non : il chasse à environ 1,45 m/s calme ou 1,96 m/s agressif",
+        "Oui, en état calme",
+        "Oui, en état agressif",
+        "Oui, s'il vient de changer d'état"
       ],
-      "answer": 3,
-      "explain": "Obambo = écriture, UV, D.O.T.S. Écriture + UV + glaciales, c'est le Démon ; Spirit Box + écriture + D.O.T.S, le Deogen ; orbes + écriture + D.O.T.S, le Thayé."
+      "answer": 0,
+      "explain": "L'Obambo chasse à environ 1,45 m/s en état calme et 1,96 m/s en état agressif : une chasse entière à 1,7 m/s sans ligne de vue l'élimine. Ne fais pas ce test par Lune de sang (+15 %) : un Obambo calme y avance à environ 1,66 m/s."
     },
     {
       "q": "À quels seuils de santé mentale moyenne l'Obambo peut-il chasser ?",

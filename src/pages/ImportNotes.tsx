@@ -5,10 +5,10 @@ import { useToast } from '../components/Toast'
 import { getGhost } from '../data'
 import { isStandalone, platform } from '../engine/device'
 import { formatDate, fr, safeDate } from '../engine/format'
-import { isCoachNote } from '../engine/notes'
-import { copyText, decodePayload, importCounts, readNotesPayload, type NotesPayload } from '../engine/share'
+import { adoptCoach, isCoachNote } from '../engine/notes'
+import { copyText, decodePayload, importCounts, importSummary, readNotesPayload, type NotesPayload } from '../engine/share'
 import { useStore } from '../store/store'
-import { importSummary, isLongNote, NoteText, TornPage } from './Notebook'
+import { isLongNote, NoteText, SHOW_NOTES, TornPage } from './Notebook'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -18,7 +18,7 @@ const TILT = [1.6, -1.3, 0.8, -1.8, 1.1, -0.6]
 /**
  * Sur iPhone, un lien touché dans Discord ou Messages s'ouvre dans Safari : l'app installée sur l'écran
  * d'accueil a sa propre mémoire et ne verrait jamais ces notes. On propose de copier le lien pour le
- * coller dans le carnet de l'app.
+ * coller dans l'app, page « Coaching ».
  */
 function IosTabHint() {
   const toast = useToast()
@@ -27,12 +27,12 @@ function IosTabHint() {
   return (
     <div className="pli-ios">
       <p className="pencil-note">
-        {fr('Si tu as installé le carnet sur l’écran d’accueil, copie ce lien et colle-le dans le carnet de l’app : l’app installée a sa propre mémoire.')}
+        {fr('Si tu as installé le carnet sur l’écran d’accueil, copie ce lien et colle-le dans l’app, page « Coaching » (le lien en bas de chaque page) : l’app installée a sa propre mémoire.')}
       </p>
       <PaperButton
         rotate={-0.8}
         onClick={async () => {
-          if (await copyText(href)) toast(fr('Lien copié : colle-le dans Carnet, « Coller un lien reçu »'))
+          if (await copyText(href)) toast(fr('Lien copié : colle-le dans l’app, page « Coaching »'))
           else {
             setShowUrl(true)
             toast(fr('Copie impossible : le lien est sélectionné, copie-le à la main'))
@@ -131,6 +131,8 @@ export function ImportNotes() {
         updated ? `${updated} mise${updated > 1 ? 's' : ''} à jour` : 'aucune mise à jour'
       }. Les notes déjà dans ton carnet ne sont jamais effacées.`
   const inBrowserTab = platform() === 'ios' && !isStandalone()
+  // qui s'entraînait seul·e reconnaîtra l'expéditeur comme son coach : ses notes sont déjà au stylo rouge
+  const after = adoptCoach(state.profile, from)
 
   return (
     <Notebook className="courrier">
@@ -189,7 +191,7 @@ export function ImportNotes() {
                 onClick={() => {
                   dispatch({ type: 'notes:import', notes: data.notes, from: data.from })
                   toast(importSummary(fresh, updated))
-                  navigate('/carnet')
+                  navigate('/carnet', { state: SHOW_NOTES })
                 }}
               >
                 Coller dans mon carnet
@@ -220,7 +222,7 @@ export function ImportNotes() {
               const meta = `${safeDate(SHORT, note.createdAt)} · ${g ? g.name : 'Général'}`
               const sign = note.author ? `— ${note.author}` : undefined
               const delay = Math.min(0.25 + i * 0.1, 0.9)
-              const hand = isCoachNote(note, state.profile) ? 'coach' : 'mine'
+              const hand = isCoachNote(note, after) ? 'coach' : 'mine'
               return (
                 <li key={note.id} className={isLongNote(note) ? 'is-torn' : 'is-sticky'}>
                   {isLongNote(note) ? (

@@ -189,15 +189,15 @@
       "explain": "Chaque objet projeté par l'explosion retire 2 % de santé aux joueurs proches. 25 % d'un coup, c'est le Djinn ; 0,5 % par seconde, le Fantôme ; 10 %, un événement standard."
     },
     {
-      "q": "Quelles sont les trois preuves du Poltergeist ?",
+      "q": "Quelle entité est la seule capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée ?",
       "choices": [
-        "Spirit Box, Ultraviolet, Écriture fantomatique",
-        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
-        "EMF niveau 5, Spirit Box, Écriture fantomatique",
-        "Ultraviolet, Écriture fantomatique, Températures glaciales"
+        "Le Poltergeist",
+        "Le Cauchemar",
+        "Le Démon",
+        "Le Yurei"
       ],
       "answer": 0,
-      "explain": "Spirit Box + UV + écriture. Les leurres sont le Fantôme, l'Esprit et le Démon, qui partagent chacun deux de ces preuves."
+      "explain": "Le Poltergeist est la seule entité qui peut lancer un objet depuis une pièce éclairée. Prudence : n'importe quelle entité peut se tenir dans une pièce sombre voisine et lancer un objet de la pièce éclairée."
     },
     {
       "q": "Quel test confirme le mieux un Poltergeist ?",
@@ -211,7 +211,7 @@
       "explain": "L'explosion d'objets est propre au Poltergeist. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, les 180 s après l'encens l'Esprit."
     },
     {
-      "q": "Tu as Spirit Box + écriture, et plusieurs objets posés en tas sont projetés d'un coup. Parmi ces entités, laquelle est la bonne ?",
+      "q": "Plusieurs objets que tu avais posés côte à côte dans sa pièce sont projetés d'un coup. Parmi ces entités, laquelle est la bonne ?",
       "choices": [
         "Esprit",
         "Cauchemar",
@@ -219,7 +219,18 @@
         "Poltergeist"
       ],
       "answer": 3,
-      "explain": "Les quatre ont Spirit Box + écriture, mais seule l'explosion de Poltergeist projette plusieurs objets en même temps."
+      "explain": "Seule l'explosion de Poltergeist projette plusieurs objets en même temps : ni l'Esprit, ni le Cauchemar, ni le Deogen ne le font."
+    },
+    {
+      "q": "Le Poltergeist peut-il interagir avec les objets autrement qu'en les lançant ?",
+      "choices": [
+        "Non, mais il peut quand même toucher les portes, les interrupteurs et le disjoncteur",
+        "Oui, comme toutes les entités",
+        "Non, et il ne touche jamais aux portes ni aux interrupteurs",
+        "Seulement pendant une chasse"
+      ],
+      "answer": 0,
+      "explain": "Le Poltergeist n'interagit avec les objets qu'en les lançant. Il peut quand même toucher les portes, actionner les interrupteurs et le disjoncteur."
     }
   ],
   "changes": [

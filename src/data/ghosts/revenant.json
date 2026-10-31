@@ -155,15 +155,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Revenant ?",
+      "q": "Caché hors de sa vue, tu parles à voix haute pendant une chasse : les pas du Revenant, jusque-là très lents, deviennent aussitôt très rapides. Pourquoi ?",
       "choices": [
-        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales",
-        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
-        "Spirit Box, Orbes fantomatiques, Écriture fantomatique"
+        "Il t'a détecté à la voix : il passe à 3,0 m/s dès qu'il détecte un joueur, même sans le voir",
+        "Il accélère toujours au bout de 13 s de chasse",
+        "Il accélère seulement quand le disjoncteur est allumé",
+        "Il fonce vers l'appareil électronique allumé le plus proche"
       ],
-      "answer": 1,
-      "explain": "Revenant = orbes, écriture, températures glaciales. Orbes + écriture + D.O.T.S, c'est le Thayé ; EMF 5 + écriture + glaciales, l'Ombre ; Spirit Box + orbes + écriture, le Cauchemar."
+      "answer": 0,
+      "explain": "Le Revenant passe instantanément de 1,0 à 3,0 m/s dès qu'il détecte un joueur, par la vue, la voix ou un appareil électronique actif. Face à lui, la cachette et le silence te sauvent, pas la course."
     },
     {
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",

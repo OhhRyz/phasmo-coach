@@ -312,37 +312,43 @@
           "id": "equipement-04",
           "text": "Sur la Spirit Box de rang 1, une LED blanche ou bleue près de l'icône micro en bas à droite indique que le jeu entend ton micro. La LED à droite de l'icône de fantôme s'allume en rouge si la question est reconnue sans réponse, en blanc si l'entité répond.",
           "q": "Sur une Spirit Box de rang 1, que signifie la LED rouge à côté de l'icône de fantôme ?",
-          "a": "Question reconnue, mais aucune réponse (le blanc indique une réponse)."
+          "a": "Question reconnue, mais aucune réponse (le blanc indique une réponse).",
+          "evidence": true
         },
         {
           "id": "equipement-05",
           "text": "Sur la Spirit Box de rang 2, une icône micro en haut à gauche indique que ton micro est entendu. En bas à droite, l'icône X signale une question reconnue sans réponse, et l'icône de fantôme une réponse.",
           "q": "Sur une Spirit Box de rang 2, quelle icône signale une question reconnue sans réponse ?",
-          "a": "L'icône X en bas à droite."
+          "a": "L'icône X en bas à droite.",
+          "evidence": true
         },
         {
           "id": "equipement-06",
           "text": "Sur la Spirit Box de rang 3, la LED sous Mic Input s'allume en blanc quand le micro est entendu. La rangée de LED sous Response s'allume en rouge sans réponse et en blanc quand l'entité répond.",
           "q": "Sur une Spirit Box de rang 3, de quelle couleur s'allument les LED Response quand l'entité répond ?",
-          "a": "En blanc (rouge s'il n'y a pas de réponse)."
+          "a": "En blanc (rouge s'il n'y a pas de réponse).",
+          "evidence": true
         },
         {
           "id": "equipement-07",
           "text": "Les questions de localisation à la Spirit Box (« Où êtes-vous ? », « Êtes-vous proche ? », « Donnez-nous un signe. », « Êtes-vous ici ? »…) renseignent sur la distance. Des mots comme close ou behind indiquent moins de 2 m, away ou far entre 2 et 5 m dans la même pièce.",
           "q": "À la Spirit Box, à quelle distance correspond une réponse contenant close ou behind ?",
-          "a": "Moins de 2 m (away ou far : entre 2 et 5 m, même pièce)."
+          "a": "Moins de 2 m (away ou far : entre 2 et 5 m, même pièce).",
+          "evidence": true
         },
         {
           "id": "equipement-08",
           "text": "Les questions d'agressivité à la Spirit Box (« Êtes-vous amical ? », « Que voulez-vous ? », « Pourquoi êtes-vous ici ? », « Voulez-vous nous blesser ? », « Devrions-nous partir ? ») renvoient une réponse agressive choisie au hasard.",
           "q": "Que renvoie une question d'agressivité comme « Êtes-vous amical ? » à la Spirit Box ?",
-          "a": "Une réponse agressive choisie au hasard."
+          "a": "Une réponse agressive choisie au hasard.",
+          "evidence": true
         },
         {
           "id": "equipement-09",
           "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? ») renvoient un âge qui n'est pas corrélé au modèle de l'entité.",
           "q": "L'âge donné par la Spirit Box correspond-il au modèle de l'entité ?",
-          "a": "Non, il n'est pas corrélé au modèle."
+          "a": "Non, il n'est pas corrélé au modèle.",
+          "evidence": true
         },
         {
           "id": "equipement-10",
@@ -385,7 +391,8 @@
           "id": "preuves-02",
           "text": "Depuis la v0.9.0.0, une entité ne peut plus lancer le livre après avoir écrit dedans. Seule une entité qui n'a pas l'écriture comme preuve, ou qui la cache, peut lancer le livre.",
           "q": "Une entité qui a écrit dans le livre peut-elle ensuite le lancer ?",
-          "a": "Non, depuis la v0.9.0.0."
+          "a": "Non, depuis la v0.9.0.0.",
+          "evidence": true
         },
         {
           "id": "preuves-03",
@@ -397,7 +404,8 @@
           "id": "preuves-04",
           "text": "Le Mimic imite le comportement et les capacités des autres entités, mais ne montre que ses propres preuves : UV, Spirit Box, Températures glaciales et faux orbes.",
           "q": "Quelles preuves le Mimic peut-il montrer ?",
-          "a": "UV, Spirit Box, Températures glaciales et faux orbes."
+          "a": "UV, Spirit Box, Températures glaciales et faux orbes.",
+          "evidence": true
         },
         {
           "id": "preuves-05",
@@ -421,7 +429,8 @@
           "id": "preuves-08",
           "text": "L'orientation des empreintes de pas ne veut rien dire : n'importe quelle entité peut laisser plusieurs empreintes gauches ou droites d'affilée.",
           "q": "Deux empreintes gauches d'affilée signifient-elles que l'entité a manqué un pas ?",
-          "a": "Non, n'importe quelle entité peut le faire."
+          "a": "Non, n'importe quelle entité peut le faire.",
+          "evidence": true
         },
         {
           "id": "preuves-09",
@@ -806,7 +815,8 @@
       "id": "tf-13",
       "claim": "Deux empreintes gauches ou deux droites d'affilée signifient que l'entité a manqué un pas.",
       "answer": false,
-      "explain": "L'orientation des empreintes ne suit aucune logique : n'importe quelle entité peut le faire."
+      "explain": "L'orientation des empreintes ne suit aucune logique : n'importe quelle entité peut le faire.",
+      "evidence": true
     },
     {
       "id": "tf-14",
@@ -854,7 +864,8 @@
       "id": "tf-21",
       "claim": "Le Mimic peut imiter les preuves des autres entités.",
       "answer": false,
-      "explain": "Il imite comportements et capacités, mais ne montre que ses propres preuves : UV, Spirit Box, Températures glaciales et faux orbes."
+      "explain": "Il imite comportements et capacités, mais ne montre que ses propres preuves : UV, Spirit Box, Températures glaciales et faux orbes.",
+      "evidence": true
     },
     {
       "id": "tf-22",
@@ -884,13 +895,15 @@
       "id": "tf-26",
       "claim": "Voir sa respiration prouve que l'entité a la preuve Températures glaciales.",
       "answer": false,
-      "explain": "Depuis la v0.9.0.0, on voit sa respiration à toute température inférieure à 5 °C."
+      "explain": "Depuis la v0.9.0.0, on voit sa respiration à toute température inférieure à 5 °C.",
+      "evidence": true
     },
     {
       "id": "tf-27",
       "claim": "Une entité peut lancer le livre après avoir écrit dedans.",
       "answer": false,
-      "explain": "Plus depuis la v0.9.0.0 : seule une entité sans la preuve écriture, ou qui la cache, peut lancer le livre."
+      "explain": "Plus depuis la v0.9.0.0 : seule une entité sans la preuve écriture, ou qui la cache, peut lancer le livre.",
+      "evidence": true
     },
     {
       "id": "tf-28",

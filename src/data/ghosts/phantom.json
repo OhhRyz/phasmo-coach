@@ -198,7 +198,7 @@
         "Une photo d'os"
       ],
       "answer": 2,
-      "explain": "Le Fantôme n'apparaît jamais sur une photo étiquetée « Fantôme ». Les empreintes UV font partie de ses preuves ; le crucifix brûlé et l'os ne disent rien du type d'entité."
+      "explain": "Le Fantôme n'apparaît jamais sur une photo étiquetée « Fantôme » : si l'entité y est visible, ce n'en est pas un. Une photo d'empreintes, de crucifix brûlé ou d'os ne permet pas de l'exclure."
     },
     {
       "q": "Comment reconnaître un Fantôme pendant une chasse ?",
@@ -212,15 +212,15 @@
       "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
     },
     {
-      "q": "Quelles sont les trois preuves du Fantôme ?",
+      "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Fantôme ou Spectre : qu'est-ce qui les distingue ?",
       "choices": [
-        "Spirit Box, Ultraviolet, Écriture fantomatique",
-        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
-        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S",
-        "Spirit Box, Ultraviolet, Projecteur D.O.T.S"
+        "Le Spectre se téléporte près de toi, le Fantôme y vient en errant",
+        "Le Fantôme se téléporte près de toi, le Spectre y vient en errant",
+        "Seul le Spectre peut laisser un EMF 2 près d'un joueur",
+        "Seul le Fantôme peut laisser un EMF 2 près d'un joueur"
       ],
-      "answer": 3,
-      "explain": "Spirit Box + UV + D.O.T.S. Les leurres sont le Poltergeist, le Spectre et la Banshee, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Les deux peuvent laisser un EMF 2 près d'un joueur pris au hasard : le Spectre en se téléportant (seule entité à le faire hors événement), le Fantôme en errant jusqu'à lui. Pour les départager, pose du sel (le Spectre ne le perturbe jamais) ou prends l'entité en photo pendant un événement."
     },
     {
       "q": "Combien de santé mentale perds-tu près d'un Fantôme pendant une chasse ou un événement ?",

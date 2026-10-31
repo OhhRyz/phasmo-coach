@@ -8,6 +8,7 @@ import type { Activity } from '../store/schema'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { EXHIBITS } from './exhibits'
+import { isRetained } from '../engine/cards'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -38,7 +39,8 @@ export function Train() {
   const lastScenario = lastOf('scenario')
   const lastEar = lastOf('ear')
   const recent = state.activity.slice(-4).reverse()
-  const facts = MECHANICS.topics.flatMap((t) => t.facts)
+  // seulement les faits à retenir : ceux « bons à savoir » (relever les preuves) ne comptent pas
+  const facts = MECHANICS.topics.flatMap((t) => t.facts).filter(isRetained)
   const factsLearned = facts.filter((f) => cardMastery(state.cards[`m:${f.id}`]) >= 0.35).length
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
   const lastDate = recent[0] ? safeDate(SHORT, recent[0].t, '') : ''
@@ -155,7 +157,7 @@ export function Train() {
             to={EXHIBITS.quiz.to}
             piece={piece(EXHIBITS.quiz.n)}
             title={EXHIBITS.quiz.title}
-            text="Preuves, vitesses, seuils de chasse, comportements, tests sans preuve."
+            text="Comportements, vitesses, seuils de chasse et tests sans preuve."
             hand={lastQuiz ? `dernier${NNBSP}: ${scoreOf(lastQuiz)}` : 'jamais ouverte'}
             rotate={-0.7}
             delay={0.29}

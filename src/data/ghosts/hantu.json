@@ -33,7 +33,7 @@
     "Buée glacée visible en chasse quand le disjoncteur est éteint ou cassé",
     "1,4 à 2,7 m/s selon la température de la pièce, aucune accélération en LdV",
     "Ne peut pas rallumer le disjoncteur et le coupe plus souvent",
-    "Températures glaciales garanties en Cauchemar et en Démence"
+    "En pleine chasse, sa vitesse change d'une pièce à l'autre selon leur température"
   ],
   "tells": [
     { "text": "Laisse échapper une buée glacée visible pendant les chasses quand le disjoncteur est éteint ou cassé.", "zeroEvidence": true },
@@ -78,10 +78,10 @@
   ],
   "quiz": [
     {
-      "q": "Quelle preuve est garantie pour le Hantu en Cauchemar et en Démence ?",
-      "choices": ["Températures glaciales", "Orbes fantomatiques", "Ultraviolet (empreintes)", "Aucune, les trois peuvent être masquées"],
+      "q": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis nettement plus rapide en entrant dans une pièce bien plus froide. Quelle entité suspectes-tu ?",
+      "choices": ["Le Hantu", "Le Raiju", "Le Djinn", "Le Revenant"],
       "answer": 0,
-      "explain": "Le Hantu garde toujours les températures glaciales quand le nombre de preuves est réduit. Si tu as exclu les glaciales en Cauchemar, ce n'est pas un Hantu."
+      "explain": "La vitesse du Hantu dépend de la température de la pièce où il se trouve : 1,4 m/s au-dessus de 15 °C, jusqu'à 2,7 m/s sous 0 °C. Le Raiju accélère près de l'électronique active, le Djinn quand il te voit de loin disjoncteur allumé, le Revenant quand il te détecte."
     },
     {
       "q": "Dans quelle condition peux-tu voir la buée glacée du Hantu ?",
@@ -102,10 +102,10 @@
       "explain": "Le Hantu fait partie des rares entités sans accélération en LdV (avec le Revenant, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse). Le passage à 3,0 m/s est typique du Revenant, le ralentissement en approche du Deogen."
     },
     {
-      "q": "Tu as UV, orbes et températures glaciales, mais la Spirit Box te répond. De quelle entité s'agit-il ?",
-      "choices": ["Le Mimic", "Le Hantu", "L'Onryo", "Le Djinn"],
+      "q": "Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?",
+      "choices": ["2,7 m/s", "1,4 m/s", "1,75 m/s", "3,0 m/s"],
       "answer": 0,
-      "explain": "Le Hantu n'a pas la Spirit Box. Le Mimic a Spirit Box, UV et glaciales, plus de faux orbes : il affiche donc les quatre. L'Onryo n'a pas l'UV et le Djinn n'a ni orbes ni Spirit Box."
+      "explain": "Plus la pièce est froide, plus le Hantu est rapide : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, et ainsi de suite jusqu'à 2,7 m/s sous 0 °C. Il n'accélère jamais en ligne de vue."
     },
     {
       "q": "L'entité vient de rallumer le disjoncteur. Que peux-tu en conclure ?",

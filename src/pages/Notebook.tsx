@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   FileHead,
   H,
@@ -14,28 +14,12 @@ import {
 } from '../components/journal/Journal'
 import { NoteEditor } from '../components/NoteEditor'
 import { useToast } from '../components/Toast'
-import { Empty, Modal, Seg } from '../components/ui'
+import { Empty, Modal } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
-import { platform } from '../engine/device'
-import { fr, NNBSP, num, plural, relativeDays, safeDate, validTime } from '../engine/format'
+import { fr, NNBSP, plural, relativeDays, safeDate, validTime } from '../engine/format'
 import { coachNameOf, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
-import {
-  appUrl,
-  canShareNatively,
-  copyText,
-  decodePayload,
-  downloadJson,
-  encodePayload,
-  importCounts,
-  LONG_LINK,
-  notesToShare,
-  parseShareInput,
-  readNotesPayload,
-  readReportPayload,
-  shareNatively,
-  type NotesPayload,
-} from '../engine/share'
+import { downloadJson, importCounts, importSummary, readNotesPayload, type NotesPayload } from '../engine/share'
 import type { CardState } from '../engine/srs'
 import { useStore } from '../store/store'
 
@@ -45,7 +29,6 @@ type Style = CSSProperties & Record<`--${string}`, string | number>
 type Hand = 'coach' | 'mine'
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-const LONG = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
 const TILT = [-1.4, 1.1, -0.5, 1.6, -1, 0.7]
 
 /**
@@ -111,15 +94,6 @@ export function isLongNote(n: CoachNote): boolean {
   return n.body.length + (n.question?.length ?? 0) + (n.answer?.length ?? 0) > 150
 }
 
-/** Ce qu'un carnet reçu a changé, en une phrase (toast). */
-export function importSummary(fresh: number, updated: number): string {
-  if (!fresh && !updated) return 'Tout est déjà dans ton carnet'
-  const parts: string[] = []
-  if (fresh) parts.push(fresh > 1 ? `${fresh} nouvelles notes` : '1 nouvelle note')
-  if (updated) parts.push(fresh ? plural(updated, 'mise à jour', 'mises à jour') : updated > 1 ? `${updated} notes mises à jour` : '1 note mise à jour')
-  return `${parts.join(' et ')} dans ton carnet`
-}
-
 /** L'état de la note dans la révision, au crayon sous le papier. */
 function noteStatus(n: CoachNote, rs: CardState | undefined, now: number): string {
   if (!n.asCard) return 'pas en révision'
@@ -131,71 +105,29 @@ function noteStatus(n: CoachNote, rs: CardState | undefined, now: number): strin
 }
 
 /**
- * Le lien à envoyer : sélectionnable, copiable, envoyable par la feuille de partage du téléphone.
- * Si la copie échoue, le lien est sélectionné pour être copié à la main. `onUsed` : le lien est parti.
+ * #/carnet : le carnet de chacun, seul·e ou à deux. Les anciens liens internes (?coller=1, ?partager=1)
+ * ouvrent la même chose sur la page « Coaching », où se font désormais les envois et les liens reçus.
  */
-export function useShareLink(url: string | null, onUsed?: () => void) {
-  const ref = useRef<HTMLTextAreaElement>(null)
-  const toast = useToast()
-  const used = useRef(onUsed)
-  used.current = onUsed
-  const select = () => {
-    const t = ref.current
-    if (!t) return
-    t.focus()
-    t.setSelectionRange(0, t.value.length)
-  }
-  const copy = async () => {
-    if (!url) return
-    if (await copyText(url)) {
-      toast('Lien copié')
-      used.current?.()
-    } else {
-      select()
-      toast(fr('Copie impossible : le lien est sélectionné, copie-le à la main'))
-    }
-  }
-  const send = async () => {
-    if (!url) return
-    const r = await shareNatively(url)
-    if (r === 'shared') used.current?.()
-    else if (r === 'failed') await copy()
-  }
-  return { ref, copy, send, select, canSend: canShareNatively(), onCopy: () => used.current?.() }
-}
-
-/** Le lien lui-même, et l'avertissement au crayon s'il est trop long pour un message Discord. */
-export function ShareUrl({ link, url, label }: { link: ReturnType<typeof useShareLink>; url: string | null; label: string }) {
-  return (
-    <>
-      <textarea
-        ref={link.ref}
-        className="textarea share-url"
-        readOnly
-        value={url ?? ''}
-        onFocus={(e) => e.currentTarget.setSelectionRange(0, e.currentTarget.value.length)}
-        onCopy={link.onCopy}
-        aria-label={label}
-      />
-      {url && url.length > LONG_LINK && (
-        <p className="pencil-note share-long" role="note">
-          {fr(`lien de ${num(url.length)} caractères : un message Discord n’en garde que ${num(2000)}. Envoie seulement les nouvelles notes, ou passe par le fichier.`)}
-        </p>
-      )}
-    </>
-  )
-}
-
 export function Notebook() {
+  const [params] = useSearchParams()
+  if (params.get('coller') === '1') return <Navigate to="/coaching?coller=1" replace />
+  if (params.get('partager') === '1') return <Navigate to="/coaching?partager=1" replace />
+  return <Carnet />
+}
+
+/** État de navigation : des notes viennent d'arriver, le carnet s'ouvre sur elles plutôt que sur l'éditeur. */
+export const SHOW_NOTES = { carnet: 'notes' } as const
+
+function Carnet() {
   const { state, dispatch } = useStore()
   const toast = useToast()
-  const navigate = useNavigate()
-  const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const [arrived] = useState(() => (location.state as typeof SHOW_NOTES | null)?.carnet === 'notes')
   const profile = state.profile
-  const isCoach = profile.role === 'coach'
+  const role = profile.role
+  const isStudent = role === 'student'
   const coach = coachNameOf(profile)
   const holder = profile.name.trim()
-  const coachCount = useMemo(() => (isCoach ? 0 : state.notes.filter((n) => isCoachNote(n, profile)).length), [state.notes, profile, isCoach])
 
   const [query, setQuery] = useState('')
   const [ghost, setGhost] = useState('')
@@ -203,108 +135,18 @@ export function Notebook() {
   const [deleting, setDeleting] = useState<CoachNote | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  /* ---------- coller un lien reçu ---------- */
-  const [wantPaste] = useState(() => params.get('coller') === '1')
-  const [pasteOpen, setPasteOpen] = useState(() => wantPaste || (!isCoach && coachCount === 0))
-  const [pasteText, setPasteText] = useState('')
-  const [pasteError, setPasteError] = useState<string | null>(null)
-  const [pasteBusy, setPasteBusy] = useState(false)
-  const pasteRef = useRef<HTMLInputElement>(null)
-  const reopenRef = useRef<HTMLParagraphElement>(null)
-  const focusPaste = useRef(wantPaste)
-  const focusReopen = useRef(false)
-
-  // ouvert : le curseur dans le champ si on l'a demandé ; replié : le focus revient sur « Coller un lien reçu »
+  // notes reçues : on descend jusqu'à elles (sur téléphone, elles sont sous l'éditeur) et le focus suit
   useEffect(() => {
-    if (pasteOpen && focusPaste.current) {
-      focusPaste.current = false
-      pasteRef.current?.focus()
-    }
-    if (!pasteOpen && focusReopen.current) {
-      focusReopen.current = false
-      reopenRef.current?.querySelector('button')?.focus()
-    }
-  }, [pasteOpen])
-
-  const foldPaste = () => {
-    focusReopen.current = true
-    setPasteOpen(false)
-    setPasteError(null)
-  }
-
-  const paste = async (e: FormEvent) => {
-    e.preventDefault()
-    const bad = fr('Ce lien n’est pas reconnu : copie-le en entier, depuis « https » jusqu’à la fin.')
-    const input = parseShareInput(pasteText)
-    if (!input) return setPasteError(bad)
-    if (input.kind === 'report') return navigate(`/rapport?d=${input.d}`)
-    setPasteBusy(true)
-    let raw: unknown = null
-    try {
-      raw = await decodePayload<unknown>(input.d)
-    } catch {
-      /* lien abîmé */
-    }
-    setPasteBusy(false)
-    if (readReportPayload(raw)) return navigate(`/rapport?d=${input.d}`)
-    const p = readNotesPayload(raw)
-    if (!p) return setPasteError(bad)
-    const { fresh, updated } = importCounts(state.notes, p.notes)
-    dispatch({ type: 'notes:import', notes: p.notes, from: p.from })
-    toast(importSummary(fresh, updated))
-    setPasteText('')
-    foldPaste()
-  }
-
-  /* ---------- partager ---------- */
-  const own = useMemo(() => notesToShare(state.notes, profile, undefined, true), [state.notes, profile])
-  const [sharing, setSharing] = useState<{ since: number | undefined } | null>(null)
-  const [shareAll, setShareAll] = useState(false)
-  const [share, setShare] = useState<{ url: string; at: number; count: number } | null>(null)
-
-  const openShare = () => {
-    const since = validTime(state.settings.lastSharedAt) ?? undefined
-    setShareAll(since == null || notesToShare(state.notes, profile, since).length === 0)
-    setShare(null)
-    setSharing({ since })
-  }
-
-  const toSend = useMemo(
-    () => (sharing ? notesToShare(state.notes, profile, sharing.since, shareAll) : []),
-    [sharing, shareAll, state.notes, profile],
-  )
-  const freshCount = useMemo(() => (sharing ? notesToShare(state.notes, profile, sharing.since).length : 0), [sharing, state.notes, profile])
-
-  useEffect(() => {
-    if (!sharing || !toSend.length) {
-      setShare(null)
-      return
-    }
-    let current = true
-    const at = Date.now()
-    const payload: NotesPayload = { kind: 'phasmo-coach/notes', from: holder, at, notes: toSend }
-    void encodePayload(payload).then((d) => current && setShare({ url: appUrl(`/importer?d=${d}`), at, count: toSend.length }))
-    return () => {
-      current = false
-    }
-  }, [sharing, toSend, holder])
-
-  // le lien est parti : la prochaine fois, seules les notes écrites ou modifiées depuis seront proposées
-  const link = useShareLink(share?.url ?? null, () => share && dispatch({ type: 'settings', settings: { lastSharedAt: share.at } }))
-
-  // liens internes : ?partager=1 ouvre directement l'envoi, ?coller=1 le champ « Coller un lien reçu »
-  useEffect(() => {
-    const p = params.get('partager') === '1'
-    const c = params.get('coller') === '1'
-    if (!p && !c) return
-    if (p) openShare()
-    if (c) {
-      focusPaste.current = true
-      setPasteOpen(true)
-      pasteRef.current?.focus()
-    }
-    setParams({}, { replace: true })
-  }, [params]) // seuls les paramètres du lien déclenchent ces ouvertures
+    if (!arrived) return
+    const raf = requestAnimationFrame(() => {
+      const h = document.getElementById('h-notes')
+      if (!h) return
+      h.setAttribute('tabindex', '-1')
+      h.focus({ preventScroll: true })
+      h.scrollIntoView({ block: 'start' })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [arrived])
 
   /* ---------- fichier ---------- */
   const filePayload = (): NotesPayload => ({ kind: 'phasmo-coach/notes', from: holder, at: Date.now(), notes: state.notes })
@@ -333,24 +175,22 @@ export function Notebook() {
     )
   }, [state.notes, query, activeGhost])
 
-  // élève : « De Ryz » (au stylo rouge) puis « Mes notes » ; coach : ses notes ; puis les notes d'autres carnets
+  // coaché·e : « De Ryz » (au stylo rouge) puis « Mes notes » ; sinon ses notes ; puis les notes d'autres carnets
   const groups = useMemo(() => {
     const out: { key: string; title: string; notes: CoachNote[]; author?: string }[] = []
-    const fromCoach = shown.filter((n) => isCoachNote(n, profile))
-    const mine = shown.filter((n) => !isCoachNote(n, profile) && (isOwnNote(n, profile) || !n.author))
-    if (isCoach) out.push({ key: 'mine', title: 'Mes notes', notes: shown.filter((n) => isCoachNote(n, profile) || isOwnNote(n, profile) || !n.author) })
-    else {
-      out.push({ key: 'coach', title: coach ? `De ${coach}` : 'Du coach', notes: fromCoach })
-      out.push({ key: 'mine', title: 'Mes notes', notes: mine })
-    }
+    const mine = (n: CoachNote) => isOwnNote(n, profile) || !n.author
+    if (isStudent) {
+      out.push({ key: 'coach', title: coach ? `De ${coach}` : 'Du coach', notes: shown.filter((n) => isCoachNote(n, profile)) })
+      out.push({ key: 'mine', title: 'Mes notes', notes: shown.filter((n) => !isCoachNote(n, profile) && mine(n)) })
+    } else out.push({ key: 'mine', title: 'Mes notes', notes: shown.filter((n) => isCoachNote(n, profile) || mine(n)) })
     const others = new Map<string, CoachNote[]>()
     for (const n of shown) {
-      if (isCoachNote(n, profile) || isOwnNote(n, profile) || !n.author) continue
+      if (isCoachNote(n, profile) || mine(n)) continue
       others.set(n.author, [...(others.get(n.author) ?? []), n])
     }
     for (const [author, notes] of others) out.push({ key: `from-${author}`, title: `De ${author}`, notes, author })
     return out
-  }, [shown, profile, isCoach, coach])
+  }, [shown, profile, isStudent, coach])
 
   const total = state.notes.length
   const inReview = state.notes.filter(makesCard).length
@@ -358,6 +198,9 @@ export function Notebook() {
   const filtering = !!query.trim() || !!activeGhost
   const now = Date.now()
   const coachLabel = coach || 'ton coach'
+  const lead =
+    'Tes notes au même endroit : une astuce, une erreur à ne plus refaire, un test à retenir. Ajoutée à la révision, une note revient d’elle-même au bon moment.' +
+    (isStudent ? ` Les notes de ${coachLabel} arrivent ici aussi, au stylo rouge.` : role === 'coach' ? ' Ton élève les reçoit quand tu les partages.' : '')
 
   let index = 0
   const renderNote = (n: CoachNote) => {
@@ -433,26 +276,13 @@ export function Notebook() {
     )
   }
 
-  const sinceLabel = sharing?.since != null ? safeDate(LONG, sharing.since, '') : ''
-
   return (
     <>
       <Book className="carnet">
         {/* ===================== page de gauche : écrire ===================== */}
         <Page side="left" section="6" label="Écrire une note">
           <FileHead>
-            <span>
-              {isCoach ? (
-                <>
-                  Carnet du coach{holder && <> · <b>{holder}</b></>}
-                </>
-              ) : (
-                <>
-                  Carnet{holder && <> de <b>{holder}</b></>}
-                  {coach && <> · coach <b>{coach}</b></>}
-                </>
-              )}
-            </span>
+            <span>{holder ? <>Carnet de <b>{holder}</b></> : 'Carnet de notes'}</span>
             <span>
               {total === 0 ? (
                 'aucune note'
@@ -471,100 +301,23 @@ export function Notebook() {
                   <em>Le carnet de</em>
                   {holder}
                 </>
-              ) : isCoach ? (
-                <>
-                  <em>Le carnet</em>du coach
-                </>
               ) : (
                 <>
                   <em>Le carnet</em>de notes
                 </>
               )}
             </h1>
-            <p className="entry-line">
-              {isCoach
-                ? fr('Tout ce que tu expliques, au même endroit. Écris-le une fois et envoie le lien : une note ajoutée à la révision reviendra d’elle-même au bon moment, plus besoin de la répéter.')
-                : fr(`Les notes de ${coachLabel} arrivent ici par lien, à côté des tiennes. Une note ajoutée à la révision reviendra d’elle-même au bon moment.`)}
-            </p>
+            <p className="entry-line">{fr(lead)}</p>
           </div>
 
-          {pasteOpen ? (
-            <section className="carnet-paste" aria-labelledby="h-paste">
-              <form onSubmit={paste} noValidate>
-                <h2 className="carnet-share-h" id="h-paste">
-                  Coller un lien reçu
-                </h2>
-                <p className="pencil-note carnet-paste-hint">
-                  {fr(
-                    platform() === 'ios'
-                      ? 'sur iPhone, un lien touché dans Discord ou Messages s’ouvre dans Safari, pas dans le carnet installé : copie-le et colle-le ici'
-                      : 'un lien de notes ou un bilan reçu par message : colle-le ici',
-                  )}
-                </p>
-                <label className="field">
-                  <span>Le lien reçu</span>
-                  <input
-                    ref={pasteRef}
-                    className="input typed"
-                    type="text"
-                    inputMode="url"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    value={pasteText}
-                    onChange={(e) => {
-                      setPasteText(e.target.value)
-                      setPasteError(null)
-                    }}
-                    placeholder="https://…/#/importer?d=…"
-                    aria-invalid={!!pasteError}
-                    aria-describedby={pasteError ? 'paste-error' : undefined}
-                  />
-                </label>
-                {pasteError && (
-                  <p className="pencil-note carnet-paste-error" id="paste-error" role="alert">
-                    {pasteError}
-                  </p>
-                )}
-                <div className="carnet-paste-btns">
-                  <PaperButton type="submit" disabled={!pasteText.trim() || pasteBusy} rotate={-0.8}>
-                    Ouvrir le lien
-                  </PaperButton>
-                  <TypedLink onClick={foldPaste}>Replier</TypedLink>
-                </div>
-              </form>
-            </section>
-          ) : (
-            <p className="carnet-paste-open" ref={reopenRef}>
-              <TypedLink
-                onClick={() => {
-                  focusPaste.current = true
-                  setPasteOpen(true)
-                }}
-              >
-                Coller un lien reçu
-              </TypedLink>
-            </p>
-          )}
-
-          <NoteEditor autoFocus={!pasteOpen} />
+          <NoteEditor autoFocus={!arrived} />
 
           <section className="carnet-share" aria-labelledby="h-share">
             <h2 className="carnet-share-h" id="h-share">
-              Partager et sauvegarder
+              Sauvegarder
             </h2>
-            <p>
-              {fr(
-                own.length
-                  ? 'Le lien emporte les notes que tu as écrites : par défaut, seulement les nouvelles depuis le dernier envoi. Le fichier garde tout le carnet, en copie de sécurité.'
-                  : 'Le lien emportera les notes que tu écris ici. Le fichier garde tout le carnet, en copie de sécurité.',
-              )}
-            </p>
+            <p>{fr('Un fichier avec toutes les notes du carnet, en copie de sécurité ou pour les passer sur un autre appareil.')}</p>
             <div className="carnet-share-btns">
-              <PaperButton onClick={openShare} disabled={!own.length} rotate={-1}>
-                Partager par lien
-              </PaperButton>
               <PaperButton
                 disabled={!total}
                 rotate={0.8}
@@ -587,6 +340,9 @@ export function Notebook() {
                 }}
               />
             </div>
+            <p className="carnet-coaching">
+              <TypedLink to="/coaching">Partager ou recevoir des notes</TypedLink>
+            </p>
           </section>
         </Page>
 
@@ -641,15 +397,13 @@ export function Notebook() {
 
             {total === 0 ? (
               <Empty title="Le carnet est vide">
-                {isCoach ? (
-                  <p>{fr('Écris le premier conseil : une astuce, une erreur à éviter, un test à retenir.')}</p>
-                ) : (
-                  <p>
-                    {fr(
-                      `Quand ${coachLabel} t’envoie un lien, ouvre-le ou colle-le dans « Coller un lien reçu » : ses notes arriveront ici. Tu peux aussi écrire les tiennes.`,
-                    )}
-                  </p>
-                )}
+                <p>
+                  {fr(
+                    isStudent
+                      ? `Quand ${coachLabel} t’envoie un lien, ouvre-le (ou colle-le dans la page « Coaching ») : ses notes arriveront ici. Tu peux aussi écrire les tiennes.`
+                      : 'Écris la première note : une astuce, une erreur à éviter, un test à retenir.',
+                  )}
+                </p>
               </Empty>
             ) : shown.length === 0 ? (
               <Empty title="Aucune note ne correspond">
@@ -673,7 +427,7 @@ export function Notebook() {
                       <span>{grp.title}</span>
                       <span className="h-count">{grp.notes.length ? plural(grp.notes.length, 'note', 'notes') : 'aucune note'}</span>
                     </h3>
-                    {grp.author && !isCoach && (
+                    {grp.author && role !== 'coach' && (
                       <p className="pencil-note carnet-group-coach">
                         {fr(
                           coach
@@ -682,7 +436,8 @@ export function Notebook() {
                         )}{' '}
                         <PaperButton
                           onClick={() => {
-                            dispatch({ type: 'profile', profile: { coachName: grp.author! } })
+                            // seul·e jusqu'ici : la personne passe en « coaché·e »
+                            dispatch({ type: 'profile', profile: { coachName: grp.author!, role: 'student' } })
                             // le groupe devient « De … » du coach : le focus suit
                             requestAnimationFrame(() => document.getElementById('h-coach')?.focus())
                           }}
@@ -694,7 +449,9 @@ export function Notebook() {
                     {grp.notes.length ? (
                       <ol className="carnet-board">{grp.notes.map(renderNote)}</ol>
                     ) : (
-                      <p className="pencil-note carnet-group-empty">{fr(`rien de ${coachLabel} pour l’instant : ses notes arrivent par lien`)}</p>
+                      <p className="pencil-note carnet-group-empty">
+                        {fr(`rien de ${coachLabel} pour l’instant : ses notes arrivent par lien, à ouvrir ou à coller dans la page « Coaching »`)}
+                      </p>
                     )}
                   </section>
                 ))
@@ -734,62 +491,6 @@ export function Notebook() {
         </p>
       </Modal>
 
-      <Modal
-        open={!!sharing}
-        onClose={() => setSharing(null)}
-        title="Envoyer mes notes"
-        actions={
-          <>
-            <TypedLink onClick={() => setSharing(null)}>Fermer</TypedLink>
-            {link.canSend && (
-              <PaperButton onClick={link.send} disabled={!share} rotate={-0.8}>
-                Envoyer…
-              </PaperButton>
-            )}
-            <TapeButton arrow={false} onClick={link.copy} disabled={!share}>
-              Copier le lien
-            </TapeButton>
-          </>
-        }
-      >
-        {own.length === 0 ? (
-          <p className="modal-text">
-            {fr('Tu n’as encore écrit aucune note dans ce carnet : le lien emporte seulement les notes que tu as écrites.')}
-          </p>
-        ) : (
-          <>
-            {sharing?.since != null && (
-              <div className="share-choice">
-                <Seg
-                  label="Notes à envoyer"
-                  value={shareAll ? 'all' : 'new'}
-                  onChange={(v) => setShareAll(v === 'all')}
-                  options={[
-                    { value: 'new', label: freshCount ? `Les nouvelles (${freshCount})` : 'Les nouvelles (aucune)' },
-                    { value: 'all', label: `Tout mon carnet (${own.length})` },
-                  ]}
-                />
-                {sinceLabel && <p className="pencil-note share-since">nouvelles ou modifiées depuis ton dernier envoi, le {sinceLabel}</p>}
-              </div>
-            )}
-            {toSend.length === 0 ? (
-              <p className="modal-text">{fr('Rien de nouveau depuis le dernier envoi. Choisis « Tout mon carnet » pour tout renvoyer.')}</p>
-            ) : (
-              <>
-                <p className="modal-text">
-                  {fr(
-                    `Envoie ce lien : en l’ouvrant, l’autre appareil pourra importer ${toSend.length > 1 ? `les ${toSend.length} notes` : 'la note'}. Celles qui existent déjà sont mises à jour, rien n’est effacé. Les notes voyagent dans le lien lui-même : aucun serveur ne les garde.`,
-                  )}
-                </p>
-                <ShareUrl link={link} url={share?.url ?? null} label="Lien de partage" />
-                <p className="pencil-note share-ios">
-                  {fr('sur iPhone, le lien s’ouvre dans Safari : si le carnet est installé, il faut le coller dans Carnet, « Coller un lien reçu »')}
-                </p>
-              </>
-            )}
-          </>
-        )}
-      </Modal>
     </>
   )
 }

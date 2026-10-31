@@ -208,15 +208,15 @@
       "explain": "La capacité laisse un EMF 2 (ou 5) au disjoncteur, pas là où se trouve l'entité ou le joueur."
     },
     {
-      "q": "Quelles sont les trois preuves du Djinn ?",
+      "q": "Disjoncteur coupé, comment chasse un Djinn ?",
       "choices": [
-        "EMF niveau 5, Ultraviolet, Spirit Box",
-        "EMF niveau 5, Ultraviolet, Températures glaciales",
-        "Ultraviolet, Orbes fantomatiques, Températures glaciales",
-        "EMF niveau 5, Écriture fantomatique, Températures glaciales"
+        "Comme une entité standard : 1,7 m/s avec accélération en LdV",
+        "À 2,5 m/s dès qu'il te voit",
+        "À 1,0 m/s tant qu'il ne te détecte pas",
+        "Il ne peut pas chasser tant que le courant est coupé"
       ],
-      "answer": 1,
-      "explain": "EMF 5 + UV + températures glaciales. Les leurres sont le Gallu, le Hantu et l'Ombre, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Disjoncteur coupé, le Djinn chasse comme une entité standard : son passage à 2,5 m/s et son drain de 25 % ne se produisent que disjoncteur allumé. Pour le tester, rallume le courant."
     },
     {
       "q": "Pendant le test de vitesse du Djinn, que dois-tu éviter pour ne pas le confondre avec un Raiju ?",

@@ -53,11 +53,14 @@ const plural = (n: number, word: string, zero?: string) => (n === 0 && zero ? ze
 const pts = (n: number) => `${n}${NBSP}pts`
 /** Le libellé enregistré dans l'historique (les anciens contrats s'appelaient « Enquête : … »). */
 const LABEL_PREFIX = /^(Enquête|Mise en situation)\s*:\s*/
+/** De 0 preuve (le mode par défaut) à Professionnel : du plus exigeant au plus guidé. */
+const DIFFICULTY_ORDER = [...DIFFICULTIES].sort((a, b) => a.count - b.count)
 
 export function Scenario() {
   const mastery = useMastery()
   const { state, deck, dispatch } = useStore()
-  const [difficulty, setDifficulty] = useState<Difficulty>('pro')
+  // par défaut, le mode qui exige le plus de savoir : 0 preuve, comportements uniquement
+  const [difficulty, setDifficulty] = useState<Difficulty>('apocalypse')
   const [pool, setPool] = useState<'all' | 'weak'>('all')
   const [scenario, setScenario] = useState<S | null>(null)
   const [revealed, setRevealed] = useState(1)
@@ -184,7 +187,7 @@ export function Scenario() {
               Confidentiel
             </Stamp>
             <p className="sc-lead">
-              Un contrat raconté rapport par rapport, comme en partie. Note tes preuves, élimine, et désigne l’entité au plus vite.
+              Un contrat raconté rapport par rapport, comme en partie. Note ce que tu observes, élimine, et désigne l’entité au plus vite.
             </p>
           </header>
 
@@ -194,7 +197,7 @@ export function Scenario() {
             </legend>
             <div className="sc-diff-grid">
               <div className="sc-diffs">
-                {DIFFICULTIES.map((d) => (
+                {DIFFICULTY_ORDER.map((d) => (
                   <RadioLine
                     key={d.id}
                     name="difficulty"

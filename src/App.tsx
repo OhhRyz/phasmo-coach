@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast'
 import { StoreProvider } from './store/store'
 import { About } from './pages/About'
 import { Codex } from './pages/Codex'
+import { Coaching } from './pages/Coaching'
 import { Ear } from './pages/Ear'
 import { GhostPage } from './pages/GhostPage'
 import { Home } from './pages/Home'
@@ -58,6 +59,7 @@ export function App() {
               <Route path="/oreille" element={<Ear />} />
               <Route path="/mecaniques" element={<MechanicsPage />} />
               <Route path="/carnet" element={<Notebook />} />
+              <Route path="/coaching" element={<Coaching />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/rapport" element={<Report />} />
               <Route path="/importer" element={<ImportNotes />} />

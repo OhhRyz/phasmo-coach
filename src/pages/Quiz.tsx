@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Evidence, Seg } from '../components/ui'
+import { Seg } from '../components/ui'
 import {
   CheckLine,
   FileHead,
@@ -18,7 +18,7 @@ import {
 import { crossPath, roughLine, roughRng, tickPath } from '../components/journal/rough'
 import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
-import { buildQuiz, isCorrect, QUIZ_TOPICS, type Choice, type Question, type QuizTopic } from '../engine/quiz'
+import { buildQuiz, DEFAULT_TOPICS, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
 import { NBSP, NNBSP, safeDate } from '../engine/format'
 import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
@@ -65,11 +65,6 @@ const SHORT_ANSWER = 22
 
 const topicLabel = (id: QuizTopic) => QUIZ_TOPICS.find((t) => t.id === id)?.label ?? ''
 const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
-
-/** Libellé d'une réponse (une preuve est soulignée dans sa couleur). */
-function ChoiceText({ c }: { c: Choice }) {
-  return c.evidence ? <Evidence id={c.evidence} /> : <>{c.label}</>
-}
 
 /** Petite marque de correction au stylo rouge (coche ou trait) dans la grille de la copie. */
 function GridMark({ ok, seed }: { ok: boolean; seed: string }) {
@@ -179,7 +174,7 @@ export function Quiz() {
   const { state, deck, dispatch } = useStore()
 
   const topicParam = QUIZ_TOPICS.find((t) => t.id === params.get('topic'))?.id
-  const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : ['evidence', 'speed', 'sanity', 'behavior'])
+  const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : DEFAULT_TOPICS)
   const [count, setCount] = useState(10)
   const [pool, setPool] = useState<Pool>(focusGhost && getGhost(focusGhost) ? 'one' : params.get('pool') === 'weak' ? 'weak' : 'all')
   const [empty, setEmpty] = useState(false)
@@ -204,7 +199,7 @@ export function Quiz() {
   const start = () => {
     const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : GHOSTS
     const qs = buildQuiz({
-      topics: topics.length ? topics : ['evidence'],
+      topics: topics.length ? topics : DEFAULT_TOPICS,
       ghosts,
       allGhosts: GHOSTS,
       mechanics: MECHANICS,
@@ -344,8 +339,9 @@ export function Quiz() {
                 Interrogation écrite
               </h1>
               <p className="qz-lead">
-                Des questions tirées des fiches, plus souvent sur les entités que tu maîtrises le moins. Une erreur ramène dans la
-                révision du jour la carte correspondante, si tu l’as déjà apprise.
+                Ce qui sert quand les preuves manquent{NNBSP}: comportements, vitesses, seuils de chasse, tests. Les preuves, elles,
+                restent dans le codex. Les questions visent plus souvent les entités que tu maîtrises le moins{NNBSP}; une erreur
+                ramène dans la révision du jour la carte correspondante, si tu l’as déjà apprise.
               </p>
             </header>
 
@@ -616,13 +612,6 @@ export function Quiz() {
                       </p>
                       <p className="qz-fix-q">{a.q.prompt}</p>
                       {a.q.quote && <blockquote className="qz-quote">{a.q.quote}</blockquote>}
-                      {a.q.evidenceShown && (
-                        <p className="qz-evi">
-                          {a.q.evidenceShown.map((e) => (
-                            <Evidence key={e} id={e} />
-                          ))}
-                        </p>
-                      )}
                       <p className="qz-fix-line">
                         <span className="qz-fix-k">Ta réponse</span>
                         <MyAnswer a={a} />
@@ -712,13 +701,6 @@ export function Quiz() {
               </p>
             )}
             {q.quote && <blockquote className="qz-quote">{q.quote}</blockquote>}
-            {q.evidenceShown && (
-              <p className="qz-evi">
-                {q.evidenceShown.map((e) => (
-                  <Evidence key={e} id={e} />
-                ))}
-              </p>
-            )}
           </div>
 
           <div className={`qz-body${checked ? ' is-checked' : ''}`}>
@@ -755,10 +737,10 @@ export function Quiz() {
                       <span className="qz-label">
                         {checked && isRight && !circleLetter ? (
                           <RoughCircle seed={`${q.id}-${c.id}-ok`} padX={0.05} padY={0.2} delay={0.25} width={2}>
-                            <ChoiceText c={c} />
+                            {c.label}
                           </RoughCircle>
                         ) : (
-                          <ChoiceText c={c} />
+                          c.label
                         )}
                       </span>
                       {checked && isRight && <span className="sr-only">{NNBSP}: bonne réponse</span>}

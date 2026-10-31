@@ -1,13 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
-import { buildDeck } from './cards'
+import { buildDeck, mechanicsCards, mentionsEvidence } from './cards'
 import { EMPTY_FILTER, filterGhosts, matchesEvidence, type FilterState } from './filter'
 import { redactGhostName, speedClasses } from './format'
-import { buildQuiz, isCorrect, QUIZ_TOPICS } from './quiz'
+import { buildQuiz, confusionWithoutEvidence, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from './quiz'
+import { buildReviewQueue, ghostMastery, learnedCount } from './progress'
 import { createRng } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
-import { decodePayload, encodePayload, notesToShare, parseShareInput, readNotesPayload, readReportPayload, reportNotes } from './share'
+import {
+  decodePayload,
+  encodePayload,
+  importSummary,
+  notesToShare,
+  parseShareInput,
+  readNotesPayload,
+  readReportPayload,
+  reportNotes,
+  shareSummary,
+  shareSummaryLine,
+} from './share'
+import { adoptCoach, coachNameOf, isCoachNote } from './notes'
+import { hydrate, initialState } from '../store/schema'
 import { cardMastery, isDue, schedule } from './srs'
 import { speedToBpm, bpmToSpeed } from './audio'
 
@@ -130,6 +144,162 @@ describe('quiz', () => {
         if (n.length > 3) expect(new RegExp(`(?<![\\p{L}])${n}(?![\\p{L}])`, 'u').test(q.quote), `${q.id}: ${q.quote}`).toBe(false)
       }
     }
+  })
+
+  /** Toutes les questions d'un thème pour une entité, sur plusieurs tirages. */
+  const allFor = (g: Ghost, topic: QuizTopic, prefix: string): Question[] => {
+    const out = new Map<string, Question>()
+    for (let seed = 1; seed <= 6; seed++) {
+      for (const q of buildQuiz({ topics: [topic], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed * 101) })) {
+        if (q.id.startsWith(prefix)) out.set(q.id + q.choices.map((c) => c.id).join(), q)
+      }
+    }
+    return [...out.values()]
+  }
+  const nameRe = (g: Ghost) =>
+    [g.name, g.nameEn, g.name.replace(/^(Le|Les|La) /, ''), g.nameEn.replace(/^The /, '')]
+      .filter((n) => n.length > 3)
+      .map((n) => new RegExp(`(?<![\\p{L}])${n}(?![\\p{L}])`, 'u'))
+  const leaks = (text: string | undefined, g: Ghost) => !!text && nameRe(g).some((re) => re.test(text))
+
+  it('ne pose plus aucune question sur les preuves', () => {
+    expect(QUIZ_TOPICS.map((t) => t.id)).not.toContain('evidence')
+    // un ancien lien ?topic=evidence ne casse rien
+    expect(buildQuiz({ topics: ['evidence' as QuizTopic], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 5, rng: createRng(1) })).toEqual([])
+    for (let seed = 1; seed <= 15; seed++) {
+      const qs = buildQuiz({ topics: QUIZ_TOPICS.map((t) => t.id), ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 30, rng: createRng(seed) })
+      for (const q of qs) {
+        expect(mentionsEvidence(q.prompt), `${q.id}: ${q.prompt}`).toBe(false)
+        expect(q.id, q.id).not.toMatch(/^q:(ev|fromev|forced|remain):/)
+        if (q.topic === 'expert') {
+          const right = q.choices.find((c) => q.correct.includes(c.id))!.label
+          expect(mentionsEvidence(right), `${q.id}: ${right}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('reconnaît ce qui parle de preuves', () => {
+    expect(mentionsEvidence('Quelles sont les trois preuves du Démon ?')).toBe(true)
+    expect(mentionsEvidence('Tu as EMF 5 + Spirit Box, et l’entité traverse le sel.')).toBe(true)
+    expect(mentionsEvidence('Comment se manifeste le D.O.T.S d’un Goryo ?')).toBe(true)
+    // ce qui se joue sans preuve reste
+    expect(mentionsEvidence('Partie à 0 preuve : tu vois des orbes dans la pièce favorite.')).toBe(false)
+    expect(mentionsEvidence('Dans quelles conditions entends-tu la respiration du Deogen à la Spirit Box ?')).toBe(false)
+    expect(mentionsEvidence('Un EMF 2 apparaît près de toi sans interaction.')).toBe(false)
+  })
+
+  it('retire des confusions ce qui parle de preuves', () => {
+    const a = confusionWithoutEvidence('UV + D.O.T.S en commun. Le Fantôme disparaît en photo ; il ne cible personne. 3e preuve : Spirit Box vs orbes.')
+    expect(a).toMatch(/^Le Fantôme disparaît en photo\s; il ne cible personne\.$/u)
+    const b = confusionWithoutEvidence('Même D.O.T.S + glaciales, mais le Yurei a les orbes au lieu de l’écriture ; il peut claquer une porte.')
+    expect(b).toBe('Il peut claquer une porte.')
+    expect(confusionWithoutEvidence('Mêmes UV et écriture.')).toBe('')
+  })
+
+  it('« Comment distinguer X de Y sans preuve ? » : une seule bonne réponse, sans nom qui la souffle', () => {
+    const covered = new Set<string>()
+    for (const g of GHOSTS) {
+      for (const q of allFor(g, 'zero', 'q:dist:')) {
+        covered.add(g.id)
+        const x = getGhost(q.id.split(':')[2])!
+        expect(q.prompt, q.id).toContain(x.name.replace(/^(Le|Les|La) /, ''))
+        expect(q.correct, q.id).toEqual([g.id])
+        expect(q.choices.length, q.id).toBe(4)
+        expect(new Set(q.choices.map((c) => c.label)).size, q.id).toBe(4)
+        for (const c of q.choices) {
+          // l'entité dont parle chaque réponse devient « l’autre » : aucun nom ne désigne la bonne
+          const about = getGhost(c.id)!
+          expect(leaks(c.label, about), `${q.id}: ${c.label}`).toBe(false)
+          expect(leaks(c.label, g), `${q.id}: ${c.label}`).toBe(false)
+          expect(leaks(c.label, x), `${q.id}: ${c.label}`).toBe(false)
+          expect(mentionsEvidence(c.label), `${q.id}: ${c.label}`).toBe(false)
+          if (c.id !== g.id) {
+            // une mauvaise réponse parle d'une autre entité confondue avec x, jamais du Mimic
+            expect(x.confusions.map((k) => k.with), q.id).toContain(c.id)
+            expect(c.id).not.toBe('the-mimic')
+          }
+        }
+      }
+    }
+    expect(covered.size).toBeGreaterThanOrEqual(20)
+  })
+
+  it('« Quelle entité peut … ? » : une seule bonne réponse, sans nom qui la souffle', () => {
+    const covered = new Set<string>()
+    for (const g of GHOSTS) {
+      for (const q of allFor(g, 'behavior', 'q:abil:')) {
+        covered.add(g.id)
+        expect(q.correct, q.id).toEqual([g.id])
+        expect(new Set(q.choices.map((c) => c.id)).size, q.id).toBe(4)
+        expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
+        expect(leaks(q.prompt, g), `${q.id}: ${q.prompt}`).toBe(false)
+        expect(leaks(q.quote, g), `${q.id}: ${q.quote}`).toBe(false)
+        expect(`${q.prompt} ${q.quote ?? ''}`, q.id).not.toMatch(/\b[dDqQnNsS]['’]cette\b/u)
+        expect(mentionsEvidence(`${q.prompt} ${q.quote ?? ''}`), q.id).toBe(false)
+      }
+    }
+    expect(covered.size).toBeGreaterThanOrEqual(15)
+  })
+
+  it('profils de vitesse et de seuil : aucune mauvaise réponse ne partage une valeur citée', () => {
+    const speeds = (g: Ghost) => [g.speed.min, g.speed.max, g.speed.alt].filter((v) => v != null && v >= 0 && v !== 1.7)
+    const thresholds = (g: Ghost) => [g.huntSanity.low, g.huntSanity.normal, g.huntSanity.high].filter((v) => v >= 0)
+    const covered = { speed: new Set<string>(), sanity: new Set<string>() }
+    for (const g of GHOSTS) {
+      for (const [topic, prefix, values] of [
+        ['speed', 'q:spdp:', speeds],
+        ['sanity', 'q:sanp:', thresholds],
+      ] as const) {
+        for (const q of allFor(g, topic, prefix)) {
+          covered[topic].add(g.id)
+          expect(q.correct, q.id).toEqual([g.id])
+          expect(leaks(q.quote, g), `${q.id}: ${q.quote}`).toBe(false)
+          for (const c of q.choices) {
+            if (c.id === g.id) continue
+            expect(c.id, q.id).not.toBe('the-mimic')
+            const o = getGhost(c.id)!
+            expect(values(o).some((v) => values(g).includes(v)), `${q.id} : ${o.id}`).toBe(false)
+          }
+        }
+      }
+    }
+    // toutes les entités à la vitesse ou au seuil particuliers ont leur question
+    const special = (pred: (g: Ghost) => boolean) => GHOSTS.filter((g) => g.id !== 'the-mimic' && pred(g)).length
+    expect(covered.speed.size).toBe(special((g) => g.speed.min >= 0 && !(g.speed.min === 1.7 && g.speed.max == null && g.speed.alt == null && g.speed.los && !g.speed.losVaries)))
+    expect(covered.sanity.size).toBe(special((g) => !(g.huntSanity.low === 50 && g.huntSanity.normal === 50 && g.huntSanity.high === 50)))
+  })
+
+  it('les faits de mécaniques « bon à savoir » (preuves) restent hors révision et hors quiz', () => {
+    const m = {
+      topics: [
+        {
+          id: 't',
+          title: 'T',
+          icon: 'evidence' as const,
+          facts: [
+            { id: 'a', text: 'x', q: 'q', a: 'a' },
+            { id: 'b', text: 'y', q: 'q2', a: 'a2', evidence: true },
+          ],
+        },
+      ],
+      trueFalse: [
+        { id: 'tf1', claim: 'c', answer: true, explain: 'e' },
+        { id: 'tf2', claim: 'c2', answer: false, explain: 'e2', evidence: true },
+      ],
+    }
+    expect(mechanicsCards(m).map((c) => c.id)).toEqual(['m:a'])
+    expect(buildQuiz({ topics: ['mechanics'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: m, count: 5, rng: createRng(3) }).map((q) => q.id)).toEqual(['q:tf:tf1'])
+  })
+
+  it('d’anciennes cartes « preuves » restées en mémoire ne comptent nulle part', () => {
+    const deck = buildDeck(GHOSTS, MECHANICS, [])
+    const base = initialState(T0)
+    const old = schedule(schedule(undefined, 4, T0 - 30 * DAY), 4, T0 - 20 * DAY)
+    const state = { ...base, cards: { 'g:spirit:ev': old, 'g:goryo:forced': old } }
+    expect(buildReviewQueue(state, deck, T0).some((c) => c.id === 'g:spirit:ev' || c.id === 'g:goryo:forced')).toBe(false)
+    expect(learnedCount(deck, state.cards)).toBe(0)
+    expect(ghostMastery('spirit', deck, state)).toBe(0)
   })
 })
 
@@ -259,7 +429,10 @@ describe('outils', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, [])
     const ids = deck.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(deck.filter((c) => c.kind === 'evidence').length).toBe(GHOSTS.length)
+    // les preuves restent dans le codex : aucune carte « Quelles sont les 3 preuves… » ni « preuve forcée »
+    expect(deck.some((c) => (c.kind as string) === 'evidence' || (c.kind as string) === 'forced')).toBe(false)
+    expect(deck.some((c) => /:ev$|:forced$/.test(c.id))).toBe(false)
+    expect(deck.filter((c) => c.kind === 'tells').length).toBe(GHOSTS.length)
   })
 })
 
@@ -334,5 +507,66 @@ describe('liens reçus', () => {
       { title: 'Note b', phase: 'new', lapses: 0, grade: null, due: null },
       { title: 'Note a', phase: 'learning', lapses: 1, grade: 1, due: s.due },
     ])
+  })
+})
+
+describe('carnet à deux (facultatif)', () => {
+  const note = (id: string, author: string, t = T0, extra = {}) => ({
+    id, author, createdAt: t, updatedAt: t, ghostId: null, title: `Note ${id}`, body: 'texte', asCard: true, ...extra,
+  })
+  const solo = { name: 'Léa', coachName: '', role: 'solo' as const, createdAt: T0 }
+
+  it('commence seul·e, et garde le rôle d’un carnet existant', () => {
+    expect(initialState().profile.role).toBe('solo')
+    const base = { version: 1, onboarded: true }
+    expect(hydrate({ ...base, profile: { name: 'Léa', coachName: 'Ryz', role: 'student' } }).profile).toMatchObject({ role: 'student', coachName: 'Ryz' })
+    expect(hydrate({ ...base, profile: { name: 'Ryz', role: 'coach' } }).profile.role).toBe('coach')
+    expect(hydrate({ ...base, profile: { name: 'Léa' } }).profile).toMatchObject({ role: 'solo', coachName: '' })
+    expect(hydrate({ ...base, profile: { name: 4, role: 'admin', coachName: null } }).profile).toMatchObject({ name: '', role: 'solo', coachName: '' })
+  })
+
+  it('n’a pas de coach quand on s’entraîne seul·e', () => {
+    expect(coachNameOf({ ...solo, coachName: 'Ryz' })).toBe('')
+    expect(isCoachNote(note('a', 'Ryz'), { ...solo, coachName: 'Ryz' })).toBe(false)
+    expect(coachNameOf({ ...solo, coachName: ' Ryz ', role: 'student' })).toBe('Ryz')
+    expect(coachNameOf({ ...solo, name: 'Ryz', role: 'coach' })).toBe('Ryz')
+  })
+
+  it('reconnaît l’expéditeur des notes comme coach', () => {
+    expect(adoptCoach(solo, ' Ryz ')).toMatchObject({ role: 'student', coachName: 'Ryz' })
+    expect(adoptCoach({ ...solo, role: 'student' }, 'Ryz')).toMatchObject({ role: 'student', coachName: 'Ryz' })
+    // ses propres notes (sauvegarde), un envoi sans nom, un coach déjà noté, le carnet d'un coach : rien ne change
+    expect(adoptCoach(solo, 'léa')).toBe(solo)
+    expect(adoptCoach(solo, '')).toBe(solo)
+    const coached = { ...solo, role: 'student' as const, coachName: 'Ryz' }
+    expect(adoptCoach(coached, 'Max')).toBe(coached)
+    const coach = { ...solo, name: 'Ryz', role: 'coach' as const }
+    expect(adoptCoach(coach, 'Léa')).toBe(coach)
+  })
+
+  it('résume les notes du coach et ce qui reste à partager', () => {
+    const coach = { name: 'Ryz', coachName: '', role: 'coach' as const, createdAt: T0 }
+    const notes = [note('a', 'Ryz', T0 - DAY), note('b', 'Ryz', T0 + DAY, { body: '', answer: undefined }), note('c', 'Léa', T0 + DAY)]
+    expect(shareSummary(notes, coach, undefined)).toEqual({ written: 2, inReview: 1, toShare: 2, lastShared: null })
+    const s = shareSummary(notes, coach, T0)
+    expect(s).toEqual({ written: 2, inReview: 1, toShare: 1, lastShared: T0 })
+    expect(shareSummaryLine(s)).toBe('2 notes écrites · 1 en révision · 1 à partager')
+    expect(shareSummaryLine(shareSummary(notes, coach, T0 + 2 * DAY))).toBe('2 notes écrites · 1 en révision · tout est partagé')
+    expect(shareSummaryLine(shareSummary([], coach, 'hier'))).toBe('aucune note écrite pour l’instant')
+  })
+
+  it('dit ce qu’un carnet reçu a changé', () => {
+    expect(importSummary(0, 0)).toBe('Tout est déjà dans ton carnet')
+    expect(importSummary(1, 0)).toBe('1 nouvelle note dans ton carnet')
+    expect(importSummary(3, 2)).toBe('3 nouvelles notes et 2 mises à jour dans ton carnet')
+    expect(importSummary(0, 1)).toBe('1 note mise à jour dans ton carnet')
+  })
+})
+
+describe('caviardage : « d’un X »', () => {
+  it('donne « de cette entité », jamais « d’cette entité »', () => {
+    const deogen = GHOSTS.find((g) => g.id === 'deogen')!
+    expect(redactGhostName('La respiration d’un Deogen à la Spirit Box.', deogen)).toBe('La respiration de cette entité à la Spirit Box.')
+    expect(redactGhostName("Le souffle d'une Deogen.", deogen)).toBe('Le souffle de cette entité.')
   })
 })

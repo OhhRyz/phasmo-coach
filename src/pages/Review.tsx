@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { Evidence } from '../components/ui'
 import { FileHead, H, IndexCard, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { getGhost, MECHANICS } from '../data'
 import type { Card, CardKind, CoachNote } from '../engine/cards'
@@ -26,8 +25,6 @@ const LEARN_MORE = 10
 
 /** Ce que demande la carte, tapé en haut à droite de la fiche. */
 const KIND_LABEL: Record<CardKind, string> = {
-  evidence: 'Preuves',
-  forced: 'Preuve forcée',
   sanity: 'Seuil de chasse',
   speed: 'Vitesse',
   tells: 'Signes clés',
@@ -463,12 +460,6 @@ export function Review() {
                 <p className="rv-verso">Au dos</p>
                 {isNote ? (
                   <p className="rv-hand hand">{card.back}</p>
-                ) : card.evidence && card.evidence.length > 0 ? (
-                  <p className="rv-evidence">
-                    {card.evidence.map((e) => (
-                      <Evidence key={e} id={e} forced={ghost?.forcedEvidence === e && card.kind === 'evidence'} />
-                    ))}
-                  </p>
                 ) : (
                   <p className="rv-answer">{fr(card.back)}</p>
                 )}

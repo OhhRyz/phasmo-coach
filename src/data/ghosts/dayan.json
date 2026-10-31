@@ -34,7 +34,7 @@
     "À moins de 10 m : 2,25 m/s si tu bouges, 1,2 m/s si tu restes immobile",
     "Chasse dès 65 % si tu bouges près d'elle, seulement à 45 % si tu restes immobile",
     "Toujours de sexe féminin : une entité masculine n'est pas une Dayan",
-    "Seule entité avec EMF 5 + orbes + Spirit Box"
+    "À moins de 10 m de toi, sa vitesse devient fixe : plus d'accélération en LdV"
   ],
   "tells": [
     { "text": "Pendant une chasse, à moins de 10 m d'un joueur, elle se déplace à 2,25 m/s si ce joueur bouge et à 1,2 m/s s'il reste immobile.", "zeroEvidence": true },
@@ -104,10 +104,10 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les preuves de la Dayan ?",
-      "choices": ["EMF 5, orbes, Spirit Box", "EMF 5, Spirit Box, écriture fantomatique", "Spirit Box, orbes, écriture fantomatique", "EMF 5, orbes, D.O.T.S"],
+      "q": "En chasse, l'entité est à moins de 10 m de toi. Tu restes immobile, mais elle garde une vitesse normale puis accélère en te voyant. Que peux-tu en conclure ?",
+      "choices": ["Ce n'est pas une Dayan", "C'est forcément une Dayan", "C'est une Dayan qui ne t'a pas encore vu", "Rien : la Dayan ne réagit qu'aux joueurs qui courent"],
       "answer": 0,
-      "explain": "La Dayan est la seule entité avec EMF 5 + orbes + Spirit Box. Les autres combinaisons sont celles de l'Esprit, du Cauchemar et du Raiju."
+      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en LdV ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan."
     },
     {
       "q": "En chasse, à moins de 10 m de toi, à quelle vitesse va une Dayan si tu restes immobile ?",

@@ -18,11 +18,11 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { UvPrint } from '../components/journal/Charts'
-import { Seg } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/progress'
-import { dayKey, fr, NBSP, NNBSP, num, plural, safeDate, validTime } from '../engine/format'
-import { coachNameOf, coachNotes, isCoachNote, makesCard } from '../engine/notes'
+import { dayKey, fr, NBSP, NNBSP, num, plural, safeDate } from '../engine/format'
+import { coachNameOf, coachNotes, isOwnNote, sortNotes } from '../engine/notes'
+import { shareSummary, shareSummaryLine } from '../engine/share'
 import { installHint, platform } from '../engine/device'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -47,8 +47,6 @@ const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord t
 function Welcome() {
   const { dispatch } = useStore()
   const [name, setName] = useState('')
-  const [coachName, setCoachName] = useState('')
-  const [role, setRole] = useState<'student' | 'coach'>('student')
   const [ok, setOk] = useState(true)
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
@@ -88,33 +86,16 @@ function Welcome() {
           onSubmit={(e) => {
             e.preventDefault()
             if (!name.trim()) return
-            dispatch({ type: 'onboard', profile: { name: name.trim(), coachName: coachName.trim(), role } })
+            // le rôle reste celui du carnet (seul·e par défaut, coaché·e si un lien de notes a déjà été ouvert)
+            dispatch({ type: 'onboard', profile: { name: name.trim() } })
             // même adresse, autre écran : on repart du haut de la page
             window.scrollTo({ top: 0 })
           }}
         >
-          <div className="field">
-            <span className="field-label">Qui tient ce carnet{NNBSP}?</span>
-            <Seg
-              label="Rôle"
-              value={role}
-              onChange={setRole}
-              options={[
-                { value: 'student', label: 'Je m’entraîne' },
-                { value: 'coach', label: 'Je suis le coach' },
-              ]}
-            />
-          </div>
           <label className="field">
             <span>Ton prénom</span>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus required maxLength={40} />
           </label>
-          {role === 'student' && (
-            <label className="field">
-              <span>Ton coach (facultatif)</span>
-              <input className="input" value={coachName} onChange={(e) => setCoachName(e.target.value)} placeholder="Prénom ou pseudo du coach" />
-            </label>
-          )}
           <CheckLine
             checked={ok}
             onChange={setOk}
@@ -128,46 +109,36 @@ function Welcome() {
               Ouvrir le carnet
             </TapeButton>
           </div>
+          <p className="pencil-note welcome-coaching">
+            {fr('être coaché·e, ou coacher quelqu’un : ça se règle plus tard, depuis le lien « Coaching » en bas de chaque page')}
+          </p>
         </form>
       </Page>
     </Notebook>
   )
 }
 
-/** Côté coach : écrire, partager, lire le bilan reçu. */
+/** Côté coach : écrire, partager, lire le bilan reçu (la page « Coaching » fait le reste). */
 function CoachCard() {
   const { state } = useStore()
-  const mine = state.notes.filter((n) => isCoachNote(n, state.profile))
-  const asCards = mine.filter(makesCard).length
-  const lastShared = validTime(state.settings.lastSharedAt)
-  const unshared = mine.filter((n) => lastShared == null || n.updatedAt > lastShared).length
-  const sum = mine.length
-    ? [
-        plural(mine.length, 'note écrite', 'notes écrites'),
-        asCards ? `${asCards} en révision` : 'aucune en révision',
-        unshared ? `${unshared} à partager` : 'tout est partagé',
-      ]
-    : ['aucune note écrite pour l’instant']
-
+  const s = shareSummary(state.notes, state.profile, state.settings.lastSharedAt)
   return (
     <IndexCard
       className="coach-card settle"
       head="Pour ton élève"
-      right={lastShared != null ? `partagé le ${safeDate(SHORT, lastShared)}` : undefined}
+      right={s.lastShared != null ? `partagé le ${safeDate(SHORT, s.lastShared)}` : undefined}
       rotate={0.5}
     >
-      <p className="coach-sum">{sum.join(' · ')}</p>
+      <p className="coach-sum">{shareSummaryLine(s)}</p>
       <p>
         {fr('Ce que tu lui expliques, note-le dans le carnet puis partage-le : une note ajoutée à la révision revient d’elle-même dans ses séances.')}
       </p>
       <div className="plan-actions">
         <TapeButton to="/carnet">Écrire une note</TapeButton>
-        <TypedLink to="/carnet?partager=1">Partager le carnet</TypedLink>
-        <TypedLink to="/carnet?coller=1">Coller un bilan reçu</TypedLink>
+        <TypedLink to="/coaching?partager=1">Partager mes notes</TypedLink>
+        <TypedLink to="/coaching?coller=1">Coller un bilan reçu</TypedLink>
       </div>
-      <p className="pencil-note">
-        {fr('Un lien de bilan s’ouvre tout seul ; s’il est arrivé en simple texte, colle-le dans le carnet.')}
-      </p>
+      <p className="pencil-note">{fr('Un lien de bilan s’ouvre tout seul ; s’il est arrivé en simple texte, colle-le dans la page « Coaching ».')}</p>
     </IndexCard>
   )
 }
@@ -217,9 +188,13 @@ export function Home() {
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
   const untouched = GHOSTS.filter((g) => (mastery[g.id] ?? 0) === 0).length
   const inProgress = GHOSTS.length - acquired - untouched
-  const isCoach = state.profile.role === 'coach'
+  const role = state.profile.role
+  const isCoach = role === 'coach'
   const coach = coachNameOf(state.profile)
-  const notes = coachNotes(state.notes, state.profile).slice(0, 2)
+  // coach et coaché·e : les vraies notes du coach (stylo rouge) ; seul·e : ses propres notes (encre)
+  const notes = (
+    role === 'solo' ? sortNotes(state.notes.filter((n) => isOwnNote(n, state.profile) || !n.author)) : coachNotes(state.notes, state.profile)
+  ).slice(0, 2)
   const lastOf = (kind: string) => [...state.activity].reverse().find((a) => a.kind === kind)
   const lastQuiz = lastOf('quiz')
   const lastScenario = lastOf('scenario')
@@ -242,6 +217,7 @@ export function Home() {
                 Rôle{NNBSP}: <b>coach</b>
               </span>
             ) : (
+              role === 'student' &&
               coach && (
                 <span>
                   Coach{NNBSP}: <b>{coach}</b>
@@ -435,41 +411,47 @@ export function Home() {
           </section>
 
           <section className="notes" aria-labelledby="h-notes">
-            <H id="h-notes">{state.profile.role === 'coach' ? 'Mes notes' : coach ? `Mots de ${coach}` : 'Mots du coach'}</H>
+            <H id="h-notes">{role === 'student' ? (coach ? `Mots de ${coach}` : 'Mots du coach') : 'Mes notes'}</H>
             {notes.length > 0 ? (
               notes.map((n, i) => {
                 const ghost = n.ghostId ? getGhost(n.ghostId) : undefined
                 return (
                   <Sticky
                     key={n.id}
-                    hand="coach"
+                    hand={role === 'solo' ? 'mine' : 'coach'}
                     rotate={i === 0 ? 1.4 : -1.6}
                     delay={0.9 + i * 0.15}
                     meta={`${safeDate(SHORT, n.createdAt)}${ghost ? ` · ${ghost.name}` : ''}`}
-                    sign={`— ${n.author}`}
+                    sign={n.author ? `— ${n.author}` : undefined}
                   >
                     {n.title}
                   </Sticky>
                 )
               })
-            ) : isCoach ? (
+            ) : role !== 'student' ? (
               <div className="notes-empty">
-                <p className="pencil-note">{fr('Aucune note pour l’instant : ton élève reçoit tes notes quand tu partages le carnet.')}</p>
+                <p className="pencil-note">
+                  {fr(
+                    isCoach
+                      ? 'Aucune note pour l’instant : ton élève reçoit tes notes quand tu les partages.'
+                      : 'Aucune note pour l’instant : une astuce, une erreur à ne plus refaire… Ajoutée à la révision, une note revient d’elle-même au bon moment.',
+                  )}
+                </p>
                 <TypedLink to="/carnet">Écrire la première note</TypedLink>
               </div>
             ) : (
               <div className="notes-empty">
                 <p className="pencil-note">
-                  {fr(`Les notes de ${coach || 'ton coach'} arrivent par lien : copie le lien reçu, puis colle-le dans le carnet.`)}
+                  {fr(`Les notes de ${coach || 'ton coach'} arrivent par lien : ouvre-le, ou copie-le et colle-le dans la page « Coaching ».`)}
                 </p>
-                <TypedLink to="/carnet?coller=1">Coller un lien reçu</TypedLink>
+                <TypedLink to="/coaching?coller=1">Coller un lien reçu</TypedLink>
               </div>
             )}
-            <div className="notes-foot">
-              <TypedLink to="/carnet">
-                Tout le carnet ({state.notes.length ? plural(state.notes.length, 'note', 'notes') : 'aucune note'})
-              </TypedLink>
-            </div>
+            {state.notes.length > 0 && (
+              <div className="notes-foot">
+                <TypedLink to="/carnet">Tout le carnet ({plural(state.notes.length, 'note', 'notes')})</TypedLink>
+              </div>
+            )}
           </section>
         </Page>
       </Notebook>
@@ -505,7 +487,7 @@ export function Home() {
             to={EXHIBITS.quiz.to}
             piece={piece(EXHIBITS.quiz.n)}
             title={EXHIBITS.quiz.title}
-            text="Preuves, seuils, vitesses, comportements et tests sans preuve."
+            text="Comportements, vitesses, seuils de chasse et tests sans preuve."
             hand={
               lastQuiz ? (
                 <>

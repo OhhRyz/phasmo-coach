@@ -114,7 +114,7 @@ export function About() {
           <H id="h-memo">Comment l’app retient ce que tu sais</H>
           <p className="prose drop">
             {fr(
-              'Chaque fiche est découpée en cartes (preuves, seuil de chasse, vitesse, signes clés, tests 0 preuve…). Après chaque carte, tu notes ta réponse : À revoir, Difficile, Bien ou Facile. Une nouvelle carte revient d’abord un peu plus loin dans la même séance, puis, si tu réponds « Bien », le lendemain, puis 3, 8, 20 jours plus tard… Si tu l’as oubliée, elle revient dans la séance et repart sur un intervalle plus court. C’est la répétition espacée : on révise juste avant d’oublier, ce qui fixe la mémoire avec un minimum de temps.',
+              'Chaque fiche est découpée en cartes : signes clés, seuil de chasse, vitesse, tests sans preuve, signes à reconnaître ; s’y ajoutent les faits de mécaniques. Les preuves, elles, restent sur les fiches et dans le carnet de preuves : le journal du jeu les donne, inutile de les apprendre par cœur. Après chaque carte, tu notes ta réponse : À revoir, Difficile, Bien ou Facile. Une nouvelle carte revient d’abord un peu plus loin dans la même séance, puis, si tu réponds « Bien », le lendemain, puis 3, 8, 20 jours plus tard… Si tu l’as oubliée, elle revient dans la séance et repart sur un intervalle plus court. C’est la répétition espacée : on révise juste avant d’oublier, ce qui fixe la mémoire avec un minimum de temps.',
             )}
           </p>
           <Intervals />
@@ -125,8 +125,8 @@ export function About() {
           </p>
           <p className="prose">
             Tout est enregistré dans le navigateur de cet appareil (aucun compte, aucun serveur). Pour changer d’appareil, exporte une
-            sauvegarde depuis le <Link to="/profil">profil</Link>{NNBSP}; pour partager des notes ou un bilan, utilise les liens du{' '}
-            <Link to="/carnet">carnet</Link> et du profil.
+            sauvegarde depuis le <Link to="/profil">profil</Link>{NNBSP}; pour partager des notes ou un bilan, tout se passe dans la page{' '}
+            <Link to="/coaching">Coaching</Link>.
           </p>
         </section>
 
@@ -142,7 +142,7 @@ export function About() {
               <dt>iPhone</dt>
               <dd>
                 {fr(
-                  'Ouvre le carnet dans Safari, touche le bouton Partager, puis « Sur l’écran d’accueil ». L’app installée a sa propre mémoire, séparée de Safari : un lien reçu s’ouvre dans Safari, copie-le et colle-le dans Carnet, « Coller un lien reçu ».',
+                  'Ouvre le carnet dans Safari, touche le bouton Partager, puis « Sur l’écran d’accueil ». L’app installée a sa propre mémoire, séparée de Safari : un lien reçu s’ouvre dans Safari, copie-le et colle-le dans l’app, page « Coaching » (le lien en bas de chaque page).',
                 )}
               </dd>
             </div>

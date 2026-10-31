@@ -1,12 +1,15 @@
-import { EVIDENCE } from '../data/evidence'
-import type { EvidenceId, Ghost, Mechanics } from '../data/types'
+import { EVIDENCE_IDS } from '../data/evidence'
+import type { EvidenceId, Ghost, Mechanics, MechanicsFact } from '../data/types'
 import { redactGhostName as redact } from './format'
 
 export type Deck = 'ghost' | 'mechanics' | 'coach'
 
+/**
+ * Ce qui s'apprend par cœur : ce qui sert sans preuve (signes, seuils, vitesses, tests, mécaniques).
+ * Les preuves restent sur les fiches et dans le carnet de preuves (le journal du jeu les donne) : pas de carte.
+ * D'anciennes cartes « preuves » peuvent rester dans la sauvegarde : tout ce qui compte passe par le paquet.
+ */
 export type CardKind =
-  | 'evidence'
-  | 'forced'
   | 'sanity'
   | 'speed'
   | 'tells'
@@ -26,7 +29,6 @@ export interface Card {
   quote?: string
   back: string
   backList?: string[]
-  evidence?: EvidenceId[]
   /** ordre d'introduction des nouvelles cartes */
   order: number
 }
@@ -48,37 +50,88 @@ export interface CoachNote {
 
 const KIND_ORDER: Record<CardKind, number> = {
   note: 0,
-  evidence: 1,
-  tells: 2,
-  sanity: 3,
-  speed: 4,
-  forced: 5,
-  test: 6,
-  reverse: 7,
-  fact: 8,
+  tells: 1,
+  sanity: 2,
+  speed: 3,
+  test: 4,
+  reverse: 5,
+  fact: 6,
 }
+
+/* ---- ce qui relève des preuves ---- */
+
+/** Les preuves telles qu'on les écrit dans les fiches (« EMF 2 » n'est pas une preuve, « EMF 5 » si). */
+const EVIDENCE_WORDS: Record<EvidenceId, RegExp> = {
+  emf: /\bEMF(?:\s*(?:de\s+)?niveau)?\s*5\b/i,
+  dots: /D\.O\.T\.S|\bDOTS\b/,
+  uv: /\bUV\b|ultraviolet|empreinte/i,
+  freezing: /glaciale|sous\s*0\s*°/i,
+  orbs: /\borbes?\b/i,
+  writing: /écriture/i,
+  spiritbox: /spirit\s*box/i,
+}
+/** Des comportements passent par la Spirit Box (Deogen, Moroi) ou les orbes (Mimic en 0 preuve) : seules, elles ne suffisent pas. */
+const EVIDENCE_ONLY: EvidenceId[] = ['emf', 'dots', 'uv', 'freezing', 'writing']
+/** « sans preuve », « 0 preuve », « aucune preuve » : justement ce qu'on veut garder. */
+const NO_EVIDENCE = /\b(?:sans|0|zéro|aucune)\s+preuves?\b/giu
+
+/** Preuves citées dans un texte. */
+export function evidenceIn(text: string): EvidenceId[] {
+  const t = text.replace(NO_EVIDENCE, '')
+  return EVIDENCE_IDS.filter((e) => EVIDENCE_WORDS[e].test(t))
+}
+
+/**
+ * Le texte parle de preuves (lesquelles, combien, où les relever) : bon à savoir, mais hors révision et hors quiz.
+ * Sert aux textes libres (questions rédigées, confusions, capacités) ; les signes et tests « 0 preuve » des
+ * fiches sont déjà triés par la source.
+ */
+export function mentionsEvidence(text: string): boolean {
+  if (/\bpreuves?\b/iu.test(text.replace(NO_EVIDENCE, ''))) return true
+  const found = evidenceIn(text)
+  return found.length >= 2 || found.some((e) => EVIDENCE_ONLY.includes(e))
+}
+
+/** Combinaison de preuves ou preuve forcée (« Seule entité avec EMF 5 + orbes… », « UV garanti en Cauchemar ») : rien à apprendre. */
+function isEvidenceList(text: string): boolean {
+  return evidenceIn(text).length >= 2 || (/\bgaranti/iu.test(text) && /Cauchemar|Démence/u.test(text))
+}
+
+/** Un test dont la condition même porte sur les preuves trouvées (« Si tu trouves plus de preuves que… »). */
+function testNeedsEvidence(text: string): boolean {
+  const first = text.split(/(?<=[.!?])\s+/u)[0] ?? text
+  return /\bpreuves?\b/iu.test(first.replace(NO_EVIDENCE, ''))
+}
+
+const zeroTestCache = new WeakMap<Ghost, { text: string; k: number }[]>()
+
+/** Tests définitifs utilisables sans preuve, avec leur rang parmi les tests définitifs (identifiant de carte stable). */
+export function zeroTests(g: Ghost): { text: string; k: number }[] {
+  let out = zeroTestCache.get(g)
+  if (!out) {
+    out = g.confirmationTests
+      .filter((t) => t.definitive)
+      .map((t, k) => ({ text: t.text, k }))
+      .filter((t) => !testNeedsEvidence(t.text))
+    zeroTestCache.set(g, out)
+  }
+  return out
+}
+
+/** Cartes de test par entité (les suivants ne sortent qu'en quiz). */
+export const TESTS_PER_GHOST = 2
+/** Cartes « signe à reconnaître » par entité. */
+export const REVERSE_PER_GHOST = 2
+
+/** Les faits de mécaniques à retenir (les autres, utiles pour relever les preuves, restent « bon à savoir »). */
+export const isRetained = (f: Pick<MechanicsFact, 'evidence'>) => !f.evidence
 
 export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
   const base = 1000 + ghostIndex * 20
   const cards: Card[] = []
-  const evNames = g.evidence.map((e) => EVIDENCE[e].label)
-  const evExtra: string[] = []
-  if (g.forcedEvidence) evExtra.push(`Preuve forcée (toujours présente en Cauchemar et en Démence) : ${EVIDENCE[g.forcedEvidence].label}.`)
-  if (g.fakeEvidence) evExtra.push(`Fausse preuve en plus : ${EVIDENCE[g.fakeEvidence].label} (ne compte pas dans les 3).`)
+  const keyTells = g.keyTells.filter((t) => !isEvidenceList(t))
 
-  cards.push({
-    id: `g:${g.id}:ev`,
-    deck: 'ghost',
-    kind: 'evidence',
-    ghostId: g.id,
-    front: `Quelles sont les 3 preuves ${de(g.name)} ?`,
-    back: evNames.join(' · '),
-    backList: evExtra,
-    evidence: g.evidence,
-    order: base + KIND_ORDER.evidence,
-  })
-
-  if (g.keyTells.length) {
+  if (keyTells.length) {
     cards.push({
       id: `g:${g.id}:tells`,
       deck: 'ghost',
@@ -86,7 +139,7 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
       ghostId: g.id,
       front: `Comment reconnaître ${le(g.name)} ? Cite ses signes clés.`,
       back: g.summary,
-      backList: g.keyTells,
+      backList: keyTells,
       order: base + KIND_ORDER.tells,
     })
   }
@@ -117,25 +170,11 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
     })
   }
 
-  if (g.forcedEvidence) {
-    cards.push({
-      id: `g:${g.id}:forced`,
-      deck: 'ghost',
-      kind: 'forced',
-      ghostId: g.id,
-      front: `En difficulté Cauchemar ou Démence, quelle preuve est toujours présente avec ${le(g.name)} ?`,
-      back: EVIDENCE[g.forcedEvidence].label,
-      evidence: [g.forcedEvidence],
-      order: base + KIND_ORDER.forced,
-    })
-  }
-
-  g.confirmationTests
-    .filter((t) => t.definitive)
-    .slice(0, 2)
-    .forEach((t, k) => {
+  zeroTests(g)
+    .slice(0, TESTS_PER_GHOST)
+    .forEach((t) => {
       cards.push({
-        id: `g:${g.id}:test:${k}`,
+        id: `g:${g.id}:test:${t.k}`,
         deck: 'ghost',
         kind: 'test',
         ghostId: g.id,
@@ -148,21 +187,20 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
   // cartes inversées : à partir des signes « 0 preuve », propres à l'entité
   g.tells
     .filter((t) => t.zeroEvidence)
-    .slice(0, 2)
+    .slice(0, REVERSE_PER_GHOST)
     .forEach((t, k) => {
-    const quote = redact(t.text, g)
-    cards.push({
-      id: `g:${g.id}:rev:${k}`,
-      deck: 'ghost',
-      kind: 'reverse',
-      ghostId: g.id,
-      front: 'Quelle entité correspond à ce signe ?',
-      quote,
-      back: `${g.name}${g.nameEn !== g.name ? ` (${g.nameEn})` : ''}`,
-      backList: [g.summary],
-      order: base + KIND_ORDER.reverse,
+      cards.push({
+        id: `g:${g.id}:rev:${k}`,
+        deck: 'ghost',
+        kind: 'reverse',
+        ghostId: g.id,
+        front: 'Quelle entité correspond à ce signe ?',
+        quote: redact(t.text, g),
+        back: `${g.name}${g.nameEn !== g.name ? ` (${g.nameEn})` : ''}`,
+        backList: [g.summary],
+        order: base + KIND_ORDER.reverse,
+      })
     })
-  })
 
   return cards
 }
@@ -171,6 +209,8 @@ export function mechanicsCards(m: Mechanics): Card[] {
   const out: Card[] = []
   m.topics.forEach((topic, ti) => {
     topic.facts.forEach((f, fi) => {
+      // utile seulement pour relever les preuves : on le lit sur la page Mécaniques, sans l'apprendre
+      if (!isRetained(f)) return
       out.push({
         id: `m:${f.id}`,
         deck: 'mechanics',
@@ -220,8 +260,13 @@ export function buildDeck(ghosts: Ghost[], mechanics: Mechanics, notes: CoachNot
 
 // Pas de y ni de h : « du Yokai », « du Yurei », « du Hantu » (h aspiré).
 const VOWEL = /^[aeiouâàéèêîïôûAEIOUÂÀÉÈÊÎÏÔÛ]/
-/** Entités dites au féminin par les joueurs francophones. */
-const FEMININE = new Set(['Banshee'])
+/** Entités dites au féminin par les joueurs francophones (« la Banshee », « la Dayan », comme dans les fiches). */
+const FEMININE = new Set(['Banshee', 'Dayan'])
+
+/** Genre grammatical d'une entité (« elle » pour l'Ombre, la Banshee, la Dayan). */
+export function isFeminine(name: string): boolean {
+  return /^La /.test(name) || FEMININE.has(name) || name === 'Ombre'
+}
 
 /** « du Démon », « de l’Onryo », « des Jumeaux », « du Mimic », « de la Banshee » */
 export function de(name: string): string {

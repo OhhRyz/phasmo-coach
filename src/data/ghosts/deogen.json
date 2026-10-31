@@ -33,7 +33,7 @@
     "Fonce à 3,0 m/s puis ralentit à 0,4 m/s en arrivant sur toi",
     "Te trouve toujours en chasse : se cacher ne sert à rien",
     "Respiration lourde à la Spirit Box à moins d'1 m (33 % de chances)",
-    "Seuil de chasse 40 % · Spirit Box garantie en Cauchemar et Démence"
+    "Seuil de chasse 40 % · plus visible que la normale pendant les chasses"
   ],
   "tells": [
     {
@@ -211,15 +211,15 @@
       "explain": "Il te trouve toujours, donc te cacher ou rester immobile ne sert à rien, et de loin il fonce à 3,0 m/s. Tout près, il tombe à 0,4 m/s : en tournant autour d'un obstacle, tu le tiens à distance."
     },
     {
-      "q": "Quelles sont les trois preuves du Deogen ?",
+      "q": "Pendant la chasse, l'entité te garde en vue dans un long couloir et accélère peu à peu. Peut-il s'agir d'un Deogen ?",
       "choices": [
-        "Spirit Box, Écriture fantomatique, Températures glaciales",
-        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
-        "EMF niveau 5, Écriture fantomatique, Projecteur D.O.T.S",
-        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S"
+        "Non : le Deogen n'accélère pas en LdV",
+        "Oui : c'est ainsi qu'il rattrape sa cible",
+        "Oui, mais seulement sous 40 % de santé mentale",
+        "Oui, tant qu'il est encore loin de toi"
       ],
-      "answer": 3,
-      "explain": "Deogen = Spirit Box, Écriture, D.O.T.S. Les autres sont le Moroi, le Thayé et le Deildegast."
+      "answer": 0,
+      "explain": "Le Deogen n'a pas l'accélération en ligne de vue : il sait toujours où est sa cible, fonce à 3,0 m/s de loin puis ralentit jusqu'à 0,4 m/s une fois tout près. Une entité qui accélère peu à peu en te voyant n'est pas un Deogen."
     },
     {
       "q": "L'entité tente une chasse alors que la santé moyenne de l'équipe est à 45 % (sans objet maudit). Qu'en déduis-tu ?",

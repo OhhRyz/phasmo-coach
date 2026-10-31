@@ -189,18 +189,18 @@
       "explain": "Le Spectre peut se téléporter près d'un joueur au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Le drain de 25 % est celui du Djinn."
     },
     {
-      "q": "Quelles sont les trois preuves du Spectre ?",
+      "q": "Pendant une chasse, l'entité traverse du sel de rang 3 sans ralentir le moins du monde. Quelle entité est-ce ?",
       "choices": [
-        "EMF niveau 5, Spirit Box, Écriture fantomatique",
-        "EMF niveau 5, Ultraviolet, Spirit Box",
-        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
-        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S"
+        "Le Spectre",
+        "L'Esprit",
+        "Le Fantôme",
+        "Les Jumeaux"
       ],
-      "answer": 3,
-      "explain": "EMF 5 + Spirit Box + D.O.T.S. Les leurres sont l'Esprit, le Gallu et le Fantôme, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Le Spectre n'est pas ralenti par le sel de rang 3 pendant les chasses, contrairement aux autres entités (on ignore encore si c'est aussi le cas d'un Gallu enragé)."
     },
     {
-      "q": "Depuis fin 2025, quelle autre entité à EMF 5 + Spirit Box peut traverser du sel sans le perturber ?",
+      "q": "Depuis fin 2025, quelle autre entité que le Spectre peut traverser du sel sans le perturber ?",
       "choices": [
         "Le Gallu en état enragé",
         "L'Esprit",

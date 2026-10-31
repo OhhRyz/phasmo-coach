@@ -18,7 +18,7 @@ export function noteTitle(title: string, body: string): string {
 
 /**
  * Écrire une note du carnet : une page de bloc-notes. La note est signée par la personne qui tient
- * ce carnet (le coach sur son appareil, l'élève sur le sien).
+ * ce carnet, seule ou à deux (le coach sur son appareil, la personne coachée sur le sien).
  * `bare` : sans le papier ni le scotch, pour l'écrire dans une fenêtre qui est déjà une fiche.
  */
 export function NoteEditor({

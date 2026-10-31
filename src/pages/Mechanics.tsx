@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty } from '../components/ui'
 import { MECHANICS } from '../data'
+import { isRetained } from '../engine/cards'
 import { NNBSP } from '../engine/format'
 import { cardMastery } from '../engine/srs'
 import { useStore } from '../store/store'
@@ -10,6 +11,9 @@ type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV']
 const SLIP_TILT = [-0.6, 0.45, -0.25, 0.7, -0.45, 0.3]
+
+/** « 1 fait à retenir », « 12 faits à retenir », « aucun fait à retenir ». */
+const toRetain = (n: number) => (n === 0 ? 'aucun fait à retenir' : `${n} ${n > 1 ? 'faits' : 'fait'} à retenir`)
 
 export function MechanicsPage() {
   const { state } = useStore()
@@ -29,13 +33,19 @@ export function MechanicsPage() {
     )
   }
 
-  const learnedIn = (t: (typeof topics)[number]) => t.facts.filter((f) => cardMastery(state.cards[`m:${f.id}`]) >= 0.35).length
-  const totalFacts = topics.reduce((n, t) => n + t.facts.length, 0)
+  // les faits « bon à savoir » (utiles pour relever les preuves) se lisent ici, mais ne sont ni révisés ni comptés
+  const retained = (t: (typeof topics)[number]) => t.facts.filter(isRetained)
+  const learnedIn = (t: (typeof topics)[number]) => retained(t).filter((f) => cardMastery(state.cards[`m:${f.id}`]) >= 0.35).length
+  const totalFacts = topics.reduce((n, t) => n + retained(t).length, 0)
   const totalLearned = topics.reduce((n, t) => n + learnedIn(t), 0)
+  const hasAsides = topics.some((t) => t.facts.some((f) => !isRetained(f)))
+  const trueFalse = MECHANICS.trueFalse.filter((tf) => !tf.evidence).length
   const idx = topics.findIndex((t) => t.id === active)
   const prev = idx > 0 ? topics[idx - 1] : null
   const next = idx >= 0 && idx < topics.length - 1 ? topics[idx + 1] : null
   const learned = topic ? learnedIn(topic) : 0
+  const topicRetained = topic ? retained(topic).length : 0
+  const topicAsides = topic ? topic.facts.length - topicRetained : 0
 
   /** Change de chapitre, puis ramène la page de droite sous les yeux si elle n'y est plus. */
   const open = (id: string) => {
@@ -78,7 +88,9 @@ export function MechanicsPage() {
           <p className="mech-lead">
             Ce qui ne dépend pas d’une entité précise mais change tout{NNBSP}: chasses, encens, équipement, idées reçues.{' '}
             {state.settings.includeMechanics
-              ? 'Ces faits font aussi partie de ta révision.'
+              ? hasAsides
+                ? `Ces faits font aussi partie de ta révision, sauf ceux marqués «${NNBSP}bon à savoir${NNBSP}».`
+                : 'Ces faits font aussi partie de ta révision.'
               : 'Ces faits ne sont pas dans ta révision (option du profil).'}
           </p>
         </header>
@@ -95,6 +107,7 @@ export function MechanicsPage() {
               {topics.map((t, k) => {
                 const on = t.id === active
                 const n = learnedIn(t)
+                const total = retained(t).length
                 return (
                   <li key={t.id}>
                     <button type="button" className={`mech-toc-btn${on ? ' is-on' : ''}`} onClick={() => open(t.id)} aria-pressed={on}>
@@ -110,8 +123,14 @@ export function MechanicsPage() {
                       </span>
                       <span className="mech-toc-dots" aria-hidden />
                       <span className="mech-toc-c pencil-note">
-                        {n}/{t.facts.length}
-                        <span className="sr-only"> retenus</span>
+                        {total > 0 ? (
+                          <>
+                            {n}/{total}
+                            <span className="sr-only"> retenus</span>
+                          </>
+                        ) : (
+                          'bon à savoir'
+                        )}
                       </span>
                     </button>
                   </li>
@@ -120,9 +139,9 @@ export function MechanicsPage() {
             </ol>
           </nav>
 
-          {MECHANICS.trueFalse.length > 0 && (
+          {trueFalse > 0 && (
             <div className="mech-quiz">
-              <TapeButton to="/quiz?topic=mechanics">Vrai ou faux ({MECHANICS.trueFalse.length})</TapeButton>
+              <TapeButton to="/quiz?topic=mechanics">Vrai ou faux ({trueFalse})</TapeButton>
             </div>
           )}
         </div>
@@ -135,14 +154,26 @@ export function MechanicsPage() {
           <span>
             Chapitre <b>{ROMAN[idx] ?? idx + 1}</b> / {ROMAN[topics.length - 1] ?? topics.length}
           </span>
-          <span>{topic ? `${topic.facts.length} faits à retenir` : ''}</span>
+          <span>{topic ? toRetain(topicRetained) + (topicAsides ? ` · ${topicAsides} bon${topicAsides > 1 ? 's' : ''} à savoir` : '') : ''}</span>
         </FileHead>
 
         <section className="mech-chapter" ref={factsRef} aria-labelledby="h-mech-facts">
-          <H id="h-mech-facts" count={topic ? (learned ? `${learned} retenu${learned > 1 ? 's' : ''} sur ${topic.facts.length}` : `aucun retenu sur ${topic.facts.length}`) : undefined}>
+          <H
+            id="h-mech-facts"
+            count={
+              topic && topicRetained
+                ? learned
+                  ? `${learned} retenu${learned > 1 ? 's' : ''} sur ${topicRetained}`
+                  : `aucun retenu sur ${topicRetained}`
+                : undefined
+            }
+          >
             {topic?.title}
           </H>
-          <p className="mech-hint pencil-note">Sous chaque fait, sa question{NNBSP}: déplie le papier pour la réponse.</p>
+          <p className="mech-hint pencil-note">
+            Sous chaque fait, sa question{NNBSP}: déplie le papier pour la réponse.
+            {topicAsides > 0 && <> «{NNBSP}Bon à savoir{NNBSP}»{NNBSP}: sert à relever les preuves, pas à retenir par cœur.</>}
+          </p>
           <ol className="mech-facts">
             {topic?.facts.map((f, k) => (
               <li key={f.id}>
@@ -150,7 +181,15 @@ export function MechanicsPage() {
                   § {k + 1}
                 </span>
                 <div className="mech-fact-body">
-                  <p className="mech-fact">{f.text}</p>
+                  <p className="mech-fact">
+                    {f.text}
+                    {!isRetained(f) && (
+                      <>
+                        {' '}
+                        <span className="pencil-note mech-aside">bon à savoir</span>
+                      </>
+                    )}
+                  </p>
                   <div className={`slip${shown[f.id] ? ' is-open' : ''}`} style={{ '--r': `${SLIP_TILT[k % SLIP_TILT.length]}deg` } as Style}>
                     <button
                       type="button"

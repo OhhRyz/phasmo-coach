@@ -36,10 +36,18 @@ export interface Settings {
   lastSharedAt?: number
 }
 
+/**
+ * Qui tient le carnet : seul·e (par défaut, l'app sert à tout le monde), coaché·e par quelqu'un, ou
+ * coach de quelqu'un. Le coaching se règle sur la page « Coaching ».
+ */
+export type Role = 'solo' | 'student' | 'coach'
+export const ROLES: readonly Role[] = ['solo', 'student', 'coach']
+
 export interface Profile {
   name: string
+  /** le coach de la personne coachée (gardé si elle repasse seule, pour le retrouver ensuite) */
   coachName: string
-  role: 'student' | 'coach'
+  role: Role
   createdAt: number
 }
 
@@ -63,7 +71,7 @@ export function initialState(now = Date.now()): PersistedState {
   return {
     version: 1,
     onboarded: false,
-    profile: { name: '', coachName: '', role: 'student', createdAt: now },
+    profile: { name: '', coachName: '', role: 'solo', createdAt: now },
     settings: { newPerDay: 12, focus: null, includeMechanics: true },
     cards: {},
     log: [],
@@ -115,6 +123,14 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
   return out
 }
 
+/** Un profil chargé : chaque champ vérifié ; un rôle absent ou inconnu devient « seul·e ». */
+function readProfile(raw: unknown, base: Profile): Profile {
+  if (!isObject(raw)) return base
+  const role = ROLES.find((r) => r === raw.role) ?? 'solo'
+  const createdAt = typeof raw.createdAt === 'number' && Number.isFinite(raw.createdAt) ? raw.createdAt : base.createdAt
+  return { ...base, name: str(raw.name).slice(0, 80), coachName: str(raw.coachName).slice(0, 80), role, createdAt }
+}
+
 export function hydrate(raw: unknown): PersistedState {
   const base = initialState()
   if (!isObject(raw) || raw.version !== 1) return base
@@ -122,7 +138,7 @@ export function hydrate(raw: unknown): PersistedState {
   return {
     version: 1,
     onboarded: !!r.onboarded,
-    profile: { ...base.profile, ...(isObject(r.profile) ? r.profile : {}) },
+    profile: readProfile(r.profile, base.profile),
     settings: { ...base.settings, ...(isObject(r.settings) ? r.settings : {}) },
     cards: isObject(r.cards) ? (r.cards as PersistedState['cards']) : {},
     log: Array.isArray(r.log) ? r.log.slice(-MAX_LOG) : [],

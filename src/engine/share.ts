@@ -4,7 +4,7 @@
  */
 import { sanitizeNotes, type Profile, type ReviewEntry } from '../store/schema'
 import type { CoachNote } from './cards'
-import { validTime } from './format'
+import { plural, validTime } from './format'
 import { coachNotes, isOwnNote, makesCard } from './notes'
 import type { CardState, Grade } from './srs'
 
@@ -263,4 +263,43 @@ export function importCounts(current: CoachNote[], incoming: CoachNote[]): { fre
     else if (cur.updatedAt < n.updatedAt) updated++
   }
   return { fresh, updated }
+}
+
+/** Ce qu'un carnet reçu a changé, en une phrase (toast). */
+export function importSummary(fresh: number, updated: number): string {
+  if (!fresh && !updated) return 'Tout est déjà dans ton carnet'
+  const parts: string[] = []
+  if (fresh) parts.push(fresh > 1 ? `${fresh} nouvelles notes` : '1 nouvelle note')
+  if (updated) parts.push(fresh ? plural(updated, 'mise à jour', 'mises à jour') : updated > 1 ? `${updated} notes mises à jour` : '1 note mise à jour')
+  return `${parts.join(' et ')} dans ton carnet`
+}
+
+/** Où en sont les notes écrites ici : combien, combien en révision, combien pas encore envoyées. */
+export interface ShareSummary {
+  written: number
+  inReview: number
+  toShare: number
+  /** dernier envoi par lien (null : jamais) */
+  lastShared: number | null
+}
+
+export function shareSummary(notes: CoachNote[], profile: Profile, lastSharedAt: unknown): ShareSummary {
+  const lastShared = validTime(lastSharedAt)
+  const own = notesToShare(notes, profile, undefined, true)
+  return {
+    written: own.length,
+    inReview: own.filter(makesCard).length,
+    toShare: notesToShare(notes, profile, lastShared ?? undefined).length,
+    lastShared,
+  }
+}
+
+/** « 3 notes écrites · 2 en révision · 1 à partager », tapé sur la fiche du coach. */
+export function shareSummaryLine(s: ShareSummary): string {
+  if (!s.written) return 'aucune note écrite pour l’instant'
+  return [
+    plural(s.written, 'note écrite', 'notes écrites'),
+    s.inReview ? `${s.inReview} en révision` : 'aucune en révision',
+    s.toShare ? `${s.toShare} à partager` : 'tout est partagé',
+  ].join(' · ')
 }

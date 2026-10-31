@@ -123,11 +123,14 @@ export function redactGhostName(text: string, g: Ghost): string {
   const names = [...new Set([g.name, bare(g.name), g.nameEn, bare(g.nameEn)])]
     .filter((n) => n.length > 2)
     .sort((a, b) => b.length - a.length)
-  const lead: Record<string, string> = { 'du ': 'de ', 'des ': 'de ', 'au ': 'à ', 'aux ': 'à ', "d'": 'de ', 'd’': 'de ' }
+  const lead: Record<string, string> = {
+    'du ': 'de ', 'des ': 'de ', 'au ': 'à ', 'aux ': 'à ', "d'": 'de ', 'd’': 'de ',
+    "d'un ": 'de ', 'd’un ': 'de ', "d'une ": 'de ', 'd’une ': 'de ',
+  }
   let out = text
   for (const n of names) {
     const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const re = new RegExp(`(?<![\\p{L}])([Ll]['’]|[Ll]es? |[Ll]a |[Dd]u |[Dd]es |[Aa]ux? |[Uu]ne? |[Dd]['’])?${escaped}s?(?![\\p{L}])`, 'gu')
+    const re = new RegExp(`(?<![\\p{L}])([Ll]['’]|[Ll]es? |[Ll]a |[Dd]u |[Dd]es |[Aa]ux? |[Dd]['’]une? |[Uu]ne? |[Dd]['’])?${escaped}s?(?![\\p{L}])`, 'gu')
     out = out.replace(re, (_m, article?: string) => `${lead[article?.toLowerCase() ?? ''] ?? ''}cette entité`)
   }
   return out

@@ -2,6 +2,7 @@ import { requestPersistentStorage } from '../engine/device'
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { GHOSTS, MECHANICS } from '../data'
 import { buildDeck, type Card, type CoachNote } from '../engine/cards'
+import { adoptCoach } from '../engine/notes'
 import { recordAnswer } from '../engine/progress'
 import { schedule, type Grade } from '../engine/srs'
 import {
@@ -91,13 +92,8 @@ function reducer(state: PersistedState, action: Action): PersistedState {
         else if (cur.updatedAt < n.updatedAt) byId.set(n.id, { ...n, pinned: cur.pinned })
       }
       const notes = [...byId.values()].sort((a, b) => b.createdAt - a.createdAt)
-      // une élève sans nom de coach : celui qui envoie le lien devient son coach
-      const from = action.from?.trim().slice(0, 80)
-      const profile =
-        from && state.profile.role === 'student' && !state.profile.coachName.trim() && from !== state.profile.name.trim()
-          ? { ...state.profile, coachName: from }
-          : state.profile
-      return { ...state, notes, profile }
+      // seul·e, ou coaché·e sans nom de coach : celui qui envoie les notes devient son coach
+      return { ...state, notes, profile: adoptCoach(state.profile, action.from) }
     }
     case 'replace':
       return action.state

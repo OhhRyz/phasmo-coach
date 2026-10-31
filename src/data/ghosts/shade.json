@@ -216,15 +216,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves de l'Ombre ?",
+      "q": "Quel type d'événement une Ombre ne fait-elle jamais ?",
       "choices": [
-        "EMF niveau 5, Écriture fantomatique, Spirit Box",
-        "Ultraviolet, Écriture fantomatique, Températures glaciales",
-        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
-        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S"
+        "L'événement de chant",
+        "Le brouillard fantomatique",
+        "L'apparition sous forme d'ombre",
+        "Un événement lancé hors de la pièce où tu te trouves"
       ],
-      "answer": 2,
-      "explain": "Ombre = EMF 5, écriture, températures glaciales. EMF 5 + écriture + Spirit Box, c'est l'Esprit ; UV + écriture + glaciales, le Démon ; EMF 5 + glaciales + D.O.T.S, l'Oni."
+      "answer": 0,
+      "explain": "L'Ombre ne peut pas faire d'événement de chant : un événement de chant l'élimine. Elle fait au contraire plus souvent le brouillard fantomatique, préfère se montrer en ombre et peut lancer un événement hors de ta pièce puis se téléporter jusqu'à toi."
     },
     {
       "q": "À partir de quel seuil de santé mentale moyenne une Ombre peut-elle chasser ?",

@@ -2,6 +2,7 @@
 .steps-doodle { display: block; width: 100%; max-width: 170px; margin-top: 8px; color: var(--ink-2); }
 .suspects .hint.pencil-note { color: var(--pencil); font-size: 20px; }
 .welcome-form { max-width: 520px; }
+.page .welcome-coaching { margin: -6px 0 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
 .registry .nm .rough { color: var(--red-pen); }
 
 /* conseil d'installation : une annotation au crayon de l'app, jamais la voix du coach */

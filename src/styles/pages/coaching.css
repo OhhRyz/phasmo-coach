@@ -1,0 +1,91 @@
+/* Page : coaching, le carnet à deux (+ le lien du pied de page, le champ « Coller », les fenêtres de lien) */
+
+/* ==========================================================================
+   Pied de page : le coaching est facultatif, il se trouve ici
+   ========================================================================== */
+.desk-foot-links { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 22px; }
+.desk-foot-links a[aria-current="page"] { text-decoration-color: var(--red-pen); }
+
+/* ==========================================================================
+   La page
+   ========================================================================== */
+.coaching .entry { margin-bottom: 30px; }
+.coaching .entry-line { color: var(--ink-2); }
+
+/* qui tient ce carnet */
+.coaching .cg-role .h { margin-bottom: 12px; }
+.cg-role .opt { min-height: 42px; }
+.cg-coach { max-width: 360px; margin-top: 20px; }
+.cg-coach .input { min-height: 44px; }
+
+/* fiches du coach et de la personne coachée */
+.coaching .cg-card { margin: 40px 0 0; }
+.coaching .cg-card p { margin: 0; font-size: 16.5px; }
+.coaching .cg-card .cg-sum {
+  min-height: 46px; display: flex; align-items: center;
+  font-family: "Courier Prime", monospace; font-size: 14.5px; letter-spacing: .03em; color: var(--ink-2);
+}
+.coaching .cg-card .plan-actions { margin-top: 20px; }
+.coaching .cg-card .clip { left: 52%; }
+
+/* le mode d'emploi, tapé */
+.cg-steps { list-style: none; margin: 0; padding: 0; border-top: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent); }
+.cg-steps li {
+  display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 14px; align-items: baseline;
+  padding: 16px 0 18px;
+  border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.cg-n { grid-row: 1 / span 2; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 15px; letter-spacing: .08em; color: var(--ink-2); }
+.cg-steps h3, .cg-steps p { grid-column: 2; }
+.cg-steps h3 { margin: 0 0 4px; font-family: "Elite", monospace; font-weight: 400; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.page .cg-steps p { margin: 0; font-size: 16.5px; line-height: 1.5; color: var(--ink-2); }
+.page .cg-solo { margin: 22px 0 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
+
+/* ==========================================================================
+   Coller un lien reçu (page « Coaching »)
+   ========================================================================== */
+.page .paste-open { margin: 30px 0 0; }
+.paste-open .link-btn { display: inline-flex; align-items: center; min-height: 40px; font-size: 15px; }
+.paste {
+  margin-top: 40px; padding: 16px 18px 18px;
+  border: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.paste form { display: grid; gap: 10px; }
+.paste-h {
+  margin: 0;
+  font-family: "Elite", monospace; font-weight: 400; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
+}
+.page .paste-hint { margin: 0 0 2px; font-size: 21px; line-height: 1.1; }
+.paste .input { min-height: 44px; overflow: hidden; text-overflow: ellipsis; }
+.page .paste-error { margin: 0; font-size: 21px; line-height: 1.1; }
+.paste-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 4px; }
+.paste-btns .paper-btn { min-height: 44px; }
+.paste-btns .link-btn { display: inline-flex; align-items: center; min-height: 40px; }
+
+/* ==========================================================================
+   Fenêtres de lien (notes à envoyer, bilan de progression)
+   ========================================================================== */
+.modal .share-url {
+  display: block; height: 112px; min-height: 0; margin-top: 4px; padding: 10px 12px; resize: none;
+  font-family: "Courier Prime", monospace; font-size: 13px; line-height: 1.5; word-break: break-all;
+  color: var(--ink-2); background: var(--paper-lo); border: 1px dashed var(--ink-3);
+}
+.modal .share-url:focus { background: var(--paper-lo); border-color: var(--red-pen); outline: none; }
+.share-long, .share-ios, .share-since { margin: 10px 0 0; font-size: 20px; line-height: 1.1; }
+.share-choice { margin: -4px 0 16px; }
+.share-choice .opt { min-height: 40px; }
+.share-since { margin-top: 2px; }
+
+/* ==========================================================================
+   Téléphone
+   ========================================================================== */
+@media (max-width: 759px) {
+  .coaching input, .coaching button, .coaching a { scroll-margin-bottom: 110px; }
+  .coaching .cg-card { margin-top: 32px; }
+  .coaching .cg-card .plan-actions { gap: 6px 22px; }
+  .coaching .link { display: inline-flex; align-items: center; min-height: 40px; }
+  .paste { margin-top: 32px; padding: 14px 12px 16px; }
+  .page .paste-open { margin-top: 24px; }
+  .cg-steps li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; padding: 14px 0 16px; }
+  .cg-n { font-size: 14px; }
+}

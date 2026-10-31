@@ -254,15 +254,15 @@
       "explain": "Croire que seule la cible l'entend est une idée reçue : tout joueur avec le microphone parabolique peut l'entendre."
     },
     {
-      "q": "Quelles sont les trois preuves de la Banshee ?",
+      "q": "En multijoueur, tout le monde est à l'intérieur pendant une chasse de Banshee. Que risque un joueur qui n'est pas sa cible et qui la croise ?",
       "choices": [
-        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
-        "EMF niveau 5, Ultraviolet, Orbes fantomatiques",
-        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S"
+        "Rien : elle le dépasse et continue de traquer sa cible",
+        "Il meurt, comme face à n'importe quelle entité",
+        "Il devient aussitôt sa nouvelle cible",
+        "Il perd 15 % de santé mentale d'un coup"
       ],
-      "answer": 3,
-      "explain": "UV + orbes + D.O.T.S. Les leurres sont le Fantôme, le Yurei et l'Obake, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Tant que sa cible est à l'intérieur, la Banshee ne poursuit qu'elle, même si d'autres joueurs sont plus proches : ceux-ci peuvent la croiser, voire la toucher, sans mourir. C'est l'un de ses tests de confirmation. La perte de 15 % concerne la cible qui la touche pendant un événement de chant."
     },
     {
       "q": "Le prénom de l'entité est masculin. Quelle entité peux-tu éliminer ?",

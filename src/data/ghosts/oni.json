@@ -159,15 +159,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves de l'Oni ?",
+      "q": "Quand un Oni est-il plus actif ?",
       "choices": [
-        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
-        "EMF niveau 5, Ultraviolet, Températures glaciales",
-        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S"
+        "Quand plusieurs joueurs sont à proximité",
+        "Quand quelqu'un parle dans sa pièce",
+        "Quand la lumière de sa pièce est allumée",
+        "Quand un appareil électronique est allumé près de lui"
       ],
-      "answer": 3,
-      "explain": "Oni = EMF 5, températures glaciales, D.O.T.S. EMF 5 + Spirit Box + D.O.T.S, c'est le Spectre ; orbes + glaciales + D.O.T.S, le Yurei ; EMF 5 + UV + glaciales, le Djinn."
+      "answer": 0,
+      "explain": "L'Oni est plus actif quand plusieurs personnes sont près de lui. C'est la voix qui attire le Yokai, la lumière allumée qui fait errer le Cauchemar, et l'électronique active qui accélère le Raiju."
     },
     {
       "q": "Combien de santé mentale un événement d'Oni draine-t-il ?",
@@ -207,6 +207,17 @@
       ],
       "answer": 1,
       "explain": "Au clignotement, l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
+    },
+    {
+      "q": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et elle avance à un pas normal qui ne ralentit pas en arrivant sur toi. Qui est-ce ?",
+      "choices": [
+        "L'Oni",
+        "Le Deogen",
+        "Le Fantôme",
+        "L'Obake"
+      ],
+      "answer": 0,
+      "explain": "L'Oni et le Deogen sont tous deux plus visibles en chasse, mais le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de toi ; l'Oni garde une vitesse normale. Le Fantôme est presque invisible, et l'Obake change de modèle le temps d'un clignotement."
     }
   ],
   "changes": [

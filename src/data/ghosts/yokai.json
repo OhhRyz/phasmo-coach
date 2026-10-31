@@ -169,15 +169,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Yokai ?",
+      "q": "À quelle distance de la boîte à musique un Yokai déclenche-t-il son événement ?",
       "choices": [
-        "Spirit Box, Orbes fantomatiques, Écriture fantomatique",
-        "Spirit Box, Ultraviolet, Projecteur D.O.T.S",
-        "Spirit Box, Orbes fantomatiques, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S"
+        "2,5 m",
+        "5 m",
+        "1 m",
+        "10 m"
       ],
-      "answer": 2,
-      "explain": "Yokai = Spirit Box, orbes, D.O.T.S. Spirit Box + orbes + écriture, c'est le Cauchemar ; Spirit Box + UV + D.O.T.S, le Fantôme ; orbes + glaciales + D.O.T.S, le Yurei."
+      "answer": 0,
+      "explain": "Le Yokai déclenche l'événement de la boîte à musique à 2,5 m au lieu de 5 m, et ne le termine que quand sa tête est à 0,5 m de la boîte, au lieu de 1 m : il s'attarde au-dessus de la boîte avant de la refermer."
     },
     {
       "q": "Jusqu'à quel seuil de santé mentale moyenne un Yokai peut-il chasser si l'on parle dans sa pièce ?",
@@ -212,6 +212,17 @@
       ],
       "answer": 1,
       "explain": "Le Yokai voit normalement : s'il te voit, il te poursuit. C'est le Kormos qui est presque aveugle et repère les joueurs qui bougent."
+    },
+    {
+      "q": "Quand un Yokai est-il plus actif ?",
+      "choices": [
+        "Quand on parle près de lui",
+        "Quand plusieurs joueurs sont à proximité, même en silence",
+        "Quand le disjoncteur est coupé",
+        "Quand une bougie est allumée dans sa pièce"
+      ],
+      "answer": 0,
+      "explain": "Le Yokai est attiré par la voix : il est plus actif quand on parle près de lui et peut chasser jusqu'à 80 % si l'on parle dans sa pièce. C'est l'Oni qui s'agite quand plusieurs joueurs sont à proximité."
     }
   ],
   "changes": [

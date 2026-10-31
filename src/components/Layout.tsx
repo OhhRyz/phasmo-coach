@@ -174,7 +174,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="desk-tools">
           <Link to="/profil" className="who" aria-current={current(pathname.startsWith('/profil'))}>
             <b>{state.profile.name || 'Profil'}</b>
-            <span>{state.profile.role === 'coach' ? 'carnet du coach' : state.profile.coachName ? `coach\u202f: ${state.profile.coachName}` : 'réglages'}</span>
+            <span>réglages</span>
           </Link>
           <Breaker />
         </div>
@@ -220,7 +220,15 @@ export function Layout({ children }: { children: ReactNode }) {
 
       <footer className="desk-foot">
         <span>Projet de fan, non affilié à Kinetic Games. Données issues de l’Unofficial Phasmo Cheat Sheet de Ty Bayn.</span>
-        <Link to="/a-propos">Sources, licence et fonctionnement</Link>
+        {/* le coaching est facultatif : l'app sert à tout le monde, il se règle depuis ce lien */}
+        <span className="desk-foot-links">
+          <Link to="/coaching" aria-current={current(pathname.startsWith('/coaching'))}>
+            Coaching
+          </Link>
+          <Link to="/a-propos" aria-current={current(pathname.startsWith('/a-propos'))}>
+            Sources, licence et fonctionnement
+          </Link>
+        </span>
       </footer>
     </>
   )

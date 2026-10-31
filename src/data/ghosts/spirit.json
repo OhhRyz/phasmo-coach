@@ -168,18 +168,18 @@
       "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Ce n'est pas pour autant un Démon : une entité standard peut rechasser dès 90 s."
     },
     {
-      "q": "Quelles sont les trois preuves de l'Esprit ?",
+      "q": "À quelle vitesse chasse un Esprit ?",
       "choices": [
-        "EMF niveau 5, Spirit Box, Écriture fantomatique",
-        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
-        "Spirit Box, Ultraviolet, Écriture fantomatique",
-        "Spirit Box, Orbes fantomatiques, Écriture fantomatique"
+        "1,7 m/s avec accélération standard en LdV",
+        "1,7 m/s sans aucune accélération en LdV",
+        "1,5 ou 1,9 m/s selon la chasse",
+        "1,0 m/s, puis 3,0 m/s quand il te détecte"
       ],
       "answer": 0,
-      "explain": "EMF 5 + Spirit Box + écriture. Les leurres sont le Spectre, le Poltergeist et le Cauchemar, qui partagent chacun deux de ces preuves."
+      "explain": "En chasse, rien ne distingue l'Esprit d'une entité standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue (jusqu'à environ 2,8 m/s après 13 s). Sa seule signature est le délai de 180 s après l'encens."
     },
     {
-      "q": "Tu hésites entre un Esprit et un Spectre (EMF 5 + Spirit Box). Quel test simple les départage sans troisième preuve ?",
+      "q": "Tu hésites entre un Esprit et un Spectre. Quel test simple les départage ?",
       "choices": [
         "Mesurer la vitesse de chasse : l'Esprit est plus rapide",
         "Écouter au microphone parabolique pour un cri unique",

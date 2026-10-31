@@ -31,10 +31,10 @@
   "summary": "Entité métamorphe : pendant les chasses, elle change de modèle le temps d'un clignotement, et ses empreintes UV peuvent être anormales (main à six doigts).",
   "keyTells": [
     "Change de modèle le temps d'un seul clignotement pendant les chasses",
-    "Empreintes spéciales : main à 6 doigts, double empreinte sur un interrupteur",
-    "25 % de chances de ne pas laisser d'UV ; empreintes qui disparaissent 2× plus vite",
-    "UV garanti en difficulté Cauchemar et Démence",
-    "Peut « sauter » un bruit de pas : un pas manquant après le sel le confirme"
+    "Première transformation au 12e clignotement : environ 8 s de chasse",
+    "Transformations dans un ordre fixe, toujours du même sexe, qui continue d'une chasse à l'autre",
+    "Peut « sauter » un bruit de pas : un pas manquant après le sel le confirme",
+    "Empreintes spéciales : main à 6 doigts, double empreinte sur un interrupteur"
   ],
   "tells": [
     {
@@ -191,15 +191,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves de l'Obake ?",
+      "q": "Pendant une chasse, l'entité prend l'apparence d'un autre personnage le temps d'un seul clignotement. Quelle entité est-ce ?",
       "choices": [
-        "EMF niveau 5, Ultraviolet, Projecteur D.O.T.S",
-        "EMF niveau 5, Ultraviolet, Orbes fantomatiques",
-        "Ultraviolet, Orbes fantomatiques, Températures glaciales",
-        "EMF niveau 5, Orbes fantomatiques, Projecteur D.O.T.S"
+        "L'Obake",
+        "Le Fantôme",
+        "L'Oni",
+        "Le Deogen"
       ],
-      "answer": 1,
-      "explain": "L'Obake donne EMF 5, Ultraviolet et Orbes. Les autres combinaisons sont celles du Goryo, du Hantu et du Raiju."
+      "answer": 0,
+      "explain": "Changer de modèle le temps d'un clignotement est propre à l'Obake (un Mimic qui l'imite peut aussi le faire). Le Fantôme est au contraire presque invisible en chasse ; l'Oni et le Deogen restent plus visibles que la normale, sans changer de modèle."
     },
     {
       "q": "Pendant une chasse, combien de temps faut-il environ pour être sûr que l'Obake se soit transformé au moins une fois ?",
@@ -213,26 +213,26 @@
       "explain": "Les transformations tombent sur des clignotements fixes : 12, 27, 39, 54… La première arrive au 12e clignotement, soit environ 8 s de chasse."
     },
     {
-      "q": "En difficulté Cauchemar ou Démence, quelle preuve l'Obake donne-t-il toujours ?",
+      "q": "L'entité vient de marcher dans ton tas de sel et, dans la série de pas qui suit, un pas manque (pas… [ ]… pas…). Qu'en conclus-tu ?",
       "choices": [
-        "EMF niveau 5",
-        "Orbes fantomatiques",
-        "Ultraviolet",
-        "Aucune, toutes peuvent être retirées"
+        "C'est un Obake",
+        "C'est un Gallu",
+        "C'est un Spectre",
+        "Rien : toute entité peut sauter un pas"
       ],
-      "answer": 2,
-      "explain": "L'Ultraviolet est garanti en Cauchemar et Démence, malgré ses 25 % de chances de ne pas laisser d'empreinte à chaque interaction."
+      "answer": 0,
+      "explain": "L'Obake a 25 % de chances de « sauter » un bruit de pas : un pas manquant juste après le sel le confirme. Le Gallu peut au contraire faire plus de 4 pas après le sel, et le Spectre ne perturbe jamais le sel."
     },
     {
-      "q": "Quelle affirmation sur les empreintes de l'Obake est vraie ?",
+      "q": "Pendant une chasse, au moment d'un clignotement, la posture de l'entité se réinitialise d'un coup sans que son apparence change. Que cela peut-il trahir ?",
       "choices": [
-        "Ses empreintes durent deux fois plus longtemps que la normale",
-        "Il laisse toujours une main à 6 doigts",
-        "Il a 25 % de chances de ne pas laisser d'empreinte UV lors d'une interaction",
-        "Ses empreintes n'apparaissent que sur les interrupteurs"
+        "Un Obake qui se transforme en son propre modèle",
+        "Un Fantôme qui devient invisible",
+        "Un Oni qui reste visible plus longtemps",
+        "Un Deogen qui ralentit près de toi"
       ],
-      "answer": 2,
-      "explain": "L'Obake a 25 % de chances de ne pas laisser d'UV, fait disparaître ses empreintes plus vite (pas plus lentement) et ne laisse une empreinte spéciale que de temps en temps."
+      "answer": 0,
+      "explain": "Les transformations de l'Obake suivent un ordre fixe. Quand son propre modèle est le suivant dans l'ordre, il se transforme en lui-même : ça se voit en général par une posture qui se réinitialise d'un coup."
     },
     {
       "q": "Lors de la dernière chasse, la dernière transformation de l'Obake était la Grand-mère. En quoi se transformera-t-il en premier à la chasse suivante ?",

@@ -34,7 +34,7 @@
     "Orbes fantomatiques en plus de ses preuves, même en partie à 0 preuve",
     "Change d'entité imitée toutes les 30 s à 2 min",
     "Comportement qui change du tout au tout d'une chasse à l'autre",
-    "Ne donne jamais EMF 5, Écriture ni D.O.T.S"
+    "Copie vitesse, seuil et capacités de l'entité imitée : ne l'élimine jamais sur sa vitesse"
   ],
   "tells": [
     {
@@ -167,15 +167,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelle preuve le Mimic montre-t-il en plus de ses trois preuves ?",
+      "q": "Peut-on éliminer le Mimic sur sa vitesse de chasse ?",
       "choices": [
-        "EMF niveau 5",
-        "Projecteur D.O.T.S",
-        "Écriture fantomatique",
-        "Orbes fantomatiques"
+        "Non : il copie la vitesse de l'entité qu'il imite",
+        "Oui : il chasse toujours à 1,7 m/s",
+        "Oui : il n'accélère jamais en LdV",
+        "Oui : il est toujours plus lent qu'une entité standard"
       ],
-      "answer": 3,
-      "explain": "Le Mimic montre toujours de faux Orbes fantomatiques en plus de Spirit Box, Ultraviolet et Températures glaciales."
+      "answer": 0,
+      "explain": "Le Mimic copie la vitesse, le seuil de chasse et les capacités de l'entité qu'il imite : il est capable de n'importe quel schéma de chasse. Ne l'élimine jamais sur sa vitesse."
     },
     {
       "q": "Partie à 0 preuve : tu vois des orbes dans la pièce favorite. Qu'en conclus-tu ?",
@@ -189,15 +189,15 @@
       "explain": "À 0 preuve, aucune entité ne donne de preuve… sauf le Mimic, dont les orbes sont une capacité et non une vraie preuve."
     },
     {
-      "q": "En Professionnel, tu as Spirit Box, Ultraviolet et Orbes fantomatiques. Quelles entités restent possibles ?",
+      "q": "D'une chasse à l'autre, l'entité change du tout au tout : une fois très rapide sans jamais accélérer, la fois suivante à vitesse normale avec une accélération quand elle te voit. Qui suspectes-tu ?",
       "choices": [
-        "Seulement le Kormos",
-        "Kormos ou Mimic",
-        "Seulement le Mimic",
-        "Hantu ou Mimic"
+        "Le Mimic",
+        "Le Revenant",
+        "Le Thayé",
+        "Le Hantu"
       ],
-      "answer": 1,
-      "explain": "Le Kormos a exactement ces trois preuves, et le Mimic peut les montrer s'il te manque encore ses Températures glaciales. Le Hantu n'a pas la Spirit Box."
+      "answer": 0,
+      "explain": "Un comportement qui change radicalement d'une chasse à l'autre est la signature du Mimic, qui change d'entité imitée toutes les 30 s à 2 min. Le Revenant, le Thayé et le Hantu n'accélèrent jamais en ligne de vue. Attention : un Djinn (disjoncteur allumé puis coupé) ou un Raiju (près puis loin de l'électronique) peut donner la même impression."
     },
     {
       "q": "À quelle fréquence le Mimic change-t-il d'entité imitée ?",
@@ -211,15 +211,15 @@
       "explain": "Il change de comportement toutes les 30 s à 2 min, d'où un comportement incohérent au fil de la partie."
     },
     {
-      "q": "Le Mimic imite une entité qui a l'EMF niveau 5. Peut-il te donner l'EMF 5 ?",
+      "q": "Entre quelles bornes de santé mentale moyenne le Mimic peut-il chasser ?",
       "choices": [
-        "Oui, il copie aussi les preuves",
-        "Oui, mais seulement en Cauchemar",
-        "Non, il ne montre que ses propres preuves",
-        "Seulement s'il l'imite depuis plus de 2 min"
+        "De 10 % à 100 %, selon l'entité qu'il imite",
+        "Toujours à 50 %",
+        "Seulement entre 35 % et 70 %",
+        "Jamais au-dessus de 50 %"
       ],
-      "answer": 2,
-      "explain": "Il copie comportements et capacités, jamais les preuves : seulement UV, Spirit Box, Températures glaciales et faux orbes."
+      "answer": 0,
+      "explain": "Le Mimic copie le seuil de l'entité imitée : il peut chasser très tard (10 %, comme un Obambo calme) ou à n'importe quelle santé mentale en copiant le Démon. Par défaut, 50 %."
     },
     {
       "q": "Quelle affirmation sur les orbes du Mimic est vraie ?",

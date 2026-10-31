@@ -80,6 +80,8 @@ export interface MechanicsFact {
   text: string
   q: string
   a: string
+  /** utile seulement pour relever les preuves : bon à savoir, hors révision et hors quiz */
+  evidence?: boolean
 }
 
 export type TopicIcon = 'hunt' | 'smudge' | 'equipment' | 'evidence' | 'myth' | 'cursed' | 'sanity' | 'speed'
@@ -96,6 +98,8 @@ export interface TrueFalse {
   claim: string
   answer: boolean
   explain: string
+  /** porte sur les preuves : hors quiz, comme les faits « bon à savoir » */
+  evidence?: boolean
 }
 
 export interface Mechanics {

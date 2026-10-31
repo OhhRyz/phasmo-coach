@@ -32,7 +32,7 @@
     "Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de LdV (au lieu de 13 s)",
     "La chasse s'arrête net s'il rejoint dans une cachette officielle le joueur détecté",
     "Chasse suivante : il fonce droit sur ce joueur, même pendant la période de grâce",
-    "Seule entité avec D.O.T.S + températures glaciales + écriture"
+    "S'il te tue dans une cachette officielle après t'avoir détecté, ce n'est pas un Aswang"
   ],
   "tells": [
     { "text": "Vitesse de base de 1,53 m/s ; en LdV, il atteint 1,65 fois cette vitesse en 8,667 s au lieu de 13 s.", "zeroEvidence": true },
@@ -102,10 +102,10 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les preuves de l'Aswang ?",
-      "choices": ["D.O.T.S, températures glaciales, écriture fantomatique", "D.O.T.S, orbes, températures glaciales", "D.O.T.S, Spirit Box, écriture fantomatique", "Orbes, écriture fantomatique, températures glaciales"],
+      "q": "Pendant une chasse, l'entité t'a repéré ; tu te caches dans un placard et elle t'y tue. Que peux-tu en conclure ?",
+      "choices": ["Ce n'est pas un Aswang", "C'est forcément un Aswang", "C'est un Aswang qui t'avait déjà trouvé caché", "Rien : un placard ne protège jamais d'un Aswang"],
       "answer": 0,
-      "explain": "L'Aswang est la seule entité avec D.O.T.S + glaciales + écriture. Les autres combinaisons sont celles du Yurei, du Deogen et du Revenant."
+      "explain": "Quand un Aswang rejoint dans une cachette officielle (placard, casier…) le joueur qu'il a détecté, sa chasse s'arrête net, sans mort. Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang. Cette faiblesse ne vaut pas dans une cachette non officielle."
     },
     {
       "q": "Que se passe-t-il si l'Aswang rejoint, dans une cachette officielle, le joueur qu'il a détecté ?",

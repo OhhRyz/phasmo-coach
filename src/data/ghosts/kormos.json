@@ -185,15 +185,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Kormos ?",
+      "q": "Pendant une chasse, quand le Kormos peut-il te voir ?",
       "choices": [
-        "Orbes fantomatiques, Ultraviolet, Températures glaciales",
-        "Spirit Box, Ultraviolet, Températures glaciales",
-        "Orbes fantomatiques, Spirit Box, Ultraviolet",
-        "EMF niveau 5, Orbes fantomatiques, Spirit Box"
+        "Seulement si tu bouges à moins de 5 m de lui",
+        "Normalement, comme toute entité",
+        "Jamais : il est totalement aveugle",
+        "Seulement si ta lampe torche est allumée"
       ],
-      "answer": 2,
-      "explain": "Kormos = Orbes, Spirit Box, Ultraviolet. Les autres sont le Hantu, les vraies preuves du Mimic et la Dayan."
+      "answer": 0,
+      "explain": "Le Kormos est presque aveugle : il ne voit un joueur, et ne gagne de la vitesse en ligne de vue, que si ce joueur bouge à moins de 5 m de lui. Le reste du temps, il chasse à l'oreille (pas, voix, électronique)."
     },
     {
       "q": "À quelle distance le Kormos entend-il un joueur qui sprinte ?",
@@ -229,15 +229,15 @@
       "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux."
     },
     {
-      "q": "Tu as Orbes, Spirit Box et UV. Quelle preuve supplémentaire exclurait le Kormos tout en gardant le Mimic ?",
+      "q": "Quel événement un Kormos ne fait-il jamais ?",
       "choices": [
-        "EMF niveau 5",
-        "Températures glaciales",
-        "Écriture fantomatique",
-        "Projecteur D.O.T.S"
+        "L'apparition qui marche vers un joueur (poursuite)",
+        "Le chant",
+        "L'apparition éclair",
+        "Aucun : il peut faire tous les événements"
       ],
-      "answer": 1,
-      "explain": "Le Mimic montre Spirit Box, UV, Températures glaciales et faux orbes : les Températures glaciales désignent le Mimic. EMF, Écriture et D.O.T.S excluraient les deux."
+      "answer": 0,
+      "explain": "Le Kormos ne fait jamais l'événement de poursuite (l'entité apparaît et marche vers un joueur) ni le brouillard fantomatique (bulle d'air) : s'il en fait un, ce n'est pas un Kormos. Dans les pièces aux lumières cassées, il ne fait que le chant ou l'apparition éclair."
     },
     {
       "q": "À quelle vitesse le Kormos file-t-il vers un joueur qu'il a détecté à plus de 5 m (sans bonus de LdV) ?",

@@ -167,15 +167,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Démon ?",
+      "q": "Ton crucifix de rang 3 brûle alors que l'entité a tenté de chasser à environ 7 m de lui, bien au-delà de la portée habituelle de 5 m. Quelle entité est-ce ?",
       "choices": [
-        "Ultraviolet, Écriture fantomatique, Spirit Box",
-        "Ultraviolet, Écriture fantomatique, Températures glaciales",
-        "EMF niveau 5, Écriture fantomatique, Températures glaciales",
-        "Ultraviolet, Orbes fantomatiques, Températures glaciales"
+        "Un Démon",
+        "Un Onryo",
+        "Un Esprit",
+        "Un Yokai"
       ],
-      "answer": 1,
-      "explain": "Démon = UV, écriture, températures glaciales. UV + écriture + Spirit Box, c'est le Poltergeist ; EMF 5 + écriture + glaciales, l'Ombre ; UV + orbes + glaciales, le Hantu."
+      "answer": 0,
+      "explain": "Contre le Démon, la portée du crucifix est augmentée de 50 % à chaque rang : 4,5 m au rang 1, 6 m au rang 2 et 7,5 m au rang 3, au lieu de 3, 4 et 5 m."
     },
     {
       "q": "Combien de temps après l'encens un Démon peut-il chasser de nouveau ?",

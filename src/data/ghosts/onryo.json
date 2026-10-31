@@ -112,10 +112,10 @@
       "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo, sans pour autant prouver qu'il s'agit d'un Démon."
     },
     {
-      "q": "Tu as Spirit Box, orbes et températures glaciales. Quelle autre entité que l'Onryo peut afficher ces trois preuves ?",
-      "choices": ["Le Mimic", "Le Hantu", "Le Cauchemar", "Le Yokai"],
+      "q": "Tu rallumes la bougie que l'entité vient de souffler, et elle la souffle de nouveau quelques secondes plus tard. Qu'en conclus-tu ?",
+      "choices": ["C'est un Onryo", "Ce n'est pas un Onryo", "C'est un Cauchemar", "Rien : toute entité peut le faire"],
       "answer": 0,
-      "explain": "Le Mimic a Spirit Box, UV et glaciales, et affiche toujours de faux orbes. Le Hantu n'a pas la Spirit Box, et ni le Cauchemar ni le Yokai n'ont de glaciales."
+      "explain": "Après chaque rallumage, une lumière à feu est protégée de 20 à 80 s. Seul l'Onryo peut éteindre deux fois la même flamme en moins de 20 s : c'est son test définitif."
     },
     {
       "q": "Que se passe-t-il si tu encenses un Onryo après que son compteur a atteint 3, mais avant qu'il utilise sa capacité ?",

@@ -103,10 +103,10 @@
       "explain": "Chronicle a corrigé un bug qui empêchait le Raiju d'accélérer près de l'électronique tenue en main. Désormais, tout équipement électronique actif du joueur, posé ou tenu, compte."
     },
     {
-      "q": "Quelles sont les preuves du Raiju ?",
-      "choices": ["EMF 5, orbes, D.O.T.S", "EMF 5, ultraviolet, D.O.T.S", "Orbes, écriture fantomatique, D.O.T.S", "Spirit Box, orbes, D.O.T.S"],
+      "q": "Pendant une chasse, quelle est la façon la plus sûre de vérifier qu'il s'agit d'un Raiju ?",
+      "choices": ["Allumer et éteindre un appareil électronique posé au sol près de son passage", "Allumer et éteindre la lampe torche que tu tiens en main face à lui", "Couper le disjoncteur pendant la chasse", "Courir vers lui pour qu'il te voie de loin"],
       "answer": 0,
-      "explain": "Le Raiju, c'est EMF 5 + orbes + D.O.T.S. Les autres combinaisons sont celles du Goryo, du Thayé et du Yokai."
+      "explain": "Si sa vitesse monte et redescend avec l'appareil, c'est un Raiju. Posé au sol, l'appareil ne trahit pas ta position ; tenu en main, il peut te faire repérer, et un Revenant ou un Kormos qui te détecte accélère aussi."
     },
     {
       "q": "Disjoncteur allumé, une entité passe à 2,5 m/s quand elle te voit de loin, alors qu'aucun appareil n'est allumé près d'elle. Laquelle est-ce plutôt ?",

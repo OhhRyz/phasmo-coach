@@ -28,10 +28,10 @@
   },
   "summary": "Une entité discrète et casanière, dont la silhouette D.O.T.S ne se voit qu'à travers une caméra vidéo et jamais quand quelqu'un est dans la pièce.",
   "keyTells": [
-    "Silhouette D.O.T.S visible uniquement à la caméra vidéo, jamais à l'œil nu",
-    "Pas de D.O.T.S quand un joueur est dans la même pièce",
     "Ne change jamais seul de pièce favorite et s'en éloigne peu",
-    "D.O.T.S garanti en Cauchemar et en Démence"
+    "Activité groupée dans sa pièce et à ses abords : rien ne bouge à l'autre bout de la carte",
+    "Silhouette D.O.T.S visible uniquement à la caméra vidéo, jamais à l'œil nu",
+    "Pas de D.O.T.S quand un joueur est dans la même pièce"
   ],
   "tells": [
     { "text": "Le D.O.T.S n'apparaît que sur une caméra vidéo et ne se montre pas si un joueur est dans la même pièce (l'état D.O.T.S peut toutefois commencer hors de la pièce et entrer dans la pièce où se trouve un joueur).", "zeroEvidence": false }
@@ -80,10 +80,10 @@
       "explain": "La silhouette D.O.T.S du Goryo n'apparaît que via une caméra vidéo et ne se montre pas quand un joueur est dans la même pièce. Si tu la vois à l'œil nu, ce n'est pas un Goryo."
     },
     {
-      "q": "Quelle preuve est garantie pour le Goryo en Cauchemar et en Démence ?",
-      "choices": ["Projecteur D.O.T.S", "EMF niveau 5", "Ultraviolet (empreintes)", "Aucune"],
+      "q": "Comment se déplace un Goryo hors chasse ?",
+      "choices": ["Il s'éloigne rarement de sa pièce et ne fait pas de longue errance", "Il erre dans toute la maison, surtout quand la lumière est allumée", "Il se téléporte près d'un joueur pris au hasard", "Il suit toujours le joueur le plus proche"],
       "answer": 0,
-      "explain": "Le Goryo garde toujours le D.O.T.S quand le nombre de preuves est réduit."
+      "explain": "Le Goryo reste plus souvent dans sa pièce et ne peut pas faire de longue errance. C'est le Cauchemar qui erre davantage lumière allumée, et le Spectre qui se téléporte près d'un joueur."
     },
     {
       "q": "Sans patte de singe utilisée, l'entité a changé de pièce favorite en cours de partie. Laquelle peux-tu éliminer ?",
@@ -92,16 +92,16 @@
       "explain": "Le Goryo ne peut pas changer de lui-même de pièce favorite (seul le vœu « Je souhaite être sain d'esprit » de la patte de singe peut la déplacer). Les trois autres le peuvent."
     },
     {
-      "q": "Qu'a changé la mise à jour Chronicle (v0.13, juin 2025) pour le Goryo ?",
-      "choices": ["Il a plus de chances d'entrer dans l'état D.O.T.S", "Il peut désormais changer de pièce favorite", "Son D.O.T.S est maintenant visible à l'œil nu", "Son seuil de chasse est passé à 60 %"],
+      "q": "Les capteurs de mouvement placés dans les couloirs autour de la pièce de l'entité ne se déclenchent presque jamais hors chasse, alors que la pièce est très active. Quelle entité cela évoque-t-il ?",
+      "choices": ["Le Goryo", "Les Jumeaux", "Le Fantôme", "Le Cauchemar"],
       "answer": 0,
-      "explain": "Les notes de patch de Chronicle indiquent que le Goryo a davantage de chances de passer en D.O.T.S. Le reste (pièce fixe, D.O.T.S visible seulement à la caméra, seuil à 50 %) n'a pas changé."
+      "explain": "Le Goryo s'éloigne rarement de sa pièce : son activité reste concentrée dedans ou juste à ses abords. Les Jumeaux interagissent au contraire loin de l'entité, le Fantôme erre vers un joueur pris au hasard et le Cauchemar sort plus souvent d'une pièce éclairée."
     },
     {
-      "q": "Tu as EMF 5, ultraviolet et D.O.T.S. De quelle entité s'agit-il ?",
-      "choices": ["Le Goryo", "Le Djinn", "Le Spectre", "Le Fantôme"],
+      "q": "À partir de quel seuil de santé mentale moyenne un Goryo peut-il chasser ?",
+      "choices": ["50 %", "40 %", "60 %", "35 %"],
       "answer": 0,
-      "explain": "Seul le Goryo combine EMF 5, UV et D.O.T.S. Le Djinn a EMF/UV/glaciales, le Spectre EMF/Spirit Box/D.O.T.S et le Fantôme Spirit Box/UV/D.O.T.S."
+      "explain": "Le Goryo a le seuil de chasse standard de 50 %, sans condition particulière. Ce ne sont pas ses chasses qui le trahissent, mais son attachement à sa pièce favorite, qu'il ne quitte presque jamais."
     },
     {
       "q": "Quelle est la vitesse de chasse du Goryo ?",

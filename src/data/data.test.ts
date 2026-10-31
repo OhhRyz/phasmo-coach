@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { GHOST_ORDER, GHOSTS, MECHANICS } from '.'
 import { EVIDENCE_IDS } from './evidence'
 
+/** Noms des preuves tels qu'ils s'écrivent dans les fiches (« EMF 2 », ou « EMF » seul, restent des interactions). */
+const EVIDENCE_NAMES = [/\bEMF (niveau )?5\b/i, /D\.O\.T\.S/i, /\bUV\b|ultraviolet/i, /glaciales?\b/i, /\borbes?\b/i, /écriture/i, /spirit box/i]
+const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, ' ').replace(/\u2019/g, "'")
+const evidenceNames = (s: string) => EVIDENCE_NAMES.filter((re) => re.test(plain(s))).length
+
 /**
  * Validation du jeu de données : à relancer après chaque mise à jour des fiches
  * (`npm test`). Un échec ici signifie une fiche incohérente.
@@ -57,6 +62,26 @@ describe('fiches des entités', () => {
         }
       })
 
+      // le journal du jeu donne les preuves : les questions portent sur ce qui sert sans preuve
+      it('a au moins 5 questions rédigées, aucune sur ses preuves', () => {
+        expect(g.quiz.length).toBeGreaterThanOrEqual(5)
+        for (const q of g.quiz) {
+          // « Quelles sont les preuves… », « Quelle preuve est garantie… » ; « à 0 preuve » reste permis
+          expect(plain(q.q).replace(/\b(0|sans) preuves?\b/gi, ''), q.q).not.toMatch(/\bpreuves?\b/i)
+          // « Tu as EMF 5, UV et D.O.T.S : quelle entité ? »
+          expect(evidenceNames(q.q), q.q).toBeLessThan(2)
+          // réponses en forme de liste de preuves
+          for (const c of q.choices) expect(evidenceNames(c), `${q.q} → ${c}`).toBeLessThan(2)
+        }
+      })
+
+      it('a des signes clés qui décrivent un comportement, pas ses preuves', () => {
+        for (const t of g.keyTells) {
+          expect(evidenceNames(t), t).toBeLessThan(2)
+          expect(plain(t), t).not.toMatch(/garanti/i)
+        }
+      })
+
       it('a des confusions vers des entités existantes', () => {
         for (const c of g.confusions) {
           expect(GHOSTS.map((x) => x.id), c.with).toContain(c.with)
@@ -89,5 +114,17 @@ describe('mécaniques', () => {
     expect(new Set(ids).size).toBe(ids.length)
     for (const t of MECHANICS.topics) for (const f of t.facts) expect(f.q && f.a && f.text, f.id).toBeTruthy()
     for (const tf of MECHANICS.trueFalse) expect(typeof tf.answer).toBe('boolean')
+  })
+
+  it('marque d’un booléen les faits utiles seulement pour relever les preuves', () => {
+    type Flagged = { id: string; evidence?: unknown }
+    const items: Flagged[] = [...MECHANICS.topics.flatMap((t) => t.facts), ...MECHANICS.trueFalse]
+    const flagged = items.filter((x) => x.evidence !== undefined)
+    for (const x of flagged) expect(typeof x.evidence, x.id).toBe('boolean')
+    expect(flagged.some((x) => x.evidence === true)).toBe(true)
+    // ce qui sert encore sans preuve n'est jamais marqué : chasses, vitesses, encens, portées, objets maudits, santé
+    for (const t of MECHANICS.topics.filter((t) => t.id !== 'equipement' && t.id !== 'preuves')) {
+      for (const f of t.facts as Flagged[]) expect(f.evidence, f.id).toBeUndefined()
+    }
   })
 })

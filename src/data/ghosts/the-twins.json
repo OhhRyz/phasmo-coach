@@ -82,10 +82,10 @@
       "explain": "Les Jumeaux chassent à ±0,2 m/s autour des 1,7 m/s standard. 1,7/2,5 m/s évoque le Raiju ou le Djinn, 1,45/1,96 m/s l'Obambo et 1,0/3,0 m/s le Revenant."
     },
     {
-      "q": "Quelles sont les preuves des Jumeaux ?",
-      "choices": ["EMF 5, Spirit Box, températures glaciales", "EMF 5, Spirit Box, écriture fantomatique", "EMF 5, Spirit Box, D.O.T.S", "Spirit Box, orbes, températures glaciales"],
+      "q": "Une chasse se déroule entièrement à 1,7 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
+      "choices": ["Non : les Jumeaux chassent à environ 1,5 ou 1,9 m/s", "Oui, si c'est le jumeau principal", "Oui, si c'est le jumeau errant", "Oui, une chasse sur deux"],
       "answer": 0,
-      "explain": "Les Jumeaux, c'est EMF 5 + Spirit Box + glaciales. Les autres combinaisons sont celles de l'Esprit, du Spectre et de l'Onryo."
+      "explain": "Les Jumeaux chassent à environ 1,5 m/s (jumeau principal) ou 1,9 m/s (jumeau errant), jamais à la vitesse standard : une vitesse de base de 1,7 m/s les élimine. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
     },
     {
       "q": "Vrai ou faux : les Jumeaux sont deux entités distinctes.",

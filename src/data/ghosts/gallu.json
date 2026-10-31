@@ -250,15 +250,15 @@
       "explain": "Enragé : 60 %. Normal : 50 %. Affaibli : 40 %."
     },
     {
-      "q": "Quelles sont les trois preuves du Gallu ?",
+      "q": "Juste après avoir marché dans ton tas de sel, l'entité fait 5 ou 6 pas audibles. Qu'en conclus-tu ?",
       "choices": [
-        "EMF niveau 5, Spirit Box, Projecteur D.O.T.S",
-        "EMF niveau 5, Orbes fantomatiques, Spirit Box",
-        "Spirit Box, Ultraviolet, Écriture fantomatique",
-        "EMF niveau 5, Ultraviolet, Spirit Box"
+        "C'est un Gallu",
+        "C'est un Obake",
+        "C'est un Spectre",
+        "Rien : toute entité peut faire jusqu'à 6 pas"
       ],
-      "answer": 3,
-      "explain": "EMF 5 + UV + Spirit Box. Les leurres sont le Spectre, la Dayan et le Poltergeist, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Après le sel, une entité laisse entre 0 et 4 bruits de pas. Le Gallu est la seule à pouvoir en faire plus de 4. L'Obake peut au contraire sauter un pas, et le Spectre ne perturbe jamais le sel."
     },
     {
       "q": "Comment évoluent tes protections contre un Gallu affaibli ?",
@@ -272,7 +272,7 @@
       "explain": "Affaibli, il est plus vulnérable : crucifix +1 m et 6 s d'aveuglement (5 s en standard). Crucifix -2 m et 4 s, c'est l'état enragé."
     },
     {
-      "q": "Tu as EMF 5 + Spirit Box, et l'entité traverse une ligne de sel sans la perturber. Qu'est-ce qui désigne un Gallu plutôt qu'un Spectre ?",
+      "q": "L'entité traverse une ligne de sel sans la perturber. Qu'est-ce qui désigne un Gallu plutôt qu'un Spectre ?",
       "choices": [
         "Elle chasse à 1,7 m/s",
         "Elle laisse un EMF 2 près d'un joueur sans interaction",

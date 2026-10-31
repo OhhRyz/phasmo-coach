@@ -2,14 +2,28 @@ import type { Profile } from '../store/schema'
 import type { CoachNote } from './cards'
 
 /**
- * Le nom du coach vu depuis cet appareil : le sien si c'est le carnet du coach, sinon celui que
- * l'élève a renseigné.
+ * Le nom du coach vu depuis cet appareil : le sien si c'est le carnet du coach, celui que la personne
+ * coachée a renseigné, et aucun pour qui s'entraîne seul·e.
  */
 export function coachNameOf(profile: Profile): string {
+  if (profile.role === 'solo') return ''
   return (profile.role === 'coach' ? profile.name : profile.coachName)?.trim() ?? ''
 }
 
 const same = (a: string, b: string) => a.trim().toLocaleLowerCase('fr') === b.trim().toLocaleLowerCase('fr')
+
+/**
+ * Le profil après avoir reçu des notes signées `from` (lien ou fichier) : qui s'entraînait seul·e, ou
+ * était coaché·e sans avoir noté par qui, reconnaît l'expéditeur comme son coach. Ses propres notes
+ * (même prénom) ou un envoi sans nom ne changent rien ; le carnet d'un coach non plus.
+ */
+export function adoptCoach(profile: Profile, from: string | undefined): Profile {
+  const sender = from?.trim().slice(0, 80) ?? ''
+  if (!sender || same(sender, profile.name)) return profile
+  if (profile.role === 'solo') return { ...profile, role: 'student', coachName: sender }
+  if (profile.role === 'student' && !profile.coachName.trim()) return { ...profile, coachName: sender }
+  return profile
+}
 
 /**
  * Une note écrite par le coach ? Seules ces notes s'affichent au stylo rouge et sous « Mots de … » :

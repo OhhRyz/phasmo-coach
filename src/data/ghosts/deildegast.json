@@ -184,15 +184,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Deildegast ?",
+      "q": "Avant de toucher à la moindre porte, tu fais le tour de la carte : il y a moins de portes ouvertes que prévu pour la difficulté choisie. Quelle entité cela peut-il trahir ?",
       "choices": [
-        "Orbes fantomatiques, Écriture fantomatique, Projecteur D.O.T.S",
-        "EMF niveau 5, Écriture fantomatique, Projecteur D.O.T.S",
-        "Spirit Box, Écriture fantomatique, Projecteur D.O.T.S",
-        "EMF niveau 5, Écriture fantomatique, Températures glaciales"
+        "Le Deildegast",
+        "Le Yurei",
+        "Le Thayé",
+        "Le Poltergeist"
       ],
-      "answer": 1,
-      "explain": "Deildegast = EMF 5, Écriture, D.O.T.S. Les autres combinaisons sont celles du Thayé, du Deogen et de l'Ombre."
+      "answer": 0,
+      "explain": "Avec un Deildegast, le réglage « portes ouvertes au départ » est appliqué un cran plus bas que celui choisi (élevé → moyen, moyen → faible, faible → aucune). C'est un indice, pas une certitude : confirme-le avec sa vitesse de chasse."
     },
     {
       "q": "Quelles sont la vitesse de départ et la vitesse minimale du Deildegast ?",

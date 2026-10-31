@@ -5,13 +5,10 @@ import { Modal, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { fr, safeDate } from '../engine/format'
 import { coachNameOf } from '../engine/notes'
-import { learnedCount, streak } from '../engine/progress'
-import { appUrl, downloadJson, encodePayload, reportNotes, type ReportPayload } from '../engine/share'
-import { useMastery } from '../store/hooks'
+import { downloadJson } from '../engine/share'
 import { hydrate } from '../store/schema'
 import { useStore } from '../store/store'
 import { useTheme } from '../theme'
-import { ShareUrl, useShareLink } from './Notebook'
 
 export type { ReportPayload } from '../engine/share'
 
@@ -53,16 +50,14 @@ function NameInput({ value, onCommit }: { value: string; onCommit: (name: string
 export function Profile() {
   const { state, deck, dispatch } = useStore()
   const toast = useToast()
-  const mastery = useMastery()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirm, setConfirm] = useState<'progress' | 'all' | 'import' | null>(null)
   const [pendingImport, setPendingImport] = useState<ReturnType<typeof hydrate> | null>(null)
-  const [reportUrl, setReportUrl] = useState<string | null>(null)
-  const link = useShareLink(reportUrl)
   const now = useMemo(() => Date.now(), [])
   const [theme, setTheme] = useTheme()
-  const isCoach = state.profile.role === 'coach'
+  const role = state.profile.role
   const coach = coachNameOf(state.profile)
+  const coaching = role === 'coach' ? 'Je coache quelqu’un' : role === 'student' ? (coach ? `Coaché·e par ${coach}` : 'Coaché·e') : 'Seul·e'
 
   const exportAll = () => downloadJson(`phasmo-coach-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`, state)
 
@@ -75,21 +70,6 @@ export function Profile() {
     } catch {
       toast('Fichier de sauvegarde non reconnu')
     }
-  }
-
-  const shareReport = async () => {
-    const payload: ReportPayload = {
-      kind: 'phasmo-coach/report',
-      name: state.profile.name,
-      at: Date.now(),
-      streak: streak(state, Date.now()),
-      learned: learnedCount(deck, state.cards),
-      total: deck.length,
-      mastery: Object.fromEntries(Object.entries(mastery).map(([k, v]) => [k, Math.round(v * 100)])),
-      activity: state.activity.slice(-12).map(({ t, kind, score, total, label }) => ({ t, kind, score, total, label })),
-      notes: reportNotes(state.notes, state.profile, state.cards, state.log),
-    }
-    setReportUrl(appUrl(`/rapport?d=${await encodePayload(payload)}`))
   }
 
   const focus = state.settings.focus ?? []
@@ -127,77 +107,41 @@ export function Profile() {
                   <span>Prénom ou pseudo</span>
                   <NameInput value={state.profile.name} onCommit={(name) => dispatch({ type: 'profile', profile: { name } })} />
                 </label>
-                <label className="field">
-                  <span>Coach</span>
-                  <input
-                    className="input"
-                    value={state.profile.coachName}
-                    onChange={(e) => dispatch({ type: 'profile', profile: { coachName: e.target.value } })}
-                    placeholder="Prénom du coach"
-                  />
-                </label>
+                <div className="field idcard-coaching">
+                  <span className="field-label">Coaching</span>
+                  <span className="idcard-coaching-v">{fr(coaching)}</span>
+                  <TypedLink to="/coaching">{role === 'solo' ? 'Être coaché·e ou coacher quelqu’un' : 'Ouvrir la page Coaching'}</TypedLink>
+                </div>
               </div>
             </div>
             <div className="idcard-role">
-              <div className="field">
-                <span className="field-label">Sur cet appareil</span>
-                <Seg
-                  label="Rôle"
-                  value={state.profile.role}
-                  onChange={(role) => dispatch({ type: 'profile', profile: { role } })}
-                  options={[
-                    { value: 'student', label: 'Je m’entraîne' },
-                    { value: 'coach', label: 'Je suis le coach' },
-                  ]}
-                />
-              </div>
               <Stamp tone="violet" rotate={-8} thunk delay={0.5}>
-                {state.profile.role === 'coach' ? 'Coach' : 'En formation'}
+                {role === 'coach' ? 'Coach' : 'En formation'}
               </Stamp>
             </div>
             <p className="idcard-stats">
               <span>
-                <b>{seen}</b> carte{seen > 1 ? 's' : ''} vue{seen > 1 ? 's' : ''}
+                <b>{seen || 'aucune'}</b> carte{seen > 1 ? 's' : ''} vue{seen > 1 ? 's' : ''}
               </span>
               <span>
-                <b>{state.log.length}</b> révision{state.log.length > 1 ? 's' : ''}
+                <b>{state.log.length || 'aucune'}</b> révision{state.log.length > 1 ? 's' : ''}
               </span>
               <span>
-                <b>{days}</b> jour{days > 1 ? 's' : ''}
+                {days > 0 ? (
+                  <>
+                    <b>{days}</b> jour{days > 1 ? 's' : ''}
+                  </>
+                ) : (
+                  'ouvert aujourd’hui'
+                )}
               </span>
             </p>
           </article>
 
           <section className="pocket settle" style={{ '--r': '.6deg', '--d': '.2s' } as Style} aria-labelledby="h-pocket">
             <h2 className="pocket-h" id="h-pocket">
-              Partager et sauvegarder
+              Changer d’appareil
             </h2>
-            {isCoach ? (
-              <div className="pocket-item">
-                <h3>Mes notes pour l’élève</h3>
-                <p>
-                  {fr(
-                    'Envoie par lien les notes écrites depuis le dernier envoi. Un bilan reçu se colle dans le carnet, ou s’ouvre directement depuis le message.',
-                  )}
-                </p>
-                <div className="pocket-btns pocket-main">
-                  <TapeButton to="/carnet?partager=1">Partager mon carnet</TapeButton>
-                  <TypedLink to="/carnet?coller=1">Coller un bilan reçu</TypedLink>
-                </div>
-              </div>
-            ) : (
-              <div className="pocket-item">
-                <h3>Bilan pour {coach || 'le coach'}</h3>
-                <p>
-                  {fr(
-                    `Un lien vers un bilan en lecture seule : maîtrise de chaque entité, série, dernières séances, et où tu en es sur chaque note ${coach ? `de ${coach}` : 'du coach'}.`,
-                  )}
-                </p>
-                <div className="pocket-btns pocket-main">
-                  <TapeButton onClick={shareReport}>Envoyer ma progression au coach</TapeButton>
-                </div>
-              </div>
-            )}
             <div className="pocket-item">
               <h3>Sauvegarde complète</h3>
               <p>Un fichier avec toute la progression et le carnet, pour changer d’appareil ou garder une copie.</p>
@@ -319,7 +263,7 @@ export function Profile() {
                 })}
               </div>
               <p className="pencil-note settings-hint">
-                {fr('les nouvelles cartes ne viendront que des entités entourées (les notes du coach et les mécaniques restent incluses) ; aucune entourée = toutes')}
+                {fr('les nouvelles cartes ne viendront que des entités entourées (les notes du carnet et les mécaniques restent incluses) ; aucune entourée = toutes')}
               </p>
             </div>
           </section>
@@ -373,29 +317,6 @@ export function Profile() {
         </p>
       </Modal>
 
-      <Modal
-        open={!!reportUrl}
-        onClose={() => setReportUrl(null)}
-        title="Lien de progression"
-        actions={
-          <>
-            <TypedLink onClick={() => setReportUrl(null)}>Fermer</TypedLink>
-            {link.canSend && (
-              <PaperButton onClick={link.send} rotate={-0.8}>
-                Envoyer…
-              </PaperButton>
-            )}
-            <TapeButton arrow={false} onClick={link.copy}>
-              Copier le lien
-            </TapeButton>
-          </>
-        }
-      >
-        <p className="modal-text">
-          {fr(`Envoie ce lien ${coach ? `à ${coach}` : 'au coach'} : le bilan est contenu dans le lien lui-même, aucun serveur ne le stocke.`)}
-        </p>
-        <ShareUrl link={link} url={reportUrl} label="Lien de progression" />
-      </Modal>
     </>
   )
 }

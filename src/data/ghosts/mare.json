@@ -225,15 +225,15 @@
       "explain": "Le Cauchemar ne peut pas allumer les lumières : si l'entité allume un interrupteur, ce n'en est pas un. Éteindre, faire éclater et chasser à 60 % lui correspondent."
     },
     {
-      "q": "Quelles sont les trois preuves du Cauchemar ?",
+      "q": "Quelle entité est la seule capable d'actionner un interrupteur pendant un événement ?",
       "choices": [
-        "Spirit Box, Orbes fantomatiques, Températures glaciales",
-        "Spirit Box, Orbes fantomatiques, Écriture fantomatique",
-        "EMF niveau 5, Spirit Box, Écriture fantomatique",
-        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales"
+        "Le Cauchemar",
+        "Le Djinn",
+        "Le Raiju",
+        "L'Ombre"
       ],
-      "answer": 1,
-      "explain": "Spirit Box + orbes + écriture. Les leurres sont l'Onryo, l'Esprit et le Revenant, qui partagent chacun deux de ces preuves."
+      "answer": 0,
+      "explain": "Le Cauchemar peut éteindre aussitôt une lumière qu'un joueur vient d'allumer à moins de 4 m de lui, même pendant un événement : c'est la seule entité qui actionne un interrupteur pendant un événement. Allumer les interrupteurs près de lui en plein événement est son test de confirmation."
     },
     {
       "q": "Vrai ou faux : le Cauchemar se dirige exprès vers les pièces sombres.",

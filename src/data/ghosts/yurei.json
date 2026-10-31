@@ -161,15 +161,15 @@
   ],
   "quiz": [
     {
-      "q": "Quelles sont les trois preuves du Yurei ?",
+      "q": "Hors chasse, l'entité touche une porte et la laisse entrouverte, à mi-course. Que peux-tu en conclure ?",
       "choices": [
-        "EMF niveau 5, Températures glaciales, Projecteur D.O.T.S",
-        "Orbes fantomatiques, Écriture fantomatique, Températures glaciales",
-        "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S",
-        "Ultraviolet, Orbes fantomatiques, Projecteur D.O.T.S"
+        "Ce n'est pas un Yurei",
+        "C'est forcément un Yurei",
+        "C'est un Yurei sous l'effet de l'encens",
+        "Rien : cela ne permet pas de conclure"
       ],
-      "answer": 2,
-      "explain": "Yurei = orbes, températures glaciales, D.O.T.S. EMF 5 + glaciales + D.O.T.S, c'est l'Oni ; orbes + écriture + glaciales, le Revenant ; UV + orbes + D.O.T.S, la Banshee."
+      "answer": 0,
+      "explain": "Hors chasse, le Yurei ouvre ou ferme toujours une porte jusqu'au bout. Une porte laissée à mi-course l'élimine (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement)."
     },
     {
       "q": "De combien le pouvoir du Yurei fait-il chuter la santé mentale des joueurs proches ?",
@@ -209,6 +209,17 @@
       ],
       "answer": 1,
       "explain": "Seul le Yurei peut toucher à une porte de sortie hors chasse et hors événement. Toutes les entités bougent les portes en chasse, et éteindre aussitôt une lumière allumée près de lui est le pouvoir du Cauchemar."
+    },
+    {
+      "q": "Combien de temps un Yurei encensé reste-t-il bloqué dans sa pièce ?",
+      "choices": [
+        "90 s",
+        "60 s",
+        "180 s",
+        "5 s"
+      ],
+      "answer": 0,
+      "explain": "Encensé, le Yurei reste bloqué dans sa pièce pendant toute la durée de l'effet de l'encens (90 s). Si des capteurs placés à ses entrées se déclenchent avant, hors événement, ce n'est pas un Yurei."
     }
   ],
   "changes": [
