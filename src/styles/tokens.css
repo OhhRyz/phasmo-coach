@@ -1,0 +1,64 @@
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #0a0c11;
+  --bg-elev: #0f1219;
+  --surface: #131722;
+  --surface-2: #181d2a;
+  --surface-3: #1f2535;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.13);
+
+  /* texte */
+  --text: #ebe8e3;
+  --text-2: #a9adba;
+  --text-3: #6f7486;
+
+  /* accents */
+  --accent: #a48bff;
+  --accent-strong: #8b6dff;
+  --accent-soft: rgba(164, 139, 255, 0.14);
+  --accent-glow: rgba(139, 109, 255, 0.35);
+  --lantern: #f2b65a;
+  --lantern-soft: rgba(242, 182, 90, 0.14);
+
+  --ok: #5ad48a;
+  --ok-soft: rgba(90, 212, 138, 0.13);
+  --bad: #f2716b;
+  --bad-soft: rgba(242, 113, 107, 0.13);
+  --warn: #f2c35a;
+
+  /* preuves (couleurs proches de celles du jeu) */
+  --ev-emf: #ec5b55;
+  --ev-dots: #46d16a;
+  --ev-uv: #b89cff;
+  --ev-freezing: #8fdaf6;
+  --ev-orbs: #e8de8f;
+  --ev-writing: #5f9ff2;
+  --ev-spiritbox: #e59f62;
+
+  /* maîtrise */
+  --m-none: #343a4c;
+  --m-low: #8a5cf6;
+  --m-mid: #c08bff;
+  --m-good: #6fd6c4;
+  --m-max: #5ad48a;
+
+  /* typo */
+  --font-ui: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* rythme */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 30px 80px -20px rgba(0, 0, 0, 0.75);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --sidebar-w: 248px;
+  --tabbar-h: 64px;
+  --content-max: 1120px;
+}

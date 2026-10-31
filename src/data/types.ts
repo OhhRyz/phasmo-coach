@@ -1,0 +1,100 @@
+export type EvidenceId = 'emf' | 'dots' | 'uv' | 'freezing' | 'orbs' | 'writing' | 'spiritbox'
+
+export interface TextItem {
+  text: string
+  zeroEvidence?: boolean
+}
+
+export interface ConfirmationTest {
+  text: string
+  definitive: boolean
+}
+
+export type ObservationKind = 'behavior' | 'hunt' | 'interaction' | 'event' | 'tell'
+export type ObservationStrength = 'definitive' | 'strong' | 'hint'
+
+export interface Observation {
+  text: string
+  kind: ObservationKind
+  strength: ObservationStrength
+}
+
+export interface AuthoredQuestion {
+  q: string
+  choices: string[]
+  answer: number
+  explain: string
+}
+
+export interface GhostSpeed {
+  /** m/s, -1 si inconnu */
+  min: number
+  max: number | null
+  alt: number | null
+  isRange: boolean
+  /** accélération standard en ligne de vue */
+  los: boolean
+  summary: string
+  details: string[]
+}
+
+export interface GhostSanity {
+  /** %, -1 si inconnu */
+  normal: number
+  low: number
+  high: number
+  summary: string
+  details: string[]
+}
+
+export interface Ghost {
+  id: string
+  name: string
+  nameEn: string
+  evidence: EvidenceId[]
+  forcedEvidence: EvidenceId | null
+  fakeEvidence: EvidenceId | null
+  speed: GhostSpeed
+  huntSanity: GhostSanity
+  summary: string
+  keyTells: string[]
+  tells: TextItem[]
+  behaviors: TextItem[]
+  abilities: TextItem[]
+  confirmationTests: ConfirmationTest[]
+  eliminationTests: { text: string }[]
+  confusions: { with: string; why: string }[]
+  observations: Observation[]
+  quiz: AuthoredQuestion[]
+  changes: string[]
+  sources: string[]
+  uncertain: string[]
+}
+
+export interface MechanicsFact {
+  id: string
+  text: string
+  q: string
+  a: string
+}
+
+export type TopicIcon = 'hunt' | 'smudge' | 'equipment' | 'evidence' | 'myth' | 'cursed' | 'sanity' | 'speed'
+
+export interface MechanicsTopic {
+  id: string
+  title: string
+  icon: TopicIcon
+  facts: MechanicsFact[]
+}
+
+export interface TrueFalse {
+  id: string
+  claim: string
+  answer: boolean
+  explain: string
+}
+
+export interface Mechanics {
+  topics: MechanicsTopic[]
+  trueFalse: TrueFalse[]
+}

@@ -1,0 +1,974 @@
+{
+  "topics": [
+    {
+      "id": "chasses",
+      "title": "Chasses",
+      "icon": "hunt",
+      "facts": [
+        {
+          "id": "chasses-01",
+          "text": "Avec le paramètre Durée des chasses sur Faible (valeur par défaut en Amateur), une chasse dure 15 s sur petite carte, 30 s sur carte moyenne et 40 s sur grande carte.",
+          "q": "Combien de temps dure une chasse sur petite carte avec la durée de chasse Faible (Amateur) ?",
+          "a": "15 secondes (30 s sur carte moyenne, 40 s sur grande carte)."
+        },
+        {
+          "id": "chasses-02",
+          "text": "Avec la durée de chasse Moyenne (valeur par défaut en Intermédiaire), une chasse dure 20 s sur petite carte, 40 s sur carte moyenne et 50 s sur grande carte.",
+          "q": "Combien de temps dure une chasse sur carte moyenne avec la durée de chasse Moyenne (Intermédiaire) ?",
+          "a": "40 secondes (20 s en petite carte, 50 s en grande carte)."
+        },
+        {
+          "id": "chasses-03",
+          "text": "Avec la durée de chasse Élevée (valeur par défaut en Professionnel, Cauchemar et Démence), une chasse dure 30 s sur petite carte, 50 s sur carte moyenne et 60 s sur grande carte. Plus la difficulté est élevée et la carte grande, plus la chasse est longue.",
+          "q": "Combien de temps dure une chasse sur grande carte avec la durée de chasse Élevée (Professionnel et plus) ?",
+          "a": "60 secondes (30 s en petite carte, 50 s en carte moyenne)."
+        },
+        {
+          "id": "chasses-04",
+          "text": "Démarrer une chasse avec n'importe quel objet maudit déclenche une chasse maudite, prolongée de 20 s quelle que soit la durée d'origine. Toutes les chasses qui suivent la première chasse maudite sont elles aussi prolongées.",
+          "q": "De combien une chasse maudite est-elle prolongée ?",
+          "a": "De 20 secondes, et les chasses suivantes sont aussi prolongées."
+        },
+        {
+          "id": "chasses-05",
+          "text": "Le paramètre Mourir augmente la durée des chasses est désactivé par défaut en Amateur, Intermédiaire et Professionnel : un meurtre termine alors la chasse. En Cauchemar et Démence (réglage Faible par défaut), chaque meurtre prolonge la chasse en cours de 15 s, 20 s ou 25 s selon la taille de la carte.",
+          "q": "En Cauchemar ou Démence (réglage Faible), de combien un meurtre prolonge-t-il la chasse sur petite carte ?",
+          "a": "15 secondes (20 s en carte moyenne, 25 s en grande carte)."
+        },
+        {
+          "id": "chasses-06",
+          "text": "Avec le paramètre Mourir augmente la durée des chasses réglé sur Élevé, chaque meurtre prolonge la chasse de 35 s, 40 s ou 45 s selon la taille de la carte (petite, moyenne, grande). Le réglage Moyen donne +25 s, +30 s ou +35 s.",
+          "q": "Avec le réglage Élevé, de combien un meurtre prolonge-t-il une chasse sur grande carte ?",
+          "a": "45 secondes."
+        },
+        {
+          "id": "chasses-07",
+          "text": "Si une chasse démarre alors que l'Obambo est dans son état agressif, sa durée est réduite de 20 % de la durée de chasse de base.",
+          "q": "Que devient la durée d'une chasse lancée par un Obambo dans son état agressif ?",
+          "a": "Elle est réduite de 20 % de la durée de base."
+        },
+        {
+          "id": "chasses-08",
+          "text": "Pendant une chasse, les entités clignotent, alternant visible et invisible plusieurs fois toutes les quelques secondes. L'Oni et le Deogen sont plus visibles que la normale, tandis que le Fantôme reste invisible plus longtemps.",
+          "q": "Quelle entité reste invisible plus longtemps entre deux clignotements de chasse ?",
+          "a": "Le Fantôme (l'Oni et le Deogen sont au contraire plus visibles)."
+        },
+        {
+          "id": "chasses-09",
+          "text": "En chasse, l'Obake change de modèle sur des clignotements prédéterminés : 12, 27, 39, 54, 62, 80, 105, 120 et 132. Sa transformation n'est donc pas garantie lors des chasses de moins d'environ 8 s.",
+          "q": "À quel clignotement l'Obake se transforme-t-il pour la première fois en chasse ?",
+          "a": "Au 12e clignotement."
+        },
+        {
+          "id": "chasses-10",
+          "text": "Un Obake à modèle masculin ne se transforme qu'en d'autres modèles masculins, et un modèle féminin qu'en modèles féminins. L'ordre des modèles suit un schéma fixe qui ne se réinitialise pas entre les chasses.",
+          "q": "Un Obake à modèle masculin peut-il prendre un modèle féminin en chasse ?",
+          "a": "Non, il ne prend que des modèles masculins."
+        },
+        {
+          "id": "chasses-11",
+          "text": "Bug connu du Mimic : son comportement en chasse est désynchronisé, et les clignotements altérés ou les transformations d'Obake qu'il imite ne sont visibles que par l'hôte.",
+          "q": "Qui peut voir les clignotements altérés imités par le Mimic pendant une chasse ?",
+          "a": "Seulement l'hôte (bug de désynchronisation)."
+        },
+        {
+          "id": "chasses-12",
+          "text": "Une entité peut lancer une chasse depuis n'importe quel endroit où elle se trouve, y compris hors de sa pièce préférée lors d'un déplacement. Une chasse qui démarre depuis une autre pièce ne prouve donc pas un changement de pièce.",
+          "q": "Une chasse qui part d'une autre pièce prouve-t-elle que l'entité a changé de pièce préférée ?",
+          "a": "Non, une entité peut chasser depuis n'importe où lors de ses déplacements."
+        },
+        {
+          "id": "chasses-13",
+          "text": "Face à un Aswang, le voir entrer dans une cachette ne suffit pas à finir la chasse : il doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête.",
+          "q": "Que doit faire un Aswang pour que sa chasse s'arrête après avoir vu un joueur se cacher ?",
+          "a": "Atteindre ou entrer dans la même cachette que ce joueur."
+        },
+        {
+          "id": "chasses-14",
+          "text": "La Lune de sang a 2 % de chances d'apparaître sur n'importe quelle carte et ne peut être ni choisie ni demandée à la patte de singe. Elle rend l'entité 15 % plus rapide en chasse, augmente le drain passif de santé mentale de 100 %, multiplie les événements et augmente la paie du contrat de 10 %.",
+          "q": "De combien la Lune de sang accélère-t-elle l'entité pendant les chasses ?",
+          "a": "De 15 %."
+        },
+        {
+          "id": "chasses-15",
+          "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à votre position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
+          "q": "Utiliser la radio globale en chasse révèle-t-il la position des autres joueurs ?",
+          "a": "Non, seulement la vôtre (c'est un appareil électronique tenu)."
+        }
+      ]
+    },
+    {
+      "id": "vitesses",
+      "title": "Vitesses et ligne de vue",
+      "icon": "speed",
+      "facts": [
+        {
+          "id": "vitesses-01",
+          "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue (LdV) continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65x sa vitesse de base.",
+          "q": "Combien de secondes de LdV continue faut-il à une entité standard pour atteindre sa vitesse maximale ?",
+          "a": "13 secondes, jusqu'à 1,65x sa vitesse de base."
+        },
+        {
+          "id": "vitesses-02",
+          "text": "Après avoir perdu la LdV, l'entité garde sa vitesse accrue jusqu'à la dernière position connue du joueur. Si elle ne retrouve pas la LdV, elle perd ensuite très lentement cette vitesse.",
+          "q": "Que fait une entité de sa vitesse accrue après avoir perdu la LdV ?",
+          "a": "Elle la garde jusqu'à la dernière position connue du joueur, puis la perd très lentement."
+        },
+        {
+          "id": "vitesses-03",
+          "text": "Selon le wiki, toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. Les Jumeaux ont un comportement de LdV particulier.",
+          "q": "Quelles entités le wiki cite-t-il comme n'ayant pas d'accélération standard en LdV ?",
+          "a": "Revenant, Hantu, Deogen et Thayé."
+        },
+        {
+          "id": "vitesses-04",
+          "text": "L'Aswang a une vitesse de base de 1,53 m/s. Il accélère lui aussi jusqu'à 1,65x en LdV, mais en 8,667 s de LdV continue au lieu de 13 s.",
+          "q": "En combien de temps de LdV un Aswang atteint-il sa vitesse maximale ?",
+          "a": "8,667 secondes (au lieu de 13)."
+        },
+        {
+          "id": "vitesses-05",
+          "text": "Le Revenant se déplace à 1,0 m/s jusqu'à détecter un joueur (vue, son ou électronique), puis passe immédiatement à 3,0 m/s. Une fois le joueur perdu et sa dernière position atteinte, il redescend progressivement à 1,0 m/s.",
+          "q": "Quelle est la vitesse d'un Revenant qui a détecté un joueur ?",
+          "a": "3,0 m/s (1,0 m/s sans détection)."
+        },
+        {
+          "id": "vitesses-06",
+          "text": "Le Deogen n'a pas d'accélération en LdV : il sent toujours sa cible et fonce à 3,0 m/s, puis ralentit à 0,4 m/s une fois proche du joueur ciblé.",
+          "q": "À quelle vitesse ralentit un Deogen arrivé près de sa cible ?",
+          "a": "0,4 m/s (3,0 m/s quand il est loin)."
+        },
+        {
+          "id": "vitesses-07",
+          "text": "Le Hantu n'a pas d'accélération en LdV : sa vitesse dépend de la température de sa pièce, de 1,4 m/s au-dessus de 15 °C à 2,7 m/s sous 0 °C (1,75 m/s entre 12 et 15 °C, 2,5 m/s entre 0 et 3 °C).",
+          "q": "Quelle est la vitesse d'un Hantu dans une pièce sous 0 °C ?",
+          "a": "2,7 m/s."
+        },
+        {
+          "id": "vitesses-08",
+          "text": "La vitesse du Moroï dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de LdV continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+          "q": "Quelle vitesse maximale un Moroï peut-il atteindre ?",
+          "a": "3,71 m/s, la plus rapide de toutes les entités."
+        },
+        {
+          "id": "vitesses-09",
+          "text": "Le Thayé n'accélère jamais en LdV. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroï sans LdV (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en LdV continue.",
+          "q": "À quelle vitesse se déplace un Thayé au plus jeune âge ?",
+          "a": "2,75 m/s, même avec une LdV."
+        },
+        {
+          "id": "vitesses-10",
+          "text": "Le Djinn chasse à 1,7 m/s avec une accélération en LdV standard. Si le disjoncteur est allumé, qu'il a une LdV sur un joueur et qu'il est à plus de 3 m de lui, il passe immédiatement à 2,5 m/s, puis reprend un comportement normal à moins de 3 m.",
+          "q": "Dans quelles conditions un Djinn passe-t-il à 2,5 m/s ?",
+          "a": "Disjoncteur allumé, LdV sur le joueur et plus de 3 m de distance."
+        },
+        {
+          "id": "vitesses-11",
+          "text": "Le Raiju se déplace à vitesse fixe de 2,5 m/s près d'un équipement électronique actif, posé ou tenu. Son plus gros indice : plusieurs paliers plats à 2,5 m/s au milieu d'une chasse sinon standard.",
+          "q": "À quelle vitesse un Raiju se déplace-t-il près d'un équipement électronique actif ?",
+          "a": "2,5 m/s, en vitesse fixe."
+        },
+        {
+          "id": "vitesses-12",
+          "text": "La Dayan se déplace à 1,7 m/s avec une accélération en LdV standard à plus de 10 m de tout joueur. À moins de 10 m, elle va à 2,25 m/s si un joueur marche et à 1,2 m/s s'il reste immobile.",
+          "q": "Quelle est la vitesse d'une Dayan à moins de 10 m d'un joueur immobile ?",
+          "a": "1,2 m/s (2,25 m/s si le joueur marche)."
+        },
+        {
+          "id": "vitesses-13",
+          "text": "Les Jumeaux chassent à des vitesses différentes : le jumeau principal est plus lent (1,5 m/s) et le jumeau errant plus rapide (1,9 m/s) qu'une entité standard. Une vitesse de base différente d'une chasse à l'autre peut donc les trahir.",
+          "q": "Quelles sont les vitesses de base des deux Jumeaux en chasse ?",
+          "a": "1,5 m/s (principal) et 1,9 m/s (errant)."
+        },
+        {
+          "id": "vitesses-14",
+          "text": "Le Deildegast commence à 3,0 m/s et perd 0,1 m/s par objet hors équipement utilisé ou ramassé depuis la dernière chasse, jusqu'à un minimum de 0,4 m/s (26 actions). Sa vitesse est verrouillée pendant la chasse, puis revient à 3,0 m/s après chaque chasse ou tentative de chasse.",
+          "q": "Combien d'actions faut-il pour ramener un Deildegast à sa vitesse minimale de 0,4 m/s ?",
+          "a": "26 actions (−0,1 m/s chacune depuis 3,0 m/s)."
+        },
+        {
+          "id": "vitesses-15",
+          "text": "Le Gallu chasse à 1,7 m/s dans son état normal, à 1,96 m/s dans son état enragé et à 1,36 m/s dans son état affaibli. Il passe en cycle de normal à enragé puis à affaibli.",
+          "q": "Quelle est la vitesse de chasse d'un Gallu enragé ?",
+          "a": "1,96 m/s."
+        }
+      ]
+    },
+    {
+      "id": "encens",
+      "title": "Encens, sel et flammes",
+      "icon": "smudge",
+      "facts": [
+        {
+          "id": "encens-01",
+          "text": "Une entité encensée pendant une chasse subit une période d'aveuglement standard de 5 s.",
+          "q": "Combien de temps dure l'aveuglement standard d'une entité encensée en chasse ?",
+          "a": "5 secondes."
+        },
+        {
+          "id": "encens-02",
+          "text": "Le Moroï a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base de 2,25 m/s. Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
+          "q": "Combien de temps un Moroï reste-t-il aveuglé par un encens de rang 1 ?",
+          "a": "7 secondes (contre 5 s en standard)."
+        },
+        {
+          "id": "encens-03",
+          "text": "L'aveuglement sous encens du Gallu dépend de son état : 4 s quand il est enragé, 6 s quand il est affaibli.",
+          "q": "Combien de temps dure l'aveuglement sous encens d'un Gallu enragé ?",
+          "a": "4 secondes (6 s quand il est affaibli)."
+        },
+        {
+          "id": "encens-04",
+          "text": "Après avoir été encensée, n'importe quelle entité peut mettre 180 s avant de chasser à nouveau, mais l'Esprit doit obligatoirement attendre tout ce délai.",
+          "q": "Combien de temps un Esprit doit-il attendre avant de rechasser après avoir été encensé ?",
+          "a": "180 secondes."
+        },
+        {
+          "id": "encens-05",
+          "text": "Le Gallu passe de l'état normal à enragé s'il marche dans le sel (après 2 s), est encensé ou utilise un crucifix. Il reste enragé jusqu'à la fin d'une chasse, devient affaibli, puis revient à normal via le sel (après 3 s), l'encens ou un crucifix.",
+          "q": "Qu'est-ce qui fait passer un Gallu de l'état normal à l'état enragé ?",
+          "a": "Marcher dans le sel, être encensé ou utiliser un crucifix."
+        },
+        {
+          "id": "encens-06",
+          "text": "Un Gallu enragé a une portée de crucifix réduite de 2 m et ne perturbe pas le sel. Affaibli, sa portée de crucifix augmente de 1 m et il perturbe le sel.",
+          "q": "Comment change la portée du crucifix contre un Gallu enragé ?",
+          "a": "Elle est réduite de 2 m (+1 m quand il est affaibli)."
+        },
+        {
+          "id": "encens-07",
+          "text": "N'importe quel rang de sel peut déclencher la capacité du Gallu. Le ralentissement causé par le sel de rang 3 est un mécanisme totalement différent, sans lien avec cette capacité.",
+          "q": "Quel rang de sel faut-il pour déclencher la capacité du Gallu ?",
+          "a": "N'importe quel rang."
+        },
+        {
+          "id": "encens-08",
+          "text": "Après avoir marché dans le sel, une entité laisse entre 0 et 4 bruits de pas, avec des empreintes UV si elle a la preuve UV. Si elle s'arrête, les pas cessent et ne reprennent pas quand elle repart.",
+          "q": "Combien de bruits de pas une entité laisse-t-elle après avoir marché dans le sel ?",
+          "a": "Entre 0 et 4."
+        },
+        {
+          "id": "encens-09",
+          "text": "À son premier allumage, une lumière à feu est protégée 30 s avant qu'une entité puisse tenter de l'éteindre. Chaque rallumage applique ensuite un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais.",
+          "q": "Combien de temps une lumière à feu fraîchement allumée est-elle protégée la première fois ?",
+          "a": "30 secondes (puis 20 à 80 s à chaque rallumage)."
+        },
+        {
+          "id": "encens-10",
+          "text": "Une fois le délai écoulé, une entité à moins de 5 m a 66,67 % de chances (2 sur 3) de souffler une lumière à feu. Le rang II est soufflé à environ 96,30 % car ses trois bougies tirent chacune leur chance, mais il compte comme une seule flamme pour l'Onryo.",
+          "q": "À quelle distance une entité peut-elle souffler une lumière à feu, et avec quelle probabilité ?",
+          "a": "À moins de 5 m, avec 66,67 % de chances (2 sur 3)."
+        },
+        {
+          "id": "encens-11",
+          "text": "Les entités peuvent souffler les lumières à feu à tout moment, même pendant une chasse (cela compte pour le compteur de l'Onryo), mais elles ne peuvent jamais les rallumer.",
+          "q": "Une entité peut-elle rallumer une lumière à feu ?",
+          "a": "Non, elle peut seulement l'éteindre."
+        },
+        {
+          "id": "encens-12",
+          "text": "L'Onryo n'évite pas les flammes : s'il tente de chasser à portée d'une lumière à feu, il la souffle au lieu d'utiliser un crucifix.",
+          "q": "Que fait un Onryo qui tente de chasser à portée d'une lumière à feu ?",
+          "a": "Il la souffle à la place d'utiliser un crucifix."
+        },
+        {
+          "id": "encens-13",
+          "text": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée. S'il est encensé après que le compteur a atteint 3 mais avant d'utiliser sa capacité, celle-ci est retardée et non réinitialisée, ce qui permet de la repousser de plusieurs minutes.",
+          "q": "Que se passe-t-il si on encense un Onryo juste après sa 3e flamme soufflée ?",
+          "a": "Sa chasse liée à la capacité est retardée, pas annulée."
+        },
+        {
+          "id": "encens-14",
+          "text": "La forte pluie empêche d'allumer les lumières à feu et allume-feux de rang 1 et 2 sous la pluie et les éteint aussitôt. La pluie légère et la Lune de sang n'éteignent pas les lumières à feu.",
+          "q": "Quelle météo empêche d'utiliser les lumières à feu de rang 1 et 2 sous la pluie ?",
+          "a": "La forte pluie."
+        }
+      ]
+    },
+    {
+      "id": "equipement",
+      "title": "Équipement de preuve",
+      "icon": "equipment",
+      "facts": [
+        {
+          "id": "equipement-01",
+          "text": "Le lecteur EMF de rang 1 a une aiguille qui pointe vers le niveau d'EMF. En général, l'aiguille doit dépasser le chiffre pour que ce niveau soit compté.",
+          "q": "Sur un EMF de rang 1, quand un niveau est-il réellement atteint ?",
+          "a": "Quand l'aiguille dépasse le chiffre."
+        },
+        {
+          "id": "equipement-02",
+          "text": "Le lecteur EMF de rang 2 possède 5 LED de couleurs différentes : le nombre de LED allumées indique le niveau d'EMF.",
+          "q": "Comment lit-on le niveau sur un EMF de rang 2 ?",
+          "a": "Au nombre de LED allumées (sur 5)."
+        },
+        {
+          "id": "equipement-03",
+          "text": "Le lecteur EMF de rang 3 a un écran LCD qui affiche le niveau d'EMF, la direction et la distance de la source. Le niveau est indiqué par le nombre de petites barres en haut de chaque section.",
+          "q": "Quelles informations affiche l'écran d'un EMF de rang 3 ?",
+          "a": "Le niveau d'EMF, la direction et la distance de la source."
+        },
+        {
+          "id": "equipement-04",
+          "text": "Sur la Spirit Box de rang 1, une LED blanche ou bleue près de l'icône micro en bas à droite indique que le jeu entend votre micro. La LED à droite de l'icône de fantôme s'allume en rouge si la question est reconnue sans réponse, en blanc si l'entité répond.",
+          "q": "Sur une Spirit Box de rang 1, que signifie la LED rouge à côté de l'icône de fantôme ?",
+          "a": "Question reconnue, mais aucune réponse (le blanc indique une réponse)."
+        },
+        {
+          "id": "equipement-05",
+          "text": "Sur la Spirit Box de rang 2, une icône micro en haut à gauche indique que votre micro est entendu. En bas à droite, l'icône X signale une question reconnue sans réponse, et l'icône de fantôme une réponse.",
+          "q": "Sur une Spirit Box de rang 2, quelle icône signale une question reconnue sans réponse ?",
+          "a": "L'icône X en bas à droite."
+        },
+        {
+          "id": "equipement-06",
+          "text": "Sur la Spirit Box de rang 3, la LED sous Mic Input s'allume en blanc quand le micro est entendu. La rangée de LED sous Response s'allume en rouge sans réponse et en blanc quand l'entité répond.",
+          "q": "Sur une Spirit Box de rang 3, de quelle couleur s'allument les LED Response quand l'entité répond ?",
+          "a": "En blanc (rouge s'il n'y a pas de réponse)."
+        },
+        {
+          "id": "equipement-07",
+          "text": "Les questions de localisation à la Spirit Box (« Où êtes-vous ? », « Êtes-vous proche ? », « Donnez-nous un signe. », « Êtes-vous ici ? »…) renseignent sur la distance. Des mots comme close ou behind indiquent moins de 2 m, away ou far entre 2 et 5 m dans la même pièce.",
+          "q": "À la Spirit Box, à quelle distance correspond une réponse contenant close ou behind ?",
+          "a": "Moins de 2 m (away ou far : entre 2 et 5 m, même pièce)."
+        },
+        {
+          "id": "equipement-08",
+          "text": "Les questions d'agressivité à la Spirit Box (« Êtes-vous amical ? », « Que voulez-vous ? », « Pourquoi êtes-vous ici ? », « Voulez-vous nous blesser ? », « Devrions-nous partir ? ») renvoient une réponse agressive choisie au hasard.",
+          "q": "Que renvoie une question d'agressivité comme « Êtes-vous amical ? » à la Spirit Box ?",
+          "a": "Une réponse agressive choisie au hasard."
+        },
+        {
+          "id": "equipement-09",
+          "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? ») renvoient un âge qui n'est pas corrélé au modèle de l'entité.",
+          "q": "L'âge donné par la Spirit Box correspond-il au modèle de l'entité ?",
+          "a": "Non, il n'est pas corrélé au modèle."
+        },
+        {
+          "id": "equipement-10",
+          "text": "Les orbes fantomatiques se voient en vision nocturne, à travers l'écran de la caméra vidéo ou via la vidéosurveillance du camion. Le bouton utiliser bascule entre vision normale et nocturne.",
+          "q": "Comment repère-t-on des orbes fantomatiques ?",
+          "a": "En vision nocturne, via l'écran de la caméra vidéo ou la vidéosurveillance du camion."
+        },
+        {
+          "id": "equipement-11",
+          "text": "Une caméra vidéo posée sur une surface ou sur un trépied avec le bouton placer devient une caméra de vidéosurveillance, visible et contrôlable depuis le camion.",
+          "q": "Comment transformer une caméra vidéo en caméra de vidéosurveillance ?",
+          "a": "La poser sur une surface ou un trépied avec le bouton placer."
+        },
+        {
+          "id": "equipement-12",
+          "text": "Le moniteur d'activité affiche l'activité EMF totale de la carte. Il peut donc monter à 10 avec quelques interactions, sans qu'il y ait forcément d'événement ou de chasse.",
+          "q": "Un niveau 10 sur le moniteur d'activité signifie-t-il forcément un événement ou une chasse ?",
+          "a": "Non, quelques interactions suffisent : il affiche l'activité EMF totale de la carte."
+        },
+        {
+          "id": "equipement-13",
+          "text": "Avec l'appareil photo, il suffit de viser l'élément paranormal et d'appuyer sur utiliser ; les rangs 2 et 3 ont un écran pour viser plus facilement. Tant que le journal n'est pas plein, la photo apparaît dans sa section Médias.",
+          "q": "Quels rangs d'appareil photo disposent d'un écran de visée ?",
+          "a": "Les rangs 2 et 3."
+        }
+      ]
+    },
+    {
+      "id": "preuves",
+      "title": "Preuves et indices",
+      "icon": "evidence",
+      "facts": [
+        {
+          "id": "preuves-01",
+          "text": "Depuis la v0.9.0.0, on voit sa respiration à toute température inférieure à 5 °C. Voir sa respiration ne prouve donc plus les températures glaciales.",
+          "q": "En dessous de quelle température voit-on sa respiration ?",
+          "a": "Sous 5 °C, quelle que soit l'entité."
+        },
+        {
+          "id": "preuves-02",
+          "text": "Depuis la v0.9.0.0, une entité ne peut plus lancer le livre après avoir écrit dedans. Seule une entité qui n'a pas l'écriture comme preuve, ou qui la cache, peut lancer le livre.",
+          "q": "Une entité qui a écrit dans le livre peut-elle ensuite le lancer ?",
+          "a": "Non, depuis la v0.9.0.0."
+        },
+        {
+          "id": "preuves-03",
+          "text": "Dans une partie à 0 preuve, aucune preuve n'apparaît, même les preuves garanties. La seule exception est les orbes du Mimic, car ce sont une capacité et non une vraie preuve.",
+          "q": "Quelle preuve peut quand même apparaître dans une partie à 0 preuve ?",
+          "a": "Les orbes du Mimic, car c'est une capacité."
+        },
+        {
+          "id": "preuves-04",
+          "text": "Le Mimic imite le comportement et les capacités des autres entités, mais ne montre que ses propres preuves : UV, Spirit Box, Températures glaciales et faux orbes.",
+          "q": "Quelles preuves le Mimic peut-il montrer ?",
+          "a": "UV, Spirit Box, Températures glaciales et faux orbes."
+        },
+        {
+          "id": "preuves-05",
+          "text": "Les orbes du Mimic se comportent exactement comme ceux des autres entités : ils restent dans la pièce préférée et n'ont aucune différence visuelle.",
+          "q": "Les orbes du Mimic suivent-ils l'entité hors de sa pièce préférée ?",
+          "a": "Non, ils restent dans la pièce préférée comme des orbes normaux."
+        },
+        {
+          "id": "preuves-06",
+          "text": "La température baisse dans toute pièce où l'entité a passé du temps (déplacements fréquents, traque de la Banshee). La seule façon fiable de confirmer un changement de pièce est de voir des orbes dans une autre pièce ou que le miroir montre une nouvelle pièce.",
+          "q": "Comment confirmer de façon fiable qu'une entité a changé de pièce préférée ?",
+          "a": "Orbes dans une autre pièce, ou miroir hanté montrant une nouvelle pièce."
+        },
+        {
+          "id": "preuves-07",
+          "text": "L'Obake a 25 % de chances de ne pas laisser de preuve UV et fait disparaître les UV plus vite. Il peut laisser des empreintes uniques : main à 6 doigts (portes, fenêtres, glacières), double empreinte (interrupteurs), 5 empreintes de doigts (claviers, portes de cellule).",
+          "q": "Quelle empreinte unique un Obake peut-il laisser sur un interrupteur ?",
+          "a": "Une double empreinte de doigt."
+        },
+        {
+          "id": "preuves-08",
+          "text": "L'orientation des empreintes de pas ne veut rien dire : n'importe quelle entité peut laisser plusieurs empreintes gauches ou droites d'affilée.",
+          "q": "Deux empreintes gauches d'affilée signifient-elles que l'entité a manqué un pas ?",
+          "a": "Non, n'importe quelle entité peut le faire."
+        },
+        {
+          "id": "preuves-09",
+          "text": "Le Hantu ne refroidit pas une pièce plus vite et n'atteint pas une température plus basse que les autres entités. Seule sa vitesse en chasse dépend du froid.",
+          "q": "Le Hantu refroidit-il les pièces plus vite que les autres entités ?",
+          "a": "Non, seule sa vitesse en chasse dépend du froid."
+        },
+        {
+          "id": "preuves-10",
+          "text": "Le Fantôme ne disparaît d'une photo que si celle-ci est étiquetée comme photo d'entité (Ghost) dans le journal. Il peut donc apparaître sur d'autres photos.",
+          "q": "À quelle condition le Fantôme disparaît-il d'une photo ?",
+          "a": "Quand la photo est étiquetée comme photo d'entité (Ghost) dans le journal."
+        },
+        {
+          "id": "preuves-11",
+          "text": "Par temps de neige, les flocons peuvent être confondus avec des orbes. La température ambiante de 5 °C permet aussi de voir sa respiration dans les pièces refroidies, voire partout si le disjoncteur est coupé, ce qui masque la pièce de l'entité.",
+          "q": "Avec quelle preuve risque-t-on de confondre la neige qui tombe ?",
+          "a": "Avec les orbes fantomatiques."
+        },
+        {
+          "id": "preuves-12",
+          "text": "Un souffle (hiss) entendu lors d'un événement ne prouve pas une bulle d'air ou un brouillard fantomatique : l'apparition en marche peut produire le même son. Il faut avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni.",
+          "q": "Un souffle entendu pendant un événement suffit-il pour écarter l'Oni ?",
+          "a": "Non, il faut avoir vu la bulle d'air ou le brouillard."
+        },
+        {
+          "id": "preuves-13",
+          "text": "N'importe quel joueur peut entendre le cri de la Banshee à travers le microphone parabolique, pas seulement sa cible.",
+          "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
+          "a": "N'importe quel joueur."
+        },
+        {
+          "id": "preuves-14",
+          "text": "L'Ombre est la seule entité pouvant apparaître avec un modèle d'ombre pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
+          "q": "Quelle entité peut apparaître sous forme d'ombre pendant l'événement d'un objet maudit ?",
+          "a": "L'Ombre."
+        },
+        {
+          "id": "preuves-15",
+          "text": "Trouver l'os dans la pièce préférée relève du hasard et ne désigne pas un Goryo : il peut s'y trouver avec n'importe quelle entité.",
+          "q": "L'os dans la pièce préférée indique-t-il un Goryo ?",
+          "a": "Non, c'est le hasard."
+        }
+      ]
+    },
+    {
+      "id": "portees",
+      "title": "Portées et détection",
+      "icon": "hunt",
+      "facts": [
+        {
+          "id": "portees-01",
+          "text": "La portée d'interaction d'une entité est une boîte centrée sur elle, qui pivote avec ses mouvements. Elle crée ainsi un rayon d'interaction effectif.",
+          "q": "Quelle forme a la portée d'interaction d'une entité ?",
+          "a": "Une boîte centrée sur l'entité qui pivote avec elle."
+        },
+        {
+          "id": "portees-02",
+          "text": "Sur les cartes petites et moyennes, la boîte d'interaction standard mesure 1,5 m du centre au bord, soit un rayon effectif de 2,12 m.",
+          "q": "Quel est le rayon d'interaction effectif d'une entité standard sur une carte petite ou moyenne ?",
+          "a": "2,12 m (1,5 m du centre au bord)."
+        },
+        {
+          "id": "portees-03",
+          "text": "Sur les cartes petites et moyennes, la boîte d'interaction des Jumeaux mesure 6 m du centre au bord, soit un rayon effectif de 8,48 m.",
+          "q": "Quel est le rayon d'interaction effectif des Jumeaux sur une carte petite ou moyenne ?",
+          "a": "8,48 m."
+        },
+        {
+          "id": "portees-04",
+          "text": "Les portées d'interaction sont deux fois plus grandes sur les grandes cartes : 3 m du centre au bord (rayon effectif 4,24 m) pour une entité standard et 12 m (16,97 m) pour les Jumeaux.",
+          "q": "Quel est le rayon d'interaction effectif d'une entité standard sur une grande carte ?",
+          "a": "4,24 m (16,97 m pour les Jumeaux)."
+        },
+        {
+          "id": "portees-05",
+          "text": "Les Jumeaux sont une seule entité dotée de deux portées d'interaction, une grande et une petite.",
+          "q": "Les Jumeaux sont-ils deux entités distinctes ?",
+          "a": "Non, une seule entité avec deux portées d'interaction."
+        },
+        {
+          "id": "portees-06",
+          "text": "Le Kormos est presque aveugle, mais il détecte la voix et l'électronique à portée normale, ainsi que les déplacements : à 10 m si le joueur avance accroupi, 15 m s'il marche et 30 m s'il sprinte.",
+          "q": "À quelle distance un Kormos détecte-t-il un joueur qui sprinte ?",
+          "a": "30 m (15 m en marchant, 10 m accroupi)."
+        },
+        {
+          "id": "portees-07",
+          "text": "Si vous restez complètement immobile sans faire de bruit au micro, le Kormos ne peut pas vous détecter, même si vous pouvez toujours mourir s'il passe par hasard sur vous.",
+          "q": "Comment échapper à la détection d'un Kormos ?",
+          "a": "Rester totalement immobile et silencieux au micro."
+        },
+        {
+          "id": "portees-08",
+          "text": "Le Kormos ne voit les joueurs, et ne gagne de vitesse en LdV, que s'ils bougent à moins de 5 m. Il chasse à 1,7 m/s, ou à 2,21 m/s quand il détecte un joueur à plus de 5 m ; une vitesse LdV maximale de 2,81 m/s peut ainsi passer à 3,65 m/s.",
+          "q": "À quelle distance le Kormos doit-il être pour voir un joueur en mouvement ?",
+          "a": "À moins de 5 m."
+        },
+        {
+          "id": "portees-09",
+          "text": "Le Myling peut émettre des sons vocaux en chasse comme toute entité, mais ses sons ne s'entendent que jusqu'à 12 m au lieu de 20 m, ce qui le rend un peu plus discret.",
+          "q": "Jusqu'à quelle distance entend-on les sons du Myling ?",
+          "a": "12 m, au lieu de 20 m pour une entité normale."
+        },
+        {
+          "id": "portees-10",
+          "text": "Le Thayé vieillit quand des joueurs restent à moins de 3 m. Bug connu : ce rayon n'est pas bloqué par le plancher, un joueur à l'étage du dessous peut donc le faire vieillir.",
+          "q": "Dans quel rayon un joueur fait-il vieillir le Thayé ?",
+          "a": "3 m, même à travers le plancher (bug)."
+        },
+        {
+          "id": "portees-11",
+          "text": "L'Ombre n'effectue aucune action donnant une lecture EMF et ne lance pas de chasse tant qu'elle est dans la même pièce qu'un joueur, pièce préférée ou non. Elle peut toutefois sortir et chasser depuis une pièce adjacente, ou atteindre des objets de la pièce depuis l'extérieur.",
+          "q": "Une Ombre peut-elle chasser quand elle est dans la même pièce qu'un joueur ?",
+          "a": "Non, mais elle peut chasser depuis une pièce adjacente."
+        }
+      ]
+    },
+    {
+      "id": "maudits",
+      "title": "Objets maudits",
+      "icon": "cursed",
+      "facts": [
+        {
+          "id": "maudits-01",
+          "text": "Le miroir hanté, une fois activé, montre la pièce préférée de l'entité. Pendant son utilisation, une source de lumière apparaît dans cette pièce et les autres joueurs voient aussi la pièce dans le miroir.",
+          "q": "Quelle pièce montre le miroir hanté ?",
+          "a": "La pièce préférée de l'entité."
+        },
+        {
+          "id": "maudits-02",
+          "text": "Le miroir hanté se brise et déclenche une chasse maudite si son utilisateur tombe à court de santé mentale ou essaie de l'utiliser sous 20 %.",
+          "q": "Quand le miroir hanté se brise-t-il ?",
+          "a": "Quand l'utilisateur tombe à court de santé mentale ou l'utilise sous 20 %."
+        },
+        {
+          "id": "maudits-03",
+          "text": "À moins de 20 m de l'entité, la boîte à musique la fait chanter, ce qui révèle sa position sans la rendre visible. À moins de 5 m, l'entité démarre un événement où elle devient visible et marche vers la boîte.",
+          "q": "À quelle distance de l'entité la boîte à musique la fait-elle chanter ?",
+          "a": "Moins de 20 m (moins de 5 m : elle apparaît et marche vers la boîte)."
+        },
+        {
+          "id": "maudits-04",
+          "text": "La boîte à musique déclenche une chasse maudite si elle est lancée au lieu d'être posée, si le joueur atteint 0 % de santé mentale, si l'événement dure plus de 5 s, ou si l'entité atteint le joueur ou la boîte. Elle peut se refermer sans chasse si personne n'est dans la zone d'enquête ou si l'entité n'est pas assez proche avant la fin de la musique.",
+          "q": "Combien de temps l'événement de la boîte à musique peut-il durer avant une chasse maudite ?",
+          "a": "Pas plus de 5 secondes."
+        },
+        {
+          "id": "maudits-05",
+          "text": "À la planche Ouija, « Où êtes-vous ? » donne la pièce actuelle de l'entité, pas sa pièce préférée, pour 50 % de santé mentale. Seul le miroir montre la pièce préférée.",
+          "q": "Que donne la question « Où êtes-vous ? » à la planche Ouija ?",
+          "a": "La pièce actuelle de l'entité (pas la préférée), pour 50 % de santé mentale."
+        },
+        {
+          "id": "maudits-06",
+          "text": "À la planche Ouija, « Cache-cache ? » lance un compte à rebours depuis 5 puis une chasse. Cette question ne coûte pas de santé mentale mais brise la planche.",
+          "q": "Que se passe-t-il après « Cache-cache ? » à la planche Ouija ?",
+          "a": "Compte à rebours depuis 5, puis chasse ; la planche se brise."
+        },
+        {
+          "id": "maudits-07",
+          "text": "Si un joueur s'éloigne de la planche Ouija active, ou pose une question à 0 % de santé mentale, la planche devient orange, se brise et déclenche une chasse maudite. Il faut dire au revoir pour terminer une session.",
+          "q": "Que faut-il faire pour terminer proprement une session de planche Ouija ?",
+          "a": "Dire au revoir."
+        },
+        {
+          "id": "maudits-08",
+          "text": "À la planche Ouija, « Quel âge avez-vous ? » renvoie l'âge actuel de l'entité pour 5 % de santé mentale. Si le nombre change, l'entité est un Thayé.",
+          "q": "Quelle entité trahit un âge qui change à la planche Ouija ?",
+          "a": "Le Thayé."
+        },
+        {
+          "id": "maudits-09",
+          "text": "Au cercle d'invocation, allumer les 5 bougies rouges téléporte l'entité dans le cercle pour un événement, puis elle attend 5 s avant une chasse maudite. Si l'entité chasse déjà, elle est téléportée au cercle et continue de chasser depuis là.",
+          "q": "Combien de bougies faut-il allumer au cercle d'invocation pour invoquer l'entité ?",
+          "a": "5 bougies rouges."
+        },
+        {
+          "id": "maudits-10",
+          "text": "Si la dernière bougie du cercle d'invocation est allumée avec moins de 16 % de santé mentale, l'entité saute l'événement et chasse immédiatement. Cette chasse n'est pas maudite, mais seul un crucifix de rang 3 inutilisé peut l'empêcher.",
+          "q": "Qu'est-ce qui peut empêcher la chasse immédiate du cercle d'invocation sous 16 % de santé mentale ?",
+          "a": "Seulement un crucifix de rang 3 inutilisé."
+        },
+        {
+          "id": "maudits-11",
+          "text": "Sur la patte de singe, le nombre de doigts tendus indique les vœux restants. Chaque vœu n'est utilisable qu'une fois par contrat ; répéter un vœu fait juste remuer les doigts.",
+          "q": "Peut-on faire deux fois le même vœu à la patte de singe dans un contrat ?",
+          "a": "Non, les doigts remuent et le vœu n'est pas exaucé."
+        },
+        {
+          "id": "maudits-12",
+          "text": "Le vœu « Je souhaite partir » déverrouille toutes les portes de sortie, même pendant une chasse. En contrepartie, le joueur est ralenti et sa vision est obscurcie pendant 5 s.",
+          "q": "Le vœu « Je souhaite partir » fonctionne-t-il pendant une chasse ?",
+          "a": "Oui, il déverrouille toutes les sorties (avec 5 s de lenteur et de vision obscurcie)."
+        },
+        {
+          "id": "maudits-13",
+          "text": "« Je souhaite que le fantôme soit emprisonné » bloque l'entité dans sa pièce 1 min, sans chasse, déplacement ni capacité. Ensuite, les portes de la pièce du joueur se verrouillent et une chasse démarre, avec 25 % de chances qu'elles se déverrouillent après la période de grâce.",
+          "q": "Combien de temps le vœu « emprisonné » bloque-t-il l'entité ?",
+          "a": "1 minute, avant une chasse avec les portes du joueur verrouillées."
+        },
+        {
+          "id": "maudits-14",
+          "text": "« Je souhaite avoir de l'information » retire 1 preuve incorrecte du journal et barre les entités associées. En contrepartie, une chasse démarre près du joueur, dont la vision et l'ouïe restent réduites jusqu'à sa mort ou la fin de la partie.",
+          "q": "Quel est l'avantage du vœu « Je souhaite avoir de l'information » ?",
+          "a": "Il retire 1 preuve incorrecte du journal."
+        },
+        {
+          "id": "maudits-15",
+          "text": "Un paquet de tarot contient 10 cartes aléatoires. La Mort (Death, 10 %) déclenche une chasse maudite, Le Pendu (The Hanged Man, 1 %) tue le joueur, L'Ermite (The Hermit, 10 %) enferme l'entité 90 s dans sa pièce préférée sans effet sur les chasses, et Le Fou (The Fool, 17 %) n'a aucun effet et sort à 100 % pendant les chasses.",
+          "q": "Quelle carte de tarot sort à coup sûr si on tire pendant une chasse ?",
+          "a": "Le Fou (The Fool), qui n'a aucun effet."
+        }
+      ]
+    },
+    {
+      "id": "sante",
+      "title": "Santé mentale",
+      "icon": "sanity",
+      "facts": [
+        {
+          "id": "sante-01",
+          "text": "L'entité chasse en fonction de la santé mentale moyenne de toute l'équipe, que les joueurs soient dans la maison ou dehors. La Banshee est la seule exception : elle chasse selon la santé mentale de sa cible.",
+          "q": "Sur quelle santé mentale se base la Banshee pour chasser ?",
+          "a": "Celle de sa cible (les autres utilisent la moyenne de l'équipe)."
+        },
+        {
+          "id": "sante-02",
+          "text": "La cible de la Banshee est tirée au hasard au début du contrat et reste la même jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La suivante est le premier joueur vivant dans l'ordre du lobby (à partir de l'hôte) ; en solo, c'est toujours l'hôte.",
+          "q": "Quand la cible de la Banshee change-t-elle ?",
+          "a": "Quand un joueur meurt ou quand la cible quitte la partie."
+        },
+        {
+          "id": "sante-03",
+          "text": "Bug de la Banshee : si la cible meurt en utilisant « Je souhaite être en vie » à la patte de singe, elle reste la cible une fois morte. Si sa santé mentale dépassait 50 %, la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas.",
+          "q": "Que se passe-t-il si la cible de la Banshee meurt via « Je souhaite être en vie » avec plus de 50 % de santé ?",
+          "a": "Elle reste la cible et la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas."
+        },
+        {
+          "id": "sante-04",
+          "text": "Regarder dans le miroir hanté draine 7,5 % de santé mentale par seconde, avec un minimum de 20 % par utilisation.",
+          "q": "Combien de santé mentale coûte le miroir hanté ?",
+          "a": "7,5 % par seconde, minimum 20 %."
+        },
+        {
+          "id": "sante-05",
+          "text": "À moins de 3 m de la boîte à musique, on perd 2,6 % de santé mentale par seconde pendant la musique, soit 77 % si elle joue entièrement.",
+          "q": "Combien de santé mentale fait perdre la boîte à musique jouée en entier à moins de 3 m ?",
+          "a": "77 % (2,6 % par seconde)."
+        },
+        {
+          "id": "sante-06",
+          "text": "Chaque bougie du cercle d'invocation draine 16 % de santé mentale à chaque joueur proche, soit 80 % pour les 5 bougies. Tenter d'allumer une bougie autre que la dernière sans assez de santé mentale l'éteint aussitôt.",
+          "q": "Combien de santé mentale coûte chaque bougie du cercle d'invocation ?",
+          "a": "16 % par bougie, 80 % au total."
+        },
+        {
+          "id": "sante-07",
+          "text": "Chaque épingle de la poupée vaudou force une interaction et draine 5 % de santé mentale, même sans interaction si rien n'est à portée. L'épingle du cœur draine 10 % et déclenche une chasse maudite ; à 0 %, toutes les épingles restantes s'enfoncent d'un coup et lancent une chasse maudite.",
+          "q": "Combien coûte l'épingle du cœur de la poupée vaudou, et que déclenche-t-elle ?",
+          "a": "10 % de santé mentale et une chasse maudite."
+        },
+        {
+          "id": "sante-08",
+          "text": "Coûts à la planche Ouija : « Où êtes-vous ? » 50 % ; « Êtes-vous ici ? / Êtes-vous proche ? », « Où est l'os ? » et « Répondez-vous à tout le monde ? » 20 % ; « Cache-cache ? » 0 % (brise la planche) ; la plupart des autres questions 5 %.",
+          "q": "Combien de santé mentale coûte « Où est l'os ? » à la planche Ouija ?",
+          "a": "20 %."
+        },
+        {
+          "id": "sante-09",
+          "text": "À la planche Ouija, « Quelle est ma santé mentale ? » répond Healthy (plus de 80 %), Good (60–80 %), Average (40–60 %), Bad (20–40 %) ou Awful (moins de 20 %), pour 5 %.",
+          "q": "Quelle réponse donne la planche Ouija à « Quelle est ma santé mentale ? » sous 20 % ?",
+          "a": "Awful."
+        },
+        {
+          "id": "sante-10",
+          "text": "À la planche Ouija, « Suis-je fou ? » répond No (plus de 90 %), Maybe (20–90 %) ou Yes (moins de 20 %). « À quel point suis-je sain ? » (How insane am I?) répond Not Very (plus de 50 %), Very (25–50 %) ou Insane (moins de 25 %).",
+          "q": "Sous quel seuil la planche Ouija répond-elle Yes à « Suis-je fou ? » ?",
+          "a": "Sous 20 % de santé mentale."
+        },
+        {
+          "id": "sante-11",
+          "text": "Le vœu « Je souhaite être sain d'esprit » ramène la santé mentale de tous à la moyenne de 50 %. En contrepartie, la pièce préférée devient une pièce aléatoire et le drain de santé mentale augmente de 50 %.",
+          "q": "Quel est l'inconvénient du vœu « Je souhaite être sain d'esprit » ?",
+          "a": "Pièce préférée aléatoire et drain de santé mentale augmenté de 50 %."
+        },
+        {
+          "id": "sante-12",
+          "text": "Le vœu « Je souhaite avoir [météo] » change la météo pour celle demandée, au prix de 25 % de santé mentale.",
+          "q": "Combien de santé mentale coûte un vœu de météo à la patte de singe ?",
+          "a": "25 %."
+        },
+        {
+          "id": "sante-13",
+          "text": "Au tarot, Le Soleil (The Sun, 5 %) remet la santé mentale à 100 %, La Lune (The Moon, 5 %) la met à 0 %, et La Roue de la Fortune (20 %) donne +25 % si elle brûle en vert ou −25 % si elle brûle en rouge.",
+          "q": "Quel est l'effet de la carte La Lune (The Moon) ?",
+          "a": "Elle met instantanément la santé mentale du joueur à 0 %."
+        },
+        {
+          "id": "sante-14",
+          "text": "La Lune de sang augmente le paramètre de drain passif de santé mentale de 100 %.",
+          "q": "De combien la Lune de sang augmente-t-elle le drain passif de santé mentale ?",
+          "a": "De 100 %."
+        }
+      ]
+    }
+  ],
+  "trueFalse": [
+    {
+      "id": "tf-01",
+      "claim": "Face à un Aswang, la chasse se termine dès qu'il vous voit entrer dans une cachette.",
+      "answer": false,
+      "explain": "L'Aswang doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête."
+    },
+    {
+      "id": "tf-02",
+      "claim": "N'importe quel joueur peut entendre le cri de la Banshee au microphone parabolique, pas seulement sa cible.",
+      "answer": true,
+      "explain": "Le cri est audible par tous les joueurs au microphone parabolique."
+    },
+    {
+      "id": "tf-03",
+      "claim": "L'entité ne chasse qu'en fonction de la santé mentale des joueurs présents dans la maison.",
+      "answer": false,
+      "explain": "Elle se base sur la santé mentale moyenne de toute l'équipe, où que soient les joueurs. Seule la Banshee se base sur sa cible."
+    },
+    {
+      "id": "tf-04",
+      "claim": "Si l'entité chasse depuis une autre pièce ou qu'une autre pièce devient froide, c'est qu'elle a changé de pièce préférée.",
+      "answer": false,
+      "explain": "Une entité peut chasser depuis n'importe où lors de ses déplacements et refroidit chaque pièce où elle passe du temps. Seuls des orbes dans une autre pièce ou le miroir le confirment."
+    },
+    {
+      "id": "tf-05",
+      "claim": "Un Deildegast peut lancer lui-même des objets pour réduire sa vitesse.",
+      "answer": false,
+      "explain": "Seuls les objets utilisés ou ramassés par les joueurs comptent ; ceux lancés par l'entité ne changent pas sa vitesse."
+    },
+    {
+      "id": "tf-06",
+      "claim": "Ramasser des objets hors équipement n'importe où sur la carte, même dans le camion, ralentit le Deildegast.",
+      "answer": true,
+      "explain": "Pas besoin de viser l'entité ni d'être dans sa pièce : tout objet hors équipement utilisé n'importe où compte."
+    },
+    {
+      "id": "tf-07",
+      "claim": "Lancer des objets pendant une chasse ralentit le Deildegast.",
+      "answer": false,
+      "explain": "Sa vitesse est verrouillée dès le début de la chasse et ne change plus avant la fin."
+    },
+    {
+      "id": "tf-08",
+      "claim": "Seul le sel de rang 3 peut déclencher la capacité du Gallu.",
+      "answer": false,
+      "explain": "N'importe quel rang de sel fonctionne. Le ralentissement du sel de rang 3 est un mécanisme différent."
+    },
+    {
+      "id": "tf-09",
+      "claim": "Si l'os est dans la pièce préférée, l'entité est un Goryo.",
+      "answer": false,
+      "explain": "C'est le hasard : l'os peut se trouver dans la pièce préférée de n'importe quelle entité."
+    },
+    {
+      "id": "tf-10",
+      "claim": "Le Hantu refroidit les pièces plus vite et descend plus bas en température que les autres entités.",
+      "answer": false,
+      "explain": "Le Hantu va plus vite dans les pièces froides pendant les chasses, mais ne refroidit ni plus vite ni plus bas."
+    },
+    {
+      "id": "tf-11",
+      "claim": "Le Cauchemar quitte les pièces éclairées pour se rendre dans des pièces sombres.",
+      "answer": false,
+      "explain": "Il se déplace simplement plus souvent quand sa pièce est éclairée, sans préférence pour finir dans une pièce sombre."
+    },
+    {
+      "id": "tf-12",
+      "claim": "Les sons du Myling cessent d'être audibles à 12 m au lieu de 20 m pour une entité normale.",
+      "answer": true,
+      "explain": "C'est ce qui le rend un peu plus discret. Il peut toutefois émettre des sons vocaux en chasse comme les autres."
+    },
+    {
+      "id": "tf-13",
+      "claim": "Deux empreintes gauches ou deux droites d'affilée signifient que l'entité a manqué un pas.",
+      "answer": false,
+      "explain": "L'orientation des empreintes ne suit aucune logique : n'importe quelle entité peut le faire."
+    },
+    {
+      "id": "tf-14",
+      "claim": "Un souffle (hiss) entendu pendant un événement prouve que c'était une bulle d'air ou un brouillard fantomatique.",
+      "answer": false,
+      "explain": "L'apparition en marche peut produire le même son. Il faut voir la bulle d'air ou le brouillard avant d'écarter l'Oni."
+    },
+    {
+      "id": "tf-15",
+      "claim": "L'Onryo évite activement les flammes et s'en éloigne.",
+      "answer": false,
+      "explain": "C'est le texte du journal mal interprété : il souffle simplement une flamme au lieu d'utiliser un crucifix quand il tente de chasser à portée."
+    },
+    {
+      "id": "tf-16",
+      "claim": "Le Fantôme n'apparaît sur aucune photo.",
+      "answer": false,
+      "explain": "Il ne disparaît que des photos étiquetées comme photo d'entité (Ghost) dans le journal."
+    },
+    {
+      "id": "tf-17",
+      "claim": "Une Ombre ne fait aucune action EMF et ne chasse pas tant qu'elle est dans la même pièce qu'un joueur, pièce préférée ou non.",
+      "answer": true,
+      "explain": "Ce n'est pas limité à la pièce préférée. Elle peut quand même sortir et chasser depuis une pièce adjacente."
+    },
+    {
+      "id": "tf-18",
+      "claim": "Seul un Esprit peut attendre 180 secondes avant de rechasser après avoir été encensé.",
+      "answer": false,
+      "explain": "Toute entité peut attendre 180 s ; la différence est que l'Esprit doit obligatoirement attendre ce délai."
+    },
+    {
+      "id": "tf-19",
+      "claim": "Les orbes du Mimic restent dans la pièce préférée, comme les orbes des autres entités.",
+      "answer": true,
+      "explain": "La rumeur d'orbes qui suivent l'entité vient d'un YouTubeur ; ils n'ont aucune différence de comportement ni d'aspect."
+    },
+    {
+      "id": "tf-20",
+      "claim": "Une preuve garantie peut quand même être trouvée dans une partie à 0 preuve.",
+      "answer": false,
+      "explain": "Il n'y a aucune preuve en 0 preuve, même garantie. Seuls les orbes du Mimic font exception, car c'est une capacité."
+    },
+    {
+      "id": "tf-21",
+      "claim": "Le Mimic peut imiter les preuves des autres entités.",
+      "answer": false,
+      "explain": "Il imite comportements et capacités, mais ne montre que ses propres preuves : UV, Spirit Box, Températures glaciales et faux orbes."
+    },
+    {
+      "id": "tf-22",
+      "claim": "Les Jumeaux sont une seule entité avec deux portées d'interaction.",
+      "answer": true,
+      "explain": "Ce n'est pas deux entités : une seule, avec une grande et une petite portée d'interaction."
+    },
+    {
+      "id": "tf-23",
+      "claim": "Une « courbe » sur le tableau d'activité (Twinteraction) prouve que ce sont les Jumeaux.",
+      "answer": false,
+      "explain": "Les Jumeaux la produisent plus souvent, mais n'importe quelle entité peut le faire en interagissant plusieurs fois rapidement."
+    },
+    {
+      "id": "tf-24",
+      "claim": "Le Spectre peut traverser les murs et voir à travers les portes pendant les chasses.",
+      "answer": false,
+      "explain": "C'est le texte du journal mal interprété : le Spectre traque et se déplace comme les autres entités."
+    },
+    {
+      "id": "tf-25",
+      "claim": "Un EMF de 10 sur le moniteur d'activité signifie forcément un événement ou une chasse.",
+      "answer": false,
+      "explain": "Le moniteur affiche l'activité EMF totale de la carte : quelques interactions suffisent pour atteindre 10."
+    },
+    {
+      "id": "tf-26",
+      "claim": "Voir sa respiration prouve que l'entité a la preuve Températures glaciales.",
+      "answer": false,
+      "explain": "Depuis la v0.9.0.0, on voit sa respiration à toute température inférieure à 5 °C."
+    },
+    {
+      "id": "tf-27",
+      "claim": "Une entité peut lancer le livre après avoir écrit dedans.",
+      "answer": false,
+      "explain": "Plus depuis la v0.9.0.0 : seule une entité sans la preuve écriture, ou qui la cache, peut lancer le livre."
+    },
+    {
+      "id": "tf-28",
+      "claim": "Ce que dit la personne à la radio au début du contrat donne des indices sur l'entité.",
+      "answer": false,
+      "explain": "C'est seulement du texte d'ambiance, comme l'ont confirmé les développeurs."
+    },
+    {
+      "id": "tf-29",
+      "claim": "La planche Ouija indique la pièce préférée de l'entité.",
+      "answer": false,
+      "explain": "Elle indique sa position actuelle. Seul le miroir hanté montre la pièce préférée."
+    },
+    {
+      "id": "tf-30",
+      "claim": "Utiliser la radio globale pendant une chasse fait détecter les autres joueurs par l'entité.",
+      "answer": false,
+      "explain": "Elle n'alerte l'entité qu'à votre propre position, car cela compte comme allumer un appareil électronique tenu."
+    },
+    {
+      "id": "tf-31",
+      "claim": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée.",
+      "answer": true,
+      "explain": "La chasse est mise en file après la 3e extinction ; une chasse en cours ou un temps de recharge (y compris d'encens) peut seulement la retarder."
+    },
+    {
+      "id": "tf-32",
+      "claim": "Une chasse maudite dure 20 secondes de plus qu'une chasse normale.",
+      "answer": true,
+      "explain": "Tout objet maudit qui lance une chasse la prolonge de 20 s, et les chasses suivantes sont aussi prolongées."
+    },
+    {
+      "id": "tf-33",
+      "claim": "Le Thayé n'accélère jamais avec la ligne de vue.",
+      "answer": true,
+      "explain": "Jeune, il va à 2,75 m/s même en LdV, puis ralentit en vieillissant. C'est la différence clé avec le Moroï."
+    },
+    {
+      "id": "tf-34",
+      "claim": "Le Moroï peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+      "answer": true,
+      "explain": "À 0 % de santé mentale moyenne, avec 13 s de LdV continue."
+    },
+    {
+      "id": "tf-35",
+      "claim": "Une entité peut rallumer une lumière à feu qu'elle a soufflée.",
+      "answer": false,
+      "explain": "Les entités peuvent souffler les lumières à feu à tout moment, mais ne peuvent jamais les rallumer."
+    },
+    {
+      "id": "tf-36",
+      "claim": "Un Kormos ne peut pas détecter un joueur parfaitement immobile et silencieux.",
+      "answer": true,
+      "explain": "Il ne vous détecte pas, mais il peut quand même vous tuer s'il passe par hasard sur vous."
+    },
+    {
+      "id": "tf-37",
+      "claim": "Les portées d'interaction des entités sont deux fois plus grandes sur les grandes cartes.",
+      "answer": true,
+      "explain": "Rayon effectif de 4,24 m au lieu de 2,12 m pour une entité standard, et 16,97 m au lieu de 8,48 m pour les Jumeaux."
+    },
+    {
+      "id": "tf-38",
+      "claim": "Pendant une Lune de sang, l'entité est 15 % plus rapide en chasse.",
+      "answer": true,
+      "explain": "La Lune de sang double aussi le drain passif de santé mentale (+100 %) et augmente le nombre d'événements."
+    },
+    {
+      "id": "tf-39",
+      "claim": "Le vœu « Je souhaite partir » de la patte de singe ne fonctionne pas pendant une chasse.",
+      "answer": false,
+      "explain": "Il déverrouille toutes les portes de sortie, même pendant une chasse."
+    },
+    {
+      "id": "tf-40",
+      "claim": "Le brouillard réduit aussi la vision de l'entité.",
+      "answer": false,
+      "explain": "La vision de l'entité n'est pas affectée par le brouillard, seule celle des joueurs à l'extérieur l'est."
+    }
+  ]
+}
