@@ -1,13 +1,13 @@
-import { PageHeader } from '../components/ui'
+import { PageHead } from '../components/ui'
 import { DATA_INFO } from '../data'
 import { SOURCE_REPO_URL, UPSTREAM_REPO_URL } from '../config'
 
 export function About() {
   return (
     <div className="page narrow">
-      <PageHeader eyebrow="À propos" title="Sources, licence et fonctionnement" />
-      <div className="stack">
-        <section className="card card-pad stack about">
+      <PageHead title="À propos" />
+      <div className="stack" style={{ '--gap': '36px' } as React.CSSProperties}>
+        <section className="stack about">
           <h2>Comment l’app retient ce que tu sais</h2>
           <p className="muted">
             Chaque fiche est découpée en cartes (preuves, seuil de chasse, vitesse, signes clés, tests 0 preuve…). Après chaque
@@ -24,7 +24,7 @@ export function About() {
             partager, utilise l’export ou les liens de partage du profil et du carnet.
           </p>
         </section>
-        <section className="card card-pad stack about">
+        <section className="stack about">
           <h2>Sources des données</h2>
           <p className="muted">
             Les fiches des {DATA_INFO.ghostCount} entités sont dérivées de l’<a href={UPSTREAM_REPO_URL} target="_blank" rel="noreferrer">Unofficial Phasmo Cheat Sheet</a>{' '}
@@ -36,7 +36,7 @@ export function About() {
             confirmer sont signalés en bas de chaque fiche.
           </p>
         </section>
-        <section className="card card-pad stack about">
+        <section className="stack about">
           <h2>Licence</h2>
           <p className="muted">
             Phasmo Coach est un logiciel libre sous licence GNU AGPL v3, comme le projet dont il dérive. Le code source est
@@ -44,8 +44,8 @@ export function About() {
           </p>
           <p className="muted">
             Phasmophobia, son logo et les informations du jeu appartiennent à Kinetic Games Limited. Ce projet de fan, à but
-            éducatif, n’est ni créé ni approuvé par Kinetic Games. Aucune image ni aucun son du jeu n’est utilisé : les icônes
-            sont dessinées pour l’app et les bruits de pas sont synthétisés.
+            éducatif, n’est ni créé ni approuvé par Kinetic Games. Aucune image ni aucun son du jeu n’est utilisé : les bruits de pas
+            sont synthétisés par l’app.
           </p>
         </section>
       </div>

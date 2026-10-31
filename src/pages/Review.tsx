@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Icon } from '../components/Icon'
-import { Empty, EvidencePill, PageHeader, Progress } from '../components/ui'
+import { Evidence, PageHead, ProgressBar } from '../components/ui'
 import { getGhost, MECHANICS } from '../data'
 import type { Card } from '../engine/cards'
 import { buildReviewQueue, unseenCards } from '../engine/progress'
@@ -96,35 +95,29 @@ export function Review() {
   if (!card || finished) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="Révision espacée" title={finished ? 'Séance terminée' : 'Tout est à jour'} />
-        <div className="card card-pad">
-          <Empty icon={finished ? 'trophy' : 'sparkles'} title={finished ? `${done} carte${done > 1 ? 's' : ''} révisée${done > 1 ? 's' : ''}` : 'Rien à réviser pour le moment'}>
-            {finished && done > 0 && (
-              <p>
-                {good} réponse{good > 1 ? 's' : ''} sur {done} jugée{done > 1 ? 's' : ''} « Bien » ou « Facile ». Les cartes
-                difficiles reviendront plus tôt, les autres s’espaceront.
-              </p>
-            )}
-            {!finished && <p>Les cartes reviennent au moment où tu risques de les oublier. Reviens demain, ou avance un peu :</p>}
-            <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-              {remainingNew > 0 && (
-                <button type="button" className="btn btn-primary" onClick={learnMore}>
-                  <Icon name="plus" size={18} />
-                  Apprendre 10 nouvelles cartes
-                </button>
-              )}
-              <Link to="/quiz" className="btn">
-                <Icon name="quiz" size={18} />
-                Faire un quiz
-              </Link>
-            </div>
-            {remainingNew > 0 && (
-              <p className="faint" style={{ fontSize: '0.8rem' }}>
-                {remainingNew} carte{remainingNew > 1 ? 's' : ''} pas encore découverte{remainingNew > 1 ? 's' : ''}.
-              </p>
-            )}
-          </Empty>
+        <PageHead title={finished ? 'Séance terminée' : 'Tout est à jour'}>
+          {finished && done > 0
+            ? `${done} carte${done > 1 ? 's' : ''} révisée${done > 1 ? 's' : ''}, dont ${good} jugée${good > 1 ? 's' : ''} « Bien » ou « Facile ». Les cartes difficiles reviendront plus tôt, les autres s’espaceront.`
+            : 'Les cartes reviennent au moment où tu risques de les oublier. Rien à revoir pour l’instant : reviens demain, ou avance un peu.'}
+        </PageHead>
+        <div className="row">
+          {remainingNew > 0 && (
+            <button type="button" className="btn btn-primary" onClick={learnMore}>
+              Apprendre 10 nouvelles cartes
+            </button>
+          )}
+          <Link to="/quiz" className="btn">
+            Faire un quiz
+          </Link>
+          <Link to="/enquete" className="btn">
+            Lancer une enquête
+          </Link>
         </div>
+        {remainingNew > 0 && (
+          <p className="faint small" style={{ marginTop: 14 }}>
+            {remainingNew} carte{remainingNew > 1 ? 's' : ''} pas encore découverte{remainingNew > 1 ? 's' : ''}.
+          </p>
+        )}
       </div>
     )
   }
@@ -134,44 +127,32 @@ export function Review() {
 
   return (
     <div className="page narrow">
-      <PageHeader eyebrow="Révision espacée" title="Révision du jour">
-        Réponds dans ta tête, retourne la carte, puis sois honnête : c’est ce qui règle le rythme de révision.
-      </PageHeader>
-
-      <div className="review-progress">
-        <Progress value={done / Math.max(1, total)} label="Progression de la séance" />
-        <span className="mono faint">
+      <div className="session-bar">
+        <span className="faint small">Révision du jour</span>
+        <ProgressBar value={done / Math.max(1, total)} label="Progression de la séance" />
+        <span className="pct">
           {done} / {total}
         </span>
       </div>
 
-      <article className={`card flashcard${revealed ? ' revealed' : ''}`} aria-live="polite">
-        <div className="flash-meta">
-          <span className={`chip${card.deck === 'coach' ? ' chip-lantern' : card.deck === 'mechanics' ? '' : ' chip-accent'}`}>
-            <Icon name={card.deck === 'coach' ? 'notebook' : card.deck === 'mechanics' ? 'compass' : 'ghost'} size={13} />
-            {deckLabel(card)}
-          </span>
-          {!cardState && <span className="chip chip-ok">Nouvelle</span>}
-          {cardState?.phase === 'relearning' && <span className="chip chip-bad">À consolider</span>}
-        </div>
+      <article className="flashcard" aria-live="polite">
+        <p className="flash-meta">
+          {deckLabel(card)}
+          {!cardState && ' · nouvelle carte'}
+          {cardState?.phase === 'relearning' && ' · à consolider'}
+        </p>
 
         <h2 className="flash-front">{card.front}</h2>
-        {card.quote && (
-          <blockquote className="flash-quote">
-            <Icon name="quote" size={18} />
-            {card.quote}
-          </blockquote>
-        )}
+        {card.quote && <blockquote className="quote">{card.quote}</blockquote>}
 
         {revealed ? (
           <div className="flash-back">
-            <div className="divider" />
             {card.evidence && card.evidence.length > 0 && (
-              <div className="ev-list" style={{ marginBottom: 4 }}>
+              <p className="evi-list">
                 {card.evidence.map((e) => (
-                  <EvidencePill key={e} id={e} forced={ghost?.forcedEvidence === e && card.kind === 'evidence'} />
+                  <Evidence key={e} id={e} forced={ghost?.forcedEvidence === e && card.kind === 'evidence'} />
                 ))}
-              </div>
+              </p>
             )}
             <p className="flash-answer">{card.back}</p>
             {card.backList && card.backList.length > 0 && (
@@ -182,36 +163,35 @@ export function Review() {
               </ul>
             )}
             {ghost && (
-              <Link to={`/codex/${ghost.id}`} className="flash-link">
-                Voir la fiche {ghost.name} <Icon name="arrowRight" size={14} />
-              </Link>
+              <p className="small">
+                <Link to={`/codex/${ghost.id}`}>Relire la fiche {ghost.name}</Link>
+              </p>
             )}
           </div>
         ) : (
           <button type="button" className="btn btn-lg btn-block flash-reveal" onClick={() => setRevealed(true)}>
-            <Icon name="eye" size={18} />
             Afficher la réponse <span className="kbd">Espace</span>
           </button>
         )}
       </article>
 
       {revealed && (
-        <div className="grade-row" role="group" aria-label="Évalue ta réponse">
+        <div className="grades" role="group" aria-label="Comment ça s’est passé ?">
           {GRADES.map(({ g, label, cls }) => (
-            <button key={g} type="button" className={`grade-btn ${cls}`} onClick={() => grade(g)}>
+            <button key={g} type="button" className={`grade ${cls}`} onClick={() => grade(g)}>
               <span>{label}</span>
-              <small className="mono">{previewInterval(cardState, g, now)}</small>
-              <span className="kbd">{g}</span>
+              <small>revient dans {previewInterval(cardState, g, now)}</small>
             </button>
           ))}
         </div>
       )}
 
-      <div className="row between review-foot">
-        <span className="faint" style={{ fontSize: '0.8rem' }}>
+      <div className="row between session-foot">
+        <span className="faint small">
           {queue.length - 1 > 0 ? `Encore ${queue.length - 1} carte${queue.length - 1 > 1 ? 's' : ''}` : 'Dernière carte'}
+          {revealed && <span className="kbd-hint"> · touches 1 à 4</span>}
         </span>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => finish(done, good)}>
+        <button type="button" className="link-btn muted-link small" onClick={() => finish(done, good)}>
           Terminer la séance
         </button>
       </div>

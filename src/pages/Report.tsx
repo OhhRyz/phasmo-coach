@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Icon } from '../components/Icon'
-import { Empty, MasteryRing, PageHeader } from '../components/ui'
+import { Empty, Mastery, PageHead } from '../components/ui'
 import { GHOSTS } from '../data'
 import { formatDate } from '../engine/format'
 import { masteryLevel } from '../engine/progress'
@@ -27,11 +26,13 @@ export function Report() {
   if (error) {
     return (
       <div className="page narrow">
-        <Empty icon="link" title="Lien de progression invalide">
+        <Empty title="Lien de progression invalide">
           <p>Le lien est peut-être incomplet. Demande à le renvoyer.</p>
-          <Link to="/" className="btn">
-            Accueil
-          </Link>
+          <div className="row">
+            <Link to="/" className="btn">
+              Accueil
+            </Link>
+          </div>
         </Empty>
       </div>
     )
@@ -43,60 +44,52 @@ export function Report() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`Bilan partagé le ${formatDate(data.at)}`} title={`Progression de ${data.name || 'l’élève'}`}>
-        Lecture seule. Ce bilan ne modifie rien sur cet appareil.
-      </PageHeader>
-      <section className="card card-pad report-stats">
-        <div className="row">
-          <MasteryRing value={avg} size={64} />
-          <div className="stat">
-            <b>{Math.round(avg * 100)} %</b>
-            <span>maîtrise moyenne</span>
-          </div>
+      <PageHead title={`Progression de ${data.name || 'l’élève'}`}>
+        Bilan partagé le {formatDate(data.at)}, en lecture seule : il ne modifie rien sur cet appareil.
+      </PageHead>
+      <dl className="figures">
+        <div>
+          <dt>Maîtrise moyenne</dt>
+          <dd>{Math.round(avg * 100)} %</dd>
         </div>
-        <div className="stat">
-          <b>{data.streak}</b>
-          <span>jours d’affilée</span>
+        <div>
+          <dt>Série</dt>
+          <dd>
+            {data.streak} jour{data.streak > 1 ? 's' : ''}
+          </dd>
         </div>
-        <div className="stat">
-          <b>
-            {data.learned}
-            <small className="faint">/{data.total}</small>
-          </b>
-          <span>cartes apprises</span>
+        <div>
+          <dt>Cartes apprises</dt>
+          <dd>
+            {data.learned} <span className="faint">sur {data.total}</span>
+          </dd>
         </div>
-      </section>
+      </dl>
 
-      <div className="grid grid-2" style={{ marginTop: 16 }}>
-        <section className="card card-pad">
-          <h2 style={{ marginBottom: 12 }}>
-            <Icon name="train" size={18} style={{ color: 'var(--accent)', verticalAlign: '-3px', marginRight: 6 }} />
-            Points faibles
-          </h2>
-          <ul className="list-plain report-list">
+      <div className="grid-2" style={{ '--gap': '40px' } as React.CSSProperties}>
+        <section className="section">
+          <h2>Points faibles</h2>
+          <ul className="list">
             {values.slice(0, 8).map(({ g, m }) => (
-              <li key={g.id}>
+              <li key={g.id} className="row between">
                 <Link to={`/codex/${g.id}`}>{g.name}</Link>
-                <span className={`chip tiny tone-${masteryLevel(m).tone}`}>{Math.round(m * 100)} %</span>
+                <Mastery value={m} />
               </li>
             ))}
           </ul>
         </section>
-        <section className="card card-pad">
-          <h2 style={{ marginBottom: 12 }}>
-            <Icon name="calendar" size={18} style={{ color: 'var(--accent)', verticalAlign: '-3px', marginRight: 6 }} />
-            Dernières séances
-          </h2>
+        <section className="section">
+          <h2>Dernières séances</h2>
           {data.activity.length === 0 ? (
             <p className="muted">Aucune séance enregistrée.</p>
           ) : (
-            <ul className="list-plain report-list">
+            <ul className="list small">
               {[...data.activity].reverse().map((a, i) => (
-                <li key={i}>
+                <li key={i} className="row between">
                   <span>
                     {a.label} <span className="faint">· {new Date(a.t).toLocaleDateString('fr-FR')}</span>
                   </span>
-                  <span className="mono faint">{a.kind === 'scenario' ? `${a.score} pts` : `${a.score}/${a.total}`}</span>
+                  <span className="pct">{a.kind === 'scenario' ? `${a.score} pts` : `${a.score}/${a.total}`}</span>
                 </li>
               ))}
             </ul>
@@ -104,21 +97,21 @@ export function Report() {
         </section>
       </div>
 
-      <section className="card card-pad" style={{ marginTop: 16 }}>
-        <h2 style={{ marginBottom: 12 }}>Toutes les entités</h2>
-        <div className="mastery-map">
+      <section className="section">
+        <h2>Toutes les entités</h2>
+        <ul className="mastery-grid">
           {GHOSTS.map((g) => {
             const m = (data.mastery[g.id] ?? 0) / 100
             return (
-              <Link key={g.id} to={`/codex/${g.id}`} className={`map-tile tone-${masteryLevel(m).tone}`} title={`${g.name} — ${Math.round(m * 100)} %`}>
-                <span className="map-name">{g.name}</span>
-                <span className="map-bar">
-                  <i style={{ width: `${Math.max(4, m * 100)}%` }} />
-                </span>
-              </Link>
+              <li key={g.id}>
+                <Link to={`/codex/${g.id}`} className={`mg-item lvl-${masteryLevel(m).tone}`} title={masteryLevel(m).label}>
+                  <span className="mg-name">{g.name}</span>
+                  <span className="pct">{Math.round(m * 100)}</span>
+                </Link>
+              </li>
             )
           })}
-        </div>
+        </ul>
       </section>
     </div>
   )

@@ -1,22 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Icon, type IconName } from '../components/Icon'
-import { Empty, PageHeader } from '../components/ui'
+import { Empty, PageHead } from '../components/ui'
 import { MECHANICS } from '../data'
-import type { TopicIcon } from '../data/types'
 import { cardMastery } from '../engine/srs'
 import { useStore } from '../store/store'
-
-const TOPIC_ICON: Record<TopicIcon, IconName> = {
-  hunt: 'skull',
-  smudge: 'candle',
-  equipment: 'emf',
-  evidence: 'search',
-  myth: 'bulb',
-  cursed: 'sparkles',
-  sanity: 'pulse',
-  speed: 'zap',
-}
 
 export function MechanicsPage() {
   const { state } = useStore()
@@ -28,37 +15,33 @@ export function MechanicsPage() {
   if (!topics.length) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="Savoir" title="Mécaniques" />
-        <Empty icon="compass" title="Contenu en préparation" />
+        <Empty title="Contenu en préparation" />
       </div>
     )
   }
 
   return (
     <div className="page">
-      <PageHeader
-        eyebrow="Savoir"
-        title="Mécaniques du jeu"
+      <PageHead
+        title="Mécaniques"
         actions={
-          <Link to="/quiz?topic=mechanics" className="btn btn-primary">
-            <Icon name="quiz" size={18} />
-            Vrai ou faux
+          <Link to="/quiz?topic=mechanics" className="btn">
+            Vrai ou faux sur les mécaniques
           </Link>
         }
       >
-        Ce qui ne dépend pas d’une entité précise mais change tout : chasses, encens, équipement, idées reçues. Ces fiches sont
-        aussi dans ta révision espacée.
-      </PageHeader>
+        Ce qui ne dépend pas d’une entité précise mais change tout : chasses, encens, équipement, idées reçues. Ces fiches font
+        aussi partie de ta révision.
+      </PageHead>
 
       <div className="mech-layout">
         <nav className="mech-nav" aria-label="Thèmes">
           {topics.map((t) => {
             const learned = t.facts.filter((f) => cardMastery(state.cards[`m:${f.id}`]) >= 0.35).length
             return (
-              <button key={t.id} type="button" className={`mech-tab${t.id === active ? ' active' : ''}`} onClick={() => setActive(t.id)}>
-                <Icon name={TOPIC_ICON[t.icon] ?? 'compass'} size={18} />
+              <button key={t.id} type="button" className={t.id === active ? 'active' : undefined} onClick={() => setActive(t.id)} aria-pressed={t.id === active}>
                 <span>{t.title}</span>
-                <span className="faint mono">
+                <span className="pct">
                   {learned}/{t.facts.length}
                 </span>
               </button>
@@ -66,18 +49,21 @@ export function MechanicsPage() {
           })}
         </nav>
 
-        <section className="stack">
-          {topic?.facts.map((f) => (
-            <article key={f.id} className="card card-pad fact">
-              <p>{f.text}</p>
-              <button type="button" className="fact-q" onClick={() => setShown((s) => ({ ...s, [f.id]: !s[f.id] }))} aria-expanded={!!shown[f.id]}>
-                <Icon name="layers" size={14} />
-                <span>{f.q}</span>
-                <Icon name="chevronDown" size={14} style={{ marginLeft: 'auto', transform: shown[f.id] ? 'rotate(180deg)' : undefined }} />
-              </button>
-              {shown[f.id] && <p className="fact-a">{f.a}</p>}
-            </article>
-          ))}
+        <section>
+          <h2 style={{ marginBottom: 14 }}>{topic?.title}</h2>
+          <ol className="facts-list">
+            {topic?.facts.map((f) => (
+              <li key={f.id}>
+                <p>{f.text}</p>
+                <p className="small">
+                  <button type="button" className="link-btn muted-link" onClick={() => setShown((s) => ({ ...s, [f.id]: !s[f.id] }))} aria-expanded={!!shown[f.id]}>
+                    {f.q}
+                  </button>
+                  {shown[f.id] && <span className="fact-a"> {f.a}</span>}
+                </p>
+              </li>
+            ))}
+          </ol>
         </section>
       </div>
     </div>

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { GHOSTS } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { newId, useStore } from '../store/store'
-import { Icon } from './Icon'
 import { useToast } from './Toast'
 
 export function NoteEditor({
@@ -61,16 +60,15 @@ export function NoteEditor({
 
   if (!open) {
     return (
-      <button type="button" className="btn btn-block note-add" onClick={() => setOpen(true)}>
-        <Icon name="plus" size={18} />
+      <button type="button" className="btn note-add" onClick={() => setOpen(true)}>
         Ajouter une note du coach
       </button>
     )
   }
 
   return (
-    <form className="card card-pad stack note-editor" onSubmit={submit}>
-      <div className="grid grid-2">
+    <form className="panel stack note-editor" onSubmit={submit}>
+      <div className="grid-2">
         <label className="field">
           <span>Titre</span>
           <input
@@ -104,17 +102,17 @@ export function NoteEditor({
           maxLength={4000}
         />
       </label>
-      <label className="switch">
+      <label className="check">
         <input type="checkbox" checked={asCard} onChange={(e) => setAsCard(e.target.checked)} />
         <span>
-          <strong>Ajouter à la révision espacée</strong>
-          <span className="faint" style={{ display: 'block', fontSize: '0.8rem' }}>
-            La note reviendra au bon moment pour ne pas être oubliée.
+          Ajouter à la révision espacée
+          <span className="faint small" style={{ display: 'block' }}>
+            La note reviendra d’elle-même au bon moment, pour ne pas être oubliée.
           </span>
         </span>
       </label>
       {asCard && (
-        <div className="grid grid-2">
+        <div className="grid-2">
           <label className="field">
             <span>Question (facultatif)</span>
             <input className="input" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="ex. Combien de temps l’encens bloque-t-il un Démon ?" />
@@ -131,7 +129,7 @@ export function NoteEditor({
         {(compact || note) && (
           <button
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-quiet"
             onClick={() => {
               if (!note) setOpen(false)
               onDone?.()
@@ -141,7 +139,6 @@ export function NoteEditor({
           </button>
         )}
         <button type="submit" className="btn btn-primary" disabled={!title.trim() && !body.trim()}>
-          <Icon name="check" size={18} />
           {note ? 'Enregistrer' : 'Ajouter la note'}
         </button>
       </div>

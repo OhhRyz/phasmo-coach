@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { EvidenceTracker } from '../components/EvidenceTracker'
-import { Icon, type IconName } from '../components/Icon'
-import { GhostEvidence, GhostSigil, Modal, PageHeader, Seg } from '../components/ui'
+import { GhostEvidence, Modal, PageHead, Seg } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE } from '../data/evidence'
 import type { Ghost } from '../data/types'
@@ -15,16 +14,7 @@ import { useStore } from '../store/store'
 
 const MAX_WRONG = 2
 
-const CLUE_ICON: Record<Clue['kind'], IconName> = {
-  context: 'door',
-  evidence: 'check',
-  'no-evidence': 'minus',
-  observation: 'eye',
-  'hunt-sanity': 'pulse',
-  'hunt-speed': 'footsteps',
-}
-
-const STRENGTH_LABEL = { hint: 'Indice', strong: 'Indice fort', definitive: 'Indice décisif' } as const
+const STRENGTH_LABEL = { hint: 'indice', strong: 'indice fort', definitive: 'indice décisif' } as const
 
 export function Scenario() {
   const mastery = useMastery()
@@ -49,7 +39,7 @@ export function Scenario() {
   }, [])
 
   useEffect(() => {
-    if (revealed > 1) timelineEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    if (revealed > 2) timelineEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [revealed])
 
   const ghost: Ghost | undefined = scenario ? getGhost(scenario.ghostId) : undefined
@@ -58,7 +48,7 @@ export function Scenario() {
     const rng = createRng((Date.now() ^ 0x5bd1e995) >>> 0)
     const sorted = [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0))
     const candidates = pool === 'weak' ? sorted.slice(0, 8) : GHOSTS
-    // pour 0 preuve, il faut assez d'observations pour que l'enquête soit jouable
+    // en 0 preuve, il faut assez d'observations pour que l'enquête soit jouable
     const playable = difficulty === 'apocalypse' ? candidates.filter((g) => g.observations.length >= 3) : candidates
     const g = weightedPick(rng, playable.length ? playable : candidates, (x) => 1.25 - (mastery[x.id] ?? 0))
     const s = generateScenario(g, difficulty, rng)
@@ -71,8 +61,9 @@ export function Scenario() {
     setGuess('')
   }
 
-  const candidates = useMemo(() => filterGhosts(GHOSTS, filter).filter((g) => !struck.includes(g.id)), [filter, struck])
-  const possible = useMemo(() => possibleEvidence(filterGhosts(GHOSTS, filter)), [filter])
+  const possibleGhosts = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
+  const candidates = useMemo(() => possibleGhosts.filter((g) => !struck.includes(g.id)), [possibleGhosts, struck])
+  const possible = useMemo(() => possibleEvidence(possibleGhosts), [possibleGhosts])
 
   const finish = (result: 'solved' | 'dead', wrongCount: number) => {
     if (!scenario || !ghost) return
@@ -81,12 +72,15 @@ export function Scenario() {
     const score = scoreScenario(revealed, scenario.clues.length, wrongCount, result === 'solved')
     dispatch({
       type: 'answers',
-      results: [{ key: `ghost:${ghost.id}`, correct: result === 'solved' && wrongCount === 0 }, { key: 'topic:scenario', correct: result === 'solved' }],
+      results: [
+        { key: `ghost:${ghost.id}`, correct: result === 'solved' && wrongCount === 0 },
+        { key: 'topic:scenario', correct: result === 'solved' },
+      ],
       now: Date.now(),
     })
     dispatch({
       type: 'activity',
-      activity: { t: Date.now(), kind: 'scenario', score, total: 1000, label: `Enquête · ${ghost.name}`, ghostId: ghost.id },
+      activity: { t: Date.now(), kind: 'scenario', score, total: 1000, label: `Enquête : ${ghost.name}`, ghostId: ghost.id },
     })
   }
 
@@ -108,57 +102,48 @@ export function Scenario() {
   if (!scenario || !ghost) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="S’entraîner" title="Mise en situation">
+        <PageHead title="Mise en situation">
           Une enquête simulée : les indices arrivent au fil du contrat, comme en partie. Note tes preuves, élimine, et désigne
           l’entité avec le moins d’indices possible.
-        </PageHeader>
-        <section className="card card-pad stack">
-          <div className="field">
-            <span className="field-label">Difficulté</span>
-            <div className="diff-grid">
+        </PageHead>
+        <div className="stack" style={{ '--gap': '26px' } as CSSProperties}>
+          <fieldset className="fieldset">
+            <legend className="field-label">Difficulté</legend>
+            <div className="choice-list">
               {DIFFICULTIES.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  className={`diff-btn${difficulty === d.id ? ' on' : ''}`}
-                  aria-pressed={difficulty === d.id}
-                  onClick={() => setDifficulty(d.id)}
-                >
-                  <span className="diff-dots" aria-hidden>
-                    {[0, 1, 2].map((i) => (
-                      <i key={i} className={i < d.count ? 'on' : ''} />
-                    ))}
+                <label key={d.id} className="radio">
+                  <input type="radio" name="difficulty" checked={difficulty === d.id} onChange={() => setDifficulty(d.id)} />
+                  <span>
+                    {d.label}
+                    <span className="faint small"> · {d.description}</span>
                   </span>
-                  <strong>{d.label}</strong>
-                  <small>{d.description}</small>
-                </button>
+                </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="field">
-            <span className="field-label">Entités tirées au sort</span>
+            <span className="field-label">Entité tirée au sort parmi</span>
             <Seg
               label="Entités"
               value={pool}
               onChange={setPool}
               options={[
-                { value: 'all', label: 'Toutes (les moins maîtrisées plus souvent)' },
+                { value: 'all', label: 'Toutes' },
                 { value: 'weak', label: 'Mes 8 points faibles' },
               ]}
             />
+            <small>Les entités que tu maîtrises le moins sortent plus souvent.</small>
           </div>
-          <div className="callout">
-            <Icon name="bulb" size={18} />
-            <span>
-              En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées
-              (Hantu, Goryo…) restent toujours visibles.
-            </span>
+          <p className="note accent">
+            En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
+            Goryo…) restent toujours visibles. En 0 preuve, seuls les orbes du Mimic apparaissent.
+          </p>
+          <div>
+            <button type="button" className="btn btn-primary btn-lg" onClick={start}>
+              Commencer l’enquête
+            </button>
           </div>
-          <button type="button" className="btn btn-primary btn-lg" onClick={start}>
-            <Icon name="search" size={18} />
-            Commencer l’enquête
-          </button>
-        </section>
+        </div>
       </div>
     )
   }
@@ -167,60 +152,59 @@ export function Scenario() {
   const allShown = revealed >= scenario.clues.length
   const score = scoreScenario(revealed, scenario.clues.length, wrong.length, true)
   const diff = DIFFICULTIES.find((d) => d.id === scenario.difficulty)!
+  const lives = MAX_WRONG + 1 - wrong.length
 
   /* ---------- résultat ---------- */
   if (outcome) {
     const finalScore = scoreScenario(revealed, scenario.clues.length, wrong.length, outcome === 'solved')
     return (
       <div className="page narrow">
-        <PageHeader eyebrow={`Enquête · ${diff.label}`} title={outcome === 'solved' ? 'Entité identifiée !' : 'Contrat échoué'}>
+        <PageHead title={outcome === 'solved' ? `C’était bien ${ghost.name}.` : `Raté : c’était ${ghost.name}.`}>
           {outcome === 'solved'
-            ? `Trouvé avec ${revealed} indice${revealed > 1 ? 's' : ''} sur ${scenario.clues.length}${wrong.length ? ` et ${wrong.length} erreur${wrong.length > 1 ? 's' : ''}` : ', sans erreur'}.`
-            : `Trop d’erreurs : c’était ${ghost.name}. On en tire une leçon.`}
-        </PageHeader>
-        <section className="card card-pad stack result-card">
-          <div className="row between">
-            <div className="row">
-              <GhostSigil ghost={ghost} mastery={mastery[ghost.id] ?? 0} size={52} />
-              <div>
-                <h2 style={{ fontSize: '1.3rem' }}>{ghost.name}</h2>
-                <span className="faint">{ghost.summary}</span>
-              </div>
-            </div>
-            <div className="stat" style={{ textAlign: 'right' }}>
-              <b className={outcome === 'solved' ? '' : 'faint'}>{finalScore}</b>
-              <span>points</span>
-            </div>
+            ? `Trouvé avec ${revealed} indice${revealed > 1 ? 's' : ''} sur ${scenario.clues.length}${
+                wrong.length ? ` et ${wrong.length} erreur${wrong.length > 1 ? 's' : ''}` : ', sans erreur'
+              }. ${finalScore} points.`
+            : 'Trois erreurs : le contrat échoue. Relis les indices ci-dessous, la leçon est souvent dedans.'}
+        </PageHead>
+        <dl className="facts">
+          <div>
+            <dt>Entité</dt>
+            <dd>
+              <Link to={`/codex/${ghost.id}`}>{ghost.name}</Link> <span className="faint small">{ghost.summary}</span>
+            </dd>
           </div>
-          <GhostEvidence ghost={ghost} />
-          {scenario.evidenceCount < 3 && scenario.evidenceCount > 0 && (
-            <p className="muted" style={{ fontSize: '0.88rem' }}>
-              Preuves visibles pendant ce contrat : {scenario.visibleEvidence.map((e) => EVIDENCE[e].label).join(', ')}.
-            </p>
+          <div>
+            <dt>Ses preuves</dt>
+            <dd>
+              <GhostEvidence ghost={ghost} />
+            </dd>
+          </div>
+          {scenario.evidenceCount > 0 && scenario.evidenceCount < 3 && (
+            <div>
+              <dt>Visibles ce contrat</dt>
+              <dd>{scenario.visibleEvidence.map((e) => EVIDENCE[e].label).join(', ')}</dd>
+            </div>
           )}
           {wrong.length > 0 && (
-            <p className="muted" style={{ fontSize: '0.88rem' }}>
-              Mauvaises pistes : {wrong.map((w) => getGhost(w)?.name).join(', ')}.
-            </p>
+            <div>
+              <dt>Mauvaises pistes</dt>
+              <dd>{wrong.map((w) => getGhost(w)?.name).join(', ')}</dd>
+            </div>
           )}
-        </section>
-        <section className="stack" style={{ marginTop: 20 }}>
-          <h2>Tous les indices du contrat</h2>
-          <ol className="timeline">
+        </dl>
+        <section className="section">
+          <h2>Le contrat en entier</h2>
+          <ol className="log">
             {scenario.clues.map((c, i) => (
               <ClueItem key={c.id} clue={c} dim={i >= revealed} showStrength />
             ))}
           </ol>
         </section>
-        <div className="row" style={{ marginTop: 22 }}>
+        <div className="row" style={{ marginTop: 28 }}>
           <button type="button" className="btn btn-primary" onClick={start}>
-            <Icon name="refresh" size={18} />
             Nouvelle enquête
           </button>
-          <Link to={`/codex/${ghost.id}`} className="btn">
-            Fiche {ghost.name}
-          </Link>
-          <button type="button" className="btn btn-ghost" onClick={() => setScenario(null)}>
+          <button type="button" className="btn" onClick={() => setScenario(null)}>
             Changer la difficulté
           </button>
         </div>
@@ -231,36 +215,23 @@ export function Scenario() {
   /* ---------- enquête en cours ---------- */
   return (
     <div className="page">
-      <div className="row between" style={{ marginBottom: 18 }}>
-        <div>
-          <div className="eyebrow">Enquête · {diff.label}</div>
-          <h1 style={{ fontSize: '1.6rem' }}>Contrat en cours</h1>
-        </div>
-        <div className="row">
-          <span className="chip mono" title="Score si tu trouves maintenant">
-            <Icon name="trophy" size={13} /> {score} pts
-          </span>
-          <span className="chip" title="Erreurs autorisées">
-            <Icon name="heart" size={13} /> {MAX_WRONG + 1 - wrong.length} vie{MAX_WRONG + 1 - wrong.length > 1 ? 's' : ''}
-          </span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setScenario(null)}>
-            Abandonner
+      <header className="page-head scenario-head">
+        <p className="faint small">
+          Enquête · {diff.label} · {scenario.evidenceCount} preuve{scenario.evidenceCount > 1 ? 's' : ''}
+        </p>
+        <h1>Contrat en cours</h1>
+        <p className="faint small">
+          {score} points si tu trouves maintenant · {lives} essai{lives > 1 ? 's' : ''} restant{lives > 1 ? 's' : ''} ·{' '}
+          <button type="button" className="link-btn muted-link" onClick={() => setScenario(null)}>
+            abandonner
           </button>
-        </div>
-      </div>
+        </p>
+      </header>
 
       <div className="scenario-layout">
-        <section className="card card-pad scenario-log">
-          <div className="card-title">
-            <h2>
-              <Icon name="clock" size={18} />
-              Journal du contrat
-            </h2>
-            <span className="faint mono" style={{ fontSize: '0.8rem' }}>
-              {revealed}/{scenario.clues.length}
-            </span>
-          </div>
-          <ol className="timeline">
+        <section>
+          <h2 className="col-title">Journal</h2>
+          <ol className="log">
             {shown.map((c) => (
               <ClueItem
                 key={c.id}
@@ -281,60 +252,44 @@ export function Scenario() {
             ))}
           </ol>
           <div ref={timelineEnd} />
-          <div className="row" style={{ marginTop: 14 }}>
+          <div className="row" style={{ marginTop: 18 }}>
             <button type="button" className="btn" disabled={allShown} onClick={() => setRevealed((r) => r + 1)}>
-              <Icon name="plus" size={18} />
               {allShown ? 'Plus aucun indice' : 'Indice suivant'}
             </button>
             <button type="button" className="btn btn-primary" onClick={() => setGuessOpen(true)}>
-              <Icon name="ghost" size={18} />
               Désigner l’entité
             </button>
           </div>
         </section>
 
-        <aside className="stack scenario-side">
-          <section className="card card-pad stack" style={{ '--gap': '12px' } as CSSProperties}>
-            <div className="card-title" style={{ marginBottom: 0 }}>
-              <h2>
-                <Icon name="notebook" size={18} />
-                Mon carnet de preuves
-              </h2>
-            </div>
-            <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
-            <p className="faint" style={{ fontSize: '0.78rem' }}>
-              Partie à {scenario.evidenceCount} preuve{scenario.evidenceCount > 1 ? 's' : ''} : le filtre en tient compte.
-            </p>
-          </section>
-          <section className="card card-pad">
-            <div className="card-title">
-              <h2>
-                <Icon name="filter" size={18} />
-                Entités possibles
-              </h2>
-              <span className="badge">{candidates.length}</span>
-            </div>
-            <ul className="list-plain cand-list">
-              {filterGhosts(GHOSTS, filter).map((g) => {
-                const isStruck = struck.includes(g.id)
-                return (
-                  <li key={g.id}>
-                    <button
-                      type="button"
-                      className={`cand${isStruck ? ' struck' : ''}${wrong.includes(g.id) ? ' wrong' : ''}`}
-                      onClick={() => !wrong.includes(g.id) && setStruck((s) => (isStruck ? s.filter((x) => x !== g.id) : [...s, g.id]))}
-                      title={isStruck ? 'Rétablir' : 'Barrer'}
-                    >
-                      {g.name}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-            <p className="faint" style={{ fontSize: '0.78rem', marginTop: 10 }}>
-              Touche une entité pour la barrer à la main.
-            </p>
-          </section>
+        <aside className="scenario-side">
+          <h2 className="col-title">Carnet de preuves</h2>
+          <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
+          <h2 className="col-title" style={{ marginTop: 26 }}>
+            Encore possibles <span className="pct">{candidates.length}</span>
+          </h2>
+          <ul className="cands">
+            {possibleGhosts.map((g) => {
+              const isStruck = struck.includes(g.id)
+              const isWrong = wrong.includes(g.id)
+              return (
+                <li key={g.id}>
+                  <button
+                    type="button"
+                    className={`cand${isStruck ? ' struck' : ''}${isWrong ? ' wrong' : ''}`}
+                    disabled={isWrong}
+                    onClick={() => setStruck((s) => (isStruck ? s.filter((x) => x !== g.id) : [...s, g.id]))}
+                    title={isStruck ? 'Rétablir' : 'Barrer'}
+                  >
+                    {g.name}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="faint small" style={{ marginTop: 8 }}>
+            Touche un nom pour le barrer.
+          </p>
         </aside>
       </div>
 
@@ -344,7 +299,7 @@ export function Scenario() {
         title="Quelle est l’entité ?"
         actions={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setGuessOpen(false)}>
+            <button type="button" className="btn btn-quiet" onClick={() => setGuessOpen(false)}>
               Continuer l’enquête
             </button>
             <button type="button" className="btn btn-primary" disabled={!guess} onClick={submitGuess}>
@@ -353,8 +308,11 @@ export function Scenario() {
           </>
         }
       >
-        <p className="muted" style={{ marginBottom: 14 }}>
-          {wrong.length > 0 ? `Attention : encore ${MAX_WRONG + 1 - wrong.length} essai${MAX_WRONG + 1 - wrong.length > 1 ? 's' : ''}.` : 'Une erreur coûte des points, trois erreurs et le contrat échoue.'}
+        <p className="muted small" style={{ marginBottom: 14 }}>
+          {wrong.length > 0
+            ? `Attention, encore ${lives} essai${lives > 1 ? 's' : ''}.`
+            : 'Une erreur coûte des points. Trois erreurs, et le contrat échoue.'}
+          {candidates.length > 0 && candidates.length < GHOSTS.length && ' Seules les entités encore possibles d’après ton carnet sont proposées.'}
         </p>
         <div className="guess-grid">
           {(candidates.length ? candidates : GHOSTS.filter((g) => !wrong.includes(g.id))).map((g) => (
@@ -363,11 +321,6 @@ export function Scenario() {
             </button>
           ))}
         </div>
-        {candidates.length > 0 && candidates.length < GHOSTS.length && (
-          <p className="faint" style={{ fontSize: '0.78rem', marginTop: 10 }}>
-            Seules les entités encore possibles d’après ton carnet sont proposées.
-          </p>
-        )}
       </Modal>
     </div>
   )
@@ -389,28 +342,24 @@ function ClueItem({
   const ev = clue.evidence ? EVIDENCE[clue.evidence] : undefined
   return (
     <li className={`clue ${clue.kind}${dim ? ' dim' : ''}`} style={ev ? ({ '--c': ev.color } as CSSProperties) : undefined}>
-      <span className="clue-time mono">{clue.time}</span>
-      <span className="clue-dot">
-        <Icon name={clue.evidence && clue.kind === 'evidence' ? clue.evidence : CLUE_ICON[clue.kind]} size={15} />
-      </span>
+      <span className="clue-time">{clue.time}</span>
       <div className="clue-body">
         <p>{clue.text}</p>
-        <div className="row" style={{ '--gap': '6px' } as CSSProperties}>
-          {ev && (
-            <span className={`chip tiny${clue.kind === 'evidence' ? ' chip-ok' : ''}`}>
-              {clue.kind === 'evidence' ? 'Preuve trouvée' : 'Pas de preuve'} · {ev.short}
-            </span>
-          )}
-          {clue.strength && showStrength && (
-            <span className={`chip tiny${clue.strength === 'definitive' ? ' chip-lantern' : ''}`}>{STRENGTH_LABEL[clue.strength]}</span>
-          )}
-          {onPlay && (
-            <button type="button" className="btn btn-sm" onClick={onPlay}>
-              <Icon name={playing ? 'stop' : 'volume'} size={15} />
-              {playing ? 'Arrêter' : 'Écouter les pas'}
-            </button>
-          )}
-        </div>
+        {(ev || (clue.strength && showStrength) || onPlay) && (
+          <p className="clue-meta">
+            {ev && (
+              <span className="evi" style={{ '--c': ev.color } as CSSProperties}>
+                {clue.kind === 'evidence' ? `preuve trouvée : ${ev.label}` : `non trouvée : ${ev.label}`}
+              </span>
+            )}
+            {clue.strength && showStrength && <span className={`tag${clue.strength === 'definitive' ? ' accent' : ''}`}>{STRENGTH_LABEL[clue.strength]}</span>}
+            {onPlay && (
+              <button type="button" className="link-btn" onClick={onPlay}>
+                {playing ? 'arrêter le son' : 'écouter les pas'}
+              </button>
+            )}
+          </p>
+        )}
       </div>
     </li>
   )

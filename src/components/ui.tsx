@@ -2,86 +2,49 @@ import { useEffect, type CSSProperties, type ReactNode } from 'react'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost } from '../data/types'
 import { masteryLevel } from '../engine/progress'
-import { Icon, type IconName } from './Icon'
 
-export function EvidencePill({
-  id,
-  compact,
-  forced,
-  fake,
-}: {
-  id: EvidenceId
-  compact?: boolean
-  forced?: boolean
-  fake?: boolean
-}) {
+export function Evidence({ id, forced, fake, short }: { id: EvidenceId; forced?: boolean; fake?: boolean; short?: boolean }) {
   const ev = EVIDENCE[id]
-  const title = `${ev.label}${forced ? ' — preuve forcée' : ''}${fake ? ' — fausse preuve' : ''}`
   return (
     <span
-      className={`ev${compact ? ' compact' : ''}${forced ? ' forced' : ''}`}
+      className={`evi${forced ? ' forced' : ''}`}
       style={{ '--c': ev.color } as CSSProperties}
-      title={title}
+      title={forced ? `${ev.label} : preuve forcée` : fake ? `${ev.label} : fausse preuve` : ev.label}
     >
-      <Icon name={id} size={16} />
-      {!compact && <span>{ev.short}</span>}
-      {!compact && forced && <span className="faint">· forcée</span>}
-      {!compact && fake && <span className="faint">· fausse</span>}
-      {compact && <span className="sr-only">{title}</span>}
+      {short ? ev.short : ev.label}
+      {fake && <span className="faint">(fausse)</span>}
     </span>
   )
 }
 
-export function GhostEvidence({ ghost, compact }: { ghost: Ghost; compact?: boolean }) {
+export function GhostEvidence({ ghost, short }: { ghost: Ghost; short?: boolean }) {
   return (
-    <div className="ev-list">
+    <span className="evi-list">
       {ghost.evidence.map((e) => (
-        <EvidencePill key={e} id={e} compact={compact} forced={ghost.forcedEvidence === e} />
+        <Evidence key={e} id={e} short={short} forced={ghost.forcedEvidence === e} />
       ))}
-      {ghost.fakeEvidence && <EvidencePill id={ghost.fakeEvidence} compact={compact} fake />}
-    </div>
+      {ghost.fakeEvidence && <Evidence id={ghost.fakeEvidence} short={short} fake />}
+    </span>
   )
 }
 
-export function MasteryRing({ value, size = 40, label = true }: { value: number; size?: number; label?: boolean }) {
-  const lvl = masteryLevel(value)
-  const stroke = size >= 56 ? 5 : 3.5
-  const r = (size - stroke) / 2
-  const c = 2 * Math.PI * r
+/** Maîtrise : pourcentage + fine barre. */
+export function Mastery({ value, showLabel }: { value: number; showLabel?: boolean }) {
   const pct = Math.round(value * 100)
   return (
-    <svg
-      className={`ring tone-${lvl.tone}`}
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      role="img"
-      aria-label={`Maîtrise ${pct} % (${lvl.label})`}
-      style={{ '--ring-w': stroke } as CSSProperties}
-    >
-      <circle className="track" cx={size / 2} cy={size / 2} r={r} />
-      <circle
-        className="val"
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        stroke="var(--tone)"
-        strokeDasharray={c}
-        strokeDashoffset={c * (1 - Math.max(0.001, value))}
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-      {label && (
-        <text className="ring-label" x="50%" y="50%" dominantBaseline="central" textAnchor="middle" style={size >= 56 ? { fontSize: '0.85rem' } : undefined}>
-          {pct}
-        </text>
-      )}
-    </svg>
+    <span className="mastery" title={`Maîtrise : ${pct} % (${masteryLevel(value).label})`}>
+      <span className="bar" aria-hidden>
+        <i style={{ width: `${Math.max(2, pct)}%` }} />
+      </span>
+      <span className="pct">{pct} %</span>
+      {showLabel && <span className="faint small">{masteryLevel(value).label}</span>}
+    </span>
   )
 }
 
-export function Progress({ value, label }: { value: number; label?: string }) {
+export function ProgressBar({ value, label }: { value: number; label?: string }) {
   return (
-    <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)} aria-label={label}>
+    <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)} aria-label={label}>
       <i style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} />
     </div>
   )
@@ -145,46 +108,22 @@ export function Modal({
   )
 }
 
-export function Empty({ icon, title, children }: { icon: IconName; title: string; children?: ReactNode }) {
+export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="empty">
-      <Icon name={icon} size={34} />
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       {children}
     </div>
   )
 }
 
-export function PageHeader({
-  eyebrow,
-  title,
-  children,
-  actions,
-}: {
-  eyebrow?: string
-  title: ReactNode
-  children?: ReactNode
-  actions?: ReactNode
-}) {
+export function PageHead({ title, children, actions, crumb }: { title: ReactNode; children?: ReactNode; actions?: ReactNode; crumb?: ReactNode }) {
   return (
-    <header className="page-header">
-      <div>
-        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-        <h1>{title}</h1>
-        {children && <p>{children}</p>}
-      </div>
-      {actions && <div className="row">{actions}</div>}
+    <header className="page-head">
+      {crumb}
+      <h1>{title}</h1>
+      {children && <p className="lead">{children}</p>}
+      {actions && <div className="row actions">{actions}</div>}
     </header>
-  )
-}
-
-/** Monogramme d'une entité : initiale dans un médaillon teinté par la maîtrise. */
-export function GhostSigil({ ghost, mastery, size = 44 }: { ghost: Ghost; mastery: number; size?: number }) {
-  const lvl = masteryLevel(mastery)
-  const letter = ghost.name.replace(/^(Le |Les |La )/, '').charAt(0)
-  return (
-    <span className={`sigil tone-${lvl.tone}`} style={{ width: size, height: size, fontSize: size * 0.46 }} aria-hidden>
-      {letter}
-    </span>
   )
 }

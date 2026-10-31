@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Icon } from '../components/Icon'
 import { useToast } from '../components/Toast'
-import { Empty, PageHeader } from '../components/ui'
+import { Empty, PageHead } from '../components/ui'
 import { getGhost } from '../data'
 import { formatDate } from '../engine/format'
 import { decodePayload } from '../engine/share'
@@ -31,11 +30,13 @@ export function ImportNotes() {
   if (error) {
     return (
       <div className="page narrow">
-        <Empty icon="link" title="Lien de partage invalide">
-          <p>Le lien est peut-être incomplet (copie-le en entier).</p>
-          <Link to="/carnet" className="btn">
-            Aller au carnet
-          </Link>
+        <Empty title="Lien de partage invalide">
+          <p>Le lien est peut-être incomplet : copie-le en entier.</p>
+          <div className="row">
+            <Link to="/carnet" className="btn">
+              Aller au carnet
+            </Link>
+          </div>
         </Empty>
       </div>
     )
@@ -51,25 +52,22 @@ export function ImportNotes() {
 
   return (
     <div className="page narrow">
-      <PageHeader eyebrow="Carnet partagé" title={`${data.notes.length} note${data.notes.length > 1 ? 's' : ''} de ${data.from || 'ton coach'}`}>
-        Partagé le {formatDate(data.at)}. {fresh} nouvelle{fresh > 1 ? 's' : ''}, {updated} mise{updated > 1 ? 's' : ''} à jour. Tes notes
-        existantes ne sont jamais effacées.
-      </PageHeader>
-      <div className="stack">
+      <PageHead title={`${data.notes.length} note${data.notes.length > 1 ? 's' : ''} de ${data.from || 'ton coach'}`}>
+        Partagées le {formatDate(data.at)}. {fresh} nouvelle{fresh > 1 ? 's' : ''}, {updated} mise{updated > 1 ? 's' : ''} à jour. Les notes
+        déjà dans ton carnet ne sont jamais effacées.
+      </PageHead>
+      <ul className="list notes">
         {data.notes.map((n) => (
-          <article key={n.id} className="card card-pad note-mini">
-            <div className="row" style={{ marginBottom: 6 }}>
-              {n.ghostId && <span className="chip chip-accent tiny">{getGhost(n.ghostId)?.name}</span>}
-              {existing.has(n.id) ? <span className="chip tiny">déjà dans le carnet</span> : <span className="chip chip-ok tiny">nouvelle</span>}
-            </div>
-            <h3>{n.title}</h3>
-            <p className="muted" style={{ whiteSpace: 'pre-wrap' }}>
-              {n.body}
+          <li key={n.id}>
+            <p className="faint small">
+              {n.ghostId ? getGhost(n.ghostId)?.name : 'Général'} · {existing.has(n.id) ? 'déjà dans le carnet' : 'nouvelle'}
             </p>
-          </article>
+            <h3>{n.title}</h3>
+            {n.body && <p className="pre muted">{n.body}</p>}
+          </li>
         ))}
-      </div>
-      <div className="row" style={{ marginTop: 20 }}>
+      </ul>
+      <div className="row" style={{ marginTop: 24 }}>
         <button
           type="button"
           className="btn btn-primary btn-lg"
@@ -79,10 +77,9 @@ export function ImportNotes() {
             navigate('/carnet')
           }}
         >
-          <Icon name="download" size={18} />
           Importer dans mon carnet
         </button>
-        <Link to="/carnet" className="btn btn-lg btn-ghost">
+        <Link to="/carnet" className="btn btn-lg btn-quiet">
           Annuler
         </Link>
       </div>

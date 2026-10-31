@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { EvidenceId } from '../data/types'
 import { cycleMark, type EvidenceMark } from '../engine/filter'
-import { Icon } from './Icon'
 
 const MARK_LABEL: Record<EvidenceMark, string> = {
   unknown: 'non testée',
@@ -10,6 +9,7 @@ const MARK_LABEL: Record<EvidenceMark, string> = {
   excluded: 'exclue',
 }
 
+/** Carnet de preuves : un clic = trouvée, deux = exclue, trois = non testée. */
 export function EvidenceTracker({
   value,
   onChange,
@@ -21,7 +21,7 @@ export function EvidenceTracker({
   possible?: Set<EvidenceId>
 }) {
   return (
-    <div className="tracker" role="group" aria-label="Preuves (clic : trouvée → exclue → non testée)">
+    <div className="tracker" role="group" aria-label="Preuves">
       {EVIDENCE_IDS.map((id) => {
         const mark = value[id] ?? 'unknown'
         const ev = EVIDENCE[id]
@@ -30,23 +30,18 @@ export function EvidenceTracker({
           <button
             key={id}
             type="button"
-            className={`track-btn ${mark}${impossible ? ' impossible' : ''}`}
+            className={`track ${mark}${impossible ? ' impossible' : ''}`}
             style={{ '--c': ev.color } as CSSProperties}
             aria-label={`${ev.label} : ${MARK_LABEL[mark]}`}
+            title={ev.label}
             onClick={() => onChange({ ...value, [id]: cycleMark(mark) })}
             onContextMenu={(e) => {
               e.preventDefault()
               onChange({ ...value, [id]: mark === 'excluded' ? 'unknown' : 'excluded' })
             }}
           >
-            <span className="track-state" aria-hidden>
-              {mark === 'found' && <Icon name="check" size={14} strokeWidth={2.4} />}
-              {mark === 'excluded' && <Icon name="x" size={14} strokeWidth={2.4} />}
-            </span>
-            <Icon name={id} size={18} className="track-icon" />
-            <span className="track-label" title={ev.label}>
-              {ev.short}
-            </span>
+            <span className="track-name">{ev.short}</span>
+            <span className="track-state">{mark === 'unknown' ? '' : MARK_LABEL[mark]}</span>
           </button>
         )
       })}

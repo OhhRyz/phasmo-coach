@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Icon } from '../components/Icon'
-import { EvidencePill, PageHeader, Progress, Seg } from '../components/ui'
+import { Evidence, PageHead, ProgressBar, Seg } from '../components/ui'
 import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
 import { buildQuiz, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
@@ -9,6 +8,8 @@ import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 
 type Pool = 'all' | 'weak' | 'one'
+
+const LETTERS = 'ABCDEFGHIJ'
 
 interface Answer {
   q: Question
@@ -95,8 +96,9 @@ export function Quiz() {
         e.preventDefault()
         if (checked) next()
         else if (q.multi && selected.length) check(selected)
-      } else if (!checked && /^[1-9]$/.test(e.key)) {
-        const c = q.choices[Number(e.key) - 1]
+      } else if (!checked && /^[1-9a-j]$/i.test(e.key)) {
+        const k = /\d/.test(e.key) ? Number(e.key) - 1 : e.key.toLowerCase().charCodeAt(0) - 97
+        const c = q.choices[k]
         if (!c) return
         if (q.multi) setSelected((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))
         else check([c.id])
@@ -110,35 +112,39 @@ export function Quiz() {
   if (!questions) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="S’entraîner" title="Quiz">
-          Des questions générées à partir des fiches, centrées sur ce que tu maîtrises le moins. Chaque erreur fait revenir la
-          carte correspondante en révision.
-        </PageHeader>
-        <section className="card card-pad stack">
-          <div className="field">
-            <span className="field-label">Thèmes</span>
-            <div className="topic-grid">
-              {QUIZ_TOPICS.map((t) => {
-                const on = topics.includes(t.id)
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`topic-btn${on ? ' on' : ''}`}
-                    aria-pressed={on}
-                    onClick={() => setTopics(on ? topics.filter((x) => x !== t.id) : [...topics, t.id])}
-                  >
-                    <span className="topic-check">{on && <Icon name="check" size={14} strokeWidth={2.4} />}</span>
-                    <span>
-                      <strong>{t.label}</strong>
-                      <small>{t.description}</small>
+        <PageHead title="Quiz">
+          Des questions tirées des fiches, en priorité sur ce que tu maîtrises le moins. Chaque erreur fait revenir la carte
+          correspondante en révision.
+        </PageHead>
+        <form
+          className="stack"
+          style={{ '--gap': '26px' } as React.CSSProperties}
+          onSubmit={(e) => {
+            e.preventDefault()
+            start()
+          }}
+        >
+          <fieldset className="fieldset">
+            <legend className="field-label">Thèmes</legend>
+            <div className="topic-list">
+              {QUIZ_TOPICS.map((t) => (
+                <label key={t.id} className="check">
+                  <input
+                    type="checkbox"
+                    checked={topics.includes(t.id)}
+                    onChange={(e) => setTopics(e.target.checked ? [...topics, t.id] : topics.filter((x) => x !== t.id))}
+                  />
+                  <span>
+                    {t.label}
+                    <span className="faint small" style={{ display: 'block' }}>
+                      {t.description}
                     </span>
-                  </button>
-                )
-              })}
+                  </span>
+                </label>
+              ))}
             </div>
-          </div>
-          <div className="grid grid-2">
+          </fieldset>
+          <div className="grid-2">
             <div className="field">
               <span className="field-label">Nombre de questions</span>
               <Seg label="Nombre de questions" value={count} onChange={setCount} options={[5, 10, 20, 30].map((n) => ({ value: n, label: String(n) }))} />
@@ -157,16 +163,13 @@ export function Quiz() {
               />
             </div>
           </div>
-          {pool === 'weak' && (
-            <p className="faint" style={{ fontSize: '0.82rem' }}>
-              Points faibles : {weak.map((g) => g.name).join(', ')}.
-            </p>
-          )}
-          <button type="button" className="btn btn-primary btn-lg" onClick={start} disabled={!topics.length}>
-            <Icon name="play" size={16} />
-            Lancer le quiz
-          </button>
-        </section>
+          {pool === 'weak' && <p className="faint small">Points faibles : {weak.map((g) => g.name).join(', ')}.</p>}
+          <div>
+            <button type="submit" className="btn btn-primary btn-lg" disabled={!topics.length}>
+              Lancer le quiz
+            </button>
+          </div>
+        </form>
       </div>
     )
   }
@@ -182,54 +185,67 @@ export function Quiz() {
     const mistakes = answers.filter((a) => !a.correct)
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="Quiz terminé" title={`${score} / ${answers.length}`}>
-          {pct >= 90 ? 'Impressionnant, rien à redire.' : pct >= 70 ? 'Très bon résultat, encore quelques détails.' : pct >= 50 ? 'C’est en bonne voie, on consolide.' : 'On a trouvé ce qu’il faut retravailler : c’est le but.'}
-        </PageHeader>
-        <section className="card card-pad stack">
-          {byTopic.map(({ t, total, ok }) => (
-            <div key={t.id} className="topic-score">
-              <span>{t.label}</span>
-              <Progress value={ok / total} label={t.label} />
-              <span className="mono">
-                {ok}/{total}
-              </span>
-            </div>
-          ))}
-        </section>
-        {mistakes.length > 0 && (
-          <section className="stack" style={{ marginTop: 22 }}>
-            <h2>À retenir ({mistakes.length})</h2>
-            {mistakes.map((a, i) => (
-              <article key={i} className="card card-pad mistake">
-                <p className="mistake-q">{a.q.prompt}</p>
-                {a.q.quote && <blockquote className="flash-quote small">{a.q.quote}</blockquote>}
-                {a.q.evidenceShown && (
-                  <div className="ev-list">
-                    {a.q.evidenceShown.map((e) => (
-                      <EvidencePill key={e} id={e} />
-                    ))}
-                  </div>
-                )}
-                <p>
-                  <span className="chip chip-ok tiny">Réponse</span>{' '}
-                  {a.q.choices
-                    .filter((c) => a.q.correct.includes(c.id))
-                    .map((c) => c.label)
-                    .join(', ')}
-                </p>
-                <p className="muted">{a.q.explain}</p>
-                {a.q.ghostId && (
-                  <Link to={`/codex/${a.q.ghostId}`} className="flash-link">
-                    Revoir la fiche <Icon name="arrowRight" size={14} />
-                  </Link>
-                )}
-              </article>
+        <PageHead title={`${score} sur ${answers.length}`}>
+          {pct >= 90
+            ? 'Impressionnant, rien à redire.'
+            : pct >= 70
+              ? 'Très bon résultat, il reste quelques détails.'
+              : pct >= 50
+                ? 'C’est en bonne voie, on consolide.'
+                : 'On a trouvé ce qu’il faut retravailler, c’est le but.'}
+        </PageHead>
+        <table className="score-table">
+          <tbody>
+            {byTopic.map(({ t, total, ok }) => (
+              <tr key={t.id}>
+                <th scope="row">{t.label}</th>
+                <td>
+                  <ProgressBar value={ok / total} label={t.label} />
+                </td>
+                <td className="pct">
+                  {ok}/{total}
+                </td>
+              </tr>
             ))}
+          </tbody>
+        </table>
+        {mistakes.length > 0 && (
+          <section className="section">
+            <h2>À retenir</h2>
+            <ul className="list">
+              {mistakes.map((a, i) => (
+                <li key={i} className="stack" style={{ '--gap': '8px' } as React.CSSProperties}>
+                  <p>
+                    <strong>{a.q.prompt}</strong>
+                  </p>
+                  {a.q.quote && <blockquote className="quote small">{a.q.quote}</blockquote>}
+                  {a.q.evidenceShown && (
+                    <p className="evi-list">
+                      {a.q.evidenceShown.map((e) => (
+                        <Evidence key={e} id={e} />
+                      ))}
+                    </p>
+                  )}
+                  <p>
+                    Réponse :{' '}
+                    {a.q.choices
+                      .filter((c) => a.q.correct.includes(c.id))
+                      .map((c) => c.label)
+                      .join(', ')}
+                  </p>
+                  <p className="muted small">{a.q.explain}</p>
+                  {a.q.ghostId && (
+                    <p className="small">
+                      <Link to={`/codex/${a.q.ghostId}`}>Relire la fiche</Link>
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
           </section>
         )}
-        <div className="row" style={{ marginTop: 22 }}>
+        <div className="row" style={{ marginTop: 28 }}>
           <button type="button" className="btn btn-primary" onClick={start}>
-            <Icon name="refresh" size={18} />
             Nouveau quiz
           </button>
           <button type="button" className="btn" onClick={() => setQuestions(null)}>
@@ -244,34 +260,29 @@ export function Quiz() {
   const ok = checked && isCorrect(q, selected)
   return (
     <div className="page narrow">
-      <div className="review-progress">
-        <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => setQuestions(null)} aria-label="Quitter le quiz">
-          <Icon name="x" size={18} />
+      <div className="session-bar">
+        <button type="button" className="link-btn muted-link small" onClick={() => setQuestions(null)}>
+          Quitter
         </button>
-        <Progress value={index / questions.length} label="Progression du quiz" />
-        <span className="mono faint">
+        <ProgressBar value={index / questions.length} label="Progression du quiz" />
+        <span className="pct">
           {index + 1} / {questions.length}
         </span>
       </div>
 
-      <article className="card card-pad quiz-card">
-        <div className="flash-meta">
-          <span className="chip chip-accent">{QUIZ_TOPICS.find((t) => t.id === q.topic)?.label}</span>
-          {q.multi && <span className="chip">Plusieurs réponses · {q.correct.length} à trouver</span>}
-        </div>
+      <article className="flashcard">
+        <p className="flash-meta">
+          {QUIZ_TOPICS.find((t) => t.id === q.topic)?.label}
+          {q.multi && ` · ${q.correct.length} réponses à trouver`}
+        </p>
         <h2 className="flash-front">{q.prompt}</h2>
-        {q.quote && (
-          <blockquote className="flash-quote">
-            <Icon name="quote" size={18} />
-            {q.quote}
-          </blockquote>
-        )}
+        {q.quote && <blockquote className="quote">{q.quote}</blockquote>}
         {q.evidenceShown && (
-          <div className="ev-list">
+          <p className="evi-list">
             {q.evidenceShown.map((e) => (
-              <EvidencePill key={e} id={e} />
+              <Evidence key={e} id={e} />
             ))}
-          </div>
+          </p>
         )}
 
         <div className={`choices${q.choices.length > 4 ? ' many' : ''}`}>
@@ -285,16 +296,16 @@ export function Quiz() {
                 type="button"
                 className={`choice ${state}`}
                 disabled={checked}
+                aria-pressed={q.multi ? isSel : undefined}
                 onClick={() => {
                   if (q.multi) setSelected((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))
                   else check([c.id])
                 }}
               >
-                <span className="choice-key">{i + 1}</span>
-                {c.evidence && <Icon name={c.evidence} size={18} />}
-                <span className="choice-label">{c.label}</span>
-                {checked && isRight && <Icon name="check" size={18} className="choice-mark" />}
-                {checked && isSel && !isRight && <Icon name="x" size={18} className="choice-mark" />}
+                <span className="choice-key">{LETTERS[i]}</span>
+                <span className="choice-label">{c.evidence ? <Evidence id={c.evidence} /> : c.label}</span>
+                {checked && isRight && <span className="choice-mark">bonne réponse</span>}
+                {checked && isSel && !isRight && <span className="choice-mark">ton choix</span>}
               </button>
             )
           })}
@@ -302,21 +313,18 @@ export function Quiz() {
 
         {q.multi && !checked && (
           <button type="button" className="btn btn-primary btn-block" disabled={!selected.length} onClick={() => check(selected)}>
-            Valider ({selected.length}/{q.correct.length}) <span className="kbd">Entrée</span>
+            Valider ({selected.length} sur {q.correct.length}) <span className="kbd">Entrée</span>
           </button>
         )}
 
         {checked && (
           <div className={`feedback ${ok ? 'ok' : 'ko'}`}>
-            <div className="row">
-              <Icon name={ok ? 'check' : 'x'} size={20} />
-              <strong>{ok ? 'Exact !' : 'Pas tout à fait.'}</strong>
-            </div>
+            <p className="feedback-title">{ok ? 'Exact.' : 'Pas tout à fait.'}</p>
             <p>{q.explain}</p>
             <div className="row between">
               {q.ghostId ? (
-                <Link to={`/codex/${q.ghostId}`} className="flash-link" target="_blank" rel="noreferrer">
-                  Ouvrir la fiche <Icon name="arrowRight" size={14} />
+                <Link to={`/codex/${q.ghostId}`} className="small" target="_blank" rel="noreferrer">
+                  Ouvrir la fiche
                 </Link>
               ) : (
                 <span />

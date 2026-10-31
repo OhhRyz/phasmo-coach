@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState } from 'react'
-import { Icon } from '../components/Icon'
 import { useToast } from '../components/Toast'
-import { Modal, PageHeader, Seg } from '../components/ui'
+import { Modal, PageHead, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { learnedCount, streak } from '../engine/progress'
 import { appUrl, copyText, downloadJson, encodePayload } from '../engine/share'
 import { useMastery } from '../store/hooks'
 import { hydrate } from '../store/schema'
 import { useStore } from '../store/store'
+import { useTheme } from '../theme'
 
 export interface ReportPayload {
   kind: 'phasmo-coach/report'
@@ -29,6 +29,7 @@ export function Profile() {
   const [pendingImport, setPendingImport] = useState<ReturnType<typeof hydrate> | null>(null)
   const [reportUrl, setReportUrl] = useState<string | null>(null)
   const now = useMemo(() => Date.now(), [])
+  const [theme, setTheme] = useTheme()
 
   const exportAll = () => downloadJson(`phasmo-coach-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`, state)
 
@@ -61,13 +62,13 @@ export function Profile() {
 
   return (
     <div className="page narrow">
-      <PageHeader eyebrow="Profil" title={state.profile.name || 'Mon profil'}>
-        Réglages de la révision et sauvegarde de ta progression. Tout est enregistré sur cet appareil uniquement.
-      </PageHeader>
+      <PageHead title={state.profile.name || 'Profil'}>
+        Réglages et sauvegarde de ta progression. Tout est enregistré sur cet appareil uniquement.
+      </PageHead>
 
-      <section className="card card-pad stack">
-        <h2>Identité</h2>
-        <div className="grid grid-2">
+      <section className="stack settings-block">
+        <h2>Toi</h2>
+        <div className="grid-2">
           <label className="field">
             <span>Prénom ou pseudo</span>
             <input className="input" value={state.profile.name} onChange={(e) => dispatch({ type: 'profile', profile: { name: e.target.value } })} />
@@ -91,8 +92,25 @@ export function Profile() {
         </div>
       </section>
 
-      <section className="card card-pad stack" style={{ marginTop: 16 }}>
-        <h2>Révision espacée</h2>
+      <section className="stack settings-block">
+        <h2>Affichage</h2>
+        <div className="field">
+          <span className="field-label">Thème</span>
+          <Seg
+            label="Thème"
+            value={theme}
+            onChange={setTheme}
+            options={[
+              { value: 'system', label: 'Comme l’appareil' },
+              { value: 'light', label: 'Clair' },
+              { value: 'dark', label: 'Sombre' },
+            ]}
+          />
+        </div>
+      </section>
+
+      <section className="stack settings-block">
+        <h2>Révision</h2>
         <label className="field">
           <span>
             Nouvelles cartes par jour : <b className="mono">{state.settings.newPerDay}</b>
@@ -107,7 +125,7 @@ export function Profile() {
           />
           <small>Entre 8 et 15, c’est un bon rythme : environ 10 minutes par jour.</small>
         </label>
-        <label className="switch">
+        <label className="check">
           <input type="checkbox" checked={state.settings.includeMechanics} onChange={(e) => dispatch({ type: 'settings', settings: { includeMechanics: e.target.checked } })} />
           <span>Inclure les cartes « Mécaniques » (chasses, encens, équipement…)</span>
         </label>
@@ -132,23 +150,22 @@ export function Profile() {
               )
             })}
           </div>
-          <small className="faint">Les nouvelles cartes ne viendront que de ces entités (les notes du coach et les mécaniques restent incluses). Rien de sélectionné = toutes.</small>
+          <small>Les nouvelles cartes ne viendront que de ces entités (les notes du coach et les mécaniques restent incluses). Rien de sélectionné = toutes.</small>
         </div>
       </section>
 
-      <section className="card card-pad stack" style={{ marginTop: 16 }}>
-        <h2>Partager & sauvegarder</h2>
+      <section className="stack settings-block">
+        <h2>Partager et sauvegarder</h2>
         <div className="share-row">
           <div>
             <strong>Envoyer ma progression au coach</strong>
             <p className="muted">Un lien vers un bilan en lecture seule : maîtrise de chaque entité, série, dernières séances.</p>
           </div>
           <button type="button" className="btn" onClick={shareReport}>
-            <Icon name="share" size={18} />
             Créer le lien
           </button>
         </div>
-        <div className="divider" />
+        <hr className="rule" />
         <div className="share-row">
           <div>
             <strong>Sauvegarde complète</strong>
@@ -156,11 +173,9 @@ export function Profile() {
           </div>
           <div className="row">
             <button type="button" className="btn" onClick={exportAll}>
-              <Icon name="download" size={18} />
               Exporter
             </button>
             <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
-              <Icon name="upload" size={18} />
               Importer
             </button>
             <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
@@ -168,8 +183,8 @@ export function Profile() {
         </div>
       </section>
 
-      <section className="card card-pad stack danger-zone" style={{ marginTop: 16 }}>
-        <h2>Zone sensible</h2>
+      <section className="stack settings-block">
+        <h2>Effacer</h2>
         <div className="share-row">
           <p className="muted">Effacer la progression (cartes, quiz, séances) en gardant le profil et le carnet.</p>
           <button type="button" className="btn btn-danger" onClick={() => setConfirm('progress')}>
@@ -182,7 +197,7 @@ export function Profile() {
             Tout effacer
           </button>
         </div>
-        <p className="faint" style={{ fontSize: '0.78rem' }}>
+        <p className="faint small">
           Profil créé le {new Date(state.profile.createdAt).toLocaleDateString('fr-FR')} · {Object.keys(state.cards).length} cartes vues · {state.log.length} révisions · {Math.round((now - state.profile.createdAt) / 86_400_000)} jours
         </p>
       </section>
@@ -193,7 +208,7 @@ export function Profile() {
         title={confirm === 'import' ? 'Remplacer par cette sauvegarde ?' : confirm === 'all' ? 'Tout effacer ?' : 'Réinitialiser la progression ?'}
         actions={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setConfirm(null)}>
+            <button type="button" className="btn btn-quiet" onClick={() => setConfirm(null)}>
               Annuler
             </button>
             <button
@@ -225,12 +240,11 @@ export function Profile() {
         title="Lien de progression"
         actions={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setReportUrl(null)}>
+            <button type="button" className="btn btn-quiet" onClick={() => setReportUrl(null)}>
               Fermer
             </button>
             <button type="button" className="btn btn-primary" onClick={async () => reportUrl && (await copyText(reportUrl)) && toast('Lien copié')}>
-              <Icon name="copy" size={16} />
-              Copier
+              Copier le lien
             </button>
           </>
         }

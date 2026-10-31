@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Icon } from '../components/Icon'
-import { PageHeader, Progress, Seg } from '../components/ui'
+import { PageHead, ProgressBar, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { num } from '../engine/format'
@@ -112,11 +111,11 @@ export function Ear() {
   if (!rounds) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="S’entraîner" title="À l’oreille">
-          En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7 m/s), et
-          entraîne ton oreille à reconnaître les entités lentes et rapides.
-        </PageHeader>
-        <section className="card card-pad stack">
+        <PageHead title="À l’oreille">
+          En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7 m/s), et entraîne
+          ton oreille à reconnaître les entités lentes et rapides.
+        </PageHead>
+        <div className="stack" style={{ '--gap': '24px' } as React.CSSProperties}>
           <div className="field">
             <span className="field-label">Exercice</span>
             <Seg
@@ -129,24 +128,22 @@ export function Ear() {
               ]}
             />
           </div>
-          <div className="ear-ref">
-            <button type="button" className={`btn${playing === 'ref' ? ' btn-primary' : ''}`} onClick={() => play(BASE, 'ref')}>
-              <Icon name={playing === 'ref' ? 'stop' : 'volume'} size={18} />
-              Écouter la référence 1,7 m/s
+          <div className="row">
+            <button type="button" className="btn" onClick={() => play(BASE, 'ref')} aria-pressed={playing === 'ref'}>
+              {playing === 'ref' ? 'Arrêter' : 'Écouter la référence (1,7 m/s)'}
             </button>
-            <span className="faint mono" style={{ fontSize: '0.8rem' }}>
-              ≈ {Math.round(speedToBpm(BASE))} pas/min
-            </span>
+            <span className="faint small">environ {Math.round(speedToBpm(BASE))} pas par minute</span>
           </div>
-          <p className="faint" style={{ fontSize: '0.82rem' }}>
-            Vitesses présentes dans les fiches : {speeds.map((s) => num(s)).join(' · ')} m/s. Sons générés par l’app (pas
-            d’enregistrement du jeu) : la cadence est fidèle, le timbre est stylisé. Mets un casque !
+          <p className="faint small">
+            Vitesses présentes dans les fiches : {speeds.map((s) => num(s)).join(' · ')} m/s. Les pas sont générés par l’app, pas
+            enregistrés dans le jeu : la cadence est fidèle, le son est simplifié. Un casque aide beaucoup.
           </p>
-          <button type="button" className="btn btn-primary btn-lg" onClick={start}>
-            <Icon name="play" size={16} />
-            Commencer ({ROUNDS} écoutes)
-          </button>
-        </section>
+          <div>
+            <button type="button" className="btn btn-primary btn-lg" onClick={start}>
+              Commencer ({ROUNDS} écoutes)
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -154,12 +151,11 @@ export function Ear() {
   if (!round) {
     return (
       <div className="page narrow">
-        <PageHeader eyebrow="À l’oreille" title={`${score} / ${rounds.length}`}>
-          {score >= 8 ? 'Belle oreille ! Essaie la vitesse exacte.' : 'L’oreille se travaille : refais une série demain.'}
-        </PageHeader>
+        <PageHead title={`${score} sur ${rounds.length}`}>
+          {score >= 8 ? 'Belle oreille. Essaie la vitesse exacte.' : 'L’oreille se travaille : refais une série demain.'}
+        </PageHead>
         <div className="row">
           <button type="button" className="btn btn-primary" onClick={start}>
-            <Icon name="refresh" size={18} />
             Nouvelle série
           </button>
           <button type="button" className="btn" onClick={() => setRounds(null)}>
@@ -177,48 +173,42 @@ export function Ear() {
 
   return (
     <div className="page narrow">
-      <div className="review-progress">
-        <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => setRounds(null)} aria-label="Quitter">
-          <Icon name="x" size={18} />
+      <div className="session-bar">
+        <button type="button" className="link-btn muted-link small" onClick={() => setRounds(null)}>
+          Quitter
         </button>
-        <Progress value={i / rounds.length} label="Progression" />
-        <span className="mono faint">
+        <ProgressBar value={i / rounds.length} label="Progression" />
+        <span className="pct">
           {i + 1} / {rounds.length}
         </span>
       </div>
-      <section className="card card-pad ear-card">
-        <button type="button" className={`ear-play${playing === 'q' ? ' on' : ''}`} onClick={() => play(round.speed, 'q')} aria-label={playing === 'q' ? 'Arrêter' : 'Écouter'}>
-          <Icon name={playing === 'q' ? 'stop' : 'play'} size={34} />
-          <span className="ear-waves" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </span>
-        </button>
-        <p className="muted">{playing === 'q' ? 'Écoute bien le rythme…' : 'Appuie pour entendre les pas'}</p>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => play(BASE, 'ref')}>
-          <Icon name={playing === 'ref' ? 'stop' : 'volume'} size={15} />
-          Référence 1,7 m/s
-        </button>
-        <div className="choices" style={{ width: '100%' }}>
+      <article className="flashcard ear">
+        <h2 className="flash-front">Quelle vitesse entends-tu ?</h2>
+        <div className="row">
+          <button type="button" className={`btn btn-lg${playing === 'q' ? '' : ' btn-primary'}`} onClick={() => play(round.speed, 'q')}>
+            {playing === 'q' ? 'Arrêter' : 'Écouter les pas'}
+          </button>
+          <button type="button" className="btn btn-lg" onClick={() => play(BASE, 'ref')}>
+            {playing === 'ref' ? 'Arrêter' : 'Référence 1,7 m/s'}
+          </button>
+        </div>
+        <div className="choices">
           {options.map((o, k) => {
             const state = answer ? (o.key === correctKey ? 'right' : o.key === answer ? 'wrong' : 'idle') : ''
             return (
               <button key={o.key} type="button" className={`choice ${state}`} disabled={!!answer} onClick={() => choose(o.key)}>
-                <span className="choice-key">{k + 1}</span>
+                <span className="choice-key">{'ABCD'[k]}</span>
                 <span className="choice-label">{o.label}</span>
               </button>
             )
           })}
         </div>
         {answer && (
-          <div className={`feedback ${answer === correctKey ? 'ok' : 'ko'}`} style={{ width: '100%' }}>
-            <div className="row">
-              <Icon name={answer === correctKey ? 'check' : 'x'} size={20} />
-              <strong>
-                {num(round.speed)} m/s · {Math.round(speedToBpm(round.speed))} pas/min
-              </strong>
-            </div>
+          <div className={`feedback ${answer === correctKey ? 'ok' : 'ko'}`}>
+            <p className="feedback-title">
+              {answer === correctKey ? 'Exact.' : 'Raté.'} {num(round.speed)} m/s, soit {Math.round(speedToBpm(round.speed))} pas par
+              minute.
+            </p>
             <p>Entités concernées : {ghostsAt(round.speed).join(', ') || 'vitesse de référence'}.</p>
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <button type="button" className="btn btn-primary" onClick={next} autoFocus>
@@ -227,7 +217,7 @@ export function Ear() {
             </div>
           </div>
         )}
-      </section>
+      </article>
     </div>
   )
 }

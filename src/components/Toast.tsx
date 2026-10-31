@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { Icon } from './Icon'
 
 interface ToastItem {
   id: number
@@ -21,7 +20,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="toasts" role="status" aria-live="polite">
         {items.map((t) => (
           <div key={t.id} className="toast">
-            <Icon name="check" size={18} />
             {t.text}
           </div>
         ))}

@@ -17,6 +17,7 @@ situation, sans avoir à tout répéter d’une séance à l’autre.
 - **Carnet du coach** : chaque explication du coach peut devenir une carte de révision ; le carnet se
   partage par simple lien (aucun serveur).
 - **Bilan de progression** partageable par lien, export / import de sauvegarde.
+- **Thème clair ou sombre** (ou celui de l’appareil), au choix dans le profil.
 - **Installable** sur téléphone (PWA) et utilisable hors ligne.
 
 Tout est stocké dans le navigateur de l’appareil (`localStorage`) : pas de compte, pas de serveur.
@@ -50,7 +51,7 @@ src/
   data/          fiches des entités (ghosts/*.json), mécaniques, types, preuves
   engine/        logique pure et testée : SRS, cartes, quiz, enquêtes, filtre, audio, partage
   store/         état persistant (localStorage), actions, hooks
-  components/    composants d’interface (icônes, cartes, carnet de preuves…)
+  components/    composants d’interface (mise en page, carnet de preuves, éditeur de notes…)
   pages/         écrans
   styles/        design system (tokens, base, layout, composants, pages)
 ```
@@ -93,5 +94,5 @@ requis par la licence AGPL).
 - Phasmo Coach est distribué sous **GNU AGPL v3** (voir `LICENSE` et `NOTICE.md`).
 - Phasmophobia, son logo et les informations du jeu appartiennent à **Kinetic Games Limited**. Projet de
   fan à but éducatif, non créé ni approuvé par Kinetic Games. Aucune image ni aucun son du jeu n’est
-  utilisé : icônes dessinées pour l’app, pas synthétisés.
+  utilisé : les bruits de pas sont synthétisés.
 - Polices Inter, Fraunces et JetBrains Mono sous SIL Open Font License (`src/assets/fonts/`).
