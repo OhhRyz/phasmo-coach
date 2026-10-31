@@ -156,7 +156,7 @@ export function Train() {
             piece={piece(EXHIBITS.quiz.n)}
             title={EXHIBITS.quiz.title}
             text="Preuves, vitesses, seuils de chasse, comportements, tests sans preuve."
-            hand={lastQuiz ? `dernier${NNBSP}: ${scoreOf(lastQuiz)}` : 'jamais ouvert'}
+            hand={lastQuiz ? `dernier${NNBSP}: ${scoreOf(lastQuiz)}` : 'jamais ouverte'}
             rotate={-0.7}
             delay={0.29}
           />

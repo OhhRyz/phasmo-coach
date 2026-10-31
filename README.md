@@ -1,5 +1,7 @@
 # Phasmo Coach
 
+**En ligne : https://phasmo-coach.vercel.app** (à ouvrir dans Safari ou Chrome, puis « Sur l’écran d’accueil »).
+
 Application web d’entraînement **hors-jeu** pour Phasmophobia, pensée pour un coach et un·e joueur·se :
 apprendre les entités, leurs preuves, vitesses, seuils de chasse et tests 0 preuve, puis s’en servir en
 situation, sans avoir à tout répéter d’une séance à l’autre.

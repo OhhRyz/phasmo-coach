@@ -89,6 +89,8 @@ function Welcome() {
             e.preventDefault()
             if (!name.trim()) return
             dispatch({ type: 'onboard', profile: { name: name.trim(), coachName: coachName.trim(), role } })
+            // même adresse, autre écran : on repart du haut de la page
+            window.scrollTo({ top: 0 })
           }}
         >
           <div className="field">
@@ -510,7 +512,7 @@ export function Home() {
                   dernier{NNBSP}: <span className="env-score">{`${lastQuiz.score}/${lastQuiz.total}`}</span>
                 </>
               ) : (
-                'jamais ouvert'
+                'jamais ouverte'
               )
             }
             rotate={1.2}
