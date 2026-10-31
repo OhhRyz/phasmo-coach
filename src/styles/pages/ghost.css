@@ -9,8 +9,40 @@
 .ghost-file .sticky-title { display: block; font-weight: 700; }
 .ghost-file .sticky-body { display: block; margin-top: 6px; font-size: .9em; }
 .ghost-file .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 30px; }
-.ghost-file .sources { margin-top: 34px; }
+.ghost-file .pager .link { display: inline-flex; align-items: center; min-height: 40px; }
 .ghost-file .measure-head .val { font-size: 22px; }
+/* « la suite : ses sosies » tient dans la marge, à droite du filet rouge */
+.ghost-file .page > .turn { right: 0; width: 82px; }
+
+/* la note de maîtrise : le pourcentage est entouré au stylo, le niveau est écrit au crayon (sauf « acquise ») */
+.ghost-file .grade small { color: var(--pencil); }
+.ghost-file .grade small.is-max { color: var(--red-pen); }
+
+/* « Voir les autres » : un vrai lien tapé, jamais un bouton du système */
+.ghost-file .conf-more { min-height: 40px; font-size: 15px; }
+
+/* notes : celles du coach (stylo rouge), puis les miennes */
+.ghost-file .ghost-notes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; margin-top: 18px; }
+.ghost-file .ghost-notes + .note-add, .ghost-file .ghost-notes .note-add { margin: 0; }
+.ghost-file section[aria-labelledby="h-coach"] + section[aria-labelledby="h-mine"] { margin-top: 44px; }
+.ghost-file .ghost-side { margin-top: 44px; }
+.ghost-file .libcard li.next .d { grid-column: 1 / -1; white-space: nowrap; }
+
+/* changements récents (lisibles) et points à vérifier (au crayon) */
+.ghost-file .gh-updates { margin-top: 48px; }
+.ghost-file .gh-changes { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.ghost-file .gh-changes li { padding: 12px 0 13px; border-bottom: 1px solid var(--rule); }
+.ghost-file .gh-change-when {
+  display: block; margin-bottom: 3px;
+  font-family: "Courier Prime", monospace; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2);
+}
+.ghost-file .gh-changes p { margin: 0; font-family: "Caslon", Georgia, serif; font-size: 16.5px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
+.ghost-file .gh-unsure { margin-top: 26px; }
+.ghost-file .gh-unsure-h { margin: 0 0 6px; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.ghost-file .gh-unsure ul { list-style: none; margin: 0; padding: 0; font-size: 21px; line-height: 1.12; }
+.ghost-file .gh-unsure li { position: relative; padding: 5px 0 5px 22px; }
+.ghost-file .gh-unsure li::before { content: "?"; position: absolute; left: 2px; top: 5px; font-weight: 700; }
+.ghost-file .sources { margin-top: 30px; font-size: 13px; }
 
 /* formulaire de note du coach (partagé avec le carnet) */
 .note-form {
@@ -23,6 +55,10 @@
 .note-actions { margin-top: 4px; }
 .note-add { margin: 6px 0; }
 @media (max-width: 759px) {
+  .ghost-file .gh-unsure ul { font-size: 20px; }
+  /* cibles tactiles : le lien vers la pile et les noms des sosies, sans changer la mise en page */
+  .ghost-file .ghost-actions .link { display: inline-flex; align-items: center; min-height: 40px; }
+  .ghost-file .conf li > b a { display: inline-block; padding: 8px 0; margin: -8px 0; }
   .note-qa-fields { grid-template-columns: 1fr; }
   .note-form { padding: 18px 14px 20px; }
 }

@@ -1,8 +1,10 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { FileHead, H, Notebook, Page, Stamp } from '../components/journal/Journal'
+import { FileHead, H, Notebook, Page, Stamp, TypedLink } from '../components/journal/Journal'
+import { Modal } from '../components/ui'
 import { DATA_INFO } from '../data'
 import { SOURCE_REPO_URL, UPSTREAM_REPO_URL } from '../config'
+import { fr, NNBSP } from '../engine/format'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -44,8 +46,53 @@ function Intervals() {
   )
 }
 
+/** Les cinq polices livrées avec l'app, et le texte de leur licence (copié dans public/licences). */
+const FONTS = [
+  { name: 'IM Fell English', by: 'Igino Marini', licence: 'SIL Open Font License 1.1', file: 'LICENSE-IMFellEnglish.txt', use: 'titres et noms' },
+  { name: 'Libre Caslon Text', by: 'Pablo Impallari et Rodrigo Fuenzalida', licence: 'SIL Open Font License 1.1', file: 'LICENSE-LibreCaslonText.txt', use: 'texte des fiches' },
+  { name: 'Special Elite', by: 'Astigmatic (Brian J. Bonislawsky)', licence: 'Apache 2.0', file: 'LICENSE-SpecialElite.txt', use: 'en-têtes tapés' },
+  { name: 'Courier Prime', by: 'Alan Dague-Greene (Quote-Unquote Apps)', licence: 'SIL Open Font License 1.1', file: 'LICENSE-CourierPrime.txt', use: 'données et compteurs' },
+  { name: 'Caveat', by: 'Pablo Impallari (Impallari Type)', licence: 'SIL Open Font License 1.1', file: 'LICENSE-Caveat.txt', use: 'écriture à la main' },
+]
+
+/**
+ * Le texte d'une licence, lu dans une fenêtre : une fois l'app installée, son service worker renverrait
+ * l'app à la place d'un fichier ouvert comme une page.
+ */
+function useLicence() {
+  const [open, setOpen] = useState<(typeof FONTS)[number] | null>(null)
+  const [text, setText] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+  const show = (font: (typeof FONTS)[number]) => (e: MouseEvent) => {
+    e.preventDefault()
+    setOpen(font)
+    setText(null)
+    setFailed(false)
+    fetch(`./licences/${font.file}`)
+      .then((r) => (r.ok && !(r.headers.get('content-type') ?? '').includes('html') ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then(setText)
+      .catch(() => setFailed(true))
+  }
+  const modal = (
+    <Modal open={!!open} onClose={() => setOpen(null)} title={open ? `Licence : ${open.name}` : 'Licence'} actions={<TypedLink onClick={() => setOpen(null)}>Fermer</TypedLink>}>
+      {failed ? (
+        <p className="modal-text">
+          {fr(`Le texte n’a pas pu être chargé (hors ligne ?). Il est aussi dans le code source, dossier public/licences : ${open?.file ?? ''}.`)}
+        </p>
+      ) : (
+        <pre className="licence-text" tabIndex={0} aria-label={open ? `Texte de la licence de ${open.name}` : undefined}>
+          {text ?? 'Chargement…'}
+        </pre>
+      )}
+    </Modal>
+  )
+  return { show, modal }
+}
+
 export function About() {
+  const licence = useLicence()
   return (
+    <>
     <Notebook className="apropos">
       {/* ===================== page de gauche : le fonctionnement ===================== */}
       <Page side="left" section="1" label="Comment l’app retient ce que tu sais">
@@ -66,19 +113,44 @@ export function About() {
         <section aria-labelledby="h-memo">
           <H id="h-memo">Comment l’app retient ce que tu sais</H>
           <p className="prose drop">
-            Chaque fiche est découpée en cartes (preuves, seuil de chasse, vitesse, signes clés, tests 0 preuve…). Après chaque carte, tu
-            indiques si c’était facile ou non : la carte revient alors dans 1 jour, puis 3, 8, 20 jours… et plus tôt si tu l’as oubliée.
-            C’est la répétition espacée : on révise juste avant d’oublier, ce qui fixe la mémoire avec un minimum de temps. Les erreurs en
-            quiz ou en enquête refont passer la carte correspondante en révision.
+            {fr(
+              'Chaque fiche est découpée en cartes (preuves, seuil de chasse, vitesse, signes clés, tests 0 preuve…). Après chaque carte, tu notes ta réponse : À revoir, Difficile, Bien ou Facile. Une nouvelle carte revient d’abord un peu plus loin dans la même séance, puis, si tu réponds « Bien », le lendemain, puis 3, 8, 20 jours plus tard… Si tu l’as oubliée, elle revient dans la séance et repart sur un intervalle plus court. C’est la répétition espacée : on révise juste avant d’oublier, ce qui fixe la mémoire avec un minimum de temps.',
+            )}
           </p>
           <Intervals />
           <p className="prose">
-            Les notes du coach deviennent elles aussi des cartes : un conseil donné une fois revient de lui-même au bon moment.
+            {fr(
+              'Une erreur au quiz peut ramener dans la révision du jour la carte correspondante, si tu l’avais déjà apprise. Les notes du carnet ajoutées à la révision (avec un texte ou une réponse) deviennent elles aussi des cartes : un conseil donné une fois revient de lui-même au bon moment.',
+            )}
           </p>
           <p className="prose">
-            Tout est enregistré dans le navigateur de cet appareil (aucun compte, aucun serveur). Pour changer d’appareil ou partager,
-            utilise l’export ou les liens de partage du <Link to="/profil">profil</Link> et du <Link to="/carnet">carnet</Link>.
+            Tout est enregistré dans le navigateur de cet appareil (aucun compte, aucun serveur). Pour changer d’appareil, exporte une
+            sauvegarde depuis le <Link to="/profil">profil</Link>{NNBSP}; pour partager des notes ou un bilan, utilise les liens du{' '}
+            <Link to="/carnet">carnet</Link> et du profil.
           </p>
+        </section>
+
+        <section aria-labelledby="h-install">
+          <H id="h-install">Installer le carnet</H>
+          <p className="prose">
+            {fr(
+              'Installé sur l’écran d’accueil, le carnet s’ouvre comme une app et marche hors ligne. Dans un simple onglet, le navigateur peut effacer ce qu’il contient : sur iPhone, Safari le fait après 7 jours sans visite.',
+            )}
+          </p>
+          <dl className="install">
+            <div>
+              <dt>iPhone</dt>
+              <dd>
+                {fr(
+                  'Ouvre le carnet dans Safari, touche le bouton Partager, puis « Sur l’écran d’accueil ». L’app installée a sa propre mémoire, séparée de Safari : un lien reçu s’ouvre dans Safari, copie-le et colle-le dans Carnet, « Coller un lien reçu ».',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Android</dt>
+              <dd>{fr('Dans Chrome, ouvre le menu (les trois points), puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».')}</dd>
+            </div>
+          </dl>
         </section>
       </Page>
 
@@ -96,12 +168,13 @@ export function About() {
             <a href={UPSTREAM_REPO_URL} target="_blank" rel="noreferrer">
               Unofficial Phasmo Cheat Sheet
             </a>{' '}
-            de Ty Bayn (Zero-Network), publié sous licence GNU AGPL v3 : données de sauvegarde du projet et textes de son wiki, traduits et
-            complétés pour les entités récentes, puis vérifiés point par point. {DATA_INFO.gameVersionNote}.
+            de Ty Bayn (Zero-Network), publié sous licence GNU AGPL v3{NNBSP}: données de sauvegarde du projet et textes de son wiki,
+            traduits et complétés pour les entités récentes, puis vérifiés point par point. {DATA_INFO.gameVersionNote}.
           </p>
           <p className="prose">
-            Le jeu évolue : si un détail ne correspond plus à ce que tu vois en partie, c’est le jeu qui a raison. Les points à confirmer
-            sont signalés en bas de chaque fiche.
+            {fr(
+              'Le jeu évolue : si un détail ne correspond plus à ce que tu vois en partie, c’est le jeu qui a raison. Les points à confirmer sont signalés en bas de chaque fiche.',
+            )}
           </p>
         </section>
 
@@ -110,7 +183,8 @@ export function About() {
             Licence
           </H>
           <p className="prose">
-            Phasmo Coach est un logiciel libre sous licence GNU AGPL v3, comme le projet dont il dérive. Le code source est disponible ici :{' '}
+            Phasmo Coach est un logiciel libre sous licence GNU AGPL v3, comme le projet dont il dérive. Le code source est disponible
+            ici{NNBSP}:{' '}
             <a href={SOURCE_REPO_URL} target="_blank" rel="noreferrer" className="src-url">
               {SOURCE_REPO_URL.replace('https://', '')}
             </a>
@@ -118,17 +192,39 @@ export function About() {
           </p>
         </section>
 
+        <section aria-labelledby="h-fonts">
+          <H id="h-fonts" count="5 polices">
+            Polices
+          </H>
+          <p className="prose">Les polices sont livrées avec l’app, sous leur propre licence libre.</p>
+          <ul className="fonts">
+            {FONTS.map((f) => (
+              <li key={f.file}>
+                <span className="fonts-name">{f.name}</span>
+                <span className="fonts-by">
+                  de {f.by}, {f.use}
+                </span>
+                <a className="fonts-lic" href={`./licences/${f.file}`} onClick={licence.show(f)}>
+                  {f.licence}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <aside className="mention" aria-label="Mention légale">
           <Stamp tone="ink" small rotate={-4}>
             Projet de fan
           </Stamp>
           <p>
-            Phasmophobia, son logo et les informations du jeu appartiennent à Kinetic Games Limited. Ce projet de fan, à but éducatif, n’est
-            ni créé ni approuvé par Kinetic Games. Aucune image ni aucun son du jeu n’est utilisé : les bruits de pas sont synthétisés par
-            l’app.
+            {fr(
+              'Phasmophobia, son logo et les informations du jeu appartiennent à Kinetic Games Limited. Ce projet de fan, à but éducatif, n’est ni créé ni approuvé par Kinetic Games. Aucune image ni aucun son du jeu n’est utilisé : les bruits de pas sont synthétisés par l’app.',
+            )}
           </p>
         </aside>
       </Page>
     </Notebook>
+    {licence.modal}
+    </>
   )
 }

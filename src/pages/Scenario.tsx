@@ -23,7 +23,9 @@ import { EVIDENCE } from '../data/evidence'
 import type { Ghost, ObservationStrength } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import { EMPTY_FILTER, filterGhosts, possibleEvidence, type FilterState } from '../engine/filter'
-import { redactGhostName } from '../engine/format'
+import { NBSP, num, safeDate } from '../engine/format'
+import { coachNameOf, coachNotes } from '../engine/notes'
+import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { createRng, weightedPick } from '../engine/random'
 import {
   candidatesAfterEachClue,
@@ -45,11 +47,15 @@ const MAX_WRONG = 1
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 const pad = (n: number) => String(n).padStart(2, '0')
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
+/** « 2 rapports », « 1 rapport » ; zéro s'écrit en toutes lettres (« aucune preuve »). */
+const plural = (n: number, word: string, zero?: string) => (n === 0 && zero ? zero : `${n} ${word}${n > 1 ? 's' : ''}`)
+const pts = (n: number) => `${n}${NBSP}pts`
+/** Le libellé enregistré dans l'historique (les anciens contrats s'appelaient « Enquête : … »). */
+const LABEL_PREFIX = /^(Enquête|Mise en situation)\s*:\s*/
 
 export function Scenario() {
   const mastery = useMastery()
-  const { state, dispatch } = useStore()
+  const { state, deck, dispatch } = useStore()
   const [difficulty, setDifficulty] = useState<Difficulty>('pro')
   const [pool, setPool] = useState<'all' | 'weak'>('all')
   const [scenario, setScenario] = useState<S | null>(null)
@@ -88,11 +94,12 @@ export function Scenario() {
   }, [sheetOpen])
 
   const ghost: Ghost | undefined = scenario ? getGhost(scenario.ghostId) : undefined
+  /** les entités les moins maîtrisées (seulement parmi celles déjà travaillées) */
+  const weak = useMemo(() => weakestGhosts(GHOSTS.map((g) => g.id), mastery, deck, state, WEAK_COUNT), [mastery, deck, state])
 
   const start = () => {
     const rng = createRng((Date.now() ^ 0x5bd1e995) >>> 0)
-    const sorted = [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0))
-    const candidates = pool === 'weak' ? sorted.slice(0, 8) : GHOSTS
+    const candidates = pool === 'weak' && weak.started ? GHOSTS.filter((g) => weak.ids.includes(g.id)) : GHOSTS
     // en 0 preuve, il faut au moins deux indices forts utilisables sans preuve pour que l'enquête soit jouable
     const playable =
       difficulty === 'apocalypse'
@@ -112,12 +119,8 @@ export function Scenario() {
 
   const possibleGhosts = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
   const candidates = useMemo(() => possibleGhosts.filter((g) => !struck.includes(g.id)), [possibleGhosts, struck])
-  const possible = useMemo(() => possibleEvidence(possibleGhosts), [possibleGhosts])
-  /** les rapports de chasse : indices de seuil et de vitesse, et observations « chasse » de l'entité */
-  const huntTexts = useMemo(
-    () => new Set(ghost ? ghost.observations.filter((o) => o.kind === 'hunt').map((o) => redactGhostName(o.text, ghost)) : []),
-    [ghost],
-  )
+  // même règle que le codex : une fois les preuves du contrat trouvées, les autres sont grisées
+  const possible = useMemo(() => possibleEvidence(possibleGhosts, filter), [possibleGhosts, filter])
   const pastContracts = useMemo(() => state.activity.filter((a) => a.kind === 'scenario'), [state.activity])
 
   const finish = (result: 'solved' | 'dead', wrongCount: number) => {
@@ -135,7 +138,7 @@ export function Scenario() {
     })
     dispatch({
       type: 'activity',
-      activity: { t: Date.now(), kind: 'scenario', score, total: 1000, label: `Enquête : ${ghost.name}`, ghostId: ghost.id },
+      activity: { t: Date.now(), kind: 'scenario', score, total: 1000, label: `Mise en situation : ${ghost.name}`, ghostId: ghost.id },
     })
   }
 
@@ -153,19 +156,21 @@ export function Scenario() {
     setGuess('')
   }
 
-  const isHunt = (c: Clue) => c.kind === 'hunt-sanity' || c.kind === 'hunt-speed' || (c.kind === 'observation' && huntTexts.has(c.text))
+  /** les rapports de chasse : indices de seuil et de vitesse, et observations « chasse » de l'entité */
+  const isHunt = (c: Clue) => c.kind === 'hunt-sanity' || c.kind === 'hunt-speed' || !!c.hunt
 
   /* ---------- configuration : l'ordre de mission ---------- */
   if (!scenario || !ghost) {
     const recent = pastContracts.slice(-6).reverse()
+    const allLabel = `Au hasard parmi les ${GHOSTS.length}`
     return (
       <Notebook className="sc sc--setup">
-        <Page side="left" section="4" label="Mise en situation : ordre de mission">
+        <Page side="left" section="4" label="Mise en situation : ordre de mission">
           <FileHead>
             <Link to="/entrainement">‹ S’entraîner</Link>
             <span>Mise en situation</span>
             <span>
-              Contrat n° <b>{pad(pastContracts.length + 1)}</b>
+              Contrat n° <b>{pad(pastContracts.length + 1)}</b>
             </span>
           </FileHead>
 
@@ -206,8 +211,8 @@ export function Scenario() {
                   <path d="M13 3 C 5 6, 9 50, 3 60 C 9 70, 5 114, 13 117" pathLength={1} strokeWidth={1.6} />
                 </svg>
                 <span>
-                  En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
-                  Goryo…) restent toujours visibles. En 0 preuve, seuls les orbes du Mimic apparaissent.
+                  En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
+                  Goryo…) restent visibles dans ces deux modes. En 0 preuve, seuls les orbes du Mimic apparaissent.
                 </span>
               </p>
             </div>
@@ -215,18 +220,31 @@ export function Scenario() {
 
           <div className="sc-field">
             <span className="typed-label" id="sc-pool-label">
-              <span className="sc-step">2</span> Entité tirée au sort parmi
+              <span className="sc-step">2</span> Entité du contrat
             </span>
-            <Seg
-              label="Entités"
-              value={pool}
-              onChange={setPool}
-              options={[
-                { value: 'all', label: `Les ${GHOSTS.length}` },
-                { value: 'weak', label: 'Mes 8 points faibles' },
-              ]}
-            />
-            <p className="pencil-note sc-hint">celles que tu maîtrises le moins sortent plus souvent</p>
+            {weak.started ? (
+              <>
+                <Seg
+                  label="Entité du contrat"
+                  value={pool}
+                  onChange={setPool}
+                  options={[
+                    { value: 'all', label: allLabel },
+                    { value: 'weak', label: weak.ids.length === 1 ? 'La moins maîtrisée' : `Les ${weak.ids.length} moins maîtrisées` },
+                  ]}
+                />
+                <p className="pencil-note sc-hint">
+                  {pool === 'weak'
+                    ? weak.ids.map((id) => getGhost(id)?.name).join(', ')
+                    : 'celles que tu maîtrises le moins sortent plus souvent'}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="sc-pool-only">{allLabel}</p>
+                <p className="pencil-note sc-hint">après ta première révision, tu pourras viser les moins maîtrisées</p>
+              </>
+            )}
           </div>
 
           <div className="sc-go">
@@ -240,7 +258,13 @@ export function Scenario() {
           <FileHead>
             <span>Règlement</span>
             <span>
-              <b>{pastContracts.length}</b> contrat{pastContracts.length > 1 ? 's' : ''} au registre
+              {pastContracts.length === 0 ? (
+                'Registre vide'
+              ) : (
+                <>
+                  <b>{pastContracts.length}</b> contrat{pastContracts.length > 1 ? 's' : ''} au registre
+                </>
+              )}
             </span>
           </FileHead>
 
@@ -249,7 +273,7 @@ export function Scenario() {
             <ol className="sc-rules">
               <li>
                 <span className="n">01</span>
-                <p>Le contrat arrive rapport par rapport : preuves trouvées ou non, comportements, chasses, bruits de pas.</p>
+                <p>Le contrat arrive rapport par rapport : preuves trouvées ou non, comportements, chasses, bruits de pas.</p>
               </li>
               <li>
                 <span className="n">02</span>
@@ -257,7 +281,7 @@ export function Scenario() {
               </li>
               <li>
                 <span className="n">03</span>
-                <p>Plus tu tranches tôt, plus la prime est grosse : près de 1000 points au premier rapport, 300 au dernier.</p>
+                <p>Plus tu tranches tôt, plus la prime est grosse : près de {num(1000)} points au premier rapport, 300 au dernier.</p>
               </li>
               <li>
                 <span className="n">04</span>
@@ -271,7 +295,7 @@ export function Scenario() {
               Derniers contrats
             </H>
             {recent.length === 0 ? (
-              <p className="sc-empty">Aucun contrat au registre pour l’instant : le premier t’attend sur la page de gauche.</p>
+              <p className="sc-empty">Ton premier contrat terminé s’inscrira ici, avec sa date et sa prime.</p>
             ) : (
               <div className="libcard sc-libcard settle" style={{ '--r': '1.2deg', '--d': '.4s' } as Style}>
                 <Tape />
@@ -284,9 +308,9 @@ export function Scenario() {
                 <ol>
                   {recent.map((a, k) => (
                     <li key={`${a.t}-${k}`} style={{ '--r': `${[-2, 1, -1, 2, -1.5, 1.5][k]}deg` } as Style}>
-                      <span className="d">{SHORT.format(a.t)}</span>
-                      <span className="sc-lib-name">{(a.ghostId && getGhost(a.ghostId)?.name) || a.label.replace(/^Enquête : /, '')}</span>
-                      <span className={`res${a.score === 0 ? ' bad' : ''}`}>{a.score === 0 ? 'échec' : `${a.score} pts`}</span>
+                      <span className="d">{safeDate(SHORT, a.t)}</span>
+                      <span className="sc-lib-name">{(a.ghostId && getGhost(a.ghostId)?.name) || a.label.replace(LABEL_PREFIX, '')}</span>
+                      <span className={`res${a.score === 0 ? ' bad' : ''}`}>{a.score === 0 ? 'échec' : pts(a.score)}</span>
                     </li>
                   ))}
                 </ol>
@@ -315,22 +339,21 @@ export function Scenario() {
     const finalScore = scoreScenario(revealed, scenario.clues.length, wrong.length, outcome === 'solved')
     const solved = outcome === 'solved'
     const idx = GHOSTS.findIndex((g) => g.id === ghost.id)
-    const coach = state.profile.role === 'coach' ? state.profile.name : state.profile.coachName
-    const ghostNotes = state.notes.filter((n) => n.ghostId === ghost.id).slice(0, 2)
+    // seulement les vraies notes du coach sur cette entité (épinglées d'abord, puis les plus récentes)
+    const coach = coachNameOf(state.profile)
+    const ghostNotes = coachNotes(state.notes, state.profile, ghost.id).slice(0, 2)
     return (
       <Notebook className="sc sc--result">
         <Page side="left" section="4" label="Rapport de clôture">
           <FileHead>
             <span>Rapport de clôture</span>
             <span>
-              Contrat n° <b>{pad(contractNo)}</b>
+              Contrat n° <b>{pad(contractNo)}</b>
             </span>
-            <span>
-              {diff.label} · {evidenceLine}
-            </span>
+            <span>{scenario.evidenceCount === 0 ? diff.label : `${diff.label} · ${evidenceLine}`}</span>
           </FileHead>
 
-          <h1 className="sr-only">{solved ? `C’était bien ${ghost.name}.` : `Raté : c’était ${ghost.name}.`}</h1>
+          <h1 className="sr-only">{solved ? `C’était bien ${ghost.name}.` : `Raté : c’était ${ghost.name}.`}</h1>
           <div className={`sc-verdict${solved ? ' is-solved' : ' is-dead'}`}>
             <Polaroid
               ghostId={ghost.id}
@@ -360,16 +383,16 @@ export function Scenario() {
                   {finalScore}
                 </RoughCircle>
               </span>
-              <span className="sc-score-of">sur 1000 points</span>
+              <span className="sc-score-of">sur {num(1000)} points</span>
             </p>
           </div>
 
           <p className="sc-lead sc-outcome">
             {solved
-              ? `Trouvé en ${plural(reportsRead, 'rapport')} sur ${reportsTotal}${
+              ? `Trouvée en ${plural(reportsRead, 'rapport')} sur ${reportsTotal}${
                   wrong.length ? `, avec ${plural(wrong.length, 'erreur')}` : ', sans erreur'
                 }.`
-              : 'Deux erreurs : le contrat échoue. Relis les rapports sur la page de droite, la leçon est souvent dedans.'}
+              : `Deux erreurs : le contrat échoue. Relis le contrat en entier : le nombre d’entités possibles est noté au crayon à chaque rapport.`}
           </p>
 
           <dl className="sc-facts">
@@ -409,16 +432,17 @@ export function Scenario() {
           {ghostNotes.length > 0 && (
             <section className="sc-notes" aria-labelledby="h-sc-notes">
               <H id="h-sc-notes" as="h3">
-                {coach ? `Notes de ${coach}` : 'Notes du coach'}
+                Notes de {coach}
               </H>
               <div className="sc-notes-row">
                 {ghostNotes.map((n, k) => (
                   <Sticky
                     key={n.id}
+                    hand="coach"
                     rotate={k % 2 ? 1.6 : -1.4}
                     delay={0.8 + k * 0.15}
-                    meta={SHORT.format(n.createdAt)}
-                    sign={n.author ? `— ${n.author}` : undefined}
+                    meta={safeDate(SHORT, n.createdAt, '')}
+                    sign={`— ${n.author}`}
                   >
                     <strong className="sc-sticky-title">{n.title}</strong>
                     {n.body && <span className="pre sc-sticky-body">{n.body}</span>}
@@ -429,7 +453,7 @@ export function Scenario() {
           )}
 
           <div className="sc-actions sc-actions--end">
-            <TapeButton onClick={start}>Nouvelle enquête</TapeButton>
+            <TapeButton onClick={start}>Nouveau contrat</TapeButton>
             <PaperButton onClick={() => setScenario(null)} rotate={-0.8}>
               Changer la difficulté
             </PaperButton>
@@ -492,7 +516,7 @@ export function Scenario() {
             </button>
             <span>Rapport de terrain</span>
             <span>
-              Contrat n° <b>{pad(contractNo)}</b>
+              Contrat n° <b>{pad(contractNo)}</b>
             </span>
           </FileHead>
 
@@ -560,14 +584,14 @@ export function Scenario() {
 
           <div className="sc-actions">
             <PaperButton disabled={allShown} onClick={() => setRevealed((r) => r + 1)} rotate={-0.8}>
-              {allShown ? 'Plus aucun indice' : 'Indice suivant'}
+              {allShown ? 'Plus aucun rapport' : 'Rapport suivant'}
             </PaperButton>
             <TapeButton onClick={() => setGuessOpen(true)}>Désigner l’entité</TapeButton>
           </div>
           <p className="sc-sealed">
             {allShown
               ? 'Tous les rapports sont sur la table.'
-              : `${plural(reportsTotal - reportsRead, 'rapport')} encore sous scellés · prime actuelle ${score} pts`}
+              : `${plural(reportsTotal - reportsRead, 'rapport')} encore sous scellés · prime actuelle ${pts(score)}`}
           </p>
         </Page>
 
@@ -581,7 +605,7 @@ export function Scenario() {
           >
             <span className="sc-sheet-title">Mon carnet</span>
             <span className="sc-sheet-sum">
-              {plural(found, 'preuve')} · {candidates.length} possible{candidates.length > 1 ? 's' : ''}
+              {plural(found, 'preuve', 'aucune preuve')} · {plural(candidates.length, 'possible', 'aucune possible')}
             </span>
             <span className="sc-sheet-act">{sheetOpen ? 'fermer' : 'ouvrir'}</span>
           </button>
@@ -589,20 +613,20 @@ export function Scenario() {
             <FileHead>
               <span>Pièces du dossier</span>
               <span>
-                Prime <b>{score}</b> pts · <b>{lives}</b> essai{lives > 1 ? 's' : ''}
+                Prime <b>{score}</b> pts · <b>{lives}</b> essai{lives > 1 ? 's' : ''}
               </span>
             </FileHead>
 
             <section aria-labelledby="h-sc-ev">
-              <H id="h-sc-ev" count={`${scenario.evidenceCount} au contrat`}>
+              <H id="h-sc-ev" count={scenario.evidenceCount === 0 ? 'aucune au contrat' : `${scenario.evidenceCount} au contrat`}>
                 Mon carnet de preuves
               </H>
-              <p className="pencil-note sc-how">un toucher : trouvée · deux : exclue · trois : effacée</p>
+              <p className="pencil-note sc-how">1 clic : trouvée · 2 : exclue · 3 : effacée</p>
               <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
             </section>
 
             <section aria-labelledby="h-sc-cands">
-              <H id="h-sc-cands" count={`${candidates.length} sur ${GHOSTS.length}`}>
+              <H id="h-sc-cands" count={candidates.length === 0 ? 'aucune' : `${candidates.length} sur ${GHOSTS.length}`}>
                 Encore possibles
               </H>
               <ul className="sc-cands">
@@ -626,7 +650,7 @@ export function Scenario() {
                 })}
               </ul>
               <p className="pencil-note sc-how">
-                touche un nom pour le barrer
+                un clic sur un nom le barre
                 {eliminated > 0 && ` · ${eliminated} écartée${eliminated > 1 ? 's' : ''} par tes preuves`}
               </p>
             </section>
@@ -638,10 +662,10 @@ export function Scenario() {
       <Modal
         open={guessOpen}
         onClose={() => setGuessOpen(false)}
-        title="Quelle est l’entité ?"
+        title="Quelle est l’entité ?"
         actions={
           <>
-            <TypedLink onClick={() => setGuessOpen(false)}>Continuer l’enquête</TypedLink>
+            <TypedLink onClick={() => setGuessOpen(false)}>Retour au contrat</TypedLink>
             <TapeButton disabled={!guess} onClick={submitGuess}>
               Valider
             </TapeButton>
@@ -650,8 +674,8 @@ export function Scenario() {
       >
         <p className="pencil-note sc-guess-note">
           {wrong.length > 0
-            ? `Attention : ${lives > 1 ? `encore ${lives} essais` : 'plus qu’un essai'}.`
-            : `Une erreur coûte ${WRONG_GUESS_PENALTY} points ; deux, et le contrat échoue.`}
+            ? `Attention : ${lives > 1 ? `encore ${lives} essais` : 'plus qu’un essai'}.`
+            : `Une erreur coûte ${WRONG_GUESS_PENALTY} points ; deux, et le contrat échoue.`}
           {candidates.length > 0 && candidates.length < GHOSTS.length && ' Seules les entités encore possibles d’après ton carnet sont proposées.'}
         </p>
         <div className="sc-guess">
@@ -701,7 +725,9 @@ function ContractHeader({ scenario, label, evidenceLine }: { scenario: S; label:
     <p className="sc-contract">
       <span className="sc-report-n">Rapport 00 · {scenario.clues[0].time}</span>
       <span>
-        {cap(scenario.map)}, difficulté {label} ({evidenceLine}). Pièce favorite : {scenario.room}.
+        {scenario.evidenceCount === 0
+          ? `${cap(scenario.map)}, partie à 0 preuve. Pièce favorite : ${scenario.room}.`
+          : `${cap(scenario.map)}, difficulté ${label} (${evidenceLine}). Pièce favorite : ${scenario.room}.`}
       </span>
     </p>
   )
@@ -773,7 +799,7 @@ function Report({
           {debrief && clue.strength && <StrengthStamp strength={clue.strength} k={n} />}
           {remaining != null && (
             <span className="pencil-note sc-remaining">
-              {remaining} possible{remaining > 1 ? 's' : ''}
+              {plural(remaining, 'possible', 'aucune possible')}
             </span>
           )}
         </span>
@@ -784,7 +810,7 @@ function Report({
           <JournalBox state={found ? 'yes' : 'no'} color={ev.color} seed={`sc-${clue.id}-${clue.evidence}`} crossOut delay={isNew ? 0.25 : 0} />
           <span className="sc-ev-name">{ev.label}</span>
           <span className="pencil-note">
-            {found ? 'trouvée' : debrief && clue.hidden ? 'non trouvée : cachée par la difficulté' : 'non trouvée'}
+            {found ? 'trouvée' : debrief && clue.hidden ? 'non trouvée : cachée par la difficulté' : 'non trouvée'}
           </span>
         </p>
       )}

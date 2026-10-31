@@ -104,7 +104,7 @@
       "definitive": true
     },
     {
-      "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son : le wiki tybayn le liste comme média « Cri paranormal ». Pratique pour garder une trace du cri.",
+      "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son, comme média « Cri paranormal ». Pratique pour garder une trace du cri.",
       "definitive": false
     },
     {
@@ -289,8 +289,7 @@
   ],
   "changes": [
     "Winter's Jest v0.15.1.0 (16 décembre 2025) : la Banshee ne se présente plus que comme féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
-    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Cri paranormal » (wiki tybayn).",
-    "Le wiki tybayn actuel détaille le ciblage (choix de la cible, changement après la mort d'un joueur, cas de la patte de singe).",
+    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Cri paranormal ».",
     "Nouvelles entités partageant deux preuves : Obambo (UV + D.O.T.S, décembre 2025) et Kormos (UV + orbes, mai 2026).",
     "Chronicle v0.13.0 (24 juin 2025) : la Banshee peut désormais changer de pièce favorite (notes de patch) ; un changement de pièce ne l'élimine plus."
   ],
@@ -316,6 +315,6 @@
   "uncertain": [
     "Nom exact du média « Cri paranormal » dans la version française du jeu : non vérifié.",
     "« Toujours féminine » depuis la v0.15.1.0 : connu par des résumés de patch, pas par les notes officielles.",
-    "Bug connu (tybayn) : elle change de cible à la mort de n'importe quel joueur ; corrigé, elle n'en changerait qu'à la mort de sa cible."
+    "Bug connu : elle change de cible à la mort de n'importe quel joueur ; une fois corrigé, elle n'en changerait qu'à la mort de sa cible."
   ]
 }

@@ -3,7 +3,7 @@
  * Calculés à partir des données de l'entité.
  */
 import type { Ghost } from '../../data/types'
-import { num } from '../../engine/format'
+import { NBSP, NNBSP, num } from '../../engine/format'
 
 const W = 480
 const L = 14
@@ -33,7 +33,7 @@ export function SanityChart({ ghost }: { ghost: Ghost }) {
   const xN = sx(normal, 100)
   const xHi = sx(Math.max(h.high, normal), 100)
   const xLo = h.low >= 0 && h.low < normal ? sx(h.low, 100) : null
-  const label = `Seuil de chasse : ${h.summary}`
+  const label = `Seuil de chasse${NNBSP}: ${h.summary}`
   return (
     <svg className="chart" viewBox={`0 0 ${W} 112`} role="img" aria-label={label}>
       <text className="hand-t" x={(L + xN) / 2} y="24" textAnchor="middle">
@@ -54,24 +54,27 @@ export function SanityChart({ ghost }: { ghost: Ghost }) {
       <path className="red" d={`M${xN} 28 V60`} strokeWidth="2.6" />
       {xLo != null && <path className="red" d={`M${xLo} 40 V60`} strokeWidth="1.6" strokeDasharray="3 3" />}
       <text className="lbl" x={L} y="78">
-        0 %
+        0{NBSP}%
       </text>
       {Math.abs(normal - 50) > 6 && (
         <text className="lbl m-hide" x={sx(50, 100)} y="78" textAnchor="middle">
           50 · standard
         </text>
       )}
-      <text className="lbl-b" x={xN} y="78" textAnchor="middle" style={{ fill: 'var(--red-pen)' }}>
-        {normal} %
+      <text className="lbl-b" x={xN > R - 22 ? R : xN} y="78" textAnchor={xN > R - 22 ? 'end' : 'middle'} style={{ fill: 'var(--red-pen)' }}>
+        {normal}
+        {NBSP}%
       </text>
       {xLo != null && Math.abs((xLo as number) - xN) > 26 && (
         <text className="lbl" x={xLo} y="78" textAnchor="middle">
-          {h.low} %
+          {h.low}
+          {NBSP}%
         </text>
       )}
       {xHi > xN + 26 && (
-        <text className="lbl" x={xHi} y="78" textAnchor="middle">
-          {h.high} %
+        <text className="lbl" x={xHi > R - 22 ? R : xHi} y="78" textAnchor={xHi > R - 22 ? 'end' : 'middle'}>
+          {h.high}
+          {NBSP}%
         </text>
       )}
       <text className="lbl" x={L} y="104" style={{ letterSpacing: '.06em' }}>
@@ -91,8 +94,11 @@ export function SpeedChart({ ghost }: { ghost: Ghost }) {
   const x = (v: number) => sx(v, max)
   const losTarget = s.los && !s.isRange && s.max == null ? s.min * 1.65 : null
   const ticks = Array.from({ length: max * 4 + 1 }, (_, i) => i / 4)
+  const far = Math.max(...values)
+  /** la vitesse la plus haute, si son chiffre heurterait l'étiquette « 3 m/s » du bout de la règle */
+  const edge = x(far) > R - 60 ? far : null
   return (
-    <svg className="chart" viewBox={`0 0 ${W} 100`} role="img" aria-label={`Vitesse en chasse : ${s.summary}`}>
+    <svg className="chart" viewBox={`0 0 ${W} 100`} role="img" aria-label={`Vitesse en chasse${NNBSP}: ${s.summary}`}>
       {s.isRange && s.max != null && <path className="red" d={`M${x(s.min)} 56 H${x(s.max)}`} strokeWidth="5" opacity=".55" />}
       {losTarget != null && (
         <>
@@ -102,33 +108,43 @@ export function SpeedChart({ ghost }: { ghost: Ghost }) {
           </text>
           <circle cx={x(losTarget)} cy="56" r="6" fill="none" style={{ stroke: 'var(--red-pen)' }} strokeWidth="2" />
           <text className="lbl-b" x={x(losTarget)} y="82" textAnchor="middle" style={{ fill: 'var(--red-pen)' }}>
-            ≈ {num(Math.round(losTarget * 10) / 10)}
+            ≈{NBSP}{num(Math.round(losTarget * 10) / 10)}
           </text>
         </>
       )}
       {!s.los && (
-        <text className="hand-t halo" x={x(s.min)} y="22" textAnchor="middle">
-          pas d’accélération en LdV
+        // centré sur la vitesse de base, sans sortir de la règle (le texte fait environ 300 unités en mobile)
+        <text className="hand-t halo" x={Math.min(R - 160, Math.max(L + 160, x(s.min)))} y="22" textAnchor="middle">
+          n’accélère pas en ligne de vue
         </text>
       )}
       <path className="axis" d={`M${L} 56 H${R}`} />
       <g className="tick">
         <path d={ticks.map((t) => `M${x(t)} 56v${t % 1 === 0 ? 7 : 4}`).join('')} />
       </g>
-      {values.map((v, i) => (
-        <g key={i}>
-          <circle cx={x(v)} cy="56" r="6" style={i === 0 ? { fill: 'var(--ink)' } : { fill: 'none', stroke: 'var(--ink)' }} strokeWidth="2" />
-          <text className="lbl-b" x={x(v)} y={i % 2 === 0 ? 82 : 96} textAnchor="middle">
-            {num(v)}
-          </text>
-        </g>
-      ))}
+      {values.map((v, i) => {
+        // la dernière vitesse, si elle tombe au bout de la règle, porte l'unité à la place de « 3 m/s »
+        const unit = v === edge
+        const end = x(v) > R - 24
+        return (
+          <g key={i}>
+            <circle cx={x(v)} cy="56" r="6" style={i === 0 ? { fill: 'var(--ink)' } : { fill: 'none', stroke: 'var(--ink)' }} strokeWidth="2" />
+            <text className="lbl-b" x={end ? R : x(v)} y={i % 2 === 0 ? 82 : 96} textAnchor={end ? 'end' : 'middle'}>
+              {num(v)}
+              {unit ? `${NBSP}m/s` : ''}
+            </text>
+          </g>
+        )
+      })}
       <text className="lbl" x={L} y="82">
         0
       </text>
-      <text className="lbl" x={R} y="98" textAnchor="end">
-        {max} m/s
-      </text>
+      {edge == null && (
+        <text className="lbl" x={R} y="98" textAnchor="end">
+          {max}
+          {NBSP}m/s
+        </text>
+      )}
       <path className="dim" d={`M${x(1.7)} 48 V56`} strokeWidth="1.2" strokeDasharray="2 2" />
     </svg>
   )

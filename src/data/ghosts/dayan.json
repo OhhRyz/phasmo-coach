@@ -141,7 +141,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que le Gallu et l'Obambo : absente de la sauvegarde tybayn de décembre 2024.",
+    "Nouvelle entité ajoutée avec Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que le Gallu et l'Obambo.",
     "Même mise à jour : la Banshee ne se présente plus que sous une forme féminine, ce qui rend le critère « entité féminine » non exclusif à la Dayan."
   ],
   "sources": [
@@ -158,8 +158,8 @@
     "https://phasmopedia.com/en/ghosts/dayan/"
   ],
   "uncertain": [
-    "Seuil quand un joueur bouge près d'elle : 65 % pour tybayn v0.19.1.0 et la plupart des sources, 60 % pour Destructoid.",
-    "Notion de « joueur le plus proche » pour le seuil : wikis communautaires seulement (tybayn v0.19.1.0 donne les seuils 65 % / 45 % / 50 % mais ne parle du joueur le plus proche que pour la vitesse).",
+    "Seuil quand un joueur bouge près d'elle : 65 % pour la plupart des sources, 60 % pour une autre.",
+    "Le seuil (65 % / 45 % / 50 %) dépend-il du « joueur le plus proche », comme sa vitesse ? Seules certaines sources l'affirment.",
     "Aucune preuve garantie connue en Cauchemar et Démence (une seule source l'affirme).",
     "Ce qui compte comme « bouger » (s'accroupir, marcher accroupi, tourner sur place) : non vérifié."
   ]

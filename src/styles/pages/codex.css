@@ -18,6 +18,8 @@
 .cx-tracker .tracker { column-gap: 20px; }
 .cx-tracker .ev-name { font-size: 16px; }
 .cx-book .cx-tracker-hint { margin: 8px 0 0; font-size: 19px; }
+/* aucune entité ne colle : la réponse arrive sous les preuves, là où l'œil se trouve */
+.cx-book .cx-none { margin: -8px 0 26px; max-width: 26em; font-size: 19px; line-height: 1.15; }
 
 /* légende au crayon, dans la marge */
 .margin-note.cx-legend {
@@ -38,8 +40,9 @@
 
 .cx-more-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 22px; }
 .cx-more-bar .link { display: inline-flex; align-items: center; min-height: 40px; }
-.cx-more-n { margin-left: 4px; color: var(--red-pen); font-weight: 700; }
+.cx-more-n { margin-left: 4px; color: var(--ink); font-weight: 700; }
 
+.cx-more[hidden] { display: none; }
 .cx-more {
   display: grid; gap: 14px;
   margin-top: 8px; padding: 16px 0 2px;
@@ -179,8 +182,9 @@
   .cx-tracker .tracker { column-gap: 14px; }
   .cx-tracker .ev-name { font-size: 16px !important; }
   .cx-book .cx-tracker-hint { font-size: 18px; }
+  .cx-book .cx-none { font-size: 18px; margin-bottom: 22px; }
 
-  .cx-search .input { font-size: 23px; }
+  .cx-search .input { font-size: 23px; min-height: 44px; }
   .cx-more .opts { margin-left: -6px; }
   .cx-actions { margin-top: 26px; }
   .cx-verdict-name { font-size: 34px; }

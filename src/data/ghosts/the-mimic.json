@@ -26,7 +26,7 @@
     "summary": "Copie le seuil de l'entité imitée (10 à 100 %)",
     "details": [
       "Copie le seuil de chasse de l'entité qu'il imite : il peut chasser très tôt (en copiant une entité capable de chasser à n'importe quelle santé, comme le Démon) ou très tard.",
-      "Bornes affichées par tybayn (v0.19.1.0) : 10 % au plus bas, 100 % au plus haut, 50 % par défaut."
+      "Bornes : 10 % au plus bas, 100 % au plus haut, 50 % par défaut."
     ]
   },
   "summary": "Entité imitatrice qui copie le comportement d'une autre entité et en change toutes les 30 s à 2 min, mais qui se trahit par de faux orbes, présents même à 0 preuve.",
@@ -236,7 +236,7 @@
   "changes": [
     "Premier hotfix de la mise à jour Chronicle (27 juin 2025) : correction d'un bug où le Mimic pouvait donner les D.O.T.S en imitant un Goryo ; il ne montre de nouveau que ses propres preuves.",
     "Nouvelle confusion à connaître : le Kormos (ajouté en mai 2026, Orbes + Spirit Box + UV) a, comme le Hantu et l'Onryo, toutes ses preuves comprises dans celles du Mimic.",
-    "Bug connu (wiki tybayn actuel) : comportement désynchronisé en chasse ; le clignotement altéré, les transformations d'Obake, etc. ne sont visibles que par l'hôte."
+    "Bug connu : comportement désynchronisé en chasse ; le clignotement altéré, les transformations d'Obake, etc. ne sont visibles que par l'hôte."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -249,9 +249,9 @@
     "https://mp1st.com/title-updates-and-patches/phasmophobia-hotfix-update-1-000-018-first-chronicle-fixes"
   ],
   "uncertain": [
-    "Bornes du seuil (10 à 100 %) reprises de tybayn v0.19.1.0 : elles dépendent des entités qu'il peut imiter (10 % = Obambo calme) et peuvent évoluer avec les prochaines entités.",
-    "Peut-il imiter chacune des entités de 2025–2026 ? Phasmopedia ne le confirme que pour le Kormos et le Deildegast.",
+    "Bornes du seuil (10 à 100 %) : elles dépendent des entités qu'il peut imiter (10 % = Obambo calme) et peuvent évoluer avec les prochaines entités.",
+    "Peut-il imiter chacune des entités de 2025–2026 ? Une seule source le confirme, et seulement pour le Kormos et le Deildegast.",
     "Un Mimic au modèle masculin peut-il imiter la Banshee ou la Dayan (entités féminines) ? Non vérifié.",
-    "Commence-t-il comme une entité standard, avec un 1er changement 1 min après l'ouverture de la porte et aucun changement en chasse ? Phasmopedia seulement."
+    "Commence-t-il comme une entité standard, avec un 1er changement 1 min après l'ouverture de la porte et aucun changement en chasse ? Une seule source."
   ]
 }

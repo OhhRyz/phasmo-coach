@@ -246,7 +246,7 @@
     }
   ],
   "changes": [
-    "v0.18.0.0 (21 juillet 2026) : un agrégateur de notes de patch (patched.gg) mentionne la correction du bug qui permettait au Fantôme d'utiliser sa capacité sur des joueurs morts ou à l'extérieur ; non confirmé, car le wiki tybayn (28/10/2026) le liste encore comme bug connu.",
+    "v0.18.0.0 (21 juillet 2026) : le bug qui permettait au Fantôme d'utiliser sa capacité sur des joueurs morts ou à l'extérieur serait corrigé ; non confirmé, car il est encore listé comme bug connu.",
     "Depuis la refonte des médias (Chronicle, v0.13, juin 2025), il existe des médias vidéo : bug connu, le Fantôme reste visible sur la pellicule de certaines vidéos. Seules la photo « Fantôme » et la vidéo de type « Fantôme » comptent pour le test.",
     "Nouvelles entités partageant deux preuves : Gallu (Spirit Box + UV) et Obambo (UV + D.O.T.S), toutes deux en décembre 2025, puis Kormos (Spirit Box + UV, mai 2026)."
   ],
@@ -264,7 +264,7 @@
     "https://www.destructoid.com/how-to-identify-an-obambo-in-phasmophobia/"
   ],
   "uncertain": [
-    "Bug de sa capacité sur les joueurs morts ou dehors : corrigé en v0.18.0.0 selon un agrégateur, toujours listé par tybayn.",
-    "Bug de la pellicule vidéo : tiré du wiki tybayn, non vérifié en jeu."
+    "Bug de sa capacité sur les joueurs morts ou dehors : corrigé en v0.18.0.0 selon une source, toujours listé comme bug connu ailleurs.",
+    "Bug de la pellicule vidéo : non vérifié en jeu."
   ]
 }

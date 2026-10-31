@@ -20,7 +20,7 @@
       "État normal (état de départ) : 1,7 m/s pendant les chasses.",
       "État enragé : 1,96 m/s.",
       "État affaibli : 1,36 m/s.",
-      "Il accélère en LdV ; selon le wiki tybayn, comme les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
+      "Il accélère en LdV ; comme pour les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
       "Sa vitesse change donc d'une chasse à l'autre selon son état, lui-même lié à ton usage du sel, de l'encens et des crucifix.",
       "Attention : s'il s'enrage pendant une chasse (encens, sel), il passe en état affaibli dès la fin de cette même chasse ; c'est donc la chasse suivante qui sera lente (1,36 m/s)."
     ]
@@ -284,7 +284,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que la Dayan et l'Obambo : absente de la sauvegarde tybayn de décembre 2024."
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que la Dayan et l'Obambo."
   ],
   "sources": [
     "tybayn wiki: wiki_gallu_states_title",
@@ -312,6 +312,6 @@
     "Effet d'un encens ou d'un crucifix utilisé pendant une chasse sur la vitesse de cette même chasse : non documenté.",
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu.",
     "Délai après l'encens et délai entre deux chasses : supposés standard, non vérifiés.",
-    "Passage en affaibli à la fin de la chasse même où il s'est enragé : déduit du texte tybayn, non testé en jeu."
+    "Passage en affaibli à la fin de la chasse même où il s'est enragé : déduit de sa description, non testé en jeu."
   ]
 }

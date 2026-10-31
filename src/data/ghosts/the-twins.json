@@ -14,7 +14,7 @@
     "summary": "1,5 ou 1,9 m/s selon le jumeau · accélère en LdV",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
-      "D'après tybayn, la vitesse lente correspond à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
+      "La vitesse lente correspondrait à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
       "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
       "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer les Jumeaux."
     ]
@@ -113,9 +113,9 @@
     }
   ],
   "changes": [
-    "Vitesses : la sauvegarde 2024 indiquait 1,53 / 1,87 m/s (±10 %) ; le wiki tybayn actuel donne 1,5 / 1,9 m/s (±0,2 m/s), tout en parlant encore de ±10 % ailleurs. Affinage des mesures, aucun patch identifié.",
-    "Le wiki tybayn documente désormais une accélération en LdV particulière : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
-    "Portées d'interaction revues par tybayn : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte (la sauvegarde 2024 indiquait 8 m / 16 m, avec les cartes moyennes groupées avec les grandes).",
+    "Vitesses précisées : 1,5 / 1,9 m/s (±0,2 m/s), au lieu des 1,53 / 1,87 m/s (±10 %) longtemps cités ; simple affinage des mesures, aucun patch identifié.",
+    "Accélération en LdV particulière, désormais précisée : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
+    "Portées d'interaction précisées : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte (on citait autrefois 8 m / 16 m, avec les cartes moyennes groupées avec les grandes).",
     "Winter's Jest v0.15.1.0 (16 décembre 2025) a ajouté l'Obambo (1,45 / 1,96 m/s) et le Gallu : le test de vitesse alternée n'est plus strictement définitif en 0 preuve.",
     "Player Character Update v0.17.0.0 (2026) : l'accélération en LdV des entités a été modifiée, puis remise à son état d'origine par le patch v0.17.1.4 (2 juin 2026)."
   ],
@@ -132,7 +132,7 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "La section « portées d'interaction » est marquée « partiellement non vérifiée » par tybayn.",
-    "Vitesse lente = chasse lancée depuis la portée standard, rapide = portée étendue ? Fextralife parlerait d'un tirage à 50/50."
+    "Portées d'interaction : en partie non vérifiées.",
+    "Vitesse lente = chasse lancée depuis la portée standard, rapide = portée étendue ? Une autre source parle d'un tirage à 50/50."
   ]
 }

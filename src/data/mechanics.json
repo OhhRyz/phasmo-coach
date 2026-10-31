@@ -116,8 +116,8 @@
         },
         {
           "id": "vitesses-03",
-          "text": "Selon le wiki tybayn, toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. S'y ajoutent le Deildegast (vitesse verrouillée pendant la chasse) et le Kormos (LdV seulement si tu bouges à moins de 5 m) ; les Jumeaux ont une LdV particulière.",
-          "q": "Quelles entités le wiki cite-t-il comme n'ayant pas d'accélération standard en LdV ?",
+          "text": "Toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. S'y ajoutent le Deildegast (vitesse verrouillée pendant la chasse) et le Kormos (LdV seulement si tu bouges à moins de 5 m) ; les Jumeaux ont une LdV particulière.",
+          "q": "En dehors du Deildegast et du Kormos, quelles entités n'ont pas l'accélération standard en LdV ?",
           "a": "Revenant, Hantu, Deogen et Thayé."
         },
         {
@@ -842,7 +842,7 @@
       "id": "tf-19",
       "claim": "Les orbes du Mimic restent dans la pièce favorite, comme les orbes des autres entités.",
       "answer": true,
-      "explain": "La rumeur d'orbes qui suivent l'entité vient d'un YouTubeur ; ils n'ont aucune différence de comportement ni d'aspect."
+      "explain": "L'idée d'orbes qui suivent l'entité est une rumeur : ils n'ont aucune différence de comportement ni d'aspect."
     },
     {
       "id": "tf-20",

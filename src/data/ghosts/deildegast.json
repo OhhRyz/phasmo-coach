@@ -251,7 +251,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité (absente de la sauvegarde de déc. 2024) : ajoutée avec la mise à jour v0.18.0.0 « 13 Willow Street Rework & Quality of Life #1 » (21 juillet 2026)."
+    "Nouvelle entité ajoutée avec la mise à jour v0.18.0.0 « 13 Willow Street Rework & Quality of Life #1 » (21 juillet 2026)."
   ],
   "sources": [
     "tybayn wiki: wiki_deildegast_speed_*",
@@ -267,9 +267,9 @@
   ],
   "uncertain": [
     "Version d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source la relie au Deildegast.",
-    "Portes, équipement et objets maudits ne compteraient pas (Fextralife) ; tybayn n'exclut que l'équipement.",
-    "Aucune preuve garantie selon les wikis ; un guide isolé affirme le contraire.",
-    "Nos tests de comparaison entre deux chasses sont déduits des mécanismes décrits par tybayn (ses propres tests sont ceux des 26 objets et des portes ouvertes au départ) : un Hantu pourrait brouiller une mesure faite à l'oreille.",
-    "Effet de l'encens et du crucifix : supposé standard ; un crucifix qui empêche une chasse remettrait aussi le compteur à zéro (Fextralife)."
+    "L'équipement ne compte pas ; les portes et les objets maudits non plus, d'après une seule source.",
+    "Aucune preuve garantie pour la plupart des sources ; une seule affirme le contraire.",
+    "Les tests qui comparent deux chasses sont déduits de son mécanisme ; les tests de référence sont ceux des 26 objets et des portes ouvertes au départ. Un Hantu pourrait brouiller une mesure faite à l'oreille.",
+    "Effet de l'encens et du crucifix : supposé standard ; un crucifix qui empêche une chasse remettrait aussi le compteur à zéro (une seule source)."
   ]
 }

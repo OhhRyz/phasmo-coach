@@ -195,7 +195,7 @@
         "Non, mais uniquement en difficulté Démence"
       ],
       "answer": 2,
-      "explain": "Le wiki tybayn le rappelle : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni."
+      "explain": "Attention : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni."
     },
     {
       "q": "Quelles entités sont plus visibles que la normale pendant une chasse ?",
@@ -206,11 +206,11 @@
         "L'Oni et l'Ombre"
       ],
       "answer": 1,
-      "explain": "D'après le wiki tybayn sur le clignotement : l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
+      "explain": "Au clignotement, l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
     }
   ],
   "changes": [
-    "v0.19.0.0 (25 août 2026) : correction d'un bug où l'événement de chant de l'Oni ne drainait que 10 % de santé mentale au lieu des 20 % prévus (annonce Steam de la v0.19.0.0, relayée par Phasmopedia, PlayNews et d'autres sites)."
+    "v0.19.0.0 (25 août 2026) : correction d'un bug où l'événement de chant de l'Oni ne drainait que 10 % de santé mentale au lieu des 20 % prévus."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -222,11 +222,12 @@
     "https://phasmophobia.fandom.com/wiki/Oni",
     "https://phasmopedia.com/en/ghosts/oni/",
     "https://phasmophobia.wiki.fextralife.com/Oni",
-    "https://www.playnews.gg/en/guides/phasmophobia-0-19-0-0-the-door-sound-that-got-yurei-wrongly-accused-is-fixed-and-two-traps-await-on-restricted-maps"
+    "https://www.playnews.gg/en/guides/phasmophobia-0-19-0-0-the-door-sound-that-got-yurei-wrongly-accused-is-fixed-and-two-traps-await-on-restricted-maps",
+    "Annonce Steam de la v0.19.0.0 (notes de patch, 25 août 2026)"
   ],
   "uncertain": [
-    "Part du temps visible en chasse : environ 55–64 % contre 31–33 % pour une entité normale (sources hors tybayn).",
-    "Le drain de 20 % ne s'applique-t-il que si l'entité te touche pendant l'événement ? Plusieurs sources le disent, pas tybayn.",
-    "Fait-il plus souvent l'événement de poursuite (40 % contre 20 %) ? Phasmopedia seulement."
+    "Part du temps visible en chasse : environ 55–64 % contre 31–33 % pour une entité normale.",
+    "Le drain de 20 % ne s'applique-t-il que si l'entité te touche pendant l'événement ? Plusieurs sources le disent, pas toutes.",
+    "Fait-il plus souvent l'événement de poursuite (40 % contre 20 %) ? Une seule source."
   ]
 }

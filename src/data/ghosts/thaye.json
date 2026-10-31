@@ -15,7 +15,7 @@
     "details": [
       "Ne prend jamais de vitesse en LdV.",
       "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
-      "Repères (tableau tybayn) : +1 an 2,575 · +2 2,4 · +3 2,225 · +4 2,05 · +5 1,875 · +6 1,7 · +7 1,525 · +8 1,35 · +9 1,175 · +10 1,0 m/s.",
+      "Repères par vieillissement : +1 an 2,575 · +2 2,4 · +3 2,225 · +4 2,05 · +5 1,875 · +6 1,7 · +7 1,525 · +8 1,35 · +9 1,175 · +10 1,0 m/s.",
       "Sa vitesse est constante pendant une chasse et ne peut que baisser d'une chasse à l'autre : il ralentit à chaque chasse s'il a été exposé aux joueurs.",
       "Compte environ 1 à 2 min de présence dans sa pièce par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
     ]
@@ -245,7 +245,7 @@
     }
   ],
   "changes": [
-    "Bugs connus (wiki tybayn actuel) : seuil de chasse 1 % plus bas que prévu ; il peut vieillir à cause d'un joueur situé à l'étage du dessous, car la portée de 3 m traverse le sol."
+    "Bugs connus : seuil de chasse 1 % plus bas que prévu ; il peut vieillir à cause d'un joueur situé à l'étage du dessous, car la portée de 3 m traverse le sol."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -258,8 +258,8 @@
     "Notes de patch v0.9.0.0 (Ascension, 2023), via résumés de recherche"
   ],
   "uncertain": [
-    "L'âge au Ouija monte-t-il de 1 à 4 ans par vieillissement, avec un 1er essai 1 min après l'ouverture de la porte ? Phasmopedia seulement.",
+    "L'âge au Ouija monte-t-il de 1 à 4 ans par vieillissement, avec un 1er essai 1 min après l'ouverture de la porte ? Une seule source.",
     "Un joueur mort le fait-il vieillir ? A-t-il moins d'événements en vieillissant ? Notes de patch v0.9.0.0 lues seulement via des résumés.",
-    "Condition exacte de vieillissement : tybayn v0.19.1.0 dit « un joueur dans la même pièce », mais son bug connu évoque une portée de 3 m qui traverse le sol."
+    "Condition exacte de vieillissement : « un joueur dans la même pièce », ou une portée de 3 m qui traverse le sol, comme le laisse penser un bug connu ?"
   ]
 }

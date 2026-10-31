@@ -15,10 +15,10 @@ export function NotFound() {
             <em>Il manque une page</em>
             Cette page a été arrachée du carnet
           </h1>
-          <p className="lead">La page demandée n’existe pas (ou elle a été hantée).</p>
+          <p className="lead">La page demandée n’existe pas.</p>
           <p className="arrachee-actions">
             <TypedLink to="/">Retour à l’accueil</TypedLink>
-            <TypedLink to="/codex">ouvrir le codex</TypedLink>
+            <TypedLink to="/codex">Ouvrir le codex</TypedLink>
           </p>
         </Page>
       </Notebook>

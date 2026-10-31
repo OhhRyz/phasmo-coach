@@ -234,7 +234,7 @@
     }
   ],
   "changes": [
-    "Le Gallu (Winter's Jest v0.15.1.0, 16 décembre 2025 ; EMF 5 + UV + Spirit Box) ne perturbe pas le sel en état enragé : les tests du sel, notés définitifs dans la sauvegarde de 2024, ne sont plus strictement propres au Spectre.",
+    "Le Gallu (Winter's Jest v0.15.1.0, 16 décembre 2025 ; EMF 5 + UV + Spirit Box) ne perturbe pas le sel en état enragé : les tests du sel, autrefois définitifs, ne sont plus strictement propres au Spectre.",
     "Nouvelles entités partageant deux preuves : Gallu et Dayan (EMF 5 + Spirit Box, décembre 2025), Deildegast (EMF 5 + D.O.T.S, v0.18.0.0, 21 juillet 2026)."
   ],
   "sources": [
@@ -252,7 +252,7 @@
   ],
   "uncertain": [
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu : ce n'est peut-être pas propre au Spectre.",
-    "« Un Gallu n'est jamais enragé juste après la fin d'une chasse » : déduit du cycle tybayn, non vérifié en jeu.",
+    "« Un Gallu n'est jamais enragé juste après la fin d'une chasse » : déduit de son cycle d'états, non vérifié en jeu.",
     "Le Mimic reproduit-il le sel intact du Spectre ? Aucune source ne le dit."
   ]
 }

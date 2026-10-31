@@ -274,11 +274,11 @@
         "Parce qu'elle ne chasse jamais dans sa pièce favorite, même vide"
       ],
       "answer": 0,
-      "explain": "Le wiki tybayn le précise : ce comportement ne se limite pas à la pièce favorite. L'Ombre ne fait rien qui donne de l'EMF et ne lance pas de chasse dans toute pièce où elle se trouve avec un joueur."
+      "explain": "Ce comportement ne se limite pas à la pièce favorite : l'Ombre ne fait rien qui donne de l'EMF et ne lance pas de chasse dans toute pièce où elle se trouve avec un joueur."
     }
   ],
   "changes": [
-    "Précision apportée par le wiki tybayn actuel (pas forcément un changement de jeu) : la forme d'ombre est propre à l'Ombre pendant les événements du cercle d'invocation, de la boîte à musique et de la patte de singe ; la sauvegarde de déc. 2024 ne citait que le cercle."
+    "Précision : la forme d'ombre propre à l'Ombre vaut pour les événements du cercle d'invocation, de la boîte à musique et de la patte de singe, pas seulement pour le cercle."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -293,8 +293,8 @@
     "https://phasmopedia.com/en/ghosts/shade/"
   ],
   "uncertain": [
-    "Peut-elle écrire dans le livre en présence d'un joueur ? Certains guides disent oui, tybayn dit non.",
-    "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle selon Phasmopedia) : non confirmée.",
-    "Modèle translucide au cercle d'invocation : l'ancienne fiche le disait propre à l'Ombre, mais la fiche tybayn v0.19.1.0 ne cite plus que la forme d'ombre ; ne t'en sers pas comme preuve."
+    "Peut-elle écrire dans le livre en présence d'un joueur ? Les sources divergent.",
+    "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle, selon une seule source) : non confirmée.",
+    "Modèle translucide au cercle d'invocation : on le disait propre à l'Ombre, mais les sources actuelles ne citent plus que la forme d'ombre ; ne t'en sers pas comme preuve."
   ]
 }

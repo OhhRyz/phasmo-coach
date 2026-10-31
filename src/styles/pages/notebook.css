@@ -46,6 +46,8 @@
   color: var(--ink-2);
 }
 .torn-sign { display: block; text-align: right; font-weight: 700; line-height: 30px; }
+/* une note qui n'est pas du coach : la même page, à l'encre (le stylo rouge reste à lui) */
+.torn--mine .torn-paper { color: var(--ink); }
 
 /* lien de partage dans les fenêtres (carnet et profil) */
 .modal-text { margin: 0 0 14px; font-size: 16.5px; line-height: 28px; color: var(--ink-2); }
@@ -55,12 +57,39 @@
   color: var(--ink-2); background: var(--paper-lo); border: 1px dashed var(--ink-3);
 }
 .modal .share-url:focus { background: var(--paper-lo); border-color: var(--red-pen); outline: none; }
+.share-long, .share-ios, .share-since { margin: 10px 0 0; font-size: 20px; line-height: 1.1; }
+.share-choice { margin: -4px 0 16px; }
+.share-choice .opt { min-height: 40px; }
+.share-since { margin-top: 2px; }
+
+/* l'éditeur de note dans une fenêtre : la fiche est déjà là, pas de papier sur le papier */
+.note-form.is-bare { padding: 0; background: none; box-shadow: none; transform: none; }
+.note-form.is-bare::before { display: none; }
+.note-form.is-bare .modal-actions { margin-top: 6px; }
+.note-card-hint { margin: 6px 0 0 40px; font-size: 20px; }
+.note-form .select { min-height: 44px; }
 
 /* ==========================================================================
    Carnet du coach
    ========================================================================== */
 .carnet .entry { margin-bottom: 34px; }
 .carnet .entry-line { color: var(--ink-2); }
+
+/* coller un lien reçu (sous le titre : c'est là qu'on le cherche en ouvrant l'app) */
+.page .carnet-paste-open { margin: -14px 0 26px; }
+.carnet-paste-open .link-btn { display: inline-flex; align-items: center; min-height: 40px; font-size: 15px; }
+.carnet-paste {
+  margin: -10px 0 34px; padding: 16px 18px 18px;
+  border: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.carnet-paste form { display: grid; gap: 10px; }
+.carnet-paste .carnet-share-h { margin: 0; }
+.page .carnet-paste-hint { margin: 0 0 2px; font-size: 21px; line-height: 1.1; }
+.carnet-paste .input { min-height: 44px; overflow: hidden; text-overflow: ellipsis; }
+.page .carnet-paste-error { margin: 0; font-size: 21px; line-height: 1.1; }
+.carnet-paste-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 4px; }
+.carnet-paste-btns .paper-btn { min-height: 44px; }
+.carnet-paste-btns .link-btn { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* partager et sauvegarder (sous le formulaire) */
 .carnet-share {
@@ -84,6 +113,18 @@
 .carnet-find .input { min-height: 44px; font-size: 24px; padding: 4px 2px 3px; }
 .carnet-find .input::-webkit-search-cancel-button { cursor: pointer; }
 .carnet-find .select { min-height: 44px; padding: 8px 0; text-overflow: ellipsis; }
+
+/* les groupes : « De Ryz », « Mes notes », puis les notes venues d'autres carnets */
+.carnet-group + .carnet-group { margin-top: 44px; }
+.carnet-group-h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--rule);
+  font-family: "Fell", serif; font-weight: 400; font-size: 25px; line-height: 1.15; color: var(--ink);
+}
+.carnet-group-h .h-count {
+  font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2);
+}
+.page .carnet-group-empty { margin: 10px 0 0; font-size: 21px; line-height: 1.1; }
 
 /* le tableau des notes collées */
 .carnet-board { list-style: none; margin: 0; padding: 12px 0 0; display: grid; gap: 36px; }
@@ -160,7 +201,8 @@
 .pli-timbre {
   position: absolute; right: 26px; top: 24px;
   display: grid; place-content: center; width: 80px; height: 90px; text-align: center;
-  font-family: "Fell", serif; font-size: 17px; line-height: 1.05; color: var(--ink);
+  font-family: "Fell", serif; font-size: 14.5px; line-height: 1.05; color: var(--ink);
+  z-index: 1;
   background:
     linear-gradient(var(--section, var(--tab-6)), var(--section, var(--tab-6))) 50% 50% / calc(100% - 20px) calc(100% - 20px) no-repeat,
     var(--label);
@@ -172,8 +214,9 @@
     radial-gradient(circle, transparent 2.6px, #000 3.1px) -5px -5px / 10px 10px;
   transform: rotate(4deg);
 }
-.pli-timbre i { font-style: italic; font-size: 19px; }
-.pli-cachet { position: absolute; right: 60px; top: 66px; z-index: 2; font-size: 13.5px; }
+.pli-timbre i { font-style: italic; font-size: 16px; }
+/* le cachet de la poste passe par-dessus le timbre, comme un vrai */
+.pli-cachet { position: absolute; right: 60px; top: 66px; z-index: 3; font-size: 13.5px; }
 /* étiquette d'adresse */
 .pli-label {
   position: relative; display: grid; width: min(330px, 100%); margin-top: 72px; padding: 8px 16px 10px;
@@ -194,6 +237,7 @@
 .pli-line b { font-weight: 400; }
 .courrier .entry-line { color: var(--ink-2); }
 .pli-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 6px; }
+.pli-actions .link, .courrier .empty-note .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* ce qu'il y avait dans l'enveloppe */
 .pli-notes {
@@ -205,6 +249,16 @@
 .pli-notes .sticky { font-size: 22px; padding: 18px 16px 16px; }
 .pli-status { display: block; margin: 10px 0 0 6px; font-size: 20px; }
 
+/* ouvert dans Safari sur iPhone : copier le lien pour l'app installée */
+.pli-ios { display: grid; justify-items: start; gap: 10px; margin-top: 30px; max-width: 30em; }
+.page .pli-ios .pencil-note { margin: 0; font-size: 21px; line-height: 1.12; }
+.pli-ios .paper-btn { min-height: 44px; }
+.pli-url {
+  display: block; width: 100%; height: 96px; min-height: 0; padding: 8px 10px; resize: none;
+  font-family: "Courier Prime", monospace; font-size: 13px; line-height: 1.5; word-break: break-all;
+  color: var(--ink-2); background: var(--paper-lo); border: 1px dashed var(--ink-3);
+}
+
 /* ==========================================================================
    Téléphone
    ========================================================================== */
@@ -213,6 +267,9 @@
   .courrier button, .courrier a { scroll-margin-bottom: 110px; }
 
   .carnet-share { margin-top: 38px; }
+  .carnet-paste { margin: -16px 0 28px; padding: 14px 12px 16px; }
+  .carnet-group-h { font-size: 23px; }
+  .note-card-hint { margin-left: 40px; }
   .carnet-share-btns { gap: 12px 14px; }
   .carnet-find { grid-template-columns: 1fr; gap: 6px; margin-bottom: 24px; }
 
@@ -231,8 +288,8 @@
 
   .pli { margin-bottom: 32px; }
   .pli-body { min-height: 0; padding: 26px 16px 20px; }
-  .pli-timbre { right: 14px; top: 20px; width: 60px; height: 70px; font-size: 13px; }
-  .pli-timbre i { font-size: 15px; }
+  .pli-timbre { right: 14px; top: 20px; width: 64px; height: 74px; font-size: 11.5px; }
+  .pli-timbre i { font-size: 13px; }
   .pli-cachet { right: 30px; top: 62px; font-size: 12px; }
   .pli-label { margin-top: 74px; }
   .pli-line { font-size: 17px; }

@@ -97,12 +97,14 @@ export function previewInterval(prev: CardState | undefined, grade: Grade, now: 
 }
 
 export function humanDuration(ms: number): string {
-  if (ms < 60 * MIN) return `${Math.max(1, Math.round(ms / MIN))} min`
-  if (ms < DAY) return `${Math.round(ms / (60 * MIN))} h`
+  // espace insécable entre le nombre et l'unité
+  if (ms < 60 * MIN) return `${Math.max(1, Math.round(ms / MIN))}\u00a0min`
+  if (ms < DAY) return `${Math.round(ms / (60 * MIN))}\u00a0h`
   const d = Math.round(ms / DAY)
-  if (d < 31) return `${d} j`
-  if (d < 365) return `${Math.round(d / 30)} mois`
-  return `${Math.round(d / 365)} an`
+  if (d < 31) return `${d}\u00a0j`
+  if (d < 365) return `${Math.round(d / 30)}\u00a0mois`
+  const y = Math.round(d / 365)
+  return `${y}\u00a0an${y > 1 ? 's' : ''}`
 }
 
 export function endOfDay(now: number): number {

@@ -24,7 +24,7 @@
     "high": 50,
     "summary": "50 %",
     "details": [
-      "Seuil de chasse standard : 50 % de santé mentale moyenne (tybayn et guides concordants)."
+      "Seuil de chasse standard : 50 % de santé mentale moyenne."
     ]
   },
   "summary": "Un chasseur un peu lent au départ qui prend de la vitesse plus vite que les autres quand il te voit, mais dont la chasse s'arrête net s'il te rejoint dans une cachette officielle… et qui s'en souvient à la chasse suivante.",
@@ -139,8 +139,8 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec Phasmophobia by Alan Wake v0.17.1.0 (12 mai 2026), avec le Kormos : absente de la sauvegarde tybayn de décembre 2024.",
-    "Patch v0.17.1.4 (2 juin 2026) : les accélérations en LdV modifiées par la Player Character Update (v0.17.0.0) ont été remises à leur état d'origine ; les valeurs retenues ici (×1,65 en 8,667 s) viennent du wiki tybayn mis à jour en octobre 2026."
+    "Nouvelle entité ajoutée avec Phasmophobia by Alan Wake v0.17.1.0 (12 mai 2026), avec le Kormos.",
+    "Patch v0.17.1.4 (2 juin 2026) : les accélérations en LdV modifiées par la Player Character Update (v0.17.0.0) ont été remises à leur état d'origine ; pour l'Aswang, c'est ×1,65 en 8,667 s."
   ],
   "sources": [
     "tybayn wiki: wiki_los_aswang_p1",
@@ -156,8 +156,8 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Preuve garantie en Cauchemar et Démence : aucune selon la seule source qui en parle (Fextralife).",
-    "À la chasse suivante, fonce-t-il vers ta position dès la période de grâce (tybayn v0.19.1.0, qui en fait un test) ou juste après ? Les autres sources divergent.",
+    "Preuve garantie en Cauchemar et Démence : aucune, selon la seule source qui en parle.",
+    "À la chasse suivante, fonce-t-il vers ta position dès la période de grâce ou juste après ? Les sources divergent.",
     "Cas non vérifiés : plusieurs joueurs cachés en même temps, ou joueur caché qui n'était pas celui qu'il avait détecté."
   ]
 }

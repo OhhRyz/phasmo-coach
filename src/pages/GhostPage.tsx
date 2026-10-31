@@ -24,7 +24,9 @@ import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
-import { num } from '../engine/format'
+import type { CoachNote } from '../engine/cards'
+import { NBSP, NNBSP, num, safeDate, validTime } from '../engine/format'
+import { coachNameOf, coachNotes, isCoachNote, makesCard, sortNotes } from '../engine/notes'
 import { masteryLevel } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -38,14 +40,15 @@ const KIND: Record<ObservationKind, string> = {
   event: 'Événement',
   tell: 'Signe',
 }
-const GRADE_WORD = { 1: 'raté', 2: 'hésité', 3: 'bon', 4: 'facile' } as const
+/** Les mêmes mots que les tampons de la révision. */
+const GRADE_WORD = { 1: 'à revoir', 2: 'difficile', 3: 'bien', 4: 'facile' } as const
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
 /** Un mot tamponné qui résume l'entité, tiré de ses données. */
 function stampFor(g: Ghost): string | null {
   if (g.id === 'the-mimic') return 'Imitateur'
-  if (g.huntSanity.high >= 70 && g.huntSanity.normal >= 60) return 'Très agressif'
+  if (g.huntSanity.high >= 70 && g.huntSanity.normal >= 60) return 'Chasse très tôt'
   if (g.forcedEvidence) return 'Preuve forcée'
   if (!g.speed.los && !g.speed.losVaries) return 'Vitesse spéciale'
   if (g.huntSanity.high > 50) return 'Chasse tôt'
@@ -53,13 +56,20 @@ function stampFor(g: Ghost): string | null {
   return null
 }
 
-/** Mot du correcteur sous la note de maîtrise. */
-function gradeWord(m: number): string {
-  if (m === 0) return 'à ouvrir'
-  if (m < 0.35) return 'on s’y met'
-  if (m < 0.6) return 'ça vient'
-  if (m < 0.85) return 'presque !'
-  return 'acquise'
+/**
+ * « Winter’s Jest v0.15.1.0 (16 décembre 2025) : la Banshee… » → la version datée à part, puis le texte.
+ * Seulement quand l'en-tête est court et porte une date ou un numéro de version.
+ */
+function splitChange(text: string): { when: string | null; text: string } {
+  const m = /^(.{6,64}?)[\u202f\u00a0 ]:\s+(.+)$/su.exec(text)
+  if (!m || !/\d/.test(m[1])) return { when: null, text }
+  const rest = m[2]
+  return { when: m[1], text: rest.charAt(0).toLocaleUpperCase('fr') + rest.slice(1) }
+}
+
+/** En-tête tapé d'un post-it : date et, si la note revient en révision, « en révision ». */
+function noteMeta(n: CoachNote): string {
+  return `${safeDate(SHORT, n.createdAt)}${makesCard(n) ? ' · en révision' : ''}`
 }
 
 function Lines({ items }: { items: TextItem[] }) {
@@ -93,14 +103,19 @@ export function GhostPage() {
     setMoreConf(false)
   }, [id])
 
-  const notes = useMemo(() => state.notes.filter((n) => n.ghostId === id), [state.notes, id])
+  // stylo rouge : les vraies notes du coach ; « Mes notes » : celles de la personne qui tient le carnet
+  const fromCoach = useMemo(() => coachNotes(state.notes, state.profile, id), [state.notes, state.profile, id])
+  const mine = useMemo(
+    () => sortNotes(state.notes.filter((n) => n.ghostId === id && !isCoachNote(n, state.profile))),
+    [state.notes, state.profile, id],
+  )
   const history = useMemo(() => {
     const prefix = `g:${id}:`
     return state.log.filter((l) => l.id.startsWith(prefix)).slice(-4)
   }, [state.log, id])
   const ghostCards = useMemo(() => deck.filter((c) => c.ghostId === id && c.deck === 'ghost'), [deck, id])
   const nextDue = useMemo(() => {
-    const dues = ghostCards.map((c) => state.cards[c.id]?.due).filter((d): d is number => d != null)
+    const dues = ghostCards.map((c) => validTime(state.cards[c.id]?.due)).filter((d): d is number => d != null)
     return dues.length ? Math.min(...dues) : null
   }, [ghostCards, state.cards])
 
@@ -130,7 +145,10 @@ export function GhostPage() {
   const twoShared = confusions.filter((c) => shared(c.other!).length >= 2)
   const others = confusions.filter((c) => shared(c.other!).length < 2)
   const folio = idx * 4 + 2
-  const coach = state.profile.role === 'coach' ? state.profile.name : state.profile.coachName
+  const coach = coachNameOf(state.profile)
+  const isCoach = state.profile.role === 'coach'
+  const level = masteryLevel(m)
+  const now = Date.now()
 
   const toggle = (v: number) => {
     if (playing === v) {
@@ -146,7 +164,7 @@ export function GhostPage() {
       <HatchDefs />
       {/* ===================== double page 1 ===================== */}
       <Notebook>
-        <Page side="left" section="3" label={`Fiche : ${ghost.name}`}>
+        <Page side="left" section="3" label={`Fiche${NNBSP}: ${ghost.name}`}>
           <FileHead>
             <Link to="/codex">‹ Codex</Link>
             <span>
@@ -164,14 +182,21 @@ export function GhostPage() {
                 {stamp}
               </Stamp>
             )}
-            {ghost.nameEn !== ghost.name && <span className="ghost-alias">« {ghost.nameEn} » en version anglaise</span>}
+            {ghost.nameEn !== ghost.name && (
+              <span className="ghost-alias">
+                «{NNBSP}
+                {ghost.nameEn}
+                {NNBSP}» en version anglaise
+              </span>
+            )}
             <MarginNote className="grade" style={{ left: -110, top: 6, width: 92, '--r': '-8deg' }}>
               <span className="grade-n">
                 <RoughCircle seed={`grade-${ghost.id}`} padX={0.1} padY={0.12} width={2.2} delay={0.9}>
-                  {Math.round(m * 100)} %
+                  {Math.round(m * 100)}
+                  {NBSP}%
                 </RoughCircle>
               </span>
-              <small>{gradeWord(m)}</small>
+              <small className={level.tone === 'max' ? 'is-max' : undefined}>{level.label.toLocaleLowerCase('fr')}</small>
             </MarginNote>
           </header>
 
@@ -235,7 +260,7 @@ export function GhostPage() {
                 <p className="listen">
                   {speeds.map((v) => (
                     <PaperButton key={v} onClick={() => toggle(v)} pressed={playing === v}>
-                      {playing === v ? 'Arrêter' : `Écouter ses pas · ${num(v)} m/s`}
+                      {playing === v ? 'Arrêter' : `Écouter ses pas · ${num(v)}${NBSP}m/s`}
                     </PaperButton>
                   ))}
                 </p>
@@ -278,7 +303,9 @@ export function GhostPage() {
               Sans preuve
             </H>
             <p className="zero-intro">Ce qui {ghost.name.startsWith('Les ') ? 'les trahit' : 'la trahit'} même quand ton journal est vide.</p>
-            {ghost.confirmationTests.length === 0 && <p className="muted">Pas de test de confirmation fiable : il faut éliminer les autres entités.</p>}
+            {ghost.confirmationTests.length === 0 && (
+              <p className="muted">Pas de test de confirmation fiable{NNBSP}: il faut éliminer les autres entités.</p>
+            )}
             {ghost.confirmationTests.map((t, k) => (
               <article className="protocol" key={k}>
                 <div className="protocol-top">
@@ -303,12 +330,12 @@ export function GhostPage() {
               </p>
             ))}
             {ghost.id !== 'the-mimic' && (
-              <p className="mimic-note">Rappel : le Mimic peut copier ces comportements. Ses orbes, toujours présents, le trahissent.</p>
+              <p className="mimic-note">Rappel{NNBSP}: le Mimic peut copier ces comportements. Ses orbes, toujours présents, le trahissent.</p>
             )}
           </section>
           {confusions.length > 0 && (
             <div className="turn">
-              la suite : ses sosies
+              la suite{NNBSP}: ses sosies
               <svg className="draw" width="40" height="44" viewBox="0 0 40 44" aria-hidden>
                 <path d="M8 2 C 2 18, 10 30, 26 38" strokeWidth="2" pathLength={1} style={{ '--d': '2.2s' } as Style} />
                 <path d="M16 38 L27 39 L24 28" strokeWidth="2" pathLength={1} style={{ '--d': '2.6s', '--dur': '.3s' } as Style} />
@@ -320,7 +347,7 @@ export function GhostPage() {
       </Notebook>
 
       {/* ===================== double page 2 ===================== */}
-      <Notebook className="notebook--cont">
+      <Notebook as="section" className="notebook--cont">
         <Page side="left" section="3" label="Ne pas confondre">
           <FileHead>
             <span>{ghost.name} · suite</span>
@@ -354,8 +381,8 @@ export function GhostPage() {
                   ))}
                 </ul>
                 {twoShared.length > 4 && (
-                  <button className="link conf-more" type="button" aria-expanded={moreConf} onClick={() => setMoreConf((v) => !v)}>
-                    {moreConf ? 'Replier la liste' : `Voir les ${twoShared.length - 4} autres`}
+                  <button className="link link-btn conf-more" type="button" aria-expanded={moreConf} onClick={() => setMoreConf((v) => !v)}>
+                    {moreConf ? 'Replier la liste' : twoShared.length - 4 === 1 ? 'Voir l’autre' : `Voir les ${twoShared.length - 4} autres`}
                   </button>
                 )}
               </div>
@@ -438,52 +465,113 @@ export function GhostPage() {
             </section>
           )}
 
-          <section aria-labelledby="h-coach">
-            <H id="h-coach">{coach ? `Notes de ${coach}` : 'Notes du coach'}</H>
-            <div className="ghost-side">
-              {notes.map((n, k) => (
-                <Sticky key={n.id} rotate={k % 2 ? 1.6 : -1.8} meta={`${SHORT.format(n.createdAt)}${n.asCard ? ' · en révision' : ''}`} sign={n.author ? `— ${n.author}` : undefined}>
-                  <strong className="sticky-title">{n.title}</strong>
-                  {n.body && <span className="pre sticky-body">{n.body}</span>}
-                </Sticky>
-              ))}
-              <NoteEditor key={ghost.id} ghostId={ghost.id} compact />
-
-              <div className="libcard settle" style={{ '--r': '1.6deg', '--d': '.6s' } as Style}>
-                <Tape />
-                <h3>Fiche de suivi</h3>
-                <div className="cols">
-                  <span>Révisé le</span>
-                  <span>Résultat</span>
-                </div>
-                <ol>
-                  {history.length === 0 && (
-                    <li>
-                      <span className="d">—</span>
-                      <span className="res">pas encore révisée</span>
-                    </li>
-                  )}
-                  {history.map((h, k) => (
-                    <li key={k} style={{ '--r': `${[-2, 1, -1, 2][k]}deg` } as Style}>
-                      <span className="d">{DATE.format(h.t)}</span>
-                      <span className={`res${h.g === 1 ? ' bad' : ''}`}>{GRADE_WORD[h.g]}</span>
-                    </li>
-                  ))}
-                  {nextDue && (
-                    <li className="next" style={{ '--r': '-3deg' } as Style}>
-                      <span className="d">À revoir le {SHORT.format(Math.max(nextDue, Date.now()))}</span>
-                      <span className="res" />
-                    </li>
-                  )}
-                </ol>
+          {(fromCoach.length > 0 || isCoach) && (
+            <section aria-labelledby="h-coach">
+              <H id="h-coach" count={fromCoach.length ? `${fromCoach.length} note${fromCoach.length > 1 ? 's' : ''}` : undefined}>
+                {coach ? `Notes de ${coach}` : 'Notes du coach'}
+              </H>
+              <div className="ghost-notes">
+                {fromCoach.map((n, k) => (
+                  <Sticky key={n.id} hand="coach" rotate={k % 2 ? 1.6 : -1.8} meta={noteMeta(n)} sign={n.author ? `— ${n.author}` : undefined}>
+                    <strong className="sticky-title">{n.title}</strong>
+                    {n.body && <span className="pre sticky-body">{n.body}</span>}
+                  </Sticky>
+                ))}
+                {isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}
               </div>
+            </section>
+          )}
+
+          {(!isCoach || mine.length > 0) && (
+            <section aria-labelledby="h-mine">
+              <H id="h-mine" count={mine.length ? `${mine.length} note${mine.length > 1 ? 's' : ''}` : undefined}>
+                {isCoach ? 'Autres notes' : 'Mes notes'}
+              </H>
+              <div className="ghost-notes">
+                {mine.map((n, k) => (
+                  <Sticky key={n.id} hand="mine" rotate={k % 2 ? -1.2 : 1.4} meta={noteMeta(n)}>
+                    <strong className="sticky-title">{n.title}</strong>
+                    {n.body && <span className="pre sticky-body">{n.body}</span>}
+                  </Sticky>
+                ))}
+                {!isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}
+              </div>
+            </section>
+          )}
+
+          <div className="ghost-side">
+            <div className="libcard settle" style={{ '--r': '1.6deg', '--d': '.6s' } as Style}>
+              <Tape />
+              <h3>Fiche de suivi</h3>
+              <div className="cols">
+                <span>Révisé le</span>
+                <span>Résultat</span>
+              </div>
+              <ol>
+                {history.length === 0 && (
+                  <li>
+                    <span className="d">—</span>
+                    <span className="res">pas encore révisée</span>
+                  </li>
+                )}
+                {history.map((h, k) => (
+                  <li key={k} style={{ '--r': `${[-2, 1, -1, 2][k]}deg` } as Style}>
+                    <span className="d">{safeDate(DATE, h.t)}</span>
+                    <span className={`res${h.g === 1 ? ' bad' : ''}`}>{GRADE_WORD[h.g] ?? '—'}</span>
+                  </li>
+                ))}
+                {nextDue != null && (
+                  <li className="next" style={{ '--r': '-3deg' } as Style}>
+                    <span className="d">{nextDue <= now ? 'À revoir aujourd’hui' : `À revoir le ${safeDate(SHORT, nextDue)}`}</span>
+                  </li>
+                )}
+              </ol>
             </div>
-          </section>
+          </div>
+
+          {(ghost.changes.length > 0 || ghost.uncertain.length > 0) && (
+            <section className="gh-updates" aria-labelledby={ghost.changes.length ? 'h-changes' : 'h-unsure'}>
+              {ghost.changes.length > 0 && (
+                <>
+                  <H id="h-changes">Changements récents</H>
+                  <ul className="gh-changes">
+                    {ghost.changes.map((c, k) => {
+                      const { when, text } = splitChange(c)
+                      return (
+                        <li key={k}>
+                          {when && <span className="gh-change-when">{when}</span>}
+                          <p>{text}</p>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
+              {ghost.uncertain.length > 0 && (
+                <div className="gh-unsure">
+                  {ghost.changes.length > 0 ? (
+                    <h3 className="gh-unsure-h" id="h-unsure">
+                      À vérifier en partie
+                    </h3>
+                  ) : (
+                    <h2 className="gh-unsure-h" id="h-unsure">
+                      À vérifier en partie
+                    </h2>
+                  )}
+                  <ul className="pencil-note">
+                    {ghost.uncertain.map((u, k) => (
+                      <li key={k}>{u}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
 
           <p className="sources">
-            {masteryLevel(m).label} · {ghost.sources.length} source{ghost.sources.length > 1 ? 's' : ''} consultée{ghost.sources.length > 1 ? 's' : ''}
-            {ghost.changes.length > 0 && <> · Changements récents : {ghost.changes.join(' ')}</>}
-            {ghost.uncertain.length > 0 && <> · À vérifier en partie : {ghost.uncertain.join(' ')}</>}
+            {ghost.sources.length === 0
+              ? 'Aucune source listée'
+              : `${ghost.sources.length} source${ghost.sources.length > 1 ? 's' : ''} consultée${ghost.sources.length > 1 ? 's' : ''}`}
           </p>
           <nav className="pager" aria-label="Fiches voisines">
             <TypedLink to={`/codex/${prev.id}`}>‹ {prev.name}</TypedLink>

@@ -2,19 +2,19 @@ import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { EvidenceId, Ghost, Mechanics } from '../data/types'
 import { de, le } from './cards'
 import { filterGhosts, EMPTY_FILTER } from './filter'
-import { redactGhostName } from './format'
+import { fr, NBSP, NNBSP, redactGhostName } from './format'
 import { pick, sample, shuffle, weightedPick, type Rng } from './random'
 
 export type QuizTopic = 'evidence' | 'speed' | 'sanity' | 'behavior' | 'zero' | 'expert' | 'mechanics'
 
 export const QUIZ_TOPICS: { id: QuizTopic; label: string; description: string }[] = [
   { id: 'evidence', label: 'Preuves', description: 'Les 3 preuves, les combinaisons, les preuves forcées' },
-  { id: 'speed', label: 'Vitesse & LdV', description: 'Vitesses de chasse et accélération en ligne de vue' },
+  { id: 'speed', label: 'Vitesse et ligne de vue', description: 'Vitesses de chasse et accélération en ligne de vue' },
   { id: 'sanity', label: 'Seuils de chasse', description: 'À quelle santé mentale chaque entité peut chasser' },
   { id: 'behavior', label: 'Comportements', description: 'Reconnaître une entité à ses signes' },
   { id: 'zero', label: 'Tests 0 preuve', description: 'Confirmer ou éliminer sans preuve' },
   { id: 'expert', label: 'Questions expertes', description: 'Questions rédigées pour chaque entité' },
-  { id: 'mechanics', label: 'Mécaniques & idées reçues', description: 'Vrai ou faux sur les mécaniques du jeu' },
+  { id: 'mechanics', label: 'Mécaniques et idées reçues', description: 'Vrai ou faux sur les mécaniques du jeu' },
 ]
 
 export interface Choice {
@@ -77,9 +77,9 @@ const evidenceOfGhost: Gen = (g) => ({
   choices: EVIDENCE_IDS.map((e) => ({ id: e, label: evLabel(e), evidence: e })),
   correct: [...g.evidence],
   explain:
-    `${g.name} : ${g.evidence.map(evLabel).join(', ')}.` +
-    (g.forcedEvidence ? ` Preuve forcée : ${evLabel(g.forcedEvidence)}.` : '') +
-    (g.fakeEvidence ? ` Attention, ${evLabel(g.fakeEvidence)} apparaissent en plus (fausse preuve).` : ''),
+    `${g.name}${NNBSP}: ${g.evidence.map(evLabel).join(', ')}.` +
+    (g.forcedEvidence ? ` Preuve forcée${NNBSP}: ${evLabel(g.forcedEvidence)}.` : '') +
+    (g.fakeEvidence ? ` Attention${NNBSP}: ${evLabel(g.fakeEvidence)} en plus, mais c’est une fausse preuve (hors des 3).` : ''),
   cardId: `g:${g.id}:ev`,
 })
 
@@ -92,7 +92,7 @@ const ghostFromEvidence: Gen = (g, ctx) => {
     id: `q:fromev:${g.id}`,
     topic: 'evidence',
     ghostId: g.id,
-    prompt: 'Quelle entité laisse exactement ces 3 preuves ?',
+    prompt: 'Quelle entité laisse exactement ces 3 preuves ?',
     evidenceShown: [...g.evidence],
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
@@ -111,11 +111,11 @@ const forcedEvidence: Gen = (g, ctx) => {
     id: `q:forced:${g.id}`,
     topic: 'evidence',
     ghostId: g.id,
-    prompt: `En Cauchemar (2 preuves), quelle preuve est toujours présente avec ${le(g.name)} ?`,
+    prompt: `En difficulté Cauchemar (2 preuves), quelle preuve est toujours présente avec ${le(g.name)}${NNBSP}?`,
     multi: false,
     choices: shuffle(ctx.rng, [forced, ...wrong, extra]).map((e) => ({ id: e, label: evLabel(e), evidence: e })),
     correct: [forced],
-    explain: `${g.name} a une preuve forcée : ${evLabel(forced)}. Elle fait toujours partie des preuves visibles quand leur nombre est réduit.`,
+    explain: `${g.name} a une preuve forcée${NNBSP}: ${evLabel(forced)}. Elle reste visible en Cauchemar et en Démence.`,
     cardId: `g:${g.id}:forced`,
   }
 }
@@ -131,12 +131,12 @@ const remainingCandidates: Gen = (g, ctx) => {
     id: `q:remain:${two.slice().sort().join('-')}`,
     topic: 'evidence',
     ghostId: g.id,
-    prompt: 'En Professionnel (3 preuves), tu as trouvé ces 2 preuves. Quelles entités restent possibles ?',
+    prompt: 'En Professionnel (3 preuves), tu as trouvé ces 2 preuves. Quelles entités restent possibles ?',
     evidenceShown: two,
     multi: true,
     choices: shuffle(ctx.rng, [...correct, ...wrong]).map(ghostChoice),
     correct: correct.map((c) => c.id),
-    explain: `Restent possibles : ${correct.map((c) => c.name).join(', ')}.`,
+    explain: `Restent possibles${NNBSP}: ${correct.map((c) => c.name).join(', ')}.`,
   }
 }
 
@@ -162,7 +162,7 @@ const sanityOfGhost: Gen = (g, ctx) => {
     id: `q:san:${g.id}`,
     topic: 'sanity',
     ghostId: g.id,
-    prompt: `Quel est le seuil de chasse ${de(g.name)} ?`,
+    prompt: `Quel est le seuil de chasse ${de(g.name)}${NNBSP}?`,
     multi: false,
     choices: shuffle(ctx.rng, [
       { id: g.id, label: g.huntSanity.summary },
@@ -182,11 +182,11 @@ const earlyHunter: Gen = (g, ctx) => {
     id: `q:early:${g.id}`,
     topic: 'sanity',
     ghostId: g.id,
-    prompt: 'La santé mentale moyenne est encore au-dessus de 50 % et une chasse démarre. Laquelle de ces entités peut en être responsable ?',
+    prompt: 'La santé mentale moyenne est encore au-dessus de 50 % et une chasse démarre. Laquelle de ces entités peut en être responsable ?',
     multi: false,
     choices: shuffle(ctx.rng, [g, ...late.slice(0, 3)]).map(ghostChoice),
     correct: [g.id],
-    explain: `${g.name} : ${g.huntSanity.summary}. Les autres ne peuvent pas chasser au-dessus de 50 % (hors effets d'objets maudits).`,
+    explain: `${g.name}${NNBSP}: ${g.huntSanity.summary}. Les autres ne peuvent pas chasser au-dessus de 50${NBSP}% (hors effets d’objets maudits).`,
     cardId: `g:${g.id}:san`,
   }
 }
@@ -202,7 +202,7 @@ const speedOfGhost: Gen = (g, ctx) => {
     id: `q:spd:${g.id}`,
     topic: 'speed',
     ghostId: g.id,
-    prompt: `Quelle description correspond à la vitesse de chasse ${de(g.name)} ?`,
+    prompt: `Quelle description correspond à la vitesse de chasse ${de(g.name)}${NNBSP}?`,
     multi: false,
     choices: shuffle(ctx.rng, [
       { id: g.id, label: g.speed.summary },
@@ -220,10 +220,10 @@ const losOfGhost: Gen = (g) => {
     id: `q:los:${g.id}`,
     topic: 'speed',
     ghostId: g.id,
-    prompt: `Pendant une chasse, ${le(g.name)} bénéficie-t-il de l'accélération standard en ligne de vue ?`,
+    prompt: `${g.name}${NNBSP}: pendant une chasse, l’accélération standard en ligne de vue s’applique-t-elle${NNBSP}?`,
     multi: false,
     choices: [
-      { id: 'yes', label: 'Oui, il accélère en te voyant' },
+      { id: 'yes', label: 'Oui, accélération en ligne de vue' },
       { id: 'no', label: 'Non, pas d’accélération standard' },
     ],
     correct: [g.speed.los ? 'yes' : 'no'],
@@ -244,12 +244,12 @@ const whichGhostTell: Gen = (g, ctx) => {
     id: `q:tell:${g.id}:${k}`,
     topic: 'behavior',
     ghostId: g.id,
-    prompt: 'Quelle entité correspond à ce signe ?',
+    prompt: 'Quelle entité correspond à ce signe ?',
     quote: redactGhostName(tell, g),
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `${g.name} : ${g.summary}`,
+    explain: `${g.name}${NNBSP}: ${g.summary}`,
     cardId: k < 2 ? `g:${g.id}:rev:${k}` : `g:${g.id}:tells`,
   }
 }
@@ -264,12 +264,12 @@ const observationQuestion: Gen = (g, ctx) => {
     id: `q:obs:${g.id}:${k}`,
     topic: 'behavior',
     ghostId: g.id,
-    prompt: 'Sur le terrain, tu observes ceci. De quelle entité s’agit-il ?',
+    prompt: 'Sur le terrain, tu observes ceci. De quelle entité s’agit-il ?',
     quote: redactGhostName(obs[k].text, g),
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `${g.name} : ${g.summary}`,
+    explain: `${g.name}${NNBSP}: ${g.summary}`,
     cardId: `g:${g.id}:tells`,
   }
 }
@@ -288,12 +288,12 @@ const zeroTest: Gen = (g, ctx) => {
     id: `q:zero:${g.id}:${k}`,
     topic: 'zero',
     ghostId: g.id,
-    prompt: 'Ce test, s’il réussit, confirme quelle entité ?',
+    prompt: 'Ce test, s’il réussit, confirme quelle entité ?',
     quote: redactGhostName(t.text, g),
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `Test de confirmation ${de(g.name)}.`,
+    explain: `Test de confirmation ${de(g.name)}. ${g.summary}`,
     cardId: k < 2 ? `g:${g.id}:test:${k}` : `g:${g.id}:tells`,
   }
 }
@@ -328,7 +328,7 @@ function trueFalseQuestions(m: Mechanics, rng: Rng): Question[] {
   return shuffle(rng, m.trueFalse).map((tf) => ({
     id: `q:tf:${tf.id}`,
     topic: 'mechanics' as const,
-    prompt: 'Vrai ou faux ?',
+    prompt: 'Vrai ou faux ?',
     quote: tf.claim,
     multi: false,
     choices: [
@@ -365,7 +365,8 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     }
     if (!q || seen.has(q.id)) continue
     seen.add(q.id)
-    out.push(q)
+    // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
+    out.push({ ...q, prompt: fr(q.prompt), explain: fr(q.explain) })
   }
   return out
 }

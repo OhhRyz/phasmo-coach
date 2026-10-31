@@ -1,7 +1,8 @@
 import { useRef, useState, type CSSProperties } from 'react'
-import { FileHead, H, Notebook, Page, RoughCircle, TypedLink } from '../components/journal/Journal'
+import { FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty } from '../components/ui'
 import { MECHANICS } from '../data'
+import { NNBSP } from '../engine/format'
 import { cardMastery } from '../engine/srs'
 import { useStore } from '../store/store'
 
@@ -9,13 +10,6 @@ type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV']
 const SLIP_TILT = [-0.6, 0.45, -0.25, 0.7, -0.45, 0.3]
-
-/** Typographie française : espace insécable avant ? ! : ; (affichage seulement). */
-const fr = (s: string) =>
-  s
-    .replace(/ ([?!:;»])/g, '\u00a0$1')
-    .replace(/« /g, '«\u00a0')
-    .replace(/(\d) (?=(?:m\/s|°C|min|cm|km|s|m|%)(?![A-Za-zÀ-ÿ]))/g, '$1\u00a0')
 
 export function MechanicsPage() {
   const { state } = useStore()
@@ -66,7 +60,13 @@ export function MechanicsPage() {
           <span>Mécaniques</span>
           <span>Manuel de terrain</span>
           <span>
-            <b>{totalLearned}</b> / {totalFacts} faits retenus
+            {totalLearned ? (
+              <>
+                <b>{totalLearned}</b> / {totalFacts} {totalLearned > 1 ? 'faits retenus' : 'fait retenu'}
+              </>
+            ) : (
+              <>aucun fait retenu sur {totalFacts}</>
+            )}
           </span>
         </FileHead>
 
@@ -76,7 +76,10 @@ export function MechanicsPage() {
             Le manuel de terrain
           </h1>
           <p className="mech-lead">
-            {fr('Ce qui ne dépend pas d’une entité précise mais change tout : chasses, encens, équipement, idées reçues. Ces fiches font aussi partie de ta révision.')}
+            Ce qui ne dépend pas d’une entité précise mais change tout{NNBSP}: chasses, encens, équipement, idées reçues.{' '}
+            {state.settings.includeMechanics
+              ? 'Ces faits font aussi partie de ta révision.'
+              : 'Ces faits ne sont pas dans ta révision (option du profil).'}
           </p>
         </header>
 
@@ -117,16 +120,17 @@ export function MechanicsPage() {
             </ol>
           </nav>
 
-          <p className="mech-quiz">
-            <TypedLink to="/quiz?topic=mechanics">Vrai ou faux sur les mécaniques</TypedLink>
-            <span className="pencil-note">{MECHANICS.trueFalse.length} affirmations à trancher</span>
-          </p>
+          {MECHANICS.trueFalse.length > 0 && (
+            <div className="mech-quiz">
+              <TapeButton to="/quiz?topic=mechanics">Vrai ou faux ({MECHANICS.trueFalse.length})</TapeButton>
+            </div>
+          )}
         </div>
         <span className="folio">— sommaire —</span>
       </Page>
 
       {/* ===================== page de droite : le chapitre ===================== */}
-      <Page side="right" section="5" label={topic ? `Chapitre : ${topic.title}` : 'Chapitre'}>
+      <Page side="right" section="5" label={topic ? `Chapitre${NNBSP}: ${topic.title}` : 'Chapitre'}>
         <FileHead>
           <span>
             Chapitre <b>{ROMAN[idx] ?? idx + 1}</b> / {ROMAN[topics.length - 1] ?? topics.length}
@@ -135,10 +139,10 @@ export function MechanicsPage() {
         </FileHead>
 
         <section className="mech-chapter" ref={factsRef} aria-labelledby="h-mech-facts">
-          <H id="h-mech-facts" count={topic ? `${learned} retenu${learned > 1 ? 's' : ''} sur ${topic.facts.length}` : undefined}>
+          <H id="h-mech-facts" count={topic ? (learned ? `${learned} retenu${learned > 1 ? 's' : ''} sur ${topic.facts.length}` : `aucun retenu sur ${topic.facts.length}`) : undefined}>
             {topic?.title}
           </H>
-          <p className="mech-hint pencil-note">Sous chaque fait, sa question{'\u00a0'}: déplie le papier pour la réponse.</p>
+          <p className="mech-hint pencil-note">Sous chaque fait, sa question{NNBSP}: déplie le papier pour la réponse.</p>
           <ol className="mech-facts">
             {topic?.facts.map((f, k) => (
               <li key={f.id}>
@@ -146,7 +150,7 @@ export function MechanicsPage() {
                   § {k + 1}
                 </span>
                 <div className="mech-fact-body">
-                  <p className="mech-fact">{fr(f.text)}</p>
+                  <p className="mech-fact">{f.text}</p>
                   <div className={`slip${shown[f.id] ? ' is-open' : ''}`} style={{ '--r': `${SLIP_TILT[k % SLIP_TILT.length]}deg` } as Style}>
                     <button
                       type="button"
@@ -158,7 +162,7 @@ export function MechanicsPage() {
                       <span className="slip-tag" aria-hidden>
                         Q.
                       </span>
-                      <span className="slip-text">{fr(f.q)}</span>
+                      <span className="slip-text">{f.q}</span>
                       <span className="slip-fold" aria-hidden>
                         {shown[f.id] ? 'replier' : 'déplier'}
                       </span>
@@ -168,7 +172,7 @@ export function MechanicsPage() {
                         <span className="slip-tag" aria-hidden>
                           R.
                         </span>
-                        <span>{fr(f.a)}</span>
+                        <span>{f.a}</span>
                       </p>
                     )}
                   </div>

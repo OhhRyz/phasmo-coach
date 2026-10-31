@@ -3,24 +3,25 @@ import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeB
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
+import { fr, safeDate } from '../engine/format'
+import { coachNameOf } from '../engine/notes'
 import { learnedCount, streak } from '../engine/progress'
-import { appUrl, copyText, downloadJson, encodePayload } from '../engine/share'
+import { appUrl, downloadJson, encodePayload, reportNotes, type ReportPayload } from '../engine/share'
 import { useMastery } from '../store/hooks'
 import { hydrate } from '../store/schema'
 import { useStore } from '../store/store'
 import { useTheme } from '../theme'
+import { ShareUrl, useShareLink } from './Notebook'
+
+export type { ReportPayload } from '../engine/share'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
-export interface ReportPayload {
-  kind: 'phasmo-coach/report'
-  name: string
-  at: number
-  streak: number
-  learned: number
-  total: number
-  mastery: Record<string, number>
-  activity: { t: number; kind: string; score: number; total: number; label: string }[]
+/** « 1 carte, aucune note » : le contenu d'une sauvegarde, au singulier comme au pluriel. */
+function importText(nCards: number, nNotes: number): string {
+  const cards = nCards === 0 ? 'aucune carte' : `${nCards} carte${nCards > 1 ? 's' : ''}`
+  const notes = nNotes === 0 ? 'aucune note' : `${nNotes} note${nNotes > 1 ? 's' : ''}`
+  return `La progression actuelle sera remplacée par celle du fichier (${cards}, ${notes}). Pense à exporter avant si besoin.`
 }
 
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -35,8 +36,11 @@ export function Profile() {
   const [confirm, setConfirm] = useState<'progress' | 'all' | 'import' | null>(null)
   const [pendingImport, setPendingImport] = useState<ReturnType<typeof hydrate> | null>(null)
   const [reportUrl, setReportUrl] = useState<string | null>(null)
+  const link = useShareLink(reportUrl)
   const now = useMemo(() => Date.now(), [])
   const [theme, setTheme] = useTheme()
+  const isCoach = state.profile.role === 'coach'
+  const coach = coachNameOf(state.profile)
 
   const exportAll = () => downloadJson(`phasmo-coach-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`, state)
 
@@ -60,7 +64,8 @@ export function Profile() {
       learned: learnedCount(deck, state.cards),
       total: deck.length,
       mastery: Object.fromEntries(Object.entries(mastery).map(([k, v]) => [k, Math.round(v * 100)])),
-      activity: state.activity.slice(-12),
+      activity: state.activity.slice(-12).map(({ t, kind, score, total, label }) => ({ t, kind, score, total, label })),
+      notes: reportNotes(state.notes, state.profile, state.cards, state.log),
     }
     setReportUrl(appUrl(`/rapport?d=${await encodePayload(payload)}`))
   }
@@ -80,7 +85,7 @@ export function Profile() {
           <FileHead>
             <span>Ce carnet appartient à</span>
             <span>
-              Ouvert le <b>{DATE.format(state.profile.createdAt)}</b>
+              Ouvert le <b>{safeDate(DATE, state.profile.createdAt)}</b>
             </span>
           </FileHead>
 
@@ -145,15 +150,32 @@ export function Profile() {
             <h2 className="pocket-h" id="h-pocket">
               Partager et sauvegarder
             </h2>
-            <div className="pocket-item">
-              <h3>Envoyer ma progression au coach</h3>
-              <p>Un lien vers un bilan en lecture seule : maîtrise de chaque entité, série, dernières séances.</p>
-              <div className="pocket-btns">
-                <PaperButton onClick={shareReport} rotate={-1.2}>
-                  Créer le lien
-                </PaperButton>
+            {isCoach ? (
+              <div className="pocket-item">
+                <h3>Mes notes pour l’élève</h3>
+                <p>
+                  {fr(
+                    'Envoie par lien les notes écrites depuis le dernier envoi. Un bilan reçu se colle dans le carnet, ou s’ouvre directement depuis le message.',
+                  )}
+                </p>
+                <div className="pocket-btns pocket-main">
+                  <TapeButton to="/carnet?partager=1">Partager mon carnet</TapeButton>
+                  <TypedLink to="/carnet?coller=1">Coller un bilan reçu</TypedLink>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="pocket-item">
+                <h3>Bilan pour {coach || 'le coach'}</h3>
+                <p>
+                  {fr(
+                    `Un lien vers un bilan en lecture seule : maîtrise de chaque entité, série, dernières séances, et où tu en es sur chaque note ${coach ? `de ${coach}` : 'du coach'}.`,
+                  )}
+                </p>
+                <div className="pocket-btns pocket-main">
+                  <TapeButton onClick={shareReport}>Envoyer ma progression au coach</TapeButton>
+                </div>
+              </div>
+            )}
             <div className="pocket-item">
               <h3>Sauvegarde complète</h3>
               <p>Un fichier avec toute la progression et le carnet, pour changer d’appareil ou garder une copie.</p>
@@ -164,7 +186,17 @@ export function Profile() {
                 <PaperButton onClick={() => fileRef.current?.click()} rotate={-0.6}>
                   Importer
                 </PaperButton>
-                <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    e.target.value = '' // le même fichier pourra être choisi à nouveau
+                    if (f) void onFile(f)
+                  }}
+                />
               </div>
             </div>
           </section>
@@ -229,7 +261,7 @@ export function Profile() {
                 value={perDay}
                 onChange={(e) => dispatch({ type: 'settings', settings: { newPerDay: Number(e.target.value) } })}
               />
-              <p className="pencil-note settings-hint">entre 8 et 15, c’est un bon rythme : environ 10 minutes par jour</p>
+              <p className="pencil-note settings-hint">{fr('entre 8 et 15, c’est un bon rythme : une dizaine de minutes par jour, révisions comprises')}</p>
             </div>
 
             <CheckLine
@@ -243,7 +275,7 @@ export function Profile() {
 
             <div className="field focus-field">
               <span className="field-label" id="lbl-focus">
-                Entités à apprendre en priorité {focus.length ? `(${focus.length})` : '(toutes)'}
+                {fr(`Limiter les nouvelles cartes à ces entités ${focus.length ? `(${focus.length})` : '(aucune : toutes)'}`)}
               </span>
               <div className="focus-names" role="group" aria-labelledby="lbl-focus">
                 {GHOSTS.map((g) => {
@@ -315,7 +347,7 @@ export function Profile() {
       >
         <p className="modal-text">
           {confirm === 'import'
-            ? `La progression actuelle sera remplacée par celle du fichier (${Object.keys(pendingImport?.cards ?? {}).length} cartes, ${pendingImport?.notes.length ?? 0} notes). Pense à exporter avant si besoin.`
+            ? importText(Object.keys(pendingImport?.cards ?? {}).length, pendingImport?.notes.length ?? 0)
             : 'Cette action est définitive. Exporte une sauvegarde avant si tu veux pouvoir revenir en arrière.'}
         </p>
       </Modal>
@@ -327,14 +359,21 @@ export function Profile() {
         actions={
           <>
             <TypedLink onClick={() => setReportUrl(null)}>Fermer</TypedLink>
-            <TapeButton arrow={false} onClick={async () => reportUrl && (await copyText(reportUrl)) && toast('Lien copié')}>
+            {link.canSend && (
+              <PaperButton onClick={link.send} rotate={-0.8}>
+                Envoyer…
+              </PaperButton>
+            )}
+            <TapeButton arrow={false} onClick={link.copy}>
               Copier le lien
             </TapeButton>
           </>
         }
       >
-        <p className="modal-text">Le bilan est contenu dans le lien lui-même : aucun serveur ne le stocke.</p>
-        <textarea className="textarea share-url" readOnly value={reportUrl ?? ''} onFocus={(e) => e.currentTarget.select()} aria-label="Lien de progression" />
+        <p className="modal-text">
+          {fr(`Envoie ce lien ${coach ? `à ${coach}` : 'au coach'} : le bilan est contenu dans le lien lui-même, aucun serveur ne le stocke.`)}
+        </p>
+        <ShareUrl link={link} url={reportUrl} label="Lien de progression" />
       </Modal>
     </>
   )

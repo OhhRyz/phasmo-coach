@@ -213,7 +213,7 @@
         "Revenant, Les Jumeaux, Obambo, Gallu"
       ],
       "answer": 2,
-      "explain": "D'après le wiki tybayn, le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
+      "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
     }
   ],
   "changes": [],
@@ -230,6 +230,6 @@
     "https://phasmophobia.wiki.fextralife.com/Revenant"
   ],
   "uncertain": [
-    "Rythme du ralentissement après ta dernière position connue : environ 0,75 m/s² (≈ 2,7 s) selon le wiki Fandom, « progressif » selon tybayn."
+    "Rythme du ralentissement après ta dernière position connue : environ 0,75 m/s² (≈ 2,7 s) selon une source, simplement « progressif » selon une autre."
   ]
 }

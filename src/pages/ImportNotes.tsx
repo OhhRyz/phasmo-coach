@@ -1,19 +1,59 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { FileHead, H, Notebook, Page, Stamp, Sticky, TapeButton, TypedLink } from '../components/journal/Journal'
+import { FileHead, H, Notebook, Page, PaperButton, Stamp, Sticky, TapeButton, TypedLink } from '../components/journal/Journal'
 import { useToast } from '../components/Toast'
-import { Empty } from '../components/ui'
 import { getGhost } from '../data'
-import { formatDate } from '../engine/format'
-import { decodePayload } from '../engine/share'
-import { sanitizeNotes } from '../store/schema'
+import { isStandalone, platform } from '../engine/device'
+import { formatDate, fr, safeDate } from '../engine/format'
+import { isCoachNote } from '../engine/notes'
+import { copyText, decodePayload, importCounts, readNotesPayload, type NotesPayload } from '../engine/share'
 import { useStore } from '../store/store'
-import { isLongNote, NoteText, TornPage, type NotesPayload } from './Notebook'
+import { importSummary, isLongNote, NoteText, TornPage } from './Notebook'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 const TILT = [1.6, -1.3, 0.8, -1.8, 1.1, -0.6]
+
+/**
+ * Sur iPhone, un lien touché dans Discord ou Messages s'ouvre dans Safari : l'app installée sur l'écran
+ * d'accueil a sa propre mémoire et ne verrait jamais ces notes. On propose de copier le lien pour le
+ * coller dans le carnet de l'app.
+ */
+function IosTabHint() {
+  const toast = useToast()
+  const [showUrl, setShowUrl] = useState(false)
+  const href = window.location.href
+  return (
+    <div className="pli-ios">
+      <p className="pencil-note">
+        {fr('Si tu as installé le carnet sur l’écran d’accueil, copie ce lien et colle-le dans le carnet de l’app : l’app installée a sa propre mémoire.')}
+      </p>
+      <PaperButton
+        rotate={-0.8}
+        onClick={async () => {
+          if (await copyText(href)) toast(fr('Lien copié : colle-le dans Carnet, « Coller un lien reçu »'))
+          else {
+            setShowUrl(true)
+            toast(fr('Copie impossible : le lien est sélectionné, copie-le à la main'))
+          }
+        }}
+      >
+        Copier le lien
+      </PaperButton>
+      {showUrl && (
+        <textarea
+          className="textarea share-url pli-url"
+          readOnly
+          autoFocus
+          value={href}
+          onFocus={(e) => e.currentTarget.setSelectionRange(0, e.currentTarget.value.length)}
+          aria-label="Lien reçu"
+        />
+      )}
+    </div>
+  )
+}
 
 export function ImportNotes() {
   const [params] = useSearchParams()
@@ -32,11 +72,11 @@ export function ImportNotes() {
       setError(true)
       return
     }
-    decodePayload<NotesPayload>(d)
-      .then((p) => {
+    decodePayload<unknown>(d)
+      .then((raw) => {
         if (!current) return
-        const notes = p.kind === 'phasmo-coach/notes' ? sanitizeNotes(p.notes) : []
-        if (notes.length) setData({ ...p, notes, from: typeof p.from === 'string' ? p.from : '' })
+        const p = readNotesPayload(raw)
+        if (p) setData(p)
         else setError(true)
       })
       .catch(() => current && setError(true))
@@ -53,12 +93,13 @@ export function ImportNotes() {
             <span>Courrier reçu</span>
             <span>Enveloppe vide</span>
           </FileHead>
-          <Empty title="Lien de partage invalide">
-            <p>Le lien est peut-être incomplet : copie-le en entier.</p>
+          <div className="empty-note">
+            <H as="h1">Lien de partage invalide</H>
+            <p>{fr('Le lien est peut-être incomplet : copie-le en entier, ou demande à le renvoyer.')}</p>
             <p>
               <TypedLink to="/carnet">Aller au carnet</TypedLink>
             </p>
-          </Empty>
+          </div>
         </Page>
       </Notebook>
     )
@@ -71,19 +112,25 @@ export function ImportNotes() {
             <span>Courrier reçu</span>
             <span>Ouverture de l’enveloppe…</span>
           </FileHead>
+          <h1 className="sr-only">Ouverture du courrier</h1>
         </Page>
       </Notebook>
     )
   }
 
-  const existing = new Set(state.notes.map((n) => n.id))
-  const fresh = data.notes.filter((n) => !existing.has(n.id)).length
-  const updated = data.notes.filter((n) => {
-    const cur = state.notes.find((x) => x.id === n.id)
-    return cur && cur.updatedAt < n.updatedAt
-  }).length
-  const from = data.from || 'ton coach'
-  const count = `${data.notes.length} note${data.notes.length > 1 ? 's' : ''}`
+  const { fresh, updated } = importCounts(state.notes, data.notes)
+  const nothingNew = fresh + updated === 0
+  const n = data.notes.length
+  const from = data.from
+  const count = `${n} note${n > 1 ? 's' : ''}`
+  const freshText = fresh ? `${fresh} nouvelle${fresh > 1 ? 's' : ''}` : 'aucune nouvelle'
+  const date = data.at != null ? formatDate(data.at) : null
+  const lead = nothingNew
+    ? 'Tout est déjà dans ton carnet.'
+    : `${date ? `Partagée${n > 1 ? 's' : ''} le ${date}. ` : ''}${fresh ? freshText : 'Aucune nouvelle'}, ${
+        updated ? `${updated} mise${updated > 1 ? 's' : ''} à jour` : 'aucune mise à jour'
+      }. Les notes déjà dans ton carnet ne sont jamais effacées.`
+  const inBrowserTab = platform() === 'ios' && !isStandalone()
 
   return (
     <Notebook className="courrier">
@@ -105,12 +152,14 @@ export function ImportNotes() {
               <span>Phasmo</span>
               <i>Coach</i>
             </span>
-            <Stamp tone="violet" rotate={-14} thunk delay={0.6} className="pli-cachet">
-              Posté le {SHORT.format(data.at)}
-            </Stamp>
+            {data.at != null && (
+              <Stamp tone="violet" rotate={-14} thunk delay={0.6} className="pli-cachet">
+                Posté le {safeDate(SHORT, data.at)}
+              </Stamp>
+            )}
             <span className="pli-label">
               <span className="pli-line">
-                <small>De</small> <b>{from}</b>
+                <small>De</small> <b>{from || '—'}</b>
               </span>
               <span className="pli-line">
                 <small>Pour</small> <b>{state.profile.name || 'toi'}</b>
@@ -125,26 +174,32 @@ export function ImportNotes() {
         <div className="entry">
           <h1 className="entry-date">
             <em>Tu as reçu</em>
-            {count} de {from}
+            {count}
+            {from && <> de {from}</>}
           </h1>
-          <p className="entry-line">
-            Partagées le {formatDate(data.at)}. {fresh} nouvelle{fresh > 1 ? 's' : ''}, {updated} mise{updated > 1 ? 's' : ''} à jour. Les
-            notes déjà dans ton carnet ne sont jamais effacées.
-          </p>
+          <p className="entry-line">{lead}</p>
         </div>
 
         <div className="pli-actions">
-          <TapeButton
-            onClick={() => {
-              dispatch({ type: 'notes:import', notes: data.notes })
-              toast('Carnet importé')
-              navigate('/carnet')
-            }}
-          >
-            Coller dans mon carnet
-          </TapeButton>
-          <TypedLink to="/carnet">Annuler</TypedLink>
+          {nothingNew ? (
+            <TapeButton to="/carnet">Ouvrir mon carnet</TapeButton>
+          ) : (
+            <>
+              <TapeButton
+                onClick={() => {
+                  dispatch({ type: 'notes:import', notes: data.notes })
+                  toast(importSummary(fresh, updated))
+                  navigate('/carnet')
+                }}
+              >
+                Coller dans mon carnet
+              </TapeButton>
+              <TypedLink to="/carnet">Annuler</TypedLink>
+            </>
+          )}
         </div>
+
+        {inBrowserTab && <IosTabHint />}
       </Page>
 
       {/* ===================== page de droite : le contenu du pli ===================== */}
@@ -154,26 +209,27 @@ export function ImportNotes() {
           <span>{count}</span>
         </FileHead>
         <section aria-labelledby="h-pli">
-          <H id="h-pli" count={`${fresh} nouvelle${fresh > 1 ? 's' : ''}`}>
+          <H id="h-pli" count={freshText}>
             Dans l’enveloppe
           </H>
           <ol className="pli-notes">
-            {data.notes.map((n, i) => {
-              const g = n.ghostId ? getGhost(n.ghostId) : undefined
-              const cur = state.notes.find((x) => x.id === n.id)
-              const status = !cur ? 'nouvelle' : cur.updatedAt < n.updatedAt ? 'plus récente que la tienne' : 'déjà dans le carnet'
-              const meta = `${SHORT.format(n.createdAt)} · ${g ? g.name : 'Général'}`
-              const sign = n.author ? `— ${n.author}` : undefined
+            {data.notes.map((note, i) => {
+              const g = note.ghostId ? getGhost(note.ghostId) : undefined
+              const cur = state.notes.find((x) => x.id === note.id)
+              const status = !cur ? 'nouvelle' : cur.updatedAt < note.updatedAt ? 'plus récente que la tienne' : 'déjà dans le carnet'
+              const meta = `${safeDate(SHORT, note.createdAt)} · ${g ? g.name : 'Général'}`
+              const sign = note.author ? `— ${note.author}` : undefined
               const delay = Math.min(0.25 + i * 0.1, 0.9)
+              const hand = isCoachNote(note, state.profile) ? 'coach' : 'mine'
               return (
-                <li key={n.id} className={isLongNote(n) ? 'is-torn' : 'is-sticky'}>
-                  {isLongNote(n) ? (
-                    <TornPage meta={meta} sign={sign} rotate={TILT[i % TILT.length] * 0.4} delay={delay}>
-                      <NoteText note={n} />
+                <li key={note.id} className={isLongNote(note) ? 'is-torn' : 'is-sticky'}>
+                  {isLongNote(note) ? (
+                    <TornPage meta={meta} sign={sign} rotate={TILT[i % TILT.length] * 0.4} delay={delay} hand={hand}>
+                      <NoteText note={note} />
                     </TornPage>
                   ) : (
-                    <Sticky meta={meta} sign={sign} rotate={TILT[i % TILT.length]} delay={delay}>
-                      <NoteText note={n} />
+                    <Sticky meta={meta} sign={sign} rotate={TILT[i % TILT.length]} delay={delay} hand={hand}>
+                      <NoteText note={note} />
                     </Sticky>
                   )}
                   <span className={`pencil-note pli-status${cur ? '' : ' is-new'}`}>{status}</span>

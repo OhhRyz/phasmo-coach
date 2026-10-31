@@ -1,23 +1,102 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { FileHead, H, IndexCard, Notebook, Page, RoughCircle, Stamp, Tape, TypedLink } from '../components/journal/Journal'
-import { Empty, Mastery } from '../components/ui'
+import { FileHead, H, IndexCard, JournalBox, Notebook, Page, RoughCircle, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
+import { Mastery } from '../components/ui'
 import { GHOSTS } from '../data'
-import { formatDate } from '../engine/format'
-import { decodePayload } from '../engine/share'
-import type { ReportPayload } from './Profile'
+import { formatDate, fr, NBSP, num, safeDate } from '../engine/format'
+import { masteryLevel, WEAK_COUNT } from '../engine/progress'
+import { decodePayload, readReportPayload, type ReportNote, type ReportPayload } from '../engine/share'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+const GRADE: Record<1 | 2 | 3 | 4, string> = { 1: 'À revoir', 2: 'Difficile', 3: 'Bien', 4: 'Facile' }
 
-/** Mot du correcteur sous la moyenne (même barème que les fiches). */
-function gradeWord(m: number): string {
-  if (m === 0) return 'à commencer'
-  if (m < 0.35) return 'on s’y met'
-  if (m < 0.6) return 'ça vient'
-  if (m < 0.85) return 'presque !'
-  return 'acquis'
+/** Une note du coach est retenue quand sa carte est apprise et que la dernière réponse était juste. */
+const isKept = (n: ReportNote) => n.phase === 'review' && (n.grade == null || n.grade >= 3)
+
+/** Le détail au crayon sous une note : dernière réponse, oublis, prochaine révision. */
+function noteDetail(n: ReportNote): string {
+  const parts: string[] = []
+  if (n.grade != null) parts.push(`dernière réponse : ${GRADE[n.grade]}`)
+  if (n.lapses > 0) parts.push(`oubliée ${n.lapses} fois`)
+  if (n.due != null) parts.push(`prochaine révision le ${safeDate(SHORT, n.due)}`)
+  return fr(parts.join(' · '))
+}
+
+/** Le mot du correcteur, au stylo, en face d'une note à reprendre. */
+function redoMark(n: ReportNote): string {
+  if (n.grade === 1) return 'à revoir'
+  if (n.grade === 2) return 'difficile'
+  return 'en cours'
+}
+
+function NotesBlock({ notes, name }: { notes: ReportNote[]; name: string }) {
+  const kept = notes.filter(isKept)
+  const fresh = notes.filter((n) => n.phase === 'new')
+  const redo = notes.filter((n) => !isKept(n) && n.phase !== 'new')
+  return (
+    <section className="rp-notes" aria-labelledby="h-rp-notes">
+      <H
+        id="h-rp-notes"
+        count={notes.length ? `${kept.length ? `${kept.length} retenue${kept.length > 1 ? 's' : ''}` : 'aucune retenue'} · ${redo.length ? redo.length : 'aucune'} à reprendre` : 'aucune'}
+      >
+        Tes notes
+      </H>
+      {notes.length === 0 ? (
+        <p className="pencil-note rp-empty">{fr(`aucune de tes notes n’est encore dans la révision de ${name}`)}</p>
+      ) : (
+        <>
+          {kept.length > 0 && (
+            <>
+              <h3 className="pencil-note rp-label">retenues</h3>
+              <ol className="rp-list">
+                {kept.map((n, i) => (
+                  <li key={i}>
+                    <span className="rp-mark">
+                      <JournalBox state="yes" seed={`rp-${i}-${n.title}`} delay={0.6 + i * 0.08} />
+                      <span className="sr-only">Retenue : </span>
+                    </span>
+                    <span className="rp-t">{n.title}</span>
+                    {noteDetail(n) && <span className="pencil-note rp-d">{noteDetail(n)}</span>}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+          {redo.length > 0 && (
+            <>
+              <h3 className="pencil-note rp-label">à reprendre</h3>
+              <ol className="rp-list">
+                {redo.map((n, i) => (
+                  <li key={i} className="is-redo">
+                    <span className="rp-mark hand">{redoMark(n)}</span>
+                    <span className="rp-t">{n.title}</span>
+                    {noteDetail(n) && <span className="pencil-note rp-d">{noteDetail(n)}</span>}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+          {fresh.length > 0 && (
+            <>
+              <h3 className="pencil-note rp-label">pas encore révisée{fresh.length > 1 ? 's' : ''}</h3>
+              <ol className="rp-list is-fresh">
+                {fresh.map((n, i) => (
+                  <li key={i}>
+                    <span className="rp-mark" aria-hidden>
+                      –
+                    </span>
+                    <span className="rp-t">{n.title}</span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+        </>
+      )}
+    </section>
+  )
 }
 
 export function Report() {
@@ -34,8 +113,13 @@ export function Report() {
       setError(true)
       return
     }
-    decodePayload<ReportPayload>(d)
-      .then((p) => current && (p.kind === 'phasmo-coach/report' ? setData(p) : setError(true)))
+    decodePayload<unknown>(d)
+      .then((raw) => {
+        if (!current) return
+        const p = readReportPayload(raw)
+        if (p) setData(p)
+        else setError(true)
+      })
       .catch(() => current && setError(true))
     return () => {
       current = false
@@ -50,12 +134,13 @@ export function Report() {
             <span>Bulletin de progression</span>
             <span>Illisible</span>
           </FileHead>
-          <Empty title="Lien de progression invalide">
+          <div className="empty-note">
+            <H as="h1">Lien de progression invalide</H>
             <p>Le lien est peut-être incomplet. Demande à le renvoyer.</p>
             <p>
               <TypedLink to="/">Accueil</TypedLink>
             </p>
-          </Empty>
+          </div>
         </Page>
       </Notebook>
     )
@@ -68,6 +153,7 @@ export function Report() {
             <span>Bulletin de progression</span>
             <span>Ouverture…</span>
           </FileHead>
+          <h1 className="sr-only">Ouverture du bulletin</h1>
         </Page>
       </Notebook>
     )
@@ -79,7 +165,12 @@ export function Report() {
   const acquired = GHOSTS.filter((g) => (data.mastery[g.id] ?? 0) >= 85).length
   const untouched = GHOSTS.filter((g) => (data.mastery[g.id] ?? 0) === 0).length
   const started = values.filter((v) => v.m > 0 && v.m < 0.85)
-  const weak = (started.length ? started : values.filter((v) => v.m < 0.85)).slice(0, 8)
+  // une entité jamais travaillée n'est pas un point faible : elle est « à découvrir »
+  const weak = (started.length ? started : values.filter((v) => v.m === 0)).slice(0, WEAK_COUNT)
+  const shared = safeDate(SHORT, data.at, '')
+  const scoreText = (a: ReportPayload['activity'][number]) => (a.kind === 'scenario' ? `${num(a.score)}${NBSP}pts` : `${a.score}/${a.total}`)
+  const labelText = (a: ReportPayload['activity'][number]) =>
+    fr(a.kind === 'scenario' ? a.label.replace(/^Enquête\s*:\s*/, 'Mise en situation : ') : a.label) || '—'
 
   return (
     <Notebook className="bulletin">
@@ -87,9 +178,11 @@ export function Report() {
       <Page side="left" section="1" label={`Progression de ${name}`}>
         <FileHead>
           <span>Bulletin de progression</span>
-          <span>
-            Établi le <b>{SHORT.format(data.at)}</b>
-          </span>
+          {shared && (
+            <span>
+              Établi le <b>{shared}</b>
+            </span>
+          )}
           <span>Lecture seule</span>
         </FileHead>
 
@@ -101,36 +194,52 @@ export function Report() {
           <Stamp tone="ink" rotate={-6} thunk delay={0.4}>
             Copie
           </Stamp>
-          <p className="entry-line">Bilan partagé le {formatDate(data.at)}, en lecture seule : il ne modifie rien sur cet appareil.</p>
+          <p className="entry-line">
+            {data.at != null ? `Bilan partagé le ${formatDate(data.at)}, en lecture seule` : 'Bilan en lecture seule'}
+            {fr(' : il ne modifie rien sur cet appareil.')}
+          </p>
         </div>
 
-        <IndexCard className="averages settle" head="Moyennes" right={`au ${SHORT.format(data.at)}`} clip rotate={-0.5}>
+        <IndexCard className="averages settle" head="Moyennes" right={shared ? `au ${shared}` : undefined} clip rotate={-0.5}>
           <dl className="avg">
             <div>
               <dt>Maîtrise moyenne</dt>
               <dd>
                 <span className="avg-grade">
-                  <RoughCircle seed={`avg-${data.at}`} padX={0.12} padY={0.16} width={2.2} delay={0.9}>
-                    {Math.round(avg * 100)} %
+                  <RoughCircle seed={`avg-${data.at ?? 0}`} padX={0.12} padY={0.16} width={2.2} delay={0.9}>
+                    {Math.round(avg * 100)}
+                    {NBSP}%
                   </RoughCircle>
                 </span>
-                <span className="hand avg-word">{gradeWord(avg)}</span>
+                <span className="pencil-note avg-word">{masteryLevel(avg).label.toLowerCase()}</span>
               </dd>
             </div>
             <div>
               <dt>Série</dt>
               <dd>
-                {data.streak} <small>jour{data.streak > 1 ? 's' : ''} d’affilée</small>
+                {data.streak ? (
+                  <>
+                    {data.streak} <small>jour{data.streak > 1 ? 's' : ''} d’affilée</small>
+                  </>
+                ) : (
+                  <small>aucune en cours</small>
+                )}
               </dd>
             </div>
             <div>
               <dt>Cartes apprises</dt>
               <dd>
-                {data.learned} <small>sur {data.total}</small>
+                {data.learned ? data.learned : <small>aucune</small>} <small>sur {num(data.total)}</small>
               </dd>
             </div>
           </dl>
         </IndexCard>
+
+        {data.notes && <NotesBlock notes={data.notes} name={name} />}
+
+        <p className="rp-action">
+          <TapeButton to="/carnet">{data.name ? `Écrire une note à ${data.name}` : 'Écrire une note'}</TapeButton>
+        </p>
 
         <div className="libcard sessions settle" style={{ '--r': '1deg', '--d': '.5s' } as Style}>
           <Tape />
@@ -151,9 +260,9 @@ export function Report() {
               const bad = a.kind !== 'scenario' && a.total > 0 && a.score / a.total < 0.5
               return (
                 <li key={i} style={{ '--r': `${[-2, 1, -1, 2, -1.5, 0.5][i % 6]}deg` } as Style}>
-                  <span className="d">{SHORT.format(a.t)}</span>
-                  <span className="lbl">{a.label}</span>
-                  <span className={`res${bad ? ' bad' : ''}`}>{a.kind === 'scenario' ? `${a.score} pts` : `${a.score}/${a.total}`}</span>
+                  <span className="d">{safeDate(SHORT, a.t)}</span>
+                  <span className="lbl">{labelText(a)}</span>
+                  <span className={`res${bad ? ' bad' : ''}`}>{scoreText(a)}</span>
                 </li>
               )
             })}
@@ -169,7 +278,7 @@ export function Report() {
         </FileHead>
 
         <section aria-labelledby="h-reg">
-          <H id="h-reg" count={`${acquired} acquise${acquired > 1 ? 's' : ''} sur ${GHOSTS.length}`}>
+          <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
             Les {GHOSTS.length} entités
           </H>
           <p className="registry-legend">La maîtrise est surlignée ; les entités acquises sont entourées.</p>
@@ -196,22 +305,20 @@ export function Report() {
             })}
           </ol>
           <div className="registry-sum">
+            <span>{acquired ? <><b>{acquired}</b> acquise{acquired > 1 ? 's' : ''}</> : 'aucune acquise'}</span>
             <span>
-              <b>{acquired}</b> acquise{acquired > 1 ? 's' : ''}
+              {GHOSTS.length - acquired - untouched ? <><b>{GHOSTS.length - acquired - untouched}</b> en cours</> : 'aucune en cours'}
             </span>
             <span>
-              <b>{GHOSTS.length - acquired - untouched}</b> en cours
-            </span>
-            <span>
-              <b>{untouched}</b> pas encore ouverte{untouched > 1 ? 's' : ''}
+              {untouched ? <><b>{untouched}</b> pas encore travaillée{untouched > 1 ? 's' : ''}</> : 'toutes travaillées'}
             </span>
           </div>
         </section>
 
         {weak.length > 0 && (
           <section aria-labelledby="h-weak">
-            <H id="h-weak" count={`les ${weak.length} plus fragiles`}>
-              À retravailler
+            <H id="h-weak" count={started.length ? `les ${weak.length} plus fragiles` : `${weak.length} à découvrir`}>
+              {started.length ? 'À retravailler' : 'À découvrir'}
             </H>
             <ol className="weak-list">
               {weak.map(({ g, m }) => (

@@ -27,9 +27,7 @@
 .mech-toc-btn.is-on .mech-toc-n { color: var(--ink); }
 .mech-toc-btn.is-on .rough { color: var(--red-pen); }
 .mech-toc-btn:focus-visible { outline-offset: -2px; }
-.mech .mech-quiz { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 28px 0 0; }
-.mech-quiz .link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15.5px; }
-.mech-quiz .pencil-note { font-size: 21px; }
+.mech .mech-quiz { margin: 34px 0 0; }
 
 /* ---------- le chapitre ---------- */
 .mech-chapter { scroll-margin-top: 16px; }
@@ -75,12 +73,13 @@
   font-family: "Courier Prime", monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
 }
 @media (hover: hover) {
-  .slip-q:hover .slip-text { color: var(--red-pen); }
+  /* le papier ouvert reste à l'encre : le rouge est réservé au coach et à la correction */
+  .slip-q:hover .slip-text { text-decoration: underline; text-decoration-color: var(--pencil); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
   .slip-q:hover .slip-fold { color: var(--ink); }
 }
 .slip-q:focus-visible { outline-offset: 2px; }
 
-.slip.is-open .slip-q { clip-path: none; }
+.slip.is-open .slip-q { clip-path: none; color: var(--ink); }
 .slip.is-open .slip-q::after { display: none; }
 .slip.is-open .slip-q::before { display: none; }
 .mech .slip-a {

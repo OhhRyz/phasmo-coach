@@ -4,10 +4,11 @@
    S'entraîner : une page d'intro tapée, puis les enveloppes sur le bureau
    ========================================================================== */
 .tr .notebook { margin-bottom: 46px; }
-.tr-head { display: grid; grid-template-columns: minmax(0, 1fr) 318px; gap: 24px 40px; align-items: start; }
+.tr-head { display: grid; grid-template-columns: minmax(0, 1fr) 344px; gap: 24px 40px; align-items: start; }
 .tr-title { margin: 0 0 24px; text-wrap: balance; }
 .tr .tr-memo { max-width: 29em; font-family: "Courier Prime", ui-monospace, monospace; font-size: 16.5px; line-height: 1.6; color: var(--ink); }
 .tr .tr-memo p { margin: 0 0 6px; }
+.tr-go { margin-top: 26px; }
 .tr .tr-memo .tr-memo-obj { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .06em; color: var(--ink-2); }
 .tr-memo-obj b { font-weight: 400; text-transform: uppercase; letter-spacing: .14em; color: var(--ink); }
 .tr .tr-down {
@@ -18,9 +19,9 @@
 
 .tr-libcard { margin-top: 10px; max-width: none; }
 .tr-libcard h2 { margin: 0; font-family: "Elite", monospace; font-weight: 400; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; text-align: center; }
-.tr-libcard .cols, .tr-libcard li { grid-template-columns: 74px minmax(0, 1fr) auto; column-gap: 10px; }
+.tr-libcard .cols, .tr-libcard li { grid-template-columns: 64px minmax(0, 1fr) auto; column-gap: 10px; }
 .tr-libcard .d { white-space: nowrap; font-size: 14px; }
-.tr-libcard .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Courier Prime", monospace; font-size: 14px; color: var(--ink); }
+.tr-libcard .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Courier Prime", monospace; font-size: 13.5px; color: var(--ink); }
 .tr-libcard .res { color: var(--red-pen); font-size: 23px; text-align: right; }
 .tr-libcard .tape { left: 50%; margin-left: -46px; }
 
@@ -38,10 +39,11 @@
   .tr-head { grid-template-columns: 1fr; gap: 30px; }
   .tr-title { margin-bottom: 18px; }
   .tr .tr-memo { font-size: 16.5px; }
+  .tr-go { margin-top: 22px; }
   .tr .tr-down { margin: 18px 0 0 auto; font-size: 20px; }
   .tr-down svg { width: 38px; height: 44px; margin-bottom: -14px; }
   .tr-libcard { margin: 6px 4px 8px; }
-  .tr-libcard .cols, .tr-libcard li { grid-template-columns: 72px minmax(0, 1fr) auto; }
+  .tr-libcard .cols, .tr-libcard li { grid-template-columns: 64px minmax(0, 1fr) auto; }
   .tr-shelf { margin-top: 34px; }
   .tr-shelf .envelopes { gap: 18px 14px; }
   .tr-shelf .envelope { min-height: 0; }
@@ -222,7 +224,54 @@
 .ear-end-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 40px; }
 .ear-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; }
 
+/* ---------- fin de série : la note à gauche, le relevé des écoutes à droite ---------- */
+.ear-results { min-height: 640px; }
+.ear-results .ear-result { grid-template-columns: auto minmax(0, 1fr); gap: 10px 30px; }
+.ear-results .ear-grade-n { font-size: 92px; }
+.ear .ear-by { margin: 34px 0 0; width: 100%; max-width: 360px; border-collapse: collapse; }
+.ear-by caption { text-align: left; padding-bottom: 6px; border-bottom: 1.5px solid var(--ink-2); }
+.ear-by th, .ear-by td { padding: 9px 0 8px; border-bottom: 1px solid var(--rule); text-align: left; font-weight: 400; }
+.ear-by th { font-family: "Elite", monospace; font-size: 15.5px; letter-spacing: .02em; color: var(--ink); }
+.ear-by td { font-family: "Courier Prime", monospace; font-size: 15px; font-weight: 700; text-align: right; color: var(--ink); white-space: nowrap; }
+
+.ear-log { max-width: none; margin-top: 18px; padding-bottom: 14px; background: var(--card); }
+:root[data-theme="dark"] .ear-log { background: var(--card); }
+.ear-log .tape { left: 50%; margin-left: -46px; }
+.ear-log table { width: 100%; margin-top: 4px; border-collapse: collapse; }
+.ear-log th {
+  padding: 0 6px 6px 0; border-bottom: 1.5px solid var(--ink-2); text-align: left; font-weight: 400;
+  font-family: "Courier Prime", monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2);
+}
+.ear-log td { height: 34px; padding: 0 6px 0 0; border-bottom: 1px solid var(--card-rule); vertical-align: middle; }
+.ear-log-n { width: 30px; font-family: "Courier Prime", monospace; font-size: 13px; color: var(--ink-3); }
+.ear-log-v { width: 96px; font-family: "Elite", monospace; font-size: 15px; letter-spacing: .02em; color: var(--ink); white-space: nowrap; }
+.ear-log-a { font-family: "Courier Prime", monospace; font-size: 15px; color: var(--ink); white-space: nowrap; }
+.ear-log-a s { color: var(--ink-2); text-decoration-color: var(--red-pen); text-decoration-thickness: 2px; text-decoration-skip-ink: none; }
+.ear-log-fix { margin-left: 10px; font-size: 23px; font-weight: 600; color: var(--red-pen); }
+.ear-log-mark { width: 52px; text-align: right; }
+.ear-log td.ear-log-mark { padding-right: 2px; }
+.ear-tick { width: 22px; height: 18px; color: var(--red-pen); overflow: visible; vertical-align: middle; }
+.ear-log-miss { font-size: 23px; font-weight: 600; color: var(--red-pen); }
+
+.ear-again { margin-top: 30px; }
+.ear-again .ear-listen { margin-top: 10px; }
+.ear .ear-ios { margin: 14px 0 0; font-size: 21px; }
+.ear--run .ear-ios { margin-top: 12px; }
+
+@media (max-width: 1180px) {
+  .ear-results { min-height: 0; }
+}
+
 @media (max-width: 759px) {
+  .ear-results .ear-result { grid-template-columns: 1fr; gap: 6px; }
+  .ear-results .ear-grade-n { font-size: 84px; }
+  .ear .ear-by { max-width: none; }
+  .ear-log { margin: 14px 2px 4px; padding-left: 14px; padding-right: 14px; }
+  .ear-log-n { width: 24px; }
+  .ear-log-v { width: 78px; font-size: 14px; }
+  .ear-log-a { font-size: 14px; }
+  .ear-log-fix { margin-left: 6px; font-size: 21px; }
+  .ear-log-mark { width: 40px; }
   .ear-entry { margin-bottom: 28px; }
   .ear .ear-lead { font-size: 17.5px; }
   .ear-bench { margin: 0 -16px 0 -22px; }

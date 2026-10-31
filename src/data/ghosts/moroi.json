@@ -14,7 +14,7 @@
     "summary": "1,5 → 2,25 m/s selon la santé · accélère en LdV (3,71 max)",
     "details": [
       "Sa vitesse dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, puis environ +0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %.",
-      "Repères (tableau tybayn) : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
+      "Repères par tranche de santé mentale : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
       "Sa vitesse suit la santé en pleine chasse : si l'équipe prend des pilules, il ralentit.",
       "Il a l'accélération en LdV : jusqu'à 1,65 × sa vitesse actuelle après 13 s de LdV continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
       "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit."
@@ -249,7 +249,7 @@
     }
   ],
   "changes": [
-    "Correction par rapport à la sauvegarde de déc. 2024 : l'aveuglement à l'encens dure 7 s en jeu (bug connu du wiki tybayn actuel), et non 7,5 s comme l'annonçaient la sauvegarde et les notes de patch.",
+    "Bug connu : l'aveuglement à l'encens dure 7 s en jeu, et non 7,5 s comme l'annonçaient les notes de patch.",
     "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités (+5 %/s → +2,5 %/s) ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
   ],
   "sources": [
@@ -264,9 +264,9 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Les pilules lèvent-elles la malédiction ? Phasmopedia seulement (tybayn v0.19.1.0 confirme en revanche la malédiction par l'enregistreur de son, si le son est enregistré).",
+    "Les pilules lèvent-elles la malédiction ? Une seule source l'affirme (la malédiction par l'enregistreur de son, si le son est enregistré, est en revanche confirmée).",
     "Test des pilules : un Obambo qui repasse en calme en pleine chasse ralentit aussi ; refais le test en cas de doute.",
     "Durée d'aveuglement avec un encens de rang 2 ou 3 : non documentée.",
-    "tybayn v0.19.1.0 classe « plus rapide d'une chasse à l'autre avec accélération en LdV » et « plus de 5 s pour revenir après l'encens » parmi les tests définitifs ; on les garde non définitifs, car les Jumeaux, le Gallu et l'Obambo changent aussi de vitesse d'une chasse à l'autre avec une LdV standard, et un Gallu affaibli reste aveuglé 6 s."
+    "« Plus rapide d'une chasse à l'autre avec accélération en LdV » et « plus de 5 s pour revenir après l'encens » passent souvent pour des tests définitifs ; ils ne le sont pas tout à fait, car les Jumeaux, le Gallu et l'Obambo changent aussi de vitesse d'une chasse à l'autre avec une LdV standard, et un Gallu affaibli reste aveuglé 6 s."
   ]
 }

@@ -42,7 +42,7 @@
     { "text": "Peut chasser à 65 % lorsqu'il est près d'un équipement électronique actif.", "zeroEvidence": true }
   ],
   "behaviors": [
-    { "text": "Bug connu (wiki tybayn) : le rayon des battements de cœur est actuellement de 15 m au lieu de 10 m.", "zeroEvidence": true },
+    { "text": "Bug connu : le rayon des battements de cœur est actuellement de 15 m au lieu de 10 m.", "zeroEvidence": true },
     { "text": "Seul l'équipement électronique du joueur compte, qu'il soit posé ou tenu en main ; un appareil éteint ne déclenche rien.", "zeroEvidence": false }
   ],
   "abilities": [],
@@ -117,7 +117,7 @@
   ],
   "changes": [
     "Chronicle v0.13 (24 juin 2025) : correction d'un bug qui empêchait le Raiju d'accélérer près de l'équipement électronique tenu en main ; il accélère désormais près de l'électronique posée ou tenue.",
-    "Wiki tybayn actuel : bug connu, le rayon des battements de cœur du Raiju est de 15 m au lieu de 10 m.",
+    "Bug connu : le rayon des battements de cœur du Raiju est de 15 m au lieu de 10 m.",
     "Player Character Update v0.17.0.0 (2026) : l'accélération en LdV des entités a été modifiée, puis remise à son état d'origine par le patch v0.17.1.4 (2 juin 2026)."
   ],
   "sources": [
@@ -131,7 +131,7 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Le Kormos et le Revenant accélèrent aussi vers un appareil tenu en main : déduit de tybayn, pas testé côte à côte.",
+    "Le Kormos et le Revenant accélèrent aussi vers un appareil tenu en main : déduit de leur description, pas testé côte à côte.",
     "Liste exacte de l'« électronique active » (radio globale, capteurs posés…) : non vérifiée."
   ]
 }

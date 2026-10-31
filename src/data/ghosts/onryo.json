@@ -124,9 +124,7 @@
       "explain": "L'encens repousse la chasse de la capacité sans remettre le compteur à zéro ; en encensant à répétition, tu peux la retarder de plusieurs minutes."
     }
   ],
-  "changes": [
-    "Le wiki tybayn actuel détaille la mécanique de la capacité (conditions, réinitialisation du compteur, retard par l'encens) et des lumières à feu (30 s puis 20–80 s de délai, 66,67 % de chances de souffle à moins de 5 m) : ce sont des précisions documentaires, pas un patch identifié."
-  ],
+  "changes": [],
   "sources": [
     "tybayn backup b0.11.1.1",
     "tybayn wiki: wiki_onryo_ability_p1 à p9",

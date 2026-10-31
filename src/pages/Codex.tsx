@@ -16,9 +16,9 @@ const SPEEDS: { value: SpeedClass; label: string }[] = [
 ]
 const HUNT_ABOVE: { value: number | null; label: string }[] = [
   { value: null, label: 'Pas d’info' },
-  { value: 50, label: '50 %' },
-  { value: 60, label: '60 %' },
-  { value: 70, label: '70 %' },
+  { value: 50, label: '50 %' },
+  { value: 60, label: '60 %' },
+  { value: 70, label: '70 %' },
 ]
 
 const SESSION_KEY = 'phasmo-coach/codex-filter'
@@ -66,8 +66,9 @@ export function Codex() {
   const [initial] = useState(loadSession)
   const [filter, setFilter] = useState<FilterState>(initial.filter)
   const [query, setQuery] = useState(initial.query)
-  // les éliminées restent dans le registre, barrées au crayon (on peut les masquer)
-  const [showOut, setShowOut] = useState(true)
+  // les éliminées restent dans le registre, barrées au crayon (on peut les masquer). Tant qu'on n'a rien
+  // choisi, elles s'effacent d'elles-mêmes quand il n'en reste que trois ou moins : la réponse remonte en tête.
+  const [outPref, setOutPref] = useState<boolean | null>(null)
   const [showMore, setShowMore] = useState(
     initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null,
   )
@@ -98,6 +99,7 @@ export function Codex() {
   }, [filter, query])
 
   const possible = useMemo(() => possibleEvidence(filterGhosts(GHOSTS, filter), filter), [filter])
+  const showOut = outPref ?? matching.length > 3
 
   // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées
   const rows = useMemo(() => {
@@ -127,6 +129,11 @@ export function Codex() {
   const searching = active || query.trim() !== ''
   const only = searching && matching.length === 1 ? matching[0] : null
   const moreCount = filter.speed.length + (filter.huntAbove != null ? 1 : 0) + (filter.los !== null ? 1 : 0)
+  // la réponse du carnet, lisible juste sous le titre (sur téléphone le registre est loin en dessous)
+  const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'exclue')].filter(Boolean)
+  const headCount = marks.length
+    ? `${marks.join(' · ')} · ${matching.length === 0 ? 'aucune possible' : s(matching.length, 'possible')}`
+    : 'rien de coché'
 
   return (
     <Notebook className="cx-book">
@@ -142,11 +149,11 @@ export function Codex() {
             </span>
           </FileHead>
 
-          <H as="h1" count={found + excluded > 0 ? `${s(found, 'trouvée')} · ${s(excluded, 'exclue')}` : 'rien de coché'}>
+          <H as="h1" count={headCount}>
             Mon carnet de preuves
           </H>
           <p className="cx-intro">
-            Coche ce que tu observes sur le terrain : le registre barre au crayon les entités qui ne collent plus.
+            Coche ce que tu observes sur le terrain : le registre barre au crayon les entités qui ne collent plus.
           </p>
 
           <div className="cx-count-field">
@@ -164,22 +171,27 @@ export function Codex() {
                 { value: 0, label: '0' },
               ]}
             />
-            <span className="pencil-note cx-count-hint">Cauchemar : 2 · Démence : 1</span>
+            <span className="pencil-note cx-count-hint">Cauchemar : 2 · Démence : 1</span>
           </div>
 
           <div className="cx-tracker">
             <MarginNote className="cx-legend" style={{ left: -108, top: 4, width: 82, '--r': '-4deg' }}>
-              <span>1 clic : trouvée</span>
-              <span>2 : exclue</span>
-              <span>3 : effacée</span>
+              <span>1 clic : trouvée</span>
+              <span>2 : exclue</span>
+              <span>3 : effacée</span>
             </MarginNote>
             <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
             {found + excluded > 0 && (
-              <p className="cx-tracker-hint pencil-note">preuve grisée : impossible avec ce qui reste</p>
+              <p className="cx-tracker-hint pencil-note">preuve grisée : impossible avec ce qui reste</p>
             )}
           </div>
 
           {/* la conclusion arrive là où l'œil se trouve : juste sous les preuves */}
+          {active && matching.length === 0 && (
+            <p className="pencil-note cx-none">
+              aucune entité ne colle : vérifie le nombre de preuves de la partie ou retire un filtre
+            </p>
+          )}
           {only && (
             <div className="cx-actions cx-actions--verdict">
               <p className="cx-verdict">
@@ -200,7 +212,6 @@ export function Codex() {
               placeholder="un nom, un comportement…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              aria-label="Rechercher"
             />
           </label>
 
@@ -212,48 +223,47 @@ export function Codex() {
               aria-expanded={showMore}
               aria-controls="cx-more"
             >
-              {showMore ? 'Replier vitesse, seuil et vue' : 'Vitesse, seuil et ligne de vue'}
+              {showMore ? 'Replier vitesse, seuil et ligne de vue' : 'Vitesse, seuil et ligne de vue'}
               {!showMore && moreCount > 0 && <span className="cx-more-n"> ({moreCount})</span>}
             </button>
             {active && <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>}
           </div>
 
-          {showMore && (
-            <div className="cx-more" id="cx-more">
-              <div className="field">
-                <span>Vitesse en chasse</span>
-                <Toggle label="Vitesse" items={SPEEDS} value={filter.speed} onChange={(speed) => setFilter({ ...filter, speed })} />
-                <span className="pencil-note cx-field-hint">plusieurs choix possibles · normale = 1,7 m/s</span>
-              </div>
-              <div className="field">
-                <span>Une chasse a démarré au-dessus de</span>
-                <Seg
-                  label="Chasse observée au-dessus de cette santé moyenne"
-                  value={filter.huntAbove ?? -1}
-                  onChange={(v) => setFilter({ ...filter, huntAbove: v < 0 ? null : v })}
-                  options={HUNT_ABOVE.map((h) => ({ value: h.value ?? -1, label: h.label }))}
-                />
-                <span className="pencil-note cx-field-hint">de santé mentale moyenne</span>
-              </div>
-              <div className="field">
-                <span>Accélère en ligne de vue</span>
-                <Seg
-                  label="Ligne de vue"
-                  value={filter.los === null ? 'any' : filter.los ? 'yes' : 'no'}
-                  onChange={(v) => setFilter({ ...filter, los: v === 'any' ? null : v === 'yes' })}
-                  options={[
-                    { value: 'any', label: 'Peu importe' },
-                    { value: 'yes', label: 'Oui' },
-                    { value: 'no', label: 'Non' },
-                  ]}
-                />
-              </div>
+          {/* toujours rendu (masqué quand replié) : aria-controls pointe vers un élément qui existe */}
+          <div className="cx-more" id="cx-more" hidden={!showMore}>
+            <div className="field">
+              <span>Vitesse en chasse</span>
+              <Toggle label="Vitesse" items={SPEEDS} value={filter.speed} onChange={(speed) => setFilter({ ...filter, speed })} />
+              <span className="pencil-note cx-field-hint">plusieurs choix possibles · normale = 1,7 m/s</span>
             </div>
-          )}
+            <div className="field">
+              <span>Une chasse a démarré au-dessus de</span>
+              <Seg
+                label="Chasse observée au-dessus de cette santé moyenne"
+                value={filter.huntAbove ?? -1}
+                onChange={(v) => setFilter({ ...filter, huntAbove: v < 0 ? null : v })}
+                options={HUNT_ABOVE.map((h) => ({ value: h.value ?? -1, label: h.label }))}
+              />
+              <span className="pencil-note cx-field-hint">de santé mentale moyenne</span>
+            </div>
+            <div className="field">
+              <span>Accélère en ligne de vue</span>
+              <Seg
+                label="Ligne de vue"
+                value={filter.los === null ? 'any' : filter.los ? 'yes' : 'no'}
+                onChange={(v) => setFilter({ ...filter, los: v === 'any' ? null : v === 'yes' })}
+                options={[
+                  { value: 'any', label: 'Peu importe' },
+                  { value: 'yes', label: 'Oui' },
+                  { value: 'no', label: 'Non' },
+                ]}
+              />
+            </div>
+          </div>
 
           {!only && (
             <div className="cx-actions">
-              <TapeButton to="/enquete">Lancer une enquête</TapeButton>
+              <TapeButton to="/enquete">Lancer une mise en situation</TapeButton>
               <span className="pencil-note cx-action-hint">et remplis ce carnet sur un contrat raconté minute par minute</span>
             </div>
           )}
@@ -263,7 +273,8 @@ export function Codex() {
 
       {/* ===================== page de droite : le registre ===================== */}
       <Page side="right" section="3" label="Registre des entités" className="cx-right">
-        <UvPrint style={{ right: 2, top: 640, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '200px' }} />
+        {/* au-dessus du registre : la marge plus bas porte les remarques au crayon des lignes */}
+        <UvPrint style={{ right: 2, top: 150, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '200px' }} />
         <FileHead>
           <span>Registre</span>
           <span>Ordre du journal du jeu</span>
@@ -280,25 +291,20 @@ export function Codex() {
                 </RoughCircle>
               ) : (
                 <>
-                  <b>{matching.length}</b> {!active && query.trim() ? 'trouvée' : 'possible'}
+                  <b>{matching.length === 0 ? 'Aucune' : matching.length}</b> {!active && query.trim() ? 'trouvée' : 'possible'}
                   {matching.length > 1 ? 's' : ''}
                 </>
               )}
             </span>
             {out.length > 0 && (
               <span className="cx-count-out">
-                {s(out.length, 'éliminée')}
-                <button
-                  type="button"
-                  className="link link-btn cx-out-toggle"
-                  aria-label={`${showOut ? 'Masquer' : 'Voir'} les ${s(out.length, 'éliminée')}`}
-                  onClick={() => setShowOut((v) => !v)}
-                >
-                  {showOut ? 'les masquer' : 'les revoir'}
+                <span id="cx-out-n">{s(out.length, 'éliminée')}</span>
+                <button type="button" className="link link-btn cx-out-toggle" aria-describedby="cx-out-n" onClick={() => setOutPref(!showOut)}>
+                  {out.length === 1 ? (showOut ? 'la masquer' : 'la revoir') : showOut ? 'les masquer' : 'les revoir'}
                 </button>
               </span>
             )}
-            {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
+            {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
           </div>
 
           {matching.length === 0 && (

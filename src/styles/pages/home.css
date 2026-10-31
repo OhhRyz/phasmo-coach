@@ -1,6 +1,69 @@
 /* Page : accueil */
 .steps-doodle { display: block; width: 100%; max-width: 170px; margin-top: 8px; color: var(--ink-2); }
-.notes-empty { grid-column: 1 / -1; font-size: 16.5px; color: var(--ink-2); max-width: 32em; }
 .suspects .hint.pencil-note { color: var(--pencil); font-size: 20px; }
 .welcome-form { max-width: 520px; }
 .registry .nm .rough { color: var(--red-pen); }
+
+/* conseil d'installation : une annotation au crayon de l'app, jamais la voix du coach */
+.home .install-note { max-width: 31em; margin: -6px 0 30px; font-size: 21.5px; line-height: 1.12; }
+.home .install-note p { margin: 0; }
+.home .install-note .link { display: inline-block; margin-top: 8px; }
+.notebook--single.home .install-note { margin: -4px 0 32px; }
+
+/* carte du coach (au-dessus de sa révision) */
+.home .coach-card { margin: 34px 0 0; }
+.home .coach-card + .plan { margin-top: 44px; }
+.home .coach-card p { margin: 0; font-size: 16.5px; }
+.home .coach-card .coach-sum {
+  min-height: 46px; display: flex; align-items: center;
+  font-family: "Courier Prime", monospace; font-size: 14.5px; letter-spacing: .03em; color: var(--ink-2);
+}
+.home .coach-card .plan-actions { margin-top: 20px; }
+.home .coach-report { display: grid; gap: 12px; margin-top: 22px; max-width: 30em; }
+.home .coach-report .pencil-note { font-size: 21px; }
+.home .coach-report .coach-report-bad { color: var(--pencil); }
+
+/* révision : rien à revoir */
+.home .plan-n--none { height: auto; min-height: 84px; align-items: center; }
+.home .plan-n--none span { font-size: 32px; line-height: 1.1; }
+
+/* suspects : noms longs plus serrés sous le polaroïd, puis la suite de la liste */
+.home .suspects .polaroid .cap-name { white-space: nowrap; }
+.home .suspects .polaroid .cap-name--long { font-size: .8em; }
+.home .suspects-more { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; margin: 26px 0 0; }
+.home .suspects-more .typed-label { margin-right: -6px; }
+.home .suspects-more a {
+  font-size: 17.5px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule);
+  text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+.home .suspects-more a:hover { color: var(--red-pen); }
+.home .suspects-more small { margin-left: 7px; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 12.5px; color: var(--red-pen); }
+.home .suspects-start { margin: 22px 0 0; font-size: 20px; }
+
+/* mots du coach */
+.home .notes-empty { grid-column: 1 / -1; max-width: 30em; }
+.home .notes-empty .pencil-note { margin: 0 0 8px; font-size: 21px; }
+
+/* enveloppes : la note obtenue est une correction, au stylo rouge */
+.home-shelf .envelope .env-score { color: var(--red-pen); }
+
+@media (max-width: 759px) {
+  /* cibles tactiles d'au moins 40 px */
+  .home .link, .home .suspects-more a { display: inline-flex; align-items: center; min-height: 40px; }
+  .home .install-note .link { margin-top: 2px; }
+  .home .registry { grid-template-rows: repeat(15, 40px); }
+  .home .registry .nm::after { /* zone de toucher : toute la ligne */
+    content: ""; position: absolute; left: -34px; right: -34px; top: 50%; height: 40px; margin-top: -20px;
+  }
+  .home .install-note { font-size: 20.5px; margin: 14px 0 24px; }
+  .home .coach-card { margin-top: 26px; }
+  .home .coach-card + .plan { margin-top: 34px; }
+  .home .coach-card .plan-actions { gap: 6px 22px; }
+  .home .plan-n--none span { font-size: 27px; }
+
+  /* nom et pourcentage l'un sous l'autre : trois polaroïds tiennent côte à côte */
+  .home .suspects .polaroid { padding-bottom: 44px; }
+  .home .suspects .polaroid .cap { flex-direction: column; align-items: flex-start; gap: 1px; font-size: 19px; }
+  .home .suspects .polaroid .cap-name--long { font-size: 16px; }
+  .home .suspects-more { gap: 0 18px; margin-top: 18px; }
+}

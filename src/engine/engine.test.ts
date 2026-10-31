@@ -7,7 +7,7 @@ import { redactGhostName, speedClasses } from './format'
 import { buildQuiz, isCorrect, QUIZ_TOPICS } from './quiz'
 import { createRng } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
-import { decodePayload, encodePayload } from './share'
+import { decodePayload, encodePayload, notesToShare, parseShareInput, readNotesPayload, readReportPayload, reportNotes } from './share'
 import { cardMastery, isDue, schedule } from './srs'
 import { speedToBpm, bpmToSpeed } from './audio'
 
@@ -260,5 +260,79 @@ describe('outils', () => {
     const ids = deck.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(deck.filter((c) => c.kind === 'evidence').length).toBe(GHOSTS.length)
+  })
+})
+
+describe('liens reçus', () => {
+  const D = 'zq1ZKkktLlGyUlAqzs8tSM0rVajIzEkFAA'
+  const profile = { name: 'Léa', coachName: 'Ryz', role: 'student' as const, createdAt: T0 }
+  const note = (id: string, author: string, t = T0, extra = {}) => ({
+    id, author, createdAt: t, updatedAt: t, ghostId: null, title: `Note ${id}`, body: 'texte', asCard: true, ...extra,
+  })
+
+  it('reconnaît un lien de notes ou de bilan, même entouré de texte', () => {
+    expect(parseShareInput(`https://ryz.github.io/phasmo-coach/#/importer?d=${D}`)).toEqual({ kind: 'notes', d: D })
+    expect(parseShareInput(`  https://x.app/#/rapport?d=${D}  `)).toEqual({ kind: 'report', d: D })
+    expect(parseShareInput(`Tiens, mes notes : <https://x.app/#/importer?d=${D}> à plus`)).toEqual({ kind: 'notes', d: D })
+    expect(parseShareInput(`https://x.app/#/importer?coller=1&d=${D}&x=1`)).toEqual({ kind: 'notes', d: D })
+    expect(parseShareInput(`https://x.app/%23/importer%3Fd%3D${D}`)).toEqual({ kind: 'notes', d: D })
+  })
+
+  it('accepte la seule valeur de d= et refuse le reste', () => {
+    expect(parseShareInput(D)).toEqual({ kind: 'notes', d: D })
+    expect(parseShareInput(`d=${D}`)).toEqual({ kind: 'notes', d: D })
+    expect(parseShareInput('')).toBeNull()
+    expect(parseShareInput('bonjour')).toBeNull()
+    expect(parseShareInput('https://x.app/#/carnet?coller=1')).toBeNull()
+    expect(parseShareInput('https://x.app/#/importer?d=abc')).toBeNull()
+    expect(parseShareInput('https://x.app/#/importer?d=')).toBeNull()
+  })
+
+  it('décode un lien collé jusqu’aux notes', async () => {
+    const d = await encodePayload({ kind: 'phasmo-coach/notes', from: 'Ryz', at: T0, notes: [note('a', 'Ryz')] })
+    const input = parseShareInput(`https://x.app/#/importer?d=${d}`)
+    const p = readNotesPayload(await decodePayload(input!.d))
+    expect(p?.notes.map((n) => n.id)).toEqual(['a'])
+    expect(p?.from).toBe('Ryz')
+  })
+
+  it('valide un carnet reçu', () => {
+    expect(readNotesPayload({ kind: 'phasmo-coach/report' })).toBeNull()
+    expect(readNotesPayload({ kind: 'phasmo-coach/notes', notes: [] })).toBeNull()
+    const p = readNotesPayload({ kind: 'phasmo-coach/notes', from: 3, at: 'hier', notes: [note('a', 'Ryz')] })
+    expect(p).toMatchObject({ from: '', at: null })
+  })
+
+  it('valide chaque champ d’un bilan, ancien ou récent', () => {
+    expect(readReportPayload({ kind: 'phasmo-coach/notes' })).toBeNull()
+    const old = readReportPayload({ kind: 'phasmo-coach/report', name: 'Léa', at: T0, streak: 2, learned: 5, total: 300, mastery: { demon: 40 }, activity: [] })
+    expect(old).toMatchObject({ name: 'Léa', at: T0, streak: 2, mastery: { demon: 40 } })
+    expect(old?.notes).toBeUndefined()
+    const bad = readReportPayload({
+      kind: 'phasmo-coach/report', name: 5, at: '2026-10-31T10:00:00Z', streak: -3, learned: 'x', total: Infinity,
+      mastery: { demon: 400, 'Pas<b>': 10, banshee: 'x' },
+      activity: [{ t: 1e300, kind: 'quiz', score: 'a', total: 10, label: 'Quiz' }, 'x'],
+      notes: [{ title: 'Encens', phase: 'oups', lapses: -1, grade: 9, due: 'demain' }, { title: '' }],
+    })
+    expect(bad).toMatchObject({ name: '', at: null, streak: 0, learned: 0, total: 0, mastery: { demon: 100 } })
+    expect(bad?.activity).toEqual([{ t: null, kind: 'quiz', score: 0, total: 10, label: 'Quiz' }])
+    expect(bad?.notes).toEqual([{ title: 'Encens', phase: 'new', lapses: 0, grade: null, due: null }])
+  })
+
+  it('n’envoie que ses propres notes, nouvelles depuis le dernier envoi', () => {
+    const notes = [note('a', 'Léa', T0 - DAY), note('b', 'Léa', T0 + DAY), note('c', 'Ryz', T0 + DAY), note('d', 'léa ', T0 + 2 * DAY)]
+    expect(notesToShare(notes, profile, T0).map((n) => n.id)).toEqual(['b', 'd'])
+    expect(notesToShare(notes, profile, T0, true).map((n) => n.id)).toEqual(['a', 'b', 'd'])
+    expect(notesToShare(notes, profile, undefined).map((n) => n.id)).toEqual(['a', 'b', 'd'])
+  })
+
+  it('résume dans le bilan où en est chaque note du coach', () => {
+    const notes = [note('a', 'Ryz'), note('b', 'Ryz', T0 + 1), note('c', 'Léa'), note('d', 'Ryz', T0, { body: '', answer: undefined })]
+    const s = schedule(schedule(undefined, 4, T0), 1, T0 + 4 * DAY)
+    const out = reportNotes(notes, profile, { 'n:a': s }, [{ id: 'n:a', t: T0, g: 4, isNew: true }, { id: 'n:a', t: T0 + 4 * DAY, g: 1, isNew: false }])
+    expect(out).toEqual([
+      { title: 'Note b', phase: 'new', lapses: 0, grade: null, due: null },
+      { title: 'Note a', phase: 'learning', lapses: 1, grade: 1, due: s.due },
+    ])
   })
 })

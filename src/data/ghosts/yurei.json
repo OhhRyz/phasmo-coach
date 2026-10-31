@@ -53,7 +53,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Bug connu (wiki tybayn) : peut ouvrir partiellement les portes de casier.",
+      "text": "Bug connu : peut ouvrir partiellement les portes de casier.",
       "zeroEvidence": false
     }
   ],
@@ -227,7 +227,7 @@
     "https://mp1st.com/title-updates-and-patches/phasmophobia-version-0-19-00-adds-quality-of-life-features-update-1-000-046-august-25"
   ],
   "uncertain": [
-    "Rayon du drain de 15 % : environ 7,5 m selon le wiki Fandom et un guide ; tybayn dit « joueurs proches ».",
+    "Rayon du drain de 15 % : environ 7,5 m selon deux sources ; les autres disent seulement « joueurs proches ».",
     "Correction (juillet 2026) empêchant d'autres entités d'imiter sa fermeture de porte : vue sur un blog, absente des notes officielles."
   ]
 }

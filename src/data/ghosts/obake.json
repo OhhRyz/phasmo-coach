@@ -260,7 +260,7 @@
   "changes": [
     "Chronicle Patch v0.13.1.0 (juillet 2025) : la transformation de l'Obake peut être filmée comme preuve vidéo (« Changement de forme »).",
     "Winter's Jest v0.15.1.0 (16 décembre 2025) : correction d'un bug majeur qui faisait laisser des empreintes d'Obake à toutes les entités.",
-    "Précision du wiki tybayn actuel : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses.",
+    "Précision : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses.",
     "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
   ],
   "sources": [
@@ -277,9 +277,9 @@
     "https://phasmopedia.com/en/ghosts/obake/"
   ],
   "uncertain": [
-    "Fréquence des empreintes spéciales : environ 1 sur 6 selon Phasmopedia, non chiffrée par tybayn.",
+    "Fréquence des empreintes spéciales : environ 1 sur 6, selon une seule source.",
     "La transformation compte-t-elle pour l'objectif « vidéo de l'entité » ? Annoncé pour 2026, version non confirmée.",
     "Se transforme-t-il aussi pendant les événements saisonniers qui remplacent son modèle ? Non vérifié.",
-    "Valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) : guides web, pas tybayn."
+    "Valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) : non confirmées."
   ]
 }

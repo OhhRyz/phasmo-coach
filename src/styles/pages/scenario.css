@@ -42,6 +42,8 @@
 .sc-field .opts { margin-left: -10px; }
 .sc-field .opt { min-height: 42px; }
 .sc-hint { margin: 4px 0 0; font-size: 20px !important; }
+/* rien encore travaillé : pas de choix, une seule manière de tirer l'entité */
+.sc-pool-only { margin: 2px 0 0; font-family: "Fell", serif; font-size: 23px; line-height: 1.2; }
 
 .sc-go { margin-top: 4px; padding-bottom: 6px; }
 
@@ -62,7 +64,8 @@
 /* ==========================================================================
    Rapport de terrain (enquête en cours)
    ========================================================================== */
-.sc-quit { font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; min-height: 24px; }
+/* même cible que les liens de l'en-tête (40 px) sans pousser la ligne tapée */
+.sc-quit { font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; display: inline-flex; align-items: center; min-height: 40px; margin: -12px 0; }
 .sc-quit:hover { color: var(--red-pen); }
 
 .sc-case { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 18px; margin-bottom: 26px; }
@@ -88,7 +91,9 @@
 .sc-report-n, .sc-contract .sc-report-n {
   font-family: "Courier Prime", monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
 }
-.sc-report-marks { display: inline-flex; align-items: center; gap: 12px; flex: none; }
+.sc-report-head { flex-wrap: wrap; }
+.sc-report-head .sc-report-n { white-space: nowrap; }
+.sc-report-marks { display: inline-flex; align-items: center; gap: 12px; flex: none; margin-left: auto; }
 .sc-report-text { margin: 4px 0 0 !important; font-size: 17px; line-height: 1.52; }
 .sc-report .stamp--sm { font-size: 11.5px; }
 html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) both; }
@@ -236,6 +241,7 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
   .sc-brace { min-height: 90px; }
   .sc-radio .txt b { font-size: 21px; }
 
+  .sc-ghost-link { display: flex; align-items: center; min-height: 40px; }
   .sc-place { font-size: 34px; }
   .sc-place em { font-size: 19px; }
   .sc-case { grid-template-columns: 1fr auto; }
@@ -260,18 +266,19 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
   }
   .sc--play > .sc-board.is-open { transform: none; }
   .sc--play > .sc-board::after { left: 24px; }
+  /* titre et résumé l'un sous l'autre : la languette tient dans ses 53 px, sans couper le résumé */
   .sc-sheet-toggle {
-    display: flex; align-items: center; gap: 10px; flex: none;
-    width: 100%; min-height: 53px; padding: 6px 16px 4px 34px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1px 12px; flex: none;
+    width: 100%; min-height: 53px; padding: 8px 16px 4px 34px;
     border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink);
   }
   .sc-sheet-toggle::before { /* languette */
     content: ""; position: absolute; left: 50%; top: 6px; width: 38px; height: 3px; margin-left: -19px; border-radius: 2px; background: var(--ink-3); opacity: .5;
   }
-  .sc-sheet-title { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
-  .sc-sheet-sum { font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; line-height: 1; color: var(--pencil); }
+  .sc-sheet-title { grid-column: 1; font-family: "Elite", monospace; font-size: 14px; line-height: 1.1; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+  .sc-sheet-sum { grid-column: 1; font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; line-height: 1; color: var(--pencil); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sc-sheet-act {
-    margin-left: auto; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .06em;
+    grid-column: 2; grid-row: 1 / 3; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .06em;
     text-decoration: underline; text-decoration-color: var(--red-pen); text-decoration-thickness: 1.5px; text-underline-offset: 4px;
   }
   .sc-board-body {

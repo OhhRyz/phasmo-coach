@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CheckLine,
   Envelope,
@@ -9,6 +9,7 @@ import {
   MarginNote,
   Notebook,
   Page,
+  PaperButton,
   Polaroid,
   RoughCircle,
   Stamp,
@@ -20,11 +21,13 @@ import {
 import { UvPrint } from '../components/journal/Charts'
 import { Seg } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
-import { buildReviewQueue, streak } from '../engine/progress'
-import { dayKey } from '../engine/format'
+import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/progress'
+import { dayKey, fr, NBSP, NNBSP, num, plural, safeDate, validTime } from '../engine/format'
+import { coachNameOf, coachNotes, isCoachNote, makesCard } from '../engine/notes'
+import { installHint, platform } from '../engine/device'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
-import { WEAK_COUNT } from './Quiz'
+import { EXHIBITS } from './exhibits'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -33,6 +36,20 @@ const DAY_MONTH = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'lon
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+const pct = (m: number) => `${Math.round(m * 100)}${NBSP}%`
+/** Noms longs (« Les Jumeaux », « Poltergeist »…) : écrits un peu plus petit sous le polaroïd. */
+const longName = (name: string) => name.length > 8
+const piece = (n: number) => `Pièce n°${NBSP}${n}`
+
+/** Sur iPhone, l'app installée ne reprend pas ce qui a été noté dans l'onglet de Safari. */
+const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
+const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord ta sauvegarde, puis importe-la dedans (page profil).'
+
+/** Chemin interne d'un lien de bilan collé (…#/rapport?d=…), sinon null. */
+function reportPath(text: string): string | null {
+  const m = text.trim().match(/#(\/rapport\?d=[^\s#]+)/)
+  return m ? m[1] : null
+}
 
 function Welcome() {
   const { dispatch } = useStore()
@@ -40,27 +57,38 @@ function Welcome() {
   const [coachName, setCoachName] = useState('')
   const [role, setRole] = useState<'student' | 'coach'>('student')
   const [ok, setOk] = useState(true)
+  const hint = useMemo(() => installHint(), [])
+  const ios = useMemo(() => platform() === 'ios', [])
   return (
-    <Notebook single>
+    <Notebook single className="home">
       <Page section="1" label="Nouveau carnet">
         <FileHead>
           <span>Nouveau carnet</span>
           <span>
-            Entrée n° <b>1</b>
+            Entrée n°{NBSP}
+            <b>1</b>
           </span>
         </FileHead>
         <div className="entry">
           <h1 className="entry-date">
             <em>Un carnet pour</em>apprendre les entités
           </h1>
-          <Stamp thunk rotate={-6}>
+          <Stamp thunk rotate={-6} tone="violet">
             Confidentiel
           </Stamp>
           <p className="entry-line">
-            Le codex des {GHOSTS.length} entités, des quiz, des enquêtes simulées, et une révision qui retient ce que tu sais déjà
-            pour ne te reposer que ce qui commence à s’effacer. Tout reste sur cet appareil.
+            Le codex des {GHOSTS.length} entités, des quiz, des mises en situation et une révision espacée qui ne te redemande que ce qui
+            commence à s’effacer. Tout reste sur cet appareil.
           </p>
         </div>
+        {hint && (
+          <div className="pencil-note install-note">
+            <p>
+              {fr(hint)}
+              {ios && ` ${fr(IOS_FRESH_START)}`}
+            </p>
+          </div>
+        )}
         <form
           className="stack welcome-form"
           style={{ '--gap': '26px' } as Style}
@@ -70,7 +98,7 @@ function Welcome() {
           }}
         >
           <div className="field">
-            <span className="field-label">Qui tient ce carnet ?</span>
+            <span className="field-label">Qui tient ce carnet{NNBSP}?</span>
             <Seg
               label="Rôle"
               value={role}
@@ -91,7 +119,12 @@ function Welcome() {
               <input className="input" value={coachName} onChange={(e) => setCoachName(e.target.value)} placeholder="Prénom ou pseudo du coach" />
             </label>
           )}
-          <CheckLine checked={ok} onChange={setOk} seed="welcome-ok" hint="Aucun compte, aucun serveur : tu peux exporter ta progression depuis le profil.">
+          <CheckLine
+            checked={ok}
+            onChange={setOk}
+            seed="welcome-ok"
+            hint={fr('Aucun compte, aucun serveur : tu peux exporter ta progression depuis le profil.')}
+          >
             J’ai compris que tout est enregistré sur cet appareil.
           </CheckLine>
           <div>
@@ -105,52 +138,174 @@ function Welcome() {
   )
 }
 
+/** Côté coach : écrire, partager, lire le bilan reçu. */
+function CoachCard() {
+  const { state } = useStore()
+  const navigate = useNavigate()
+  const [reading, setReading] = useState(false)
+  const [link, setLink] = useState('')
+  const [bad, setBad] = useState(false)
+
+  const mine = state.notes.filter((n) => isCoachNote(n, state.profile))
+  const asCards = mine.filter(makesCard).length
+  const lastShared = validTime(state.settings.lastSharedAt)
+  const unshared = mine.filter((n) => lastShared == null || n.updatedAt > lastShared).length
+  const sum = mine.length
+    ? [
+        plural(mine.length, 'note écrite', 'notes écrites'),
+        asCards ? `${asCards} en révision` : 'aucune en révision',
+        unshared ? `${unshared} à partager` : 'tout est partagé',
+      ]
+    : ['aucune note écrite pour l’instant']
+
+  return (
+    <IndexCard
+      className="coach-card settle"
+      head="Pour ton élève"
+      right={lastShared != null ? `partagé le ${safeDate(SHORT, lastShared)}` : undefined}
+      rotate={0.5}
+    >
+      <p className="coach-sum">{sum.join(' · ')}</p>
+      <p>
+        {fr('Ce que tu lui expliques, note-le dans le carnet puis partage-le : une note ajoutée à la révision revient d’elle-même dans ses séances.')}
+      </p>
+      <div className="plan-actions">
+        <TapeButton to="/carnet">Écrire une note</TapeButton>
+        <TypedLink to="/carnet?partager=1">Partager le carnet</TypedLink>
+        <button
+          type="button"
+          className="link link-btn"
+          aria-expanded={reading}
+          aria-controls="coach-report"
+          onClick={() => {
+            setReading((r) => !r)
+            setBad(false)
+          }}
+        >
+          Lire un bilan reçu
+        </button>
+      </div>
+      {reading && (
+        <form
+          id="coach-report"
+          className="coach-report"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const path = reportPath(link)
+            if (path) navigate(path)
+            else setBad(true)
+          }}
+        >
+          <p className="pencil-note">
+            {fr('Le lien de bilan que ton élève t’envoie s’ouvre tout seul : il suffit de l’ouvrir. S’il est arrivé en simple texte, colle-le ici.')}
+          </p>
+          <label className="field">
+            <span>Lien du bilan</span>
+            <input
+              className="input"
+              value={link}
+              onChange={(e) => {
+                setLink(e.target.value)
+                setBad(false)
+              }}
+              placeholder="https://…#/rapport?d=…"
+              inputMode="url"
+              autoComplete="off"
+              autoFocus
+            />
+          </label>
+          {bad && (
+            <p className="pencil-note coach-report-bad" role="alert">
+              {fr('Ce n’est pas un lien de bilan. Copie le lien en entier, tel que tu l’as reçu.')}
+            </p>
+          )}
+          <div>
+            <PaperButton type="submit" disabled={!link.trim()}>
+              Lire le bilan
+            </PaperButton>
+          </div>
+        </form>
+      )}
+    </IndexCard>
+  )
+}
+
 export function Home() {
   const { state, deck } = useStore()
   const mastery = useMastery()
   const now = useMemo(() => Date.now(), [])
   const queue = useMemo(() => buildReviewQueue(state, deck, now), [state, deck, now])
+  const hint = useMemo(() => installHint(), [])
+  const ios = useMemo(() => platform() === 'ios', [])
 
   const days = streak(state, now)
-  const activeDays = useMemo(() => {
+  const { activeDays, today } = useMemo(() => {
     const set = new Set<string>()
     state.log.forEach((l) => set.add(dayKey(l.t)))
     state.activity.forEach((a) => set.add(dayKey(a.t)))
-    return set.size
-  }, [state.log, state.activity])
-  const weak = useMemo(() => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, 3), [mastery])
+    return { activeDays: set.size, today: set.has(dayKey(now)) }
+  }, [state.log, state.activity, now])
+  // le numéro d'entrée ne compte la journée qu'une fois, qu'il y ait déjà eu une séance aujourd'hui ou non
+  const entryN = activeDays + (today ? 0 : 1)
+  const streakLine =
+    days === 0
+      ? 'Pas encore de séance aujourd’hui. Quelques minutes suffisent pour lancer une série.'
+      : today
+        ? days === 1
+          ? 'Une séance aujourd’hui : la série commence.'
+          : `${days} jours d’affilée, aujourd’hui compris.`
+        : days === 1
+          ? 'Une séance hier : une autre aujourd’hui, et la série commence.'
+          : `${days} jours d’affilée jusqu’à hier : une séance aujourd’hui prolonge la série.`
+
+  const weak = useMemo(() => weakestGhosts(GHOSTS.map((g) => g.id), mastery, deck, state, WEAK_COUNT), [mastery, deck, state])
+  const suspects = weak.ids.map((id) => getGhost(id)).filter((g) => g != null)
+  const shown = suspects.slice(0, 3)
+  const more = suspects.slice(3)
+  const weakCount = weak.started
+    ? suspects.length === 1
+      ? 'la moins maîtrisée'
+      : `les ${suspects.length} moins maîtrisées`
+    : 'à découvrir'
+
   const dueCount = queue.filter((c) => state.cards[c.id]).length
   const newCount = queue.length - dueCount
   const minutes = Math.max(1, Math.round(queue.length * 0.4))
-  const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)!.name)
+  const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)?.name).filter(Boolean)
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
   const untouched = GHOSTS.filter((g) => (mastery[g.id] ?? 0) === 0).length
-  const notes = state.notes.slice(0, 2)
+  const inProgress = GHOSTS.length - acquired - untouched
+  const isCoach = state.profile.role === 'coach'
+  const coach = coachNameOf(state.profile)
+  const notes = coachNotes(state.notes, state.profile).slice(0, 2)
   const lastOf = (kind: string) => [...state.activity].reverse().find((a) => a.kind === kind)
   const lastQuiz = lastOf('quiz')
   const lastScenario = lastOf('scenario')
   const lastEar = lastOf('ear')
-  const coach = state.profile.role === 'coach' ? state.profile.name : state.profile.coachName
+  const hasData = state.log.length > 0 || state.activity.length > 0 || state.notes.length > 0
 
   if (!state.onboarded) return <Welcome />
 
   return (
     <>
-      <Notebook>
+      <Notebook className="home">
         {/* ===================== page de gauche : aujourd'hui ===================== */}
         <Page side="left" section="1" label="Aujourd’hui">
           <FileHead>
             <span>
               Carnet de <b>{state.profile.name || '—'}</b>
             </span>
-            {coach && (
+            {isCoach ? (
               <span>
-                Coach : <b>{coach}</b>
+                Rôle{NNBSP}: <b>coach</b>
               </span>
+            ) : (
+              coach && (
+                <span>
+                  Coach{NNBSP}: <b>{coach}</b>
+                </span>
+              )
             )}
-            <span>
-              Entrée n° <b>{activeDays + 1}</b>
-            </span>
           </FileHead>
 
           <div className="entry">
@@ -158,16 +313,11 @@ export function Home() {
               <em>{cap(WEEKDAY.format(now))}</em>
               {DAY_MONTH.format(now)}
             </h1>
-            <Stamp thunk rotate={-7} delay={0.35}>
-              Entrée n° {activeDays + 1}
+            <Stamp thunk rotate={-7} delay={0.35} tone="violet">
+              Entrée n°{NBSP}
+              {entryN}
             </Stamp>
-            <p className="entry-line">
-              {days > 1
-                ? `${days} jours d’affilée sans sauter une séance.`
-                : days === 1
-                  ? 'Une séance aujourd’hui : la série commence.'
-                  : 'Pas encore de séance aujourd’hui. Quelques minutes suffisent pour lancer la série.'}
-            </p>
+            <p className="entry-line">{fr(streakLine)}</p>
             {days > 0 && (
               <MarginNote className="tally-note" style={{ left: -104, top: 6, width: 80, '--r': '-4deg' }}>
                 <Tally n={days} />
@@ -178,13 +328,28 @@ export function Home() {
             )}
           </div>
 
+          {hint && (
+            <div className="pencil-note install-note">
+              <p>
+                {fr(hint)}
+                {ios && hasData && ` ${fr(IOS_KEEP_DATA)}`}
+              </p>
+              {ios && hasData && <TypedLink to="/profil">Exporter ma sauvegarde</TypedLink>}
+            </div>
+          )}
+
+          {isCoach && <CoachCard />}
+
           <IndexCard className="plan settle" head="Révision du jour" right={SHORT.format(now)} clip rotate={-0.6}>
             {queue.length > 0 ? (
               <>
                 <div className="plan-n">
                   <b>{queue.length}</b>
                   <span>carte{queue.length > 1 ? 's' : ''}</span>
-                  <small>environ {minutes} min</small>
+                  <small>
+                    environ {minutes}
+                    {NBSP}min
+                  </small>
                 </div>
                 <p>
                   <strong>
@@ -193,7 +358,7 @@ export function Home() {
                     {newCount > 0 && `${newCount} nouvelle${newCount > 1 ? 's' : ''}`}.
                   </strong>{' '}
                   {onMenu.length > 0 &&
-                    `Au menu : ${onMenu.slice(0, 4).join(', ')}${onMenu.length > 4 ? `… et ${onMenu.length - 4} autre${onMenu.length - 4 > 1 ? 's' : ''}` : ''}.`}
+                    fr(`Au menu : ${onMenu.slice(0, 4).join(', ')}${onMenu.length > 4 ? `… et ${onMenu.length - 4} autre${onMenu.length - 4 > 1 ? 's' : ''}` : ''}.`)}
                 </p>
                 <div className="plan-actions">
                   <TapeButton to="/revision">Ouvrir la séance</TapeButton>
@@ -202,13 +367,16 @@ export function Home() {
               </>
             ) : (
               <>
-                <div className="plan-n">
-                  <b>0</b>
-                  <span>carte à revoir</span>
+                <div className="plan-n plan-n--none">
+                  <span>Aucune carte à revoir</span>
                 </div>
-                <p>Tout est révisé pour aujourd’hui. Les cartes reviendront d’elles-mêmes au bon moment.</p>
+                <p>
+                  {fr(
+                    'Tout est révisé pour aujourd’hui : les cartes reviendront d’elles-mêmes au bon moment. En attendant, entraîne-toi sur une mise en situation.',
+                  )}
+                </p>
                 <div className="plan-actions">
-                  <TapeButton to="/enquete">Lancer une enquête</TapeButton>
+                  <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
                   <TypedLink to="/revision">apprendre de nouvelles cartes</TypedLink>
                 </div>
               </>
@@ -216,26 +384,52 @@ export function Home() {
           </IndexCard>
 
           <section className="suspects" aria-labelledby="h-suspects">
-            <H id="h-suspects" count={`tes ${weak.length} points faibles`}>
+            <H id="h-suspects" count={suspects.length ? weakCount : 'toutes acquises'}>
               Les suspects
             </H>
-            <div className="polaroids">
-              {weak.map((g, i) => (
-                <div className="suspect" key={g.id}>
-                  <Polaroid
-                    ghostId={g.id}
-                    to={`/codex/${g.id}`}
-                    caption={g.name}
-                    small={`${Math.round((mastery[g.id] ?? 0) * 100)} %`}
-                    rotate={[-4, 3, -2][i]}
-                    delay={0.45 + i * 0.13}
-                  />
-                  {g.keyTells[0] && <p className="hint pencil-note">{g.keyTells[0]}</p>}
+            {suspects.length > 0 ? (
+              <>
+                <div className="polaroids">
+                  {shown.map((g, i) => (
+                    <div className="suspect" key={g.id}>
+                      <Polaroid
+                        ghostId={g.id}
+                        to={`/codex/${g.id}`}
+                        caption={<span className={longName(g.name) ? 'cap-name cap-name--long' : 'cap-name'}>{g.name}</span>}
+                        small={weak.started ? pct(mastery[g.id] ?? 0) : undefined}
+                        rotate={[-4, 3, -2][i]}
+                        delay={0.45 + i * 0.13}
+                      />
+                      {g.keyTells[0] && <p className="hint pencil-note">{g.keyTells[0]}</p>}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                {more.length > 0 && (
+                  <p className="suspects-more">
+                    <span className="typed-label">Puis</span>
+                    {more.map((g) => (
+                      <Link key={g.id} to={`/codex/${g.id}`}>
+                        {g.name}
+                        {weak.started && <small>{pct(mastery[g.id] ?? 0)}</small>}
+                      </Link>
+                    ))}
+                  </p>
+                )}
+                {!weak.started && (
+                  <p className="pencil-note suspects-start">{fr('Aucune entité travaillée pour l’instant : commence par la révision du jour.')}</p>
+                )}
+              </>
+            ) : (
+              <p className="suspects-start">Toutes les entités sont acquises.</p>
+            )}
             <div className="after">
-              <TypedLink to="/quiz?pool=weak">Quiz sur mes {WEAK_COUNT} points faibles</TypedLink>
+              {suspects.length > 0 && (
+                <TypedLink to="/quiz?pool=weak">
+                  {weak.started
+                    ? `Quiz sur ${suspects.length === 1 ? 'la moins maîtrisée' : `les ${suspects.length} moins maîtrisées`}`
+                    : `Quiz sur ces ${suspects.length} entités`}
+                </TypedLink>
+              )}
               <TypedLink to="/codex">Ouvrir le codex</TypedLink>
             </div>
           </section>
@@ -251,10 +445,10 @@ export function Home() {
           </FileHead>
 
           <section aria-labelledby="h-reg">
-            <H id="h-reg" count={`${acquired} acquise${acquired > 1 ? 's' : ''} sur ${GHOSTS.length}`}>
+            <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
               Les {GHOSTS.length} entités
             </H>
-            <p className="registry-legend">Ta maîtrise est surlignée ; les entités acquises sont entourées.</p>
+            <p className="registry-legend">Ta maîtrise est surlignée{NNBSP}; les entités acquises sont entourées.</p>
             <ol className="registry">
               {GHOSTS.map((g, i) => {
                 const m = mastery[g.id] ?? 0
@@ -279,13 +473,21 @@ export function Home() {
             </ol>
             <div className="registry-sum">
               <span>
-                <b>{acquired}</b> acquise{acquired > 1 ? 's' : ''}
+                <b>{acquired || 'aucune'}</b> acquise{acquired > 1 ? 's' : ''}
               </span>
               <span>
-                <b>{GHOSTS.length - acquired - untouched}</b> en cours
+                <b>{inProgress || 'aucune'}</b> en cours
               </span>
               <span>
-                <b>{untouched}</b> pas encore ouverte{untouched > 1 ? 's' : ''}
+                {untouched ? (
+                  <>
+                    <b>{untouched}</b> pas encore travaillée{untouched > 1 ? 's' : ''}
+                  </>
+                ) : (
+                  <>
+                    <b>toutes</b> travaillées
+                  </>
+                )}
               </span>
             </div>
           </section>
@@ -293,26 +495,37 @@ export function Home() {
           <section className="notes" aria-labelledby="h-notes">
             <H id="h-notes">{coach ? `Mots de ${coach}` : 'Mots du coach'}</H>
             {notes.length > 0 ? (
-              notes.map((n, i) => (
-                <Sticky
-                  key={n.id}
-                  rotate={i === 0 ? 1.4 : -1.6}
-                  delay={0.9 + i * 0.15}
-                  meta={`${SHORT.format(n.createdAt)}${n.ghostId ? ` · ${getGhost(n.ghostId)?.name ?? ''}` : ''}`}
-                  sign={n.author ? `— ${n.author}` : undefined}
-                >
-                  {n.title}
-                </Sticky>
-              ))
+              notes.map((n, i) => {
+                const ghost = n.ghostId ? getGhost(n.ghostId) : undefined
+                return (
+                  <Sticky
+                    key={n.id}
+                    hand="coach"
+                    rotate={i === 0 ? 1.4 : -1.6}
+                    delay={0.9 + i * 0.15}
+                    meta={`${safeDate(SHORT, n.createdAt)}${ghost ? ` · ${ghost.name}` : ''}`}
+                    sign={`— ${n.author}`}
+                  >
+                    {n.title}
+                  </Sticky>
+                )
+              })
+            ) : isCoach ? (
+              <div className="notes-empty">
+                <p className="pencil-note">{fr('Aucune note pour l’instant : ton élève reçoit tes notes quand tu partages le carnet.')}</p>
+                <TypedLink to="/carnet">Écrire la première note</TypedLink>
+              </div>
             ) : (
-              <p className="notes-empty">
-                Le carnet du coach est encore vide. Chaque explication notée dans le <Link to="/carnet">carnet</Link> devient une carte de
-                révision : plus besoin de la répéter.
-              </p>
+              <div className="notes-empty">
+                <p className="pencil-note">
+                  {fr(`Les notes de ${coach || 'ton coach'} arrivent par lien : copie le lien reçu, puis colle-le dans le carnet.`)}
+                </p>
+                <TypedLink to="/carnet?coller=1">Coller un lien reçu</TypedLink>
+              </div>
             )}
             <div className="notes-foot">
               <TypedLink to="/carnet">
-                Tout le carnet ({state.notes.length} note{state.notes.length > 1 ? 's' : ''})
+                Tout le carnet ({state.notes.length ? plural(state.notes.length, 'note', 'notes') : 'aucune note'})
               </TypedLink>
             </div>
           </section>
@@ -320,36 +533,64 @@ export function Home() {
       </Notebook>
 
       {/* ===================== sur le bureau : les exercices ===================== */}
-      <section className="desk-shelf" aria-labelledby="h-shelf">
+      <section className="desk-shelf home-shelf" aria-labelledby="h-shelf">
         <h2 className="shelf-label" id="h-shelf">
           Pièces à conviction
         </h2>
         <div className="envelopes">
           <Envelope
-            to="/quiz"
-            piece="Pièce n° 1"
-            title="Quiz"
-            text="Preuves, seuils, vitesses, comportements et tests sans preuve."
-            hand={lastQuiz ? `dernier : ${lastQuiz.score}/${lastQuiz.total}` : 'jamais ouvert'}
+            to={EXHIBITS.situation.to}
+            piece={piece(EXHIBITS.situation.n)}
+            title={EXHIBITS.situation.title}
+            text="Un contrat raconté minute par minute. À toi de trancher."
+            hand={
+              lastScenario ? (
+                <>
+                  dernier contrat{NNBSP}:{' '}
+                  <span className="env-score">
+                    {num(lastScenario.score)}
+                    {NBSP}pts
+                  </span>
+                </>
+              ) : (
+                'aucun contrat'
+              )
+            }
             rotate={-1.5}
             delay={0.2}
           />
           <Envelope
-            to="/enquete"
-            piece="Pièce n° 2"
-            title="Mise en situation"
-            text="Un contrat raconté minute par minute. À toi de trancher."
-            hand={lastScenario ? `dernière : ${lastScenario.score} pts` : 'jamais ouverte'}
+            to={EXHIBITS.quiz.to}
+            piece={piece(EXHIBITS.quiz.n)}
+            title={EXHIBITS.quiz.title}
+            text="Preuves, seuils, vitesses, comportements et tests sans preuve."
+            hand={
+              lastQuiz ? (
+                <>
+                  dernier{NNBSP}: <span className="env-score">{`${lastQuiz.score}/${lastQuiz.total}`}</span>
+                </>
+              ) : (
+                'jamais ouvert'
+              )
+            }
             rotate={1.2}
             labelRotate={-0.8}
             delay={0.3}
           />
           <Envelope
-            to="/oreille"
-            piece="Pièce n° 3"
-            title="À l’oreille"
+            to={EXHIBITS.oreille.to}
+            piece={piece(EXHIBITS.oreille.n)}
+            title={EXHIBITS.oreille.title}
             text="Reconnaître la vitesse d’une entité au rythme de ses pas."
-            hand={lastEar ? `dernière : ${lastEar.score}/${lastEar.total}` : 'au casque, c’est mieux'}
+            hand={
+              lastEar ? (
+                <>
+                  dernière{NNBSP}: <span className="env-score">{`${lastEar.score}/${lastEar.total}`}</span>
+                </>
+              ) : (
+                'jamais ouverte'
+              )
+            }
             rotate={-0.8}
             delay={0.4}
           >
@@ -362,11 +603,11 @@ export function Home() {
             </svg>
           </Envelope>
           <Envelope
-            to="/codex"
-            piece="Pièce n° 4"
-            title="Codex"
-            text={`Les ${GHOSTS.length} fiches : preuves, vitesses, seuils et tests sans preuve.`}
-            hand="tout est dedans"
+            to={EXHIBITS.codex.to}
+            piece={piece(EXHIBITS.codex.n)}
+            title={EXHIBITS.codex.title}
+            text="Preuves, vitesses, seuils et tests sans preuve, entité par entité."
+            hand={`${GHOSTS.length} fiches`}
             rotate={1.8}
             labelRotate={0.4}
             delay={0.5}

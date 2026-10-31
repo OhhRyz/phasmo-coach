@@ -5,7 +5,9 @@ import { roughEllipse, roughLine, roughRng } from '../components/journal/rough'
 import { ProgressBar, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
-import { num } from '../engine/format'
+import { platform } from '../engine/device'
+import { NBSP, NNBSP, fr, num } from '../engine/format'
+import { ignoreKey } from '../engine/keys'
 import { createRng, pick, shuffle, type Rng } from '../engine/random'
 import { useStore } from '../store/store'
 
@@ -18,6 +20,13 @@ interface Round {
   choices: number[]
 }
 
+/** Une écoute de la série, pour le relevé de fin. */
+interface Heard {
+  speed: number
+  answer: string
+  ok: boolean
+}
+
 const ROUNDS = 10
 const BASE = 1.7
 
@@ -27,10 +36,15 @@ function classOf(v: number): 'slow' | 'normal' | 'fast' {
   return 'normal'
 }
 
-const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: 'Normale (1,7 m/s)', fast: 'Plus rapide que la normale' }
+const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: `Normale (1,7${NBSP}m/s)`, fast: 'Plus rapide que la normale' }
 const MODE_LABEL: Record<Mode, string> = { class: 'Lente, normale ou rapide', exact: 'Vitesse exacte' }
 /** CLASS_LABEL découpé pour l'affichage : le mot entouré, puis sa précision tapée. */
-const CLASS_SPLIT = { slow: ['Plus lente', 'que la normale'], normal: ['Normale', '1,7 m/s'], fast: ['Plus rapide', 'que la normale'] } as const
+const CLASS_SPLIT = { slow: ['Plus lente', 'que la normale'], normal: ['Normale', `1,7${NBSP}m/s`], fast: ['Plus rapide', 'que la normale'] } as const
+/** Les allures, en un mot (relevé de fin). */
+const CLASS_WORD = { slow: 'lente', normal: 'normale', fast: 'rapide' } as const
+const CLASS_PLURAL = { slow: 'Plus lentes', normal: `Normales (1,7${NBSP}m/s)`, fast: 'Plus rapides' } as const
+const ms = (v: number) => `${num(v)}${NBSP}m/s`
+const IOS_HINT = `Pas de son${NNBSP}? Vérifie que le bouton silencieux est désactivé.`
 
 /** Toutes les vitesses distinctes présentes dans les fiches. */
 function allSpeeds(): number[] {
@@ -253,7 +267,8 @@ function SpeedRuler({ max, dots, cands, picked, zones, truth, label }: RulerProp
               <path d={roughEllipse(14, 14, roughRng('truth' + truth), 0.1, 0.1)} transform={`translate(${x(truth) - 7} ${H0 - 7})`} pathLength={1} style={{ '--d': '.1s', '--dur': '.5s' } as Style} />
               <path className="ear-truth-line" d={`M${x(truth)} ${H0} V${H0 + 21} M${x(truth)} ${H0 + 40} V${H1}`} />
               <text className="ear-truth-t" x={Math.max(60, Math.min(w - 60, x(truth)))} y="18" textAnchor="middle">
-                {num(truth)} m/s{truthSide === 0 ? ' : la référence' : ''}
+                {ms(truth)}
+                {truthSide === 0 ? `${NNBSP}: la référence` : ''}
               </text>
             </g>
           )}
@@ -273,13 +288,20 @@ export function Ear() {
   const [answer, setAnswer] = useState<string | null>(null)
   const [score, setScore] = useState(0)
   const [playing, setPlaying] = useState<'q' | 'ref' | null>(null)
+  /** réécoute depuis le relevé de fin : la vitesse en cours */
+  const [again, setAgain] = useState<number | null>(null)
+  const [heard, setHeard] = useState<Heard[]>([])
   const steps = useRef<Footsteps | null>(null)
+  const ios = useMemo(() => platform() === 'ios', [])
   const speeds = useMemo(allSpeeds, [])
   /** dernière écoute imprimée sur la bande (affichage seulement) */
   const [trail, setTrail] = useState<{ v: number; which: 'q' | 'ref'; id: number; at: number } | null>(null)
 
   useEffect(() => {
-    steps.current = createFootsteps(() => setPlaying(null))
+    steps.current = createFootsteps(() => {
+      setPlaying(null)
+      setAgain(null)
+    })
     return () => steps.current?.stop()
   }, [])
 
@@ -300,6 +322,7 @@ export function Ear() {
     setI(0)
     setScore(0)
     setAnswer(null)
+    setHeard([])
   }
 
   const correctKey = round ? (mode === 'class' ? classOf(round.speed) : String(round.speed)) : ''
@@ -309,10 +332,13 @@ export function Ear() {
     setAnswer(key)
     steps.current?.stop()
     if (key === correctKey) setScore((s) => s + 1)
+    setHeard((h) => [...h, { speed: round.speed, answer: key, ok: key === correctKey }])
   }
 
   const next = () => {
     if (!rounds) return
+    // la réécoute de l'écoute précédente ne doit pas déborder sur la suivante
+    steps.current?.stop()
     if (i + 1 >= rounds.length) {
       dispatch({ type: 'activity', activity: { t: Date.now(), kind: 'ear', score, total: rounds.length, label: 'À l’oreille' } })
       setI(rounds.length)
@@ -329,6 +355,29 @@ export function Ear() {
     play(v, which)
   }
   const shown = trail && trail.at === screen ? trail : null
+
+  /* clavier : A–D ou 1–4 entourent une réponse, Entrée passe à la suivante (comme au quiz) */
+  useEffect(() => {
+    if (!round) return
+    const keys = mode === 'class' ? ['slow', 'normal', 'fast'] : round.choices.map(String)
+    const onKey = (e: KeyboardEvent) => {
+      if (ignoreKey(e, (el) => e.key !== 'Enter' && !!el.closest('.ear'))) return
+      if (e.key === 'Enter') {
+        if (!answer) return
+        e.preventDefault()
+        next()
+        return
+      }
+      if (answer) return
+      const k = /^[1-9]$/.test(e.key) ? Number(e.key) - 1 : /^[a-z]$/i.test(e.key) ? e.key.toLowerCase().charCodeAt(0) - 97 : -1
+      const key = keys[k]
+      if (key == null) return
+      e.preventDefault()
+      choose(key)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
   const stripStatus: StripState = !shown ? 'idle' : playing === shown.which ? 'run' : 'paused'
   const max = Math.max(...speeds) > 3.05 ? 4 : 3
 
@@ -352,8 +401,8 @@ export function Ear() {
                 Le rythme des pas
               </h1>
               <p className="ear-lead">
-                En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7 m/s), et
-                entraîne ton oreille à reconnaître les entités lentes et rapides.
+                En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7{NBSP}m/s),
+                et entraîne ton oreille à reconnaître les entités lentes et rapides.
               </p>
             </header>
 
@@ -372,8 +421,8 @@ export function Ear() {
               />
               <p className="ear-mode-hint">
                 {mode === 'class'
-                  ? 'Trois cases : plus lente que la référence, normale, ou plus rapide.'
-                  : 'Quatre vitesses proposées sur la règle : retrouve la bonne au rythme des pas.'}
+                  ? fr('Trois cases : plus lente que la référence, normale, ou plus rapide.')
+                  : fr('Quatre vitesses proposées sur la règle : retrouve la bonne au rythme des pas.')}
               </p>
             </section>
 
@@ -395,22 +444,24 @@ export function Ear() {
                 speed={shown?.v ?? null}
                 status={stripStatus}
                 runId={shown?.id ?? 0}
-                caption={stripStatus === 'run' ? 'à l’écoute…' : shown ? '1,7 m/s · référence' : 'en attente'}
+                caption={stripStatus === 'run' ? 'à l’écoute…' : shown ? `${ms(BASE)} · référence` : 'en attente'}
               />
-              <SpeedRuler max={max} dots={speeds} label={`Règle de 0 à ${max} m/s : référence à 1,7 m/s, ${speeds.length} vitesses relevées dans les fiches`} />
+              <SpeedRuler max={max} dots={speeds} label={fr(`Règle de 0 à ${max} m/s : référence à 1,7 m/s, ${speeds.length} vitesses relevées dans les fiches`)} />
               <p className="ear-legend">
-                Points au crayon : les vitesses présentes dans les fiches, {speeds.map((s) => num(s)).join(' · ')} m/s.
+                Points au crayon{NNBSP}: les vitesses présentes dans les fiches, {speeds.map((s) => num(s)).join(' · ')}
+                {NBSP}m/s.
               </p>
               <div className="ear-listen">
                 <PaperButton onClick={() => listen(BASE, 'ref')} pressed={playing === 'ref'}>
-                  {playing === 'ref' ? 'Arrêter' : 'Écouter la référence (1,7 m/s)'}
+                  {playing === 'ref' ? 'Arrêter' : `Écouter la référence (${ms(BASE)})`}
                 </PaperButton>
                 <span className="pencil-note ear-bpm">environ {refBpm} pas par minute</span>
               </div>
+              {ios && <p className="pencil-note ear-ios">{IOS_HINT}</p>}
             </section>
 
             <p className="ear-small">
-              Les pas sont générés par l’app, pas enregistrés dans le jeu : la cadence est fidèle, le son est simplifié.{' '}
+              Les pas sont générés par l’app, pas enregistrés dans le jeu{NNBSP}: la cadence est fidèle, le son est simplifié.{' '}
               <span className="pencil-note">Un casque aide beaucoup.</span>
             </p>
           </Page>
@@ -421,19 +472,38 @@ export function Ear() {
 
   if (!round) {
     const good = score >= 8
+    const misses = heard.filter((h) => !h.ok)
+    // les vitesses ratées, à réécouter (la référence a déjà son bouton)
+    const missed = [...new Set(misses.map((h) => h.speed))].filter((v) => Math.abs(v - BASE) > 0.001).sort((a, b) => a - b)
+    const byClass = (['slow', 'normal', 'fast'] as const)
+      .map((c) => {
+        const list = heard.filter((h) => classOf(h.speed) === c)
+        return { c, total: list.length, ok: list.filter((h) => h.ok).length }
+      })
+      .filter((x) => x.total > 0)
+    const answerText = (key: string) => (mode === 'class' ? CLASS_WORD[key as keyof typeof CLASS_WORD] ?? key : ms(Number(key)))
+    const replay = (v: number) => {
+      if (again === v) {
+        steps.current?.stop()
+        return
+      }
+      steps.current?.play(v, 6)
+      setAgain(v)
+    }
+    const leave = (fn: () => void) => () => {
+      steps.current?.stop()
+      fn()
+    }
     return (
       <div className="ear">
-        <Notebook single>
-          <Page section="4" label="Résultat de la série">
+        <Notebook className="ear-results">
+          <Page side="left" section="4" label="Résultat de la série">
             <FileHead>
               <span>À l’oreille · série terminée</span>
               <span>{MODE_LABEL[mode]}</span>
-              <span>
-                <b>{rounds.length}</b> écoutes
-              </span>
             </FileHead>
             <div className="ear-result">
-              <div className="ear-grade" aria-label={`Note : ${score} sur ${rounds.length}`}>
+              <div className="ear-grade" aria-label={`Note${NNBSP}: ${score} sur ${rounds.length}`}>
                 <RoughCircle seed={`ear-grade-${score}`} padX={0.12} padY={0.14} width={2.4} delay={0.5}>
                   <span className="ear-grade-n hand">
                     {score}
@@ -447,13 +517,31 @@ export function Ear() {
                   Série terminée
                 </h1>
                 <p className="ear-result-line">
-                  {score} bonne{score > 1 ? 's' : ''} réponse{score > 1 ? 's' : ''} sur {rounds.length} écoutes.
+                  {score === 0 ? 'Aucune bonne réponse' : `${score} bonne${score > 1 ? 's' : ''} réponse${score > 1 ? 's' : ''}`} sur {rounds.length}{' '}
+                  écoutes.
                 </p>
                 <p className="ear-verdict pencil-note">
-                  {good ? 'Belle oreille. Essaie la vitesse exacte.' : 'L’oreille se travaille : refais une série demain.'}
+                  {good ? (mode === 'class' ? 'Belle oreille. Essaie la vitesse exacte.' : 'Belle oreille.') : fr('L’oreille se travaille : refais une série demain.')}
                 </p>
               </div>
             </div>
+
+            {byClass.length > 0 && (
+              <table className="ear-by">
+                <caption className="typed-label">Par allure</caption>
+                <tbody>
+                  {byClass.map(({ c, total, ok }) => (
+                    <tr key={c}>
+                      <th scope="row">{CLASS_PLURAL[c]}</th>
+                      <td className={ok < total ? 'is-short' : undefined}>
+                        {ok}/{total}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
             <div className="ear-end-actions">
               <TapeButton
                 onClick={() => {
@@ -463,9 +551,98 @@ export function Ear() {
               >
                 Nouvelle série
               </TapeButton>
-              <TypedLink onClick={() => setRounds(null)}>Changer d’exercice</TypedLink>
+              <TypedLink onClick={leave(() => setRounds(null))}>Changer d’exercice</TypedLink>
               <TypedLink to="/entrainement">Retour aux exercices</TypedLink>
             </div>
+          </Page>
+
+          <Page side="right" section="4" label="Relevé des écoutes">
+            <FileHead>
+              <span>Relevé</span>
+              <span>
+                {misses.length === 0 ? (
+                  'aucune erreur'
+                ) : (
+                  <>
+                    <b>{misses.length}</b> erreur{misses.length > 1 ? 's' : ''} sur {heard.length}
+                  </>
+                )}
+              </span>
+            </FileHead>
+            <section aria-labelledby="h-ear-log">
+              <H id="h-ear-log" count={misses.length ? `${misses.length} ratée${misses.length > 1 ? 's' : ''}` : 'sans faute'}>
+                Relevé des écoutes
+              </H>
+              <div className="libcard ear-log settle" style={{ '--r': '-0.6deg', '--d': '.3s' } as Style}>
+                <Tape />
+                <table>
+                  <caption className="sr-only">Chaque écoute de la série{NNBSP}: la vitesse jouée, ta réponse, la correction</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">N°</th>
+                      <th scope="col">Jouée</th>
+                      <th scope="col">Ta réponse</th>
+                      <th scope="col">
+                        <span className="sr-only">Correction</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {heard.map((h, k) => (
+                      <tr key={k} className={h.ok ? undefined : 'is-miss'}>
+                        <td className="ear-log-n">{k + 1}</td>
+                        <td className="ear-log-v">{ms(h.speed)}</td>
+                        <td className="ear-log-a">
+                          {h.ok ? (
+                            answerText(h.answer)
+                          ) : (
+                            <>
+                              <s>{answerText(h.answer)}</s>
+                              {mode === 'class' && (
+                                <span className="ear-log-fix hand">
+                                  <span className="sr-only">, il fallait{NNBSP}: </span>
+                                  {CLASS_WORD[classOf(h.speed)]}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </td>
+                        <td className="ear-log-mark">
+                          {h.ok ? (
+                            <>
+                              <svg className="draw ear-tick" viewBox="0 0 24 20" aria-hidden>
+                                <path d="M3 11 L9 17 L21 3" pathLength={1} strokeWidth={2.4} style={{ '--d': `${0.4 + k * 0.06}s`, '--dur': '.3s' } as Style} />
+                              </svg>
+                              <span className="sr-only">juste</span>
+                            </>
+                          ) : (
+                            <span className="hand ear-log-miss">raté</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {misses.length > 0 && (
+              <section className="ear-again" aria-labelledby="h-ear-again">
+                <h2 className="typed-label" id="h-ear-again">
+                  À réécouter
+                </h2>
+                <div className="ear-listen">
+                  {missed.map((v) => (
+                    <PaperButton key={v} onClick={() => replay(v)} pressed={again === v}>
+                      {again === v ? 'Arrêter' : ms(v)}
+                    </PaperButton>
+                  ))}
+                  <PaperButton onClick={() => replay(BASE)} pressed={again === BASE} rotate={-0.8}>
+                    {again === BASE ? 'Arrêter' : `Référence ${ms(BASE)}`}
+                  </PaperButton>
+                </div>
+              </section>
+            )}
           </Page>
         </Notebook>
       </div>
@@ -475,13 +652,21 @@ export function Ear() {
   const options =
     mode === 'class'
       ? (['slow', 'normal', 'fast'] as const).map((k) => ({ key: k, label: CLASS_LABEL[k] }))
-      : round.choices.map((c) => ({ key: String(c), label: `${num(c)} m/s` }))
+      : round.choices.map((c) => ({ key: String(c), label: ms(c) }))
 
   const ok = answer === correctKey
   const pickedLetter = answer && mode === 'exact' ? 'ABCD'[options.findIndex((o) => o.key === answer)] : null
   const names = answer ? ghostsAt(round.speed) : []
   const statusText =
-    stripStatus === 'run' ? (shown?.which === 'ref' ? 'référence · à l’écoute…' : 'à l’écoute…') : shown ? (shown.which === 'ref' ? 'référence 1,7 m/s' : `écoute n° ${i + 1}`) : 'en attente'
+    stripStatus === 'run'
+      ? shown?.which === 'ref'
+        ? 'référence · à l’écoute…'
+        : 'à l’écoute…'
+      : shown
+        ? shown.which === 'ref'
+          ? `référence ${ms(BASE)}`
+          : `écoute n°${NBSP}${i + 1}`
+        : 'en attente'
 
   return (
     <div className="ear ear--run">
@@ -494,13 +679,15 @@ export function Ear() {
               onClick={() => {
                 steps.current?.stop()
                 setRounds(null)
+                setHeard([])
               }}
             >
               ‹ Quitter la série
             </button>
             <span>À l’oreille · {MODE_LABEL[mode]}</span>
             <span>
-              Écoute n° <b>{i + 1}</b> / {rounds.length}
+              Écoute n°{NBSP}
+              <b>{i + 1}</b> / {rounds.length}
             </span>
           </FileHead>
           <div className="ear-progress">
@@ -512,7 +699,7 @@ export function Ear() {
           </div>
 
           <H as="h1" count={mode === 'class' ? 'trois cases' : 'quatre vitesses'}>
-            Quelle vitesse entends-tu ?
+            Quelle vitesse entends-tu{NNBSP}?
           </H>
 
           <FootprintStrip speed={shown?.v ?? null} status={stripStatus} runId={shown?.id ?? 0} caption={statusText} />
@@ -524,8 +711,8 @@ export function Ear() {
             truth={answer ? round.speed : null}
             label={
               answer
-                ? `Règle de 0 à ${max} m/s : la vraie vitesse, ${num(round.speed)} m/s, est marquée en rouge ; la référence est à 1,7 m/s.`
-                : `Règle de 0 à ${max} m/s, référence à 1,7 m/s.`
+                ? fr(`Règle de 0 à ${max} m/s : la vraie vitesse, ${num(round.speed)} m/s, est marquée en rouge ; la référence est à 1,7 m/s.`)
+                : fr(`Règle de 0 à ${max} m/s, référence à 1,7 m/s.`)
             }
           />
 
@@ -540,9 +727,10 @@ export function Ear() {
               </TapeButton>
             )}
             <PaperButton onClick={() => listen(BASE, 'ref')} pressed={playing === 'ref'} rotate={-0.8}>
-              {playing === 'ref' ? 'Arrêter' : 'Référence 1,7 m/s'}
+              {playing === 'ref' ? 'Arrêter' : `Référence ${ms(BASE)}`}
             </PaperButton>
           </div>
+          {ios && i === 0 && !answer && <p className="pencil-note ear-ios">{IOS_HINT}</p>}
 
           <fieldset className="ear-answer">
             <legend className="typed-label">{answer ? 'Ta réponse' : 'Entoure ta réponse'}</legend>
@@ -572,8 +760,8 @@ export function Ear() {
                           )
                         })()}
                       </span>
-                      {state === 'right' && <span className="sr-only"> : bonne réponse</span>}
-                      {state === 'wrong' && <span className="sr-only"> : ton choix, faux</span>}
+                      {state === 'right' && <span className="sr-only">{NNBSP}: bonne réponse</span>}
+                      {state === 'wrong' && <span className="sr-only">{NNBSP}: ton choix, faux</span>}
                     </button>
                   </li>
                 )
@@ -589,7 +777,7 @@ export function Ear() {
                     {ok ? 'Exact' : 'Raté'}
                   </Stamp>
                   <p className="ear-fix-line">
-                    <b>{num(round.speed)} m/s</b>, soit {Math.round(speedToBpm(round.speed))} pas par minute.
+                    <b>{ms(round.speed)}</b>, soit {Math.round(speedToBpm(round.speed))} pas par minute.
                   </p>
                 </div>
                 <p className="ear-ghosts">

@@ -78,17 +78,17 @@ export function GhostRow({
           )}
         </span>
         <span className="cx-ev">
-          <span className="sr-only">Preuves : </span>
+          <span className="sr-only">Preuves : </span>
           <GhostEvidence ghost={ghost} short />
         </span>
       </span>
       <span className="cx-mast">
-        <span className="sr-only">Maîtrise : </span>
+        <span className="sr-only">Maîtrise : </span>
         <Mastery value={mastery} />
       </span>
       <span className="cx-data">
         <span className="cx-speed">
-          <span className="sr-only">Vitesse : </span>
+          <span className="sr-only">Vitesse : </span>
           {speedText(ghost)}
         </span>
         <span className="cx-san">
@@ -96,7 +96,7 @@ export function GhostRow({
           {sanityText(ghost)}
         </span>
       </span>
-      {los !== 'Oui' && <span className="cx-los pencil-note">{los === 'Non' ? 'n’accélère pas à vue' : 'accélération variable'}</span>}
+      {los !== 'Oui' && <span className="cx-los pencil-note">{los === 'Non' ? 'n’accélère pas en ligne de vue' : 'accélération variable'}</span>}
       {dimmed && <Strike seed={ghost.id} />}
     </li>
   )

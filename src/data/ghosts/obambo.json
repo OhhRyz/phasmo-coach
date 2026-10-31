@@ -13,10 +13,10 @@
     "los": true,
     "summary": "1,45 m/s calme · 1,96 m/s agressif · accélère en LdV",
     "details": [
-      "État calme : environ 1,45 m/s en chasse (1,445 m/s selon les sources les plus précises), plus lent qu'une entité standard.",
+      "État calme : environ 1,45 m/s en chasse (plus précisément 1,445 m/s), plus lent qu'une entité standard.",
       "État agressif : environ 1,96 m/s en chasse (1,955 m/s), plus rapide qu'une entité standard.",
       "L'état peut changer en pleine chasse : la vitesse passe alors immédiatement d'une valeur à l'autre, sans transition.",
-      "Il accélère en ligne de vue : d'après le wiki tybayn, l'accélération en LdV des entités récentes à vitesse variable (dont l'Obambo) est calculée directement à partir de leur vitesse actuelle.",
+      "Il accélère en ligne de vue : comme pour les autres entités récentes à vitesse variable, cette accélération est calculée directement à partir de sa vitesse actuelle.",
       "Ces vitesses valent pour une vitesse d'entité de 100 %. Par météo « Lune de sang », toutes les entités sont 15 % plus rapides en chasse : un Obambo calme avance alors à environ 1,66 m/s, presque comme une entité standard, et un Obambo agressif à environ 2,25 m/s."
     ]
   },
@@ -226,7 +226,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest (v0.15.1.0), en décembre 2025, en même temps que le Gallu et la Dayan : aucune donnée dans la sauvegarde tybayn de déc. 2024."
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest (v0.15.1.0), en décembre 2025, en même temps que le Gallu et la Dayan."
   ],
   "sources": [
     "tybayn wiki: wiki_hunt_duration_p4",
@@ -243,10 +243,10 @@
     "https://kineticgames.co.uk/news/phasmophobia-winters-jest-v01510"
   ],
   "uncertain": [
-    "Vitesses exactes : 1,445 / 1,955 m/s selon Fextralife et Phasmopedia, arrondies à 1,45 / 1,96 ailleurs.",
+    "Vitesses exactes : 1,445 / 1,955 m/s pour les sources les plus précises, arrondies à 1,45 / 1,96 ailleurs.",
     "Activité hors chasse : plus calme ou plus active en état agressif ? Les sources divergent.",
     "Vitesse maximale en LdV : non publiée.",
     "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes de sortie : non vérifiés.",
-    "tybayn v0.19.1.0 ne donne que les deux tests de vitesse (saut en pleine chasse, alternance d'une chasse à l'autre) ; le test du chronomètre et les tests d'élimination viennent du wiki Fandom, de Phasmopedia et de guides."
+    "Les deux tests de vitesse (saut en pleine chasse, alternance d'une chasse à l'autre) sont les plus sûrs ; le test du chronomètre et les tests d'élimination viennent de sources secondaires."
   ]
 }

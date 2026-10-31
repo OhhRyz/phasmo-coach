@@ -244,12 +244,12 @@
         "Faux : il erre simplement plus quand sa pièce est éclairée, sans préférence pour le noir"
       ],
       "answer": 3,
-      "explain": "Le wiki tybayn actuel corrige cette idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité."
+      "explain": "C'est une idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité."
     }
   ],
   "changes": [
-    "Le wiki tybayn actuel corrige l'ancienne fiche : le Cauchemar erre davantage quand sa pièce est éclairée, sans préférence pour les pièces sombres (la sauvegarde de 2024 disait qu'il partait vers les pièces sombres).",
-    "Wiki tybayn : il ne peut pas allumer téléviseurs et ordinateurs, contrairement aux notes de patch (listé en bug connu, désormais écrit tel quel dans sa fiche v0.19.1.0).",
+    "Idée reçue corrigée : le Cauchemar erre davantage quand sa pièce est éclairée, sans préférence pour les pièces sombres (on disait autrefois qu'il partait vers les pièces sombres).",
+    "Il ne peut pas allumer téléviseurs et ordinateurs, contrairement à ce qu'annonçaient les notes de patch : c'est un bug connu, mais c'est ainsi en jeu aujourd'hui.",
     "Nouvelles entités partageant deux preuves : Dayan (Spirit Box + orbes, décembre 2025) et Kormos (Spirit Box + orbes, mai 2026)."
   ],
   "sources": [

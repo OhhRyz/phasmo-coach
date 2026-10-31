@@ -19,7 +19,7 @@
       "Pseudo-LdV : il ne te voit, et ne gagne de la vitesse en LdV, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
       "Si tu sors de ces 5 m et qu'il ne te détecte plus, il arrête d'accélérer et perd peu à peu la vitesse accumulée.",
       "La vitesse de LdV accumulée se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
-      "tybayn le classe avec accélération en LdV, mais elle ne s'applique que quand tu bouges à moins de 5 m de lui : ne l'élimine jamais sur ce seul critère, qu'il accélère ou non."
+      "Il compte parmi les entités qui accélèrent en LdV, mais seulement quand tu bouges à moins de 5 m de lui : ne l'élimine jamais sur ce seul critère, qu'il accélère ou non."
     ]
   },
   "huntSanity": {
@@ -252,7 +252,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité (absente de la sauvegarde de déc. 2024) : ajoutée avec l'Aswang lors de la mise à jour « Phasmophobia by Alan Wake » (v0.17.1.0, vers le 12 mai 2026).",
+    "Nouvelle entité ajoutée avec l'Aswang lors de la mise à jour « Phasmophobia by Alan Wake » (v0.17.1.0, vers le 12 mai 2026).",
     "Hotfix v0.17.1.1 (13 mai 2026) : ne détecte plus et ne tente plus de tuer les joueurs déjà morts.",
     "v0.17.1.4 (2 juin 2026) : ne peut plus tuer à travers les sols ni tuer des joueurs à l'extérieur ; annulation du ralentissement de l'accélération en LdV introduit en v0.17.0.0.",
     "v0.18.0.0 (21 juillet 2026) : ne peut plus entendre les joueurs pendant la période de grâce après une chasse, ni tuer à travers les murs ou de plus loin que prévu."
@@ -274,11 +274,11 @@
   ],
   "uncertain": [
     "Version exacte d'ajout (v0.17.1.0, mai 2026) : non confirmée par les notes officielles.",
-    "Portée de mise à mort : 0,5 m sans LdV selon les wikis, 1,5 m à travers les obstacles selon d'anciens guides (sans doute corrigé).",
+    "Portée de mise à mort : 0,5 m sans LdV pour la plupart des sources, 1,5 m à travers les obstacles pour d'anciennes (sans doute corrigé).",
     "Poursuit-il toujours en priorité un joueur qui sprinte ? Une seule source.",
     "Effet de l'encens (aveuglement standard de 5 s ?) : non documenté.",
-    "Événements possibles : tybayn v0.19.1.0 exclut la poursuite et le brouillard fantomatique et limite ses événements dans les pièces aux lumières cassées (chant ou apparition éclair) ; le reste n'est pas documenté.",
-    "Classé avec accélération en LdV sur la fiche tybayn v0.19.1.0 (l'ancien tableau tybayn le classait sans), alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
-    "Condition exacte du seuil de 70 % : joueur qui sprinte dans la même pièce (tybayn v0.19.1.0), ou simplement près de lui (d'autres sources) ?"
+    "Événements possibles : ni poursuite ni brouillard fantomatique, et seulement le chant ou l'apparition éclair dans les pièces aux lumières cassées ; le reste n'est pas documenté.",
+    "Classé tantôt avec, tantôt sans accélération en LdV, alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
+    "Condition exacte du seuil de 70 % : un joueur qui sprinte dans la même pièce, ou simplement près de lui ? Les sources divergent."
   ]
 }
