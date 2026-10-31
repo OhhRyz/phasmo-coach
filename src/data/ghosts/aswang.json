@@ -35,18 +35,18 @@
     "S'il te tue dans une cachette officielle après t'avoir détecté, ce n'est pas un Aswang"
   ],
   "tells": [
-    { "text": "Vitesse de base de 1,53 m/s ; en LdV, il atteint 1,65 fois cette vitesse en 8,667 s au lieu de 13 s.", "zeroEvidence": true },
-    { "text": "S'il détecte un joueur puis le rejoint dans une cachette officielle disponible (placard, casier…), la chasse se termine immédiatement, sans mort.", "zeroEvidence": true }
+    { "text": "Vitesse de base de 1,53 m/s ; en LdV, la vitesse atteint 1,65 fois cette base en 8,667 s au lieu de 13 s.", "zeroEvidence": true },
+    { "text": "Quand l'entité détecte un joueur puis le rejoint dans une cachette officielle disponible (placard, casier…), la chasse se termine immédiatement, sans mort.", "zeroEvidence": true }
   ],
   "behaviors": [
-    { "text": "Après avoir trouvé un joueur caché, il place au début de la chasse suivante un point de passage directement sur la position de ce joueur et s'y rend, même pendant la période de grâce.", "zeroEvidence": true },
-    { "text": "Pour que la chasse s'arrête, il doit atteindre ou entrer dans la même cachette que le joueur détecté : le voir entrer dans une cachette ne suffit pas.", "zeroEvidence": true },
+    { "text": "Après avoir trouvé un joueur caché, place au début de la chasse suivante un point de passage directement sur la position de ce joueur et s'y rend, même pendant la période de grâce.", "zeroEvidence": true },
+    { "text": "Pour que la chasse s'arrête, l'entité doit atteindre la cachette du joueur détecté ou y entrer : voir ce joueur entrer dans une cachette ne suffit pas.", "zeroEvidence": true },
     { "text": "Cette faiblesse ne fonctionne ni dans les cachettes non officielles, ni quand la difficulté est réglée sans cachettes.", "zeroEvidence": false }
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Laisse l'entité te voir pendant une chasse, puis cache-toi dans une cachette officielle. Si elle atteint ta cachette et que la chasse s'arrête aussitôt sans que tu meures, c'est un Aswang. Attention : si ce n'en est pas un, tu meurs.", "definitive": true },
-    { "text": "Place du sel ou des détecteurs de mouvement près de la pièce de l'entité. Si elle marche dans le sel ou déclenche les détecteurs pendant la période de grâce d'une chasse, c'est un Aswang (c'est ce qui arrive à la chasse qui suit celle où il a trouvé un joueur caché). Attention : une chasse lancée avec un objet maudit réduit la période de grâce à 1 s.", "definitive": true },
+    { "text": "Laisse l'entité te voir pendant une chasse, puis cache-toi dans une cachette officielle. Si l'entité atteint ta cachette et que la chasse s'arrête aussitôt sans que tu meures, c'est un Aswang. Attention : si le test échoue, tu meurs.", "definitive": true },
+    { "text": "Place du sel ou des détecteurs de mouvement près de la pièce de l'entité. Si l'entité marche dans le sel ou déclenche les détecteurs pendant la période de grâce d'une chasse, c'est un Aswang (c'est ce qui arrive à la chasse qui suit celle où un joueur caché a été trouvé). Attention : une chasse lancée avec un objet maudit réduit la période de grâce à 1 s.", "definitive": true },
     { "text": "Chronomètre la prise de vitesse en LdV : si l'entité passe de son allure de base (un peu lente) à sa vitesse maximale en moins de 9 s de LdV continue, au lieu d'environ 13 s, c'est probablement un Aswang.", "definitive": false },
     { "text": "Si, après t'avoir trouvé caché, l'entité fonce droit vers ta position dès le début de la chasse suivante, ça pourrait être un Aswang.", "definitive": false }
   ],
@@ -65,17 +65,17 @@
     { "with": "revenant", "why": "Même écriture + glaciales, mais le Revenant a les orbes au lieu du D.O.T.S ; il rampe à 1,0 m/s puis passe d'un coup à 3,0 m/s quand il te détecte, au lieu d'accélérer progressivement." },
     { "with": "shade", "why": "Même écriture + glaciales, mais l'Ombre a l'EMF 5 au lieu du D.O.T.S ; timide, elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
     { "with": "demon", "why": "Même écriture + glaciales, mais le Démon a l'UV au lieu du D.O.T.S ; il chasse dès 70 % (voire à n'importe quel niveau) et peut rechasser 60 s après un encens." },
-    { "with": "moroi", "why": "Même écriture + glaciales, mais le Moroi a la Spirit Box au lieu du D.O.T.S ; il maudit ceux qui l'entendent à la Spirit Box ou au micro parabolique et devient plus rapide quand la santé mentale baisse." },
+    { "with": "moroi", "why": "Même écriture + glaciales, mais le Moroi a la Spirit Box au lieu du D.O.T.S ; il maudit ceux qui l'entendent au micro parabolique et devient plus rapide quand la santé mentale baisse." },
     { "with": "the-twins", "why": "Le jumeau lent (~1,5 m/s) a une vitesse de base proche de celle de l'Aswang, mais la vitesse des Jumeaux change d'une chasse à l'autre et leurs preuves sont EMF 5, Spirit Box et glaciales." }
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, l'entité t'a repéré et tu te réfugies dans un placard ; elle arrive jusqu'à ta cachette… et la chasse s'arrête net : tu es indemne.",
+      "text": "Pendant la chasse, tu es repéré et tu te réfugies dans un placard ; l'entité arrive jusqu'à ta cachette… et la chasse s'arrête net : tu es indemne.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Pendant une chasse, ton coéquipier poursuivi par l'entité se cache dans un casier ; elle l'y rejoint et la chasse prend fin aussitôt, sans victime.",
+      "text": "Pendant une chasse, ton coéquipier poursuivi se cache dans un casier ; l'entité l'y rejoint et la chasse prend fin aussitôt, sans victime.",
       "kind": "hunt",
       "strength": "definitive"
     },

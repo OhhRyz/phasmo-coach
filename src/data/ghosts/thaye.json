@@ -2,7 +2,11 @@
   "id": "thaye",
   "name": "Thayé",
   "nameEn": "Thaye",
-  "evidence": ["orbs", "writing", "dots"],
+  "evidence": [
+    "orbs",
+    "writing",
+    "dots"
+  ],
   "forcedEvidence": null,
   "fakeEvidence": null,
   "speed": {
@@ -50,11 +54,11 @@
   ],
   "behaviors": [
     {
-      "text": "Essaie de vieillir toutes les 1 à 2 min : si un joueur est dans la même pièce que lui à ce moment-là, il vieillit ; sinon, il attend 30 s et réessaie (bug connu : la détection, d'une portée de 3 m, traverse le sol, donc un joueur à l'étage du dessous peut aussi le faire vieillir).",
+      "text": "Essaie de vieillir toutes les 1 à 2 min : si un joueur est dans la même pièce que l'entité à ce moment-là, le vieillissement a lieu ; sinon, nouvel essai 30 s plus tard (bug connu : la détection, d'une portée de 3 m, traverse le sol, donc un joueur à l'étage du dessous compte aussi).",
       "zeroEvidence": true
     },
     {
-      "text": "Plus actif quand il est jeune.",
+      "text": "Plus d'activité tant que l'entité est jeune.",
       "zeroEvidence": true
     }
   ],
@@ -92,7 +96,7 @@
     },
     {
       "with": "deildegast",
-      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit selon les objets que l'équipe utilise et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ne fait que ralentir. Il chasse à 50 %."
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV et chasse à 50 %, mais il ralentit selon les objets que l'équipe utilise et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ne fait que ralentir."
     },
     {
       "with": "deogen",

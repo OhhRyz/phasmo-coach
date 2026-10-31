@@ -8,6 +8,8 @@ export interface TextItem {
 export interface ConfirmationTest {
   text: string
   definitive: boolean
+  /** test faisable seulement si cette preuve est présente (ex. empreintes UV de l'Obake) : hors révision et hors quiz */
+  requires?: EvidenceId
 }
 
 export type ObservationKind = 'behavior' | 'hunt' | 'interaction' | 'event' | 'tell'

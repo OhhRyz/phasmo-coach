@@ -40,11 +40,11 @@
   ],
   "tells": [
     {
-      "text": "Ne touche pas au sel et n'interagit avec lui d'aucune façon.",
+      "text": "Ne touche pas au sel et n'interagit d'aucune façon avec le sel.",
       "zeroEvidence": true
     },
     {
-      "text": "N'est pas ralenti par le sel de rang 3 pendant une chasse.",
+      "text": "Le sel de rang 3 ne ralentit pas l'entité pendant une chasse.",
       "zeroEvidence": true
     }
   ],
@@ -105,7 +105,7 @@
     },
     {
       "with": "oni",
-      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il clignote plus), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
+      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il reste visible plus longtemps à chaque clignotement), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
     },
     {
       "with": "goryo",
@@ -121,7 +121,7 @@
     },
     {
       "with": "deogen",
-      "why": "Spirit Box + D.O.T.S en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, chasse à 40 % et peut respirer fort dans la Spirit Box. 3e preuve : écriture vs EMF 5."
+      "why": "Spirit Box + D.O.T.S en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, et chasse à 40 %. 3e preuve : écriture vs EMF 5."
     },
     {
       "with": "deildegast",

@@ -10,19 +10,35 @@ export function coachNameOf(profile: Profile): string {
   return (profile.role === 'coach' ? profile.name : profile.coachName)?.trim() ?? ''
 }
 
-const same = (a: string, b: string) => a.trim().toLocaleLowerCase('fr') === b.trim().toLocaleLowerCase('fr')
+/** Même prénom, aux espaces et aux majuscules près. */
+export const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase('fr') === b.trim().toLocaleLowerCase('fr')
+const same = sameName
 
 /**
  * Le profil après avoir reçu des notes signées `from` (lien ou fichier) : qui s'entraînait seul·e, ou
  * était coaché·e sans avoir noté par qui, reconnaît l'expéditeur comme son coach. Ses propres notes
- * (même prénom) ou un envoi sans nom ne changent rien ; le carnet d'un coach non plus.
+ * (même prénom) ou un envoi sans nom ne changent rien ; le carnet d'un coach non plus. Un carnet encore
+ * sans prénom non plus : on ne sait pas encore si l'expéditeur n'est pas la personne elle-même (ses notes
+ * transférées sur un nouvel appareil), qui deviendrait alors sa propre coach.
  */
 export function adoptCoach(profile: Profile, from: string | undefined): Profile {
   const sender = from?.trim().slice(0, 80) ?? ''
+  // avant l'ouverture du carnet (prénom vide), on adopte quand même : onboardProfile corrige le cas où
+  // l'expéditeur est la personne elle-même (ses propres notes passées d'un appareil à l'autre)
   if (!sender || same(sender, profile.name)) return profile
   if (profile.role === 'solo') return { ...profile, role: 'student', coachName: sender }
   if (profile.role === 'student' && !profile.coachName.trim()) return { ...profile, coachName: sender }
   return profile
+}
+
+/**
+ * Le profil à l'ouverture du carnet (prénom saisi sur l'accueil). Une personne « coachée » par son propre
+ * prénom (ses notes reçues d'un autre appareil avant d'avoir donné son nom) s'entraîne en fait seule.
+ */
+export function onboardProfile(profile: Profile, patch: Partial<Profile>): Profile {
+  const next = { ...profile, ...patch }
+  const own = next.role === 'student' && !!next.coachName.trim() && same(next.coachName, next.name)
+  return own ? { ...next, role: 'solo', coachName: '' } : next
 }
 
 /**

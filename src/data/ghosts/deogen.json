@@ -2,7 +2,11 @@
   "id": "deogen",
   "name": "Deogen",
   "nameEn": "Deogen",
-  "evidence": ["spiritbox", "writing", "dots"],
+  "evidence": [
+    "spiritbox",
+    "writing",
+    "dots"
+  ],
   "forcedEvidence": "spiritbox",
   "fakeEvidence": null,
   "speed": {
@@ -32,7 +36,7 @@
   "keyTells": [
     "Fonce à 3,0 m/s puis ralentit à 0,4 m/s en arrivant sur toi",
     "Te trouve toujours en chasse : se cacher ne sert à rien",
-    "Respiration lourde à la Spirit Box à moins d'1 m (33 % de chances)",
+    "Aucune accélération en LdV ; une fois sur toi, tu le tiens à distance en tournant autour d'une table ou d'un meuble",
     "Seuil de chasse 40 % · plus visible que la normale pendant les chasses"
   ],
   "tells": [
@@ -41,11 +45,11 @@
       "zeroEvidence": false
     },
     {
-      "text": "Vitesse de chasse très élevée, mais il ralentit en approchant du joueur ciblé.",
+      "text": "Vitesse de chasse très élevée, qui chute fortement en approchant du joueur ciblé.",
       "zeroEvidence": true
     },
     {
-      "text": "Plus visible pendant les chasses.",
+      "text": "Plus visible pendant les chasses, et ralentit à 0,4 m/s une fois sur toi.",
       "zeroEvidence": true
     }
   ],
@@ -58,12 +62,13 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si, pendant une chasse, tu entends l'entité foncer vers toi puis ralentir nettement une fois près de toi, c'est un Deogen.",
+      "text": "Si, pendant une chasse, tu entends l'entité foncer vers toi puis ralentir nettement une fois près de toi alors que tu continues de bouger, c'est un Deogen (une Dayan ne ralentit que si tu restes immobile).",
       "definitive": true
     },
     {
       "text": "Pose des questions à la Spirit Box à moins d'1 m de l'entité : si tu entends une respiration lourde au lieu d'une réponse, c'est un Deogen.",
-      "definitive": true
+      "definitive": true,
+      "requires": "spiritbox"
     }
   ],
   "eliminationTests": [
@@ -85,7 +90,7 @@
     },
     {
       "with": "thaye",
-      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de la Spirit Box. Lui aussi n'a pas de LdV et peut être très rapide (2,75 m/s jeune), mais sa vitesse est constante pendant la chasse et baisse d'une chasse à l'autre ; il chasse dès 75 % quand il est jeune."
+      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de la Spirit Box. Lui non plus n'accélère pas en LdV et peut être très rapide (2,75 m/s jeune), mais sa vitesse est constante pendant la chasse et baisse d'une chasse à l'autre ; il chasse dès 75 % quand il est jeune."
     },
     {
       "with": "moroi",
@@ -134,7 +139,7 @@
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse ; une fois tout près, elle avance presque au ralenti, que tu bouges ou non.",
+      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse ; une fois tout près, son allure tombe presque au ralenti, que tu bouges ou non.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -189,15 +194,15 @@
       "explain": "Il fonce à 3,0 m/s vers sa cible et ralentit à 0,4 m/s tout près. Le premier choix décrit le Revenant, le deuxième le Thayé."
     },
     {
-      "q": "Dans quelles conditions peux-tu entendre la respiration du Deogen à la Spirit Box ?",
+      "q": "Pendant une chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, fonce sur toi de loin puis avance presque au ralenti une fois tout près. De quelle entité s'agit-il ?",
       "choices": [
-        "À moins d'1 m de lui, avec 33 % de chances par question",
-        "À moins de 3 m, à chaque question",
-        "N'importe où dans sa pièce, 33 % de chances",
-        "Uniquement pendant une chasse"
+        "Le Deogen",
+        "L'Oni",
+        "Le Fantôme",
+        "Le Revenant"
       ],
       "answer": 0,
-      "explain": "La respiration lourde n'arrive qu'à moins d'1 m de l'entité, avec 33 % de chances, à la place d'une réponse normale."
+      "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en LdV ; le Fantôme est au contraire presque invisible, et le Revenant accélère quand il te détecte au lieu de ralentir."
     },
     {
       "q": "Quelle est la meilleure façon de survivre à une chasse de Deogen ?",

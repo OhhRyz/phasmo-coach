@@ -44,7 +44,7 @@
   "confirmationTests": [
     { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true },
     { "text": "Si l'entité émet deux sons paranormaux au micro parabolique ou à l'enregistreur de son à moins de 80 s d'intervalle, c'est un Myling.", "definitive": true },
-    { "text": "Prends un enregistreur de son de rang 1 ou 3 et attends un son paranormal. Quand il se produit, entre et sors de la zone de grésillement (le voyant passe au rouge ou la boussole apparaît). Si le grésillement commence 1 m plus loin que la normale pour le rang de ton enregistreur, c'est un Myling.", "definitive": true }
+    { "text": "Prends un enregistreur de son de rang 1 ou 3 et attends un son paranormal. Dès que ce son se produit, entre et sors de la zone de grésillement (le voyant passe au rouge ou la boussole apparaît). Si le grésillement commence 1 m plus loin que la normale pour le rang de ton enregistreur, c'est un Myling.", "definitive": true }
   ],
   "eliminationTests": [
     { "text": "Si tu entends l'entité entre 12 m et 20 m de toi pendant une chasse, ce n'est pas un Myling." }

@@ -2,7 +2,11 @@
   "id": "hantu",
   "name": "Hantu",
   "nameEn": "Hantu",
-  "evidence": ["uv", "orbs", "freezing"],
+  "evidence": [
+    "uv",
+    "orbs",
+    "freezing"
+  ],
   "forcedEvidence": "freezing",
   "fakeEvidence": null,
   "speed": {
@@ -15,7 +19,7 @@
     "details": [
       "Pendant une chasse, sa vitesse dépend de la température de la pièce où il se trouve : plus la pièce est froide, plus il est rapide.",
       "Paliers : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, 2,1 m/s entre 9 et 12 °C, 2,3 m/s entre 6 et 9 °C, 2,4 m/s entre 3 et 6 °C, 2,5 m/s entre 0 et 3 °C et 2,7 m/s sous 0 °C.",
-      "Il n'accélère jamais en ligne de vue (LdV) : te voir ne le rend pas plus rapide.",
+      "Il n'accélère jamais en ligne de vue : te voir ne le rend pas plus rapide.",
       "Sa vitesse change quand il passe dans une pièce d'une autre température : s'il traverse plusieurs pièces pendant une chasse, sa vitesse paraît très variable. Plus il reste longtemps dans une pièce, plus elle refroidit, ce qui joue aussi sur sa vitesse."
     ]
   },
@@ -36,80 +40,196 @@
     "En pleine chasse, sa vitesse change d'une pièce à l'autre selon leur température"
   ],
   "tells": [
-    { "text": "Laisse échapper une buée glacée visible pendant les chasses quand le disjoncteur est éteint ou cassé.", "zeroEvidence": true },
-    { "text": "Ne peut pas rallumer le disjoncteur.", "zeroEvidence": true },
-    { "text": "A plus de chances d'éteindre le disjoncteur.", "zeroEvidence": true },
-    { "text": "Est plus rapide dans les pièces froides pendant les chasses.", "zeroEvidence": true }
+    {
+      "text": "Laisse échapper une buée glacée visible pendant les chasses quand le disjoncteur est éteint ou cassé.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut pas rallumer le disjoncteur.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "A plus de chances d'éteindre le disjoncteur.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Est plus rapide dans les pièces froides pendant les chasses.",
+      "zeroEvidence": true
+    }
   ],
   "behaviors": [
-    { "text": "Contrairement à une idée reçue, il ne refroidit pas les pièces plus vite et n'atteint pas des températures plus basses que les autres entités à températures glaciales : seule sa vitesse en chasse dépend du froid.", "zeroEvidence": false }
+    {
+      "text": "Contrairement à une idée reçue, il ne refroidit pas les pièces plus vite et n'atteint pas des températures plus basses que les autres entités à températures glaciales : seule sa vitesse en chasse dépend du froid.",
+      "zeroEvidence": false
+    }
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Assure-toi que le disjoncteur est éteint ou cassé, puis observe l'entité pendant qu'elle chasse. Si tu vois une buée sortir de l'entité, c'est un Hantu.", "definitive": true },
-    { "text": "Pendant une chasse, si l'entité semble changer de vitesse au hasard sans être influencée par l'équipement ou par un joueur (en passant d'une pièce chaude à une pièce froide, par exemple), c'est très probablement un Hantu.", "definitive": false }
+    {
+      "text": "Assure-toi que le disjoncteur est éteint ou cassé, puis observe l'entité pendant qu'elle chasse. Si tu vois une buée sortir de l'entité, c'est un Hantu.",
+      "definitive": true
+    },
+    {
+      "text": "Pendant une chasse, si l'entité semble changer de vitesse au hasard sans être influencée par l'équipement ou par un joueur (en passant d'une pièce chaude à une pièce froide, par exemple), c'est très probablement un Hantu.",
+      "definitive": false
+    }
   ],
   "eliminationTests": [
-    { "text": "Si le disjoncteur est éteint ou cassé et que tu ne vois aucune buée en observant l'entité pendant la chasse, ce n'est pas un Hantu." },
-    { "text": "Si l'entité rallume le disjoncteur, ce n'est pas un Hantu." },
-    { "text": "Si l'entité accélère en LdV, ce n'est pas un Hantu." },
-    { "text": "En Cauchemar ou en Démence, si tu as exclu les températures glaciales, ce n'est pas un Hantu." }
+    {
+      "text": "Si le disjoncteur est éteint ou cassé et que tu ne vois aucune buée en observant l'entité pendant la chasse, ce n'est pas un Hantu."
+    },
+    {
+      "text": "Si l'entité rallume le disjoncteur, ce n'est pas un Hantu."
+    },
+    {
+      "text": "Si l'entité accélère en LdV, ce n'est pas un Hantu."
+    },
+    {
+      "text": "En Cauchemar ou en Démence, si tu as exclu les températures glaciales, ce n'est pas un Hantu."
+    }
   ],
   "confusions": [
-    { "with": "the-mimic", "why": "Le Mimic affiche toujours de faux orbes en plus de ses vraies preuves (Spirit Box, ultraviolet, températures glaciales) : UV + orbes + glaciales peut donc venir d'un Mimic. Une réponse à la Spirit Box exclut le Hantu." },
-    { "with": "obake", "why": "Même UV + orbes, mais l'Obake a l'EMF 5 au lieu des glaciales ; il peut laisser des empreintes à 6 doigts, change de modèle le temps d'un clignotement en chasse et accélère en LdV." },
-    { "with": "banshee", "why": "Même UV + orbes, mais la Banshee a le D.O.T.S ; elle ne poursuit que sa cible, peut pousser un cri unique au micro parabolique et accélère en LdV." },
-    { "with": "jinn", "why": "Même UV + glaciales, mais le Djinn a l'EMF 5. Il ne peut pas couper directement le disjoncteur et, disjoncteur allumé, passe à 2,5 m/s quand il te voit à plus de 3 m. Le Hantu, lui, coupe souvent le disjoncteur et n'accélère jamais en LdV." },
-    { "with": "demon", "why": "Même UV + glaciales, mais le Démon a l'écriture ; il peut chasser dès 70 % (et à n'importe quel niveau grâce à sa capacité) et accélère en LdV." },
-    { "with": "revenant", "why": "Mêmes orbes + glaciales, mais le Revenant a l'écriture. Il rampe à 1,0 m/s puis fonce à 3,0 m/s dès qu'il te détecte : sa vitesse dépend de toi, celle du Hantu dépend de la pièce." },
-    { "with": "yurei", "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S ; il peut claquer une porte en faisant perdre 15 % de santé mentale et accélère en LdV." },
-    { "with": "onryo", "why": "Mêmes orbes + glaciales, mais l'Onryo a la Spirit Box ; il chasse dès 60 %, souffle les flammes (qui agissent comme un crucifix) et accélère en LdV." },
-    { "with": "kormos", "why": "Même UV + orbes, mais le Kormos a la Spirit Box ; quasi aveugle, il te repère surtout à tes pas et peut chasser plus tôt si un joueur sprinte près de lui." },
-    { "with": "thaye", "why": "Le Thayé n'accélère pas non plus en LdV, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes." },
-    { "with": "mare", "why": "Le Cauchemar éteint lui aussi beaucoup de lumières, mais interrupteur par interrupteur, et ne peut jamais en rallumer ; son seuil dépend de la lumière de sa pièce (60 % éteinte, 40 % allumée). Une seule preuve en commun (orbes)." }
+    {
+      "with": "the-mimic",
+      "why": "Le Mimic affiche toujours de faux orbes en plus de ses vraies preuves (Spirit Box, ultraviolet, températures glaciales) : UV + orbes + glaciales peut donc venir d'un Mimic. Une réponse à la Spirit Box exclut le Hantu."
+    },
+    {
+      "with": "obake",
+      "why": "Même UV + orbes, mais l'Obake a l'EMF 5 au lieu des glaciales ; il peut laisser des empreintes à 6 doigts, change de modèle le temps d'un clignotement en chasse et accélère en LdV."
+    },
+    {
+      "with": "banshee",
+      "why": "Même UV + orbes, mais la Banshee a le D.O.T.S ; elle ne poursuit que sa cible, peut pousser un cri unique au micro parabolique et accélère en LdV."
+    },
+    {
+      "with": "jinn",
+      "why": "Même UV + glaciales, mais le Djinn a l'EMF 5. Il ne peut pas couper directement le disjoncteur et, disjoncteur allumé, passe à 2,5 m/s quand il te voit à plus de 3 m. Le Hantu, lui, coupe souvent le disjoncteur et n'accélère jamais en LdV."
+    },
+    {
+      "with": "demon",
+      "why": "Même UV + glaciales, mais le Démon a l'écriture ; il peut chasser dès 70 %, rechasser 60 s après l'encens et accélère en LdV."
+    },
+    {
+      "with": "revenant",
+      "why": "Mêmes orbes + glaciales, mais le Revenant a l'écriture. Il rampe à 1,0 m/s puis fonce à 3,0 m/s dès qu'il te détecte : sa vitesse dépend de toi, celle du Hantu dépend de la pièce."
+    },
+    {
+      "with": "yurei",
+      "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S ; il peut claquer une porte en faisant perdre 15 % de santé mentale et accélère en LdV."
+    },
+    {
+      "with": "onryo",
+      "why": "Mêmes orbes + glaciales, mais l'Onryo a la Spirit Box ; il chasse dès 60 %, souffle les flammes (qui agissent comme un crucifix) et accélère en LdV."
+    },
+    {
+      "with": "kormos",
+      "why": "Même UV + orbes, mais le Kormos a la Spirit Box ; quasi aveugle, il te repère surtout à tes pas et peut chasser plus tôt si un joueur sprinte près de lui."
+    },
+    {
+      "with": "thaye",
+      "why": "Le Thayé n'accélère pas non plus en LdV, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes."
+    },
+    {
+      "with": "mare",
+      "why": "Le Cauchemar éteint lui aussi beaucoup de lumières, mais interrupteur par interrupteur, et ne peut jamais en rallumer ; son seuil dépend de la lumière de sa pièce (60 % éteinte, 40 % allumée). Une seule preuve en commun (orbes)."
+    }
   ],
   "observations": [
-    { "text": "Pendant une chasse, alors que le disjoncteur est coupé, tu vois une buée blanche s'échapper de l'entité à intervalles réguliers.", "kind": "hunt", "strength": "definitive" },
-    { "text": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis devient nettement plus rapide en entrant dans une pièce bien plus froide, sans que tu fasses quoi que ce soit.", "kind": "hunt", "strength": "strong" },
-    { "text": "En pleine chasse, l'entité sort de sa pièce, la plus froide de toutes, et ralentit nettement en entrant dans un couloir plus chaud, alors qu'elle te voit.", "kind": "hunt", "strength": "strong" },
-    { "text": "Tu relèves les températures : dans une pièce à plus de 15 °C, l'entité chasse lentement, vers 1,4 m/s ; dans une pièce vers 5 °C, elle file à environ 2,4 m/s.", "kind": "hunt", "strength": "strong" },
-    { "text": "L'entité te poursuit sur toute la longueur d'un couloir en te gardant en vue, mais elle ne prend jamais de vitesse.", "kind": "hunt", "strength": "hint" },
-    { "text": "Le disjoncteur se coupe tout seul à plusieurs reprises au cours de la partie, et il ne se rallume jamais sans qu'un joueur s'en charge.", "kind": "interaction", "strength": "hint" }
+    {
+      "text": "Pendant une chasse, alors que le disjoncteur est coupé, tu vois une buée blanche s'échapper de l'entité à intervalles réguliers.",
+      "kind": "hunt",
+      "strength": "definitive"
+    },
+    {
+      "text": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis devient nettement plus rapide en entrant dans une pièce bien plus froide, sans que tu fasses quoi que ce soit.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "En pleine chasse, l'entité sort de sa pièce, la plus froide de toutes, et ralentit nettement en entrant dans un couloir plus chaud, alors qu'elle te voit.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "Tu relèves les températures : dans une pièce à plus de 15 °C, l'entité chasse lentement, vers 1,4 m/s ; dans une pièce vers 5 °C, elle file à environ 2,4 m/s.",
+      "kind": "hunt",
+      "strength": "strong"
+    },
+    {
+      "text": "L'entité te poursuit sur toute la longueur d'un couloir en te gardant en vue, mais elle ne prend jamais de vitesse.",
+      "kind": "hunt",
+      "strength": "hint"
+    },
+    {
+      "text": "Le disjoncteur se coupe tout seul à plusieurs reprises au cours de la partie, et il ne se rallume jamais sans qu'un joueur s'en charge.",
+      "kind": "interaction",
+      "strength": "hint"
+    }
   ],
   "quiz": [
     {
       "q": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis nettement plus rapide en entrant dans une pièce bien plus froide. Quelle entité suspectes-tu ?",
-      "choices": ["Le Hantu", "Le Raiju", "Le Djinn", "Le Revenant"],
+      "choices": [
+        "Le Hantu",
+        "Le Raiju",
+        "Le Djinn",
+        "Le Revenant"
+      ],
       "answer": 0,
       "explain": "La vitesse du Hantu dépend de la température de la pièce où il se trouve : 1,4 m/s au-dessus de 15 °C, jusqu'à 2,7 m/s sous 0 °C. Le Raiju accélère près de l'électronique active, le Djinn quand il te voit de loin disjoncteur allumé, le Revenant quand il te détecte."
     },
     {
       "q": "Dans quelle condition peux-tu voir la buée glacée du Hantu ?",
-      "choices": ["Pendant une chasse, disjoncteur éteint ou cassé", "Pendant une chasse, uniquement dans une pièce sous 0 °C", "À tout moment dans sa pièce favorite", "Pendant un événement, lumières allumées"],
+      "choices": [
+        "Pendant une chasse, disjoncteur éteint ou cassé",
+        "Pendant une chasse, uniquement dans une pièce sous 0 °C",
+        "À tout moment dans sa pièce favorite",
+        "Pendant un événement, lumières allumées"
+      ],
       "answer": 0,
       "explain": "La buée apparaît pendant les chasses, dans n'importe quelle pièce, dès que le disjoncteur est éteint ou cassé : c'est l'état du disjoncteur qui compte, pas la température de la pièce."
     },
     {
       "q": "À quelle vitesse se déplace un Hantu dans une pièce à plus de 15 °C ?",
-      "choices": ["1,4 m/s", "1,7 m/s", "2,1 m/s", "2,7 m/s"],
+      "choices": [
+        "1,4 m/s",
+        "1,7 m/s",
+        "2,1 m/s",
+        "2,7 m/s"
+      ],
       "answer": 0,
       "explain": "Au chaud, le Hantu est plus lent qu'une entité standard (1,4 m/s). 2,1 m/s correspond à 9–12 °C et 2,7 m/s aux pièces sous 0 °C ; 1,7 m/s est la vitesse standard des autres entités."
     },
     {
       "q": "Un Hantu te voit au bout d'un long couloir. Que se passe-t-il ?",
-      "choices": ["Sa vitesse ne change pas : il n'accélère pas en LdV", "Il accélère jusqu'à 1,65 fois sa vitesse de base", "Il passe instantanément à 3,0 m/s", "Il ralentit à mesure qu'il s'approche de toi"],
+      "choices": [
+        "Sa vitesse ne change pas : il n'accélère pas en LdV",
+        "Il accélère jusqu'à 1,65 fois sa vitesse de base",
+        "Il passe instantanément à 3,0 m/s",
+        "Il ralentit à mesure qu'il s'approche de toi"
+      ],
       "answer": 0,
       "explain": "Le Hantu fait partie des rares entités sans accélération en LdV (avec le Revenant, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse). Le passage à 3,0 m/s est typique du Revenant, le ralentissement en approche du Deogen."
     },
     {
       "q": "Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?",
-      "choices": ["2,7 m/s", "1,4 m/s", "1,75 m/s", "3,0 m/s"],
+      "choices": [
+        "2,7 m/s",
+        "1,4 m/s",
+        "1,75 m/s",
+        "3,0 m/s"
+      ],
       "answer": 0,
       "explain": "Plus la pièce est froide, plus le Hantu est rapide : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, et ainsi de suite jusqu'à 2,7 m/s sous 0 °C. Il n'accélère jamais en ligne de vue."
     },
     {
       "q": "L'entité vient de rallumer le disjoncteur. Que peux-tu en conclure ?",
-      "choices": ["Ce n'est pas un Hantu", "C'est forcément un Hantu", "C'est forcément un Djinn", "Rien du tout"],
+      "choices": [
+        "Ce n'est pas un Hantu",
+        "C'est forcément un Hantu",
+        "C'est forcément un Djinn",
+        "Rien du tout"
+      ],
       "answer": 0,
       "explain": "Le Hantu ne peut pas rallumer le disjoncteur : tu peux l'éliminer. Ça ne prouve pas pour autant qu'il s'agisse d'un Djinn."
     }

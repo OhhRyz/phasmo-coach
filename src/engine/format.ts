@@ -115,23 +115,51 @@ export function safeDate(f: Intl.DateTimeFormat, t: unknown, fallback = '—'): 
   return v == null ? fallback : f.format(v)
 }
 
-/** Remplace le nom de l'entité dans un texte pour ne pas souffler la réponse. */
-export function redactGhostName(text: string, g: Ghost): string {
+const namePatternCache = new WeakMap<Ghost, { names: string[]; patterns: RegExp[] }>()
+
+/** Les noms d'une entité à caviarder (du plus long au plus court), et leur motif avec article. */
+function namePatterns(g: Ghost): { names: string[]; patterns: RegExp[] } {
+  const cached = namePatternCache.get(g)
+  if (cached) return cached
   // Le nom français est cherché avec sa majuscule seulement : « Ombre », « Esprit » ou « Fantôme » sont
   // aussi des mots courants (« une ombre », « l'esprit »…) qu'il ne faut pas toucher.
   const bare = (n: string) => n.replace(/^(The |Le |Les |La |L['’])/, '')
   const names = [...new Set([g.name, bare(g.name), g.nameEn, bare(g.nameEn)])]
     .filter((n) => n.length > 2)
     .sort((a, b) => b.length - a.length)
+  const patterns = names.map((n) => {
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`(?<![\\p{L}])([Ll]['’]|[Ll]es? |[Ll]a |[Dd]u |[Dd]es |[Aa]ux? |[Dd]['’]une? |[Uu]ne? |[Dd]['’])?${escaped}s?(?![\\p{L}])`, 'gu')
+  })
+  const out = { names, patterns }
+  namePatternCache.set(g, out)
+  return out
+}
+
+/**
+ * Remplace le nom de l'entité dans un texte pour ne pas souffler la réponse. Ce qui est entre « » n'est
+ * jamais touché : c'est un libellé du jeu (« Fantôme translucide », « Cri paranormal ») ou une phrase
+ * citée, qui deviendrait incompréhensible. Un texte qui nomme l'entité entre « » ne se pose donc pas tel quel.
+ */
+export function redactGhostName(text: string, g: Ghost): string {
+  const { names, patterns } = namePatterns(g)
+  // le plus souvent, le nom n'y est pas du tout : rien à faire
+  if (!names.some((n) => text.includes(n))) return text
   const lead: Record<string, string> = {
     'du ': 'de ', 'des ': 'de ', 'au ': 'à ', 'aux ': 'à ', "d'": 'de ', 'd’': 'de ',
     "d'un ": 'de ', 'd’un ': 'de ', "d'une ": 'de ', 'd’une ': 'de ',
   }
-  let out = text
-  for (const n of names) {
-    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const re = new RegExp(`(?<![\\p{L}])([Ll]['’]|[Ll]es? |[Ll]a |[Dd]u |[Dd]es |[Aa]ux? |[Dd]['’]une? |[Uu]ne? |[Dd]['’])?${escaped}s?(?![\\p{L}])`, 'gu')
-    out = out.replace(re, (_m, article?: string) => `${lead[article?.toLowerCase() ?? ''] ?? ''}cette entité`)
+  const outside = (part: string) => {
+    let out = part
+    for (const re of patterns) {
+      out = out.replace(re, (_m, article?: string) => `${lead[article?.toLowerCase() ?? ''] ?? ''}cette entité`)
+    }
+    // « qu'un Deogen » devient « que cette entité » (et non « qu'cette entité »)
+    return out.replace(/(?<![\p{L}])(d|D|qu|Qu|n|N|s|S)['’]cette entité/gu, '$1e cette entité')
   }
-  return out
+  // les morceaux impairs sont entre « »
+  return text
+    .split(/(«[^«»]*»)/u)
+    .map((part, i) => (i % 2 ? part : outside(part)))
+    .join('')
 }

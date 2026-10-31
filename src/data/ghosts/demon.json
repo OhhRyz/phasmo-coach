@@ -36,7 +36,7 @@
   ],
   "tells": [
     {
-      "text": "Peut chasser 60 s après avoir été encensé, au lieu des 90 s standard.",
+      "text": "Peut chasser 60 s après un encens, au lieu des 90 s standard.",
       "zeroEvidence": true
     },
     {
@@ -58,11 +58,11 @@
   ],
   "confirmationTests": [
     {
-      "text": "Lance un chronomètre après avoir encensé l'entité. Si elle chasse de nouveau avant 90 s (chasse naturelle, sans objet maudit), c'est un Démon.",
+      "text": "Lance un chronomètre après avoir encensé l'entité. Si l'entité chasse de nouveau avant 90 s (chasse naturelle, sans objet maudit), c'est un Démon.",
       "definitive": true
     },
     {
-      "text": "Lance un chronomètre à la fin d'une chasse ou après l'utilisation d'un crucifix. Si elle chasse de nouveau avant 25 s (chasse naturelle, sans objet maudit), c'est un Démon.",
+      "text": "Lance un chronomètre à la fin d'une chasse ou après l'utilisation d'un crucifix. Si l'entité chasse de nouveau avant 25 s (chasse naturelle, sans objet maudit), c'est un Démon.",
       "definitive": true
     },
     {
@@ -110,7 +110,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit via la Spirit Box ou le micro parabolique, accélère quand la santé mentale baisse et reste aveuglé plus longtemps par l'encens en chasse (7 s au lieu de 5 s)."
+      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit le joueur qui l'entend au micro parabolique, accélère quand la santé mentale baisse et reste aveuglé plus longtemps par l'encens en chasse (7 s au lieu de 5 s)."
     },
     {
       "with": "aswang",
@@ -118,19 +118,19 @@
     },
     {
       "with": "onryo",
-      "why": "Autre chasseur précoce : l'Onryo chasse normalement à 60 % et peut chasser à toute santé mentale en éteignant des flammes (toutes les 3 flammes)."
+      "why": "L'Onryo peut aussi chasser tôt : normalement à 60 %, et à toute santé mentale en éteignant des flammes (toutes les 3 flammes)."
     },
     {
       "with": "banshee",
-      "why": "Autre chasseur précoce : la Banshee chasse selon la santé mentale de sa cible (50 % ou moins), donc parfois jusqu'à 87 % de moyenne."
+      "why": "La Banshee peut aussi chasser tôt, selon la santé mentale de sa cible (50 % ou moins) : parfois jusqu'à 87 % de moyenne."
     },
     {
       "with": "yokai",
-      "why": "Autre chasseur précoce : le Yokai peut chasser jusqu'à 80 % si quelqu'un parle dans sa pièce, mais jamais au-dessus. Aucune preuve en commun."
+      "why": "Le Yokai peut aussi chasser tôt : jusqu'à 80 % si quelqu'un parle dans sa pièce, mais jamais au-dessus. Aucune preuve en commun."
     },
     {
       "with": "thaye",
-      "why": "Autre chasseur précoce : le Thayé jeune chasse dès 75 %, à 2,75 m/s sans accélération en LdV, puis chasse de plus en plus tard en vieillissant. Une seule preuve en commun (écriture)."
+      "why": "Jeune, le Thayé peut aussi chasser très tôt, dès 75 %, à 2,75 m/s sans accélération en LdV, puis de plus en plus tard en vieillissant. Une seule preuve en commun (écriture)."
     }
   ],
   "observations": [

@@ -2,7 +2,7 @@ import { requestPersistentStorage } from '../engine/device'
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { GHOSTS, MECHANICS } from '../data'
 import { buildDeck, type Card, type CoachNote } from '../engine/cards'
-import { adoptCoach } from '../engine/notes'
+import { adoptCoach, onboardProfile } from '../engine/notes'
 import { recordAnswer } from '../engine/progress'
 import { schedule, type Grade } from '../engine/srs'
 import {
@@ -70,7 +70,8 @@ function reducer(state: PersistedState, action: Action): PersistedState {
     case 'settings':
       return { ...state, settings: { ...state.settings, ...action.settings } }
     case 'onboard':
-      return { ...state, onboarded: true, profile: { ...state.profile, ...action.profile } }
+      // coaché·e par… son propre prénom (ses notes reçues avant d'avoir donné son nom) : on s'entraîne seul·e
+      return { ...state, onboarded: true, profile: onboardProfile(state.profile, action.profile) }
     case 'note:upsert': {
       const exists = state.notes.some((n) => n.id === action.note.id)
       return {

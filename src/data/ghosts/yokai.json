@@ -2,7 +2,11 @@
   "id": "yokai",
   "name": "Yokai",
   "nameEn": "Yokai",
-  "evidence": ["spiritbox", "orbs", "dots"],
+  "evidence": [
+    "spiritbox",
+    "orbs",
+    "dots"
+  ],
   "forcedEvidence": null,
   "fakeEvidence": null,
   "speed": {
@@ -51,23 +55,23 @@
   ],
   "behaviors": [
     {
-      "text": "Plus actif quand on parle près de lui.",
+      "text": "Plus d'activité quand on parle près de l'entité.",
       "zeroEvidence": true
     }
   ],
   "abilities": [
     {
-      "text": "Parler dans la même pièce qu'un Yokai peut le pousser à chasser jusqu'à 80 % de santé mentale moyenne.",
+      "text": "Si quelqu'un parle dans sa pièce, peut chasser jusqu'à 80 % de santé mentale moyenne.",
       "zeroEvidence": true
     }
   ],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue, et regarde si l'entité vient vers toi. Si elle ne te détecte pas, c'est un Yokai.",
+      "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue, et regarde si l'entité vient vers toi : si ce n'est pas le cas, c'est un Yokai.",
       "definitive": true
     },
     {
-      "text": "Après avoir repéré la zone de l'entité, localise-la précisément (capteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si elle s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : elle doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, elle peut se retrouver hors de portée de toutes les entités.",
+      "text": "Après avoir repéré la zone de l'entité, localise-la précisément (capteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si l'entité s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : l'entité doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, la boîte peut se retrouver hors de portée de toutes les entités.",
       "definitive": true
     }
   ],
@@ -127,7 +131,7 @@
     },
     {
       "with": "demon",
-      "why": "Autre chasseur précoce : une chasse vers 75 % peut aussi venir d'un Démon (70 %, voire toute santé mentale). Si personne ne parlait dans la pièce de l'entité, pense plutôt au Démon."
+      "why": "Le Démon chasse dès 70 %, même quand personne ne parle, peut chasser à toute santé mentale et rechasse 60 s après l'encens."
     }
   ],
   "observations": [
@@ -137,7 +141,7 @@
       "strength": "strong"
     },
     {
-      "text": "Pendant une chasse, caché hors de sa vue, tu parles à voix haute à environ 4 m de l'entité : elle ne vient pas vers toi et poursuit son chemin ; un peu plus tard, elle t'aperçoit au bout d'un couloir et fonce aussitôt sur toi.",
+      "text": "Pendant une chasse, caché hors de sa vue, tu parles à voix haute à environ 4 m de l'entité : pas de réaction, son chemin continue ; un peu plus tard, l'entité t'aperçoit au bout d'un couloir et fonce aussitôt sur toi.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -181,13 +185,23 @@
     },
     {
       "q": "Jusqu'à quel seuil de santé mentale moyenne un Yokai peut-il chasser si l'on parle dans sa pièce ?",
-      "choices": ["70 %", "80 %", "65 %", "100 %"],
+      "choices": [
+        "70 %",
+        "80 %",
+        "65 %",
+        "100 %"
+      ],
       "answer": 1,
       "explain": "Jusqu'à 80 %, et seulement si quelqu'un parle dans sa pièce. 70 % est le seuil normal du Démon, 65 % celui du Raiju près d'appareils électroniques ; chasser à 100 % relève de pouvoirs comme celui du Démon, pas du Yokai."
     },
     {
       "q": "Pendant une chasse, à quelle distance un Yokai entend-il ta voix ?",
-      "choices": ["2,5 m ou moins", "12 m", "5 m", "À la distance normale"],
+      "choices": [
+        "2,5 m ou moins",
+        "12 m",
+        "5 m",
+        "À la distance normale"
+      ],
       "answer": 0,
       "explain": "Sa distance d'écoute et de détection des appareils électroniques tombe à 2,5 m ou moins. 12 m est la distance à laquelle on entend les pas d'un Myling, 5 m la portée de vue du Kormos."
     },

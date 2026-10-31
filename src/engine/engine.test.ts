@@ -1,11 +1,26 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
-import { buildDeck, mechanicsCards, mentionsEvidence } from './cards'
+import {
+  buildDeck,
+  evidenceIn,
+  ghostCards,
+  isFeminine,
+  mechanicsCards,
+  mentionsEvidence,
+  namesGhost,
+  needsEvidence,
+  noteCards,
+  numbersFit,
+  reverseTells,
+  speedValues,
+  thresholds,
+  zeroTests,
+} from './cards'
 import { EMPTY_FILTER, filterGhosts, matchesEvidence, type FilterState } from './filter'
 import { redactGhostName, speedClasses } from './format'
-import { buildQuiz, confusionWithoutEvidence, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from './quiz'
-import { buildReviewQueue, ghostMastery, learnedCount } from './progress'
+import { buildQuiz, confusionWithoutEvidence, isCorrect, partnerClaim, QUIZ_TOPICS, type Question, type QuizTopic } from './quiz'
+import { buildReviewQueue, ghostMastery, learnedCount, unseenCards } from './progress'
 import { createRng } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
 import {
@@ -20,7 +35,7 @@ import {
   shareSummary,
   shareSummaryLine,
 } from './share'
-import { adoptCoach, coachNameOf, isCoachNote } from './notes'
+import { adoptCoach, coachNameOf, isCoachNote, onboardProfile } from './notes'
 import { hydrate, initialState } from '../store/schema'
 import { cardMastery, isDue, schedule } from './srs'
 import { speedToBpm, bpmToSpeed } from './audio'
@@ -183,10 +198,18 @@ describe('quiz', () => {
     expect(mentionsEvidence('Quelles sont les trois preuves du Démon ?')).toBe(true)
     expect(mentionsEvidence('Tu as EMF 5 + Spirit Box, et l’entité traverse le sel.')).toBe(true)
     expect(mentionsEvidence('Comment se manifeste le D.O.T.S d’un Goryo ?')).toBe(true)
+    // une réponse de la Spirit Box (voix, respiration du Deogen) est la preuve elle-même
+    expect(mentionsEvidence('Dans quelles conditions entends-tu la respiration du Deogen à la Spirit Box ?')).toBe(true)
+    expect(mentionsEvidence('Où se déclenchent les capteurs de mouvement et les réponses à la Spirit Box ?')).toBe(true)
+    expect(mentionsEvidence('Mêmes températures glaciales.')).toBe(true)
     // ce qui se joue sans preuve reste
     expect(mentionsEvidence('Partie à 0 preuve : tu vois des orbes dans la pièce favorite.')).toBe(false)
-    expect(mentionsEvidence('Dans quelles conditions entends-tu la respiration du Deogen à la Spirit Box ?')).toBe(false)
     expect(mentionsEvidence('Un EMF 2 apparaît près de toi sans interaction.')).toBe(false)
+    expect(mentionsEvidence('Le Moroi maudit qui l’entend au micro parabolique.')).toBe(false)
+    // « sous 0 °C » est une vitesse du Hantu (thermomètre), pas la preuve « températures glaciales »
+    expect(evidenceIn('Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?')).toEqual([])
+    expect(mentionsEvidence('Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?')).toBe(false)
+    expect(mentionsEvidence('Il souffle une buée glacée en chasse, disjoncteur coupé.')).toBe(false)
   })
 
   it('retire des confusions ce qui parle de preuves', () => {
@@ -300,6 +323,214 @@ describe('quiz', () => {
     expect(buildReviewQueue(state, deck, T0).some((c) => c.id === 'g:spirit:ev' || c.id === 'g:goryo:forced')).toBe(false)
     expect(learnedCount(deck, state.cards)).toBe(0)
     expect(ghostMastery('spirit', deck, state)).toBe(0)
+  })
+})
+
+describe('révision et quiz : seulement ce qui sert sans preuve', () => {
+  /** Une entité de test, bâtie sur une vraie fiche. */
+  const fake = (patch: Partial<Ghost>): Ghost => ({ ...GHOSTS[0], ...patch })
+  const ghost = (id: string) => getGhost(id)!
+  /** Toutes les questions de tous les thèmes, sur plusieurs tirages (calculées une fois). */
+  let everything: Question[] = []
+  beforeAll(() => {
+    const out = new Map<string, Question>()
+    for (let seed = 1; seed <= 8; seed++) {
+      for (const t of QUIZ_TOPICS) {
+        for (const q of buildQuiz({ topics: [t.id], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 40, rng: createRng(seed * 37) })) {
+          out.set(q.id + q.choices.map((c) => c.id).join(), q)
+        }
+      }
+    }
+    everything = [...out.values()]
+  }, 60_000)
+  const wrongChoices = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id))
+
+  it('un test qui passe par une preuve n’est ni une carte ni une question', () => {
+    const g = fake({
+      id: 'x-test',
+      confirmationTests: [
+        { text: 'Lance un chronomètre après l’encens : si elle chasse avant 60 s, c’est elle.', definitive: true },
+        { text: 'Passe la lampe UV sur les interrupteurs : une double empreinte la désigne.', definitive: true },
+        { text: 'Pose des questions à la Spirit Box : si tu entends une respiration lourde, c’est elle.', definitive: true },
+        { text: 'Pose un tas de sel et écoute ses pas.', definitive: true, requires: 'uv' },
+        { text: 'Filme-la quand elle est visible dans le D.O.T.S.', definitive: true },
+        { text: 'Si le thermomètre affiche des températures glaciales, c’est elle.', definitive: true },
+        { text: 'Peut-être elle.', definitive: false },
+        { text: 'En partie à 0 preuve, cherche des orbes dans la pièce favorite.', definitive: true },
+      ],
+    })
+    // k : rang parmi les tests définitifs (identifiant de carte stable)
+    expect(zeroTests(g).map((t) => t.k)).toEqual([0, 6])
+    expect(ghostCards(g, 0).filter((c) => c.kind === 'test').map((c) => c.id)).toEqual(['g:x-test:test:0', 'g:x-test:test:6'])
+    for (const gh of GHOSTS) {
+      for (const t of zeroTests(gh)) {
+        expect(needsEvidence(t.text), `${gh.id} : ${t.text}`).toBe(false)
+        expect(gh.confirmationTests.find((c) => c.text === t.text)?.requires, t.text).toBeUndefined()
+      }
+    }
+  })
+
+  it('les signes clés ne gardent rien qui passe par une preuve, avec « leurs » pour un nom au pluriel', () => {
+    const g = fake({
+      keyTells: [
+        'Ne change jamais de pièce favorite',
+        'Silhouette D.O.T.S visible uniquement à la caméra vidéo',
+        'Respiration lourde à la Spirit Box à moins d’1 m',
+        'Empreintes spéciales : main à 6 doigts',
+        'Toujours des orbes dans sa pièce, même en partie à 0 preuve',
+      ],
+    })
+    expect(ghostCards(g, 0).find((c) => c.kind === 'tells')?.backList).toEqual([
+      'Ne change jamais de pièce favorite',
+      'Toujours des orbes dans sa pièce, même en partie à 0 preuve',
+    ])
+    const deck = buildDeck(GHOSTS, MECHANICS, [])
+    for (const c of deck.filter((c) => c.kind === 'tells' || c.kind === 'reverse' || c.kind === 'test')) {
+      for (const t of [c.quote ?? '', ...(c.kind === 'tells' ? (c.backList ?? []) : [c.back])]) expect(needsEvidence(t), `${c.id} : ${t}`).toBe(false)
+    }
+    expect(deck.find((c) => c.id === 'g:the-twins:tells')?.front).toMatch(/Cite leurs signes clés\.$/u)
+    expect(deck.find((c) => c.id === 'g:demon:tells')?.front).toMatch(/Cite ses signes clés\.$/u)
+  })
+
+  it('une carte « quelle entité correspond à ce signe ? » ne vaut que pour une entité', () => {
+    const z = (text: string) => ({ text, zeroEvidence: true })
+    const empty = { keyTells: [], abilities: [], behaviors: [], observations: [], confirmationTests: [] }
+    const b = fake({
+      ...empty,
+      id: 'b',
+      name: 'Bbb',
+      nameEn: 'Bbb',
+      tells: [z('Est plus visible pendant les chasses : son clignotement dure plus longtemps.')],
+      behaviors: [z('Ne fait jamais l’événement de poursuite ni l’événement « brouillard fantomatique » (bulle d’air).')],
+    })
+    const a = fake({
+      ...empty,
+      id: 'a',
+      name: 'Aaa',
+      nameEn: 'Aaa',
+      tells: [
+        z('Plus visible pendant les chasses.'), // l'autre aussi
+        z('Ne fait pas l’événement « brouillard fantomatique » (bulle d’air).'), // l'autre aussi
+        z('N’apparaît sur aucune vidéo de type « Aaa ».'), // le nom reste entre « »
+        z('Comme la Bbb, ne fait jamais d’événement de chant.'), // nomme une autre entité
+        z('Disparaît quand tu la prends en photo (y compris en état D.O.T.S).'), // l'aparté s'en va
+        z('Moins visible pendant les chasses.'), // « moins » n'est pas « plus »
+      ],
+    })
+    const all = [a, b]
+    expect(reverseTells(a, all)).toEqual([
+      { text: 'Disparaît quand tu la prends en photo.', k: 4 },
+      { text: 'Moins visible pendant les chasses.', k: 5 },
+    ])
+    expect(ghostCards(a, 0, all).filter((c) => c.kind === 'reverse').map((c) => c.id)).toEqual(['g:a:rev:4', 'g:a:rev:5'])
+    // chaque question renvoie vers une carte qui existe
+    const ids = new Set(buildDeck(GHOSTS, MECHANICS, []).map((c) => c.id))
+    for (const q of everything) if (q.cardId) expect(ids.has(q.cardId), `${q.id} → ${q.cardId}`).toBe(true)
+  })
+
+  it('le caviardage ne touche jamais à ce qui est entre « », et le quiz ne cite pas un tel nom', () => {
+    const phantom = ghost('phantom')
+    expect(redactGhostName('Une vidéo de type « Fantôme » : le Fantôme disparaît.', phantom)).toBe('Une vidéo de type « Fantôme » : cette entité disparaît.')
+    expect(redactGhostName('Il sort de la vidéo « Fantôme translucide ».', phantom)).toBe('Il sort de la vidéo « Fantôme translucide ».')
+    expect(namesGhost('Une vidéo de type « Fantôme ».', phantom)).toBe(true)
+    expect(namesGhost('Une vidéo de type « Cri paranormal ».', phantom)).toBe(false)
+    const leaks = (text: string, g: Ghost) =>
+      [g.name, g.nameEn, g.name.replace(/^(Le|Les|La) /, ''), g.nameEn.replace(/^The /, '')]
+        .filter((n) => n.length > 3)
+        .some((n) => new RegExp(`(?<![\\p{L}])${n}(?![\\p{L}])`, 'u').test(text))
+    let quoted = 0
+    for (const q of everything) {
+      // « Quelle entité … ? » : ni l'énoncé ni la citation ne nomment l'entité (« Quel est le seuil du Raiju ? » la nomme exprès)
+      if (!q.ghostId || !/^q:(?:tell|obs|abil|zero|sanp|spdp):/u.test(q.id)) continue
+      quoted++
+      expect(leaks(`${q.prompt} ${q.quote ?? ''}`, ghost(q.ghostId)), `${q.id} : ${q.prompt} ${q.quote ?? ''}`).toBe(false)
+    }
+    expect(quoted).toBeGreaterThan(100)
+  })
+
+  it('aucune mauvaise réponse n’est vraie aussi de l’entité demandée', () => {
+    let dist = 0
+    for (const q of everything) {
+      const g = ghost(q.ghostId ?? 'spirit')
+      for (const c of wrongChoices(q)) {
+        const o = getGhost(c.id)
+        // « Il chasse à 1,7 m/s et à 50 % » face au Myling
+        if (q.id.startsWith('q:dist:')) expect(numbersFit(c.label, g), `${q.id} : ${c.label}`).toBe(false)
+        // « 50 % » face au Raiju (50 %, 65 % près de l'électronique), « 1,7 m/s · accélère en LdV » face à sa vitesse
+        if (q.id.startsWith('q:san:')) expect([...thresholds(o!)].every((v) => thresholds(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
+        if (q.id.startsWith('q:spd:')) expect([...speedValues(o!)].every((v) => speedValues(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
+        // une entité nommée dans le test (« le Deogen est lui aussi plus visible ») ne sert pas de mauvaise réponse
+        if (q.id.startsWith('q:zero:')) expect(namesGhost(q.quote ?? '', o!), `${q.id} : ${c.id}`).toBe(false)
+      }
+      if (q.id.startsWith('q:dist:')) dist++
+    }
+    expect(dist).toBeGreaterThan(50)
+    // la ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) n'a pas de réponse oui/non
+    const los = everything.filter((q) => q.id.startsWith('q:los:'))
+    expect(los.length).toBeGreaterThan(10)
+    for (const q of los) expect(ghost(q.ghostId!).speed.losVaries, q.id).toBeFalsy()
+  })
+
+  it('un pronom de l’énoncé n’écarte aucune réponse d’emblée', () => {
+    /** Les fiches, où le seul signe 0 preuve de l'entité est remplacé. */
+    const withTell = (id: string, text: string) => {
+      const all = GHOSTS.map((g) => (g.id === id ? { ...g, tells: [{ text, zeroEvidence: true }] } : g))
+      const g = all.find((x) => x.id === id)!
+      const qs: Question[] = []
+      for (let seed = 1; seed <= 30; seed++) {
+        qs.push(...buildQuiz({ topics: ['behavior'], ghosts: [g], allGhosts: all, mechanics: MECHANICS, count: 6, rng: createRng(seed) }))
+      }
+      return qs.filter((q) => q.id.startsWith('q:tell:'))
+    }
+    const genders = (qs: Question[]) => new Set(qs.flatMap((q) => q.choices.map((c) => isFeminine(ghost(c.id).name))))
+    // « il » : aucune entité féminine parmi les choix
+    const masc = withTell('yurei', 'Quand il touche une porte de sortie, il la referme complètement.')
+    expect(masc.length).toBeGreaterThan(0)
+    expect(genders(masc)).toEqual(new Set([false]))
+    // « elle » : il n'y a pas trois autres entités féminines, donc pas de question plutôt qu'une réponse soufflée
+    for (const q of withTell('banshee', 'Elle ne poursuit que sa cible, même quand elle traverse la carte.')) {
+      expect(genders([q]), q.id).toEqual(new Set([true]))
+    }
+    // « elle » qui ne désigne pas l'entité (une porte, pour une entité masculine) : on n'en tient pas compte
+    expect(genders(withTell('yurei', 'Touche une porte de sortie : elle se referme complètement.'))).toEqual(new Set([true, false]))
+    // dans les vraies fiches, un pronom qui désigne l'entité garde des choix du même genre
+    const fem = (t: string) => /(?:^|[\s(])[Ee]lles?\b/u.test(t)
+    const mas = (t: string) => /(?:^|[\s(])(?:[Ii]ls?|[Ll]ui)\b(?!\s+(?:faut|suffit|y\s+a)\b)/u.test(t)
+    for (const q of everything) {
+      if (!/^q:(?:tell|obs|abil|zero|sanp|spdp):/u.test(q.id)) continue
+      const text = `${q.prompt} ${q.quote ?? ''}`
+      const gender = fem(text) && !mas(text) ? true : mas(text) && !fem(text) ? false : null
+      if (gender == null || isFeminine(ghost(q.ghostId!).name) !== gender) continue
+      for (const c of q.choices) expect(isFeminine(ghost(c.id).name), `${q.id} : ${c.id} — ${text}`).toBe(gender)
+    }
+  })
+
+  it('départager deux entités : des phrases entières, sans conseil flou ni « Mais » en tête', () => {
+    // la proposition qui portait le point est retirée : la phrase garde le sien
+    expect(confusionWithoutEvidence('Lui aussi est très rapide en début de partie ; UV + D.O.T.S en commun. Il chasse à 50 %.')).toBe(
+      'Lui aussi est très rapide en début de partie. Il chasse à 50 %.',
+    )
+    const [yokai, demon, thaye, deildegast] = ['yokai', 'demon', 'thaye', 'deildegast'].map(ghost)
+    expect(partnerClaim('Le Thayé ralentit en vieillissant ; le Deildegast, lui, ralentit selon les objets. Le Thayé chasse à 75 % jeune.', deildegast, thaye)).toBe(
+      'Le Thayé ralentit en vieillissant. Le Thayé chasse à 75 % jeune.',
+    )
+    // « pense plutôt à l'autre », ou deux « l'autre » : la réponse ne désigne plus personne
+    expect(partnerClaim('Le Démon est un chasseur précoce lui aussi. Si personne ne parlait dans la pièce, pense plutôt à lui.', yokai, demon)).toBe('')
+    expect(partnerClaim('Le Démon chasse tôt, et l’autre aussi quand on lui parle longtemps.', yokai, demon)).toBe('')
+    expect(partnerClaim('Il chasse vers 75 %, et l’autre aussi ; l’autre peut chasser à toute santé mentale.', yokai, demon)).toBe('')
+    expect(partnerClaim('Le Démon chasse dès 70 % même quand personne ne parle et rechasse 60 s après l’encens.', yokai, demon)).toBe(
+      'Le Démon chasse dès 70 % même quand personne ne parle et rechasse 60 s après l’encens.',
+    )
+    for (const q of everything) {
+      expect(q.explain, q.id).not.toMatch(/^(?:[^:]{1,40}:\s*)?Mais\b/iu)
+      if (!q.id.startsWith('q:dist:')) continue
+      for (const c of q.choices) {
+        expect(c.label, q.id).toMatch(/[.!?…]$/u)
+        expect(c.label, q.id).not.toMatch(/pense plutôt/iu)
+        // une phrase coupée garde son point avant la suivante
+        expect(c.label, q.id).not.toMatch(/[\p{Ll}\d)] (?:Il|Elle|Ils|L’autre) /u)
+      }
+    }
   })
 })
 
@@ -542,6 +773,41 @@ describe('carnet à deux (facultatif)', () => {
     expect(adoptCoach(coached, 'Max')).toBe(coached)
     const coach = { ...solo, name: 'Ryz', role: 'coach' as const }
     expect(adoptCoach(coach, 'Léa')).toBe(coach)
+  })
+
+  it('ne devient jamais sa propre coach', () => {
+    // ses notes transférées sur un nouvel appareil, avant d'y avoir donné son prénom : rien ne change
+    const blank = { ...solo, name: '' }
+    // le lien d'un coach ouvert avant de donner son prénom fait bien de l'expéditeur son coach…
+    expect(adoptCoach(blank, 'Ryz')).toMatchObject({ role: 'student', coachName: 'Ryz' })
+    // …et ses propres notes passées d'un appareil à l'autre ne la rendent pas « coachée par elle-même »
+    expect(onboardProfile(adoptCoach(blank, 'Inès'), { name: 'Inès' })).toMatchObject({ name: 'Inès', role: 'solo', coachName: '' })
+    // un carnet déjà « coaché par soi-même » se corrige à l'ouverture
+    const selfCoached = { ...blank, role: 'student' as const, coachName: 'Inès' }
+    expect(onboardProfile(selfCoached, { name: 'inès' })).toMatchObject({ name: 'inès', role: 'solo', coachName: '' })
+    // un vrai coach reste son coach, et qui s'entraîne seul·e le reste
+    expect(onboardProfile({ ...blank, role: 'student', coachName: 'Ryz' }, { name: 'Léa' })).toMatchObject({ name: 'Léa', role: 'student', coachName: 'Ryz' })
+    expect(onboardProfile(blank, { name: 'Léa' })).toMatchObject({ name: 'Léa', role: 'solo', coachName: '' })
+  })
+
+  it('montre les notes du coach avant les siennes, et une note du coach toute neuve avant les cartes dues', () => {
+    const profile = { ...solo, role: 'student' as const, coachName: 'Ryz' }
+    // dans le carnet, la plus récente d'abord : sa propre note, écrite après celle du coach
+    const notes = [note('own', 'Léa', T0 + DAY), note('coach', 'Ryz', T0)]
+    expect(noteCards(notes).map((c) => c.author)).toEqual(['Léa', 'Ryz'])
+    const deck = buildDeck(GHOSTS, MECHANICS, notes)
+    const base = initialState(T0)
+    const state = { ...base, profile, notes }
+    expect(unseenCards(deck, state.cards, state.settings, profile).slice(0, 2).map((c) => c.id)).toEqual(['n:coach', 'n:own'])
+    // sans coach, l'ordre du carnet reste
+    expect(unseenCards(deck, state.cards, state.settings, solo).slice(0, 2).map((c) => c.id)).toEqual(['n:own', 'n:coach'])
+    // des cartes dues : la note du coach passe devant, sa propre note s'intercale comme les autres nouvelles
+    const old = schedule(schedule(undefined, 4, T0 - 30 * DAY), 4, T0 - 20 * DAY)
+    const dueIds = deck.filter((c) => c.deck === 'ghost').slice(0, 6).map((c) => c.id)
+    const queue = buildReviewQueue({ ...state, cards: Object.fromEntries(dueIds.map((id) => [id, old])) }, deck, T0).map((c) => c.id)
+    expect(queue[0]).toBe('n:coach')
+    expect(queue.slice(1, 4)).toEqual(dueIds.slice(0, 3))
+    expect(queue[4]).toBe('n:own')
   })
 
   it('résume les notes du coach et ce qui reste à partager', () => {

@@ -41,17 +41,17 @@
       "zeroEvidence": true
     },
     {
-      "text": "Ne fait pas l'événement « brouillard fantomatique » (bulle d'air).",
+      "text": "Ne fait jamais l'événement « brouillard fantomatique » (bulle d'air), tout en restant plus visible que la normale en chasse.",
       "zeroEvidence": true
     },
     {
-      "text": "Est plus visible pendant les chasses : son clignotement le laisse apparent plus longtemps que les autres entités.",
+      "text": "Est plus visible pendant les chasses : reste visible plus longtemps que les autres entités à chaque clignotement.",
       "zeroEvidence": true
     }
   ],
   "behaviors": [
     {
-      "text": "Plus actif quand plusieurs personnes sont à proximité.",
+      "text": "Plus d'activité quand plusieurs personnes sont à proximité.",
       "zeroEvidence": true
     },
     {
@@ -62,11 +62,11 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Observe l'entité pendant une chasse : si elle est plus visible que la normale, c'est un Oni (le Deogen est lui aussi plus visible en chasse, mais sa vitesse est complètement différente).",
+      "text": "Observe l'entité pendant une chasse : si l'entité est plus visible que la normale tout en gardant une vitesse standard, c'est un Oni (le Deogen aussi est plus visible en chasse, mais sa vitesse est complètement différente).",
       "definitive": true
     },
     {
-      "text": "Si l'affichage de la santé mentale est activé, vérifie-la après un événement : si elle a baissé de 20 % au lieu de 10 %, c'est un Oni.",
+      "text": "Si l'affichage de la santé mentale est activé, relève ta santé mentale juste avant et juste après un événement : une baisse de 20 % au lieu de 10 % désigne un Oni.",
       "definitive": true
     }
   ],
@@ -78,7 +78,7 @@
   "confusions": [
     {
       "with": "deogen",
-      "why": "Le Deogen est aussi plus visible en chasse, mais il fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi ; il peut aussi respirer bruyamment dans la Spirit Box."
+      "why": "Le Deogen est aussi plus visible en chasse, mais il fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi."
     },
     {
       "with": "phantom",
@@ -132,7 +132,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et elle avance à un pas normal qui ne ralentit pas quand elle arrive sur toi.",
+      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et son pas reste normal, sans ralentir une fois sur toi.",
       "kind": "hunt",
       "strength": "definitive"
     },

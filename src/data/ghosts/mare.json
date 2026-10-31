@@ -42,7 +42,7 @@
   ],
   "tells": [
     {
-      "text": "Ne chasse pas avant 40 % de santé mentale moyenne quand l'interrupteur de la pièce où il se trouve est en position allumée (quel que soit l'état du disjoncteur) ; chasse dès 60 % si l'interrupteur est en position éteinte ou si les ampoules sont cassées (quelle que soit la position de l'interrupteur).",
+      "text": "Ne chasse pas avant 40 % de santé mentale moyenne quand l'interrupteur de la pièce où se trouve l'entité est en position allumée (quel que soit l'état du disjoncteur) ; chasse dès 60 % si l'interrupteur est en position éteinte ou si les ampoules sont cassées (quelle que soit la position de l'interrupteur).",
       "zeroEvidence": true
     },
     {
@@ -52,7 +52,7 @@
   ],
   "behaviors": [
     {
-      "text": "Erre davantage quand les lumières de la pièce où il se trouve sont allumées, ce qui le pousse à en sortir plus souvent, sans préférence particulière pour une pièce sombre.",
+      "text": "Erre davantage quand la lumière est allumée dans la pièce où se trouve l'entité, et en sort donc plus souvent, sans préférence particulière pour une pièce sombre.",
       "zeroEvidence": true
     },
     {
@@ -60,7 +60,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Ne peut pas allumer les lumières, téléviseurs et ordinateurs compris (les lumières à détecteur de mouvement font exception). Les notes de patch annonçaient qu'il pourrait allumer téléviseurs et ordinateurs : en pratique, il ne le peut pas.",
+      "text": "Ne peut pas allumer les lumières, téléviseurs et ordinateurs compris (les lumières à détecteur de mouvement font exception). Les notes de patch annonçaient l'allumage des téléviseurs et ordinateurs : en pratique, c'est impossible.",
       "zeroEvidence": true
     }
   ],
@@ -76,7 +76,7 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pendant un événement de l'entité, allume les interrupteurs à moins de 4 m d'elle. Si elle les éteint alors que l'événement continue, c'est un Cauchemar.",
+      "text": "Pendant un événement, allume les interrupteurs à moins de 4 m de l'entité. Si l'entité les éteint alors que l'événement continue, c'est un Cauchemar.",
       "definitive": true
     },
     {
@@ -115,7 +115,7 @@
     },
     {
       "with": "moroi",
-      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse. 3e preuve : températures glaciales vs orbes."
+      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend au microphone parabolique et devient très rapide quand la santé moyenne baisse. 3e preuve : températures glaciales vs orbes."
     },
     {
       "with": "deogen",
@@ -123,7 +123,7 @@
     },
     {
       "with": "thaye",
-      "why": "Orbes + écriture en commun. Le Thayé jeune chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : D.O.T.S vs Spirit Box."
+      "why": "Orbes + écriture en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : D.O.T.S vs Spirit Box."
     },
     {
       "with": "hantu",

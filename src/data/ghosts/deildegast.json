@@ -54,11 +54,11 @@
   ],
   "behaviors": [
     {
-      "text": "Comptent pour le ralentir : ramasser un objet hors équipement (joueur vivant ou mort), interagir avec un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
+      "text": "Ce qui ralentit sa prochaine chasse : ramasser un objet hors équipement (joueur vivant ou mort), ou utiliser un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
       "zeroEvidence": true
     },
     {
-      "text": "Chaque objet ne compte qu'une fois, mais il peut être n'importe où sur la carte, y compris hors de la zone d'enquête ou dans le camion.",
+      "text": "Chaque objet utilisé ne ralentit sa prochaine chasse qu'une fois, où que se trouve l'objet sur la carte (même hors de la zone d'enquête ou dans le camion).",
       "zeroEvidence": true
     },
     {
@@ -66,7 +66,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Les objets qu'il lance lui-même ne le ralentissent pas : seuls ceux manipulés par les joueurs comptent.",
+      "text": "Les objets lancés par l'entité ne ralentissent pas sa prochaine chasse : seuls ceux manipulés par les joueurs comptent.",
       "zeroEvidence": true
     }
   ],
@@ -85,7 +85,7 @@
       "definitive": false
     },
     {
-      "text": "Après une chasse lente, ne touche plus à rien : si la chasse suivante redevient très rapide (3,0 m/s) et que cette vitesse ne change pas de toute la chasse, c'est un Deildegast (un Thayé, lui, ne redevient jamais plus rapide).",
+      "text": "Après une chasse lente, ne touche plus à rien : si la chasse suivante redevient très rapide (3,0 m/s) et que cette vitesse ne change pas de toute la chasse, c'est un Deildegast (un Thayé ne redevient jamais plus rapide).",
       "definitive": true
     }
   ],
@@ -162,7 +162,7 @@
       "strength": "strong"
     },
     {
-      "text": "Pendant toute la chasse, sa vitesse ne bouge pas : elle n'accélère pas quand elle te voit et ne ralentit pas en arrivant sur toi.",
+      "text": "Pendant toute la chasse, la vitesse de l'entité ne bouge pas : pas d'accélération quand elle te voit, pas de ralentissement en arrivant sur toi.",
       "kind": "hunt",
       "strength": "strong"
     },

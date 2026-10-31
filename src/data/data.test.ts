@@ -6,6 +6,40 @@ import { EVIDENCE_IDS } from './evidence'
 const EVIDENCE_NAMES = [/\bEMF (niveau )?5\b/i, /D\.O\.T\.S/i, /\bUV\b|ultraviolet/i, /glaciales?\b/i, /\borbes?\b/i, /écriture/i, /spirit box/i]
 const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, ' ').replace(/\u2019/g, "'")
 const evidenceNames = (s: string) => EVIDENCE_NAMES.filter((re) => re.test(plain(s))).length
+const ORBS = EVIDENCE_NAMES[4]
+/**
+ * Les preuves qu'un texte fait relever (empreintes comprises). Les orbes restent permises pour le Mimic :
+ * ses faux orbes se cherchent justement en partie à 0 preuve. Le livre d'écriture, lui, est un objet qu'on pose.
+ */
+const evidenceCited = (s: string, ghostId = '') => {
+  const t = plain(s).replace(/livres? d'écriture/gi, 'livre')
+  return [...EVIDENCE_NAMES, /empreintes?/i].filter((re) => !(ghostId === 'the-mimic' && re === ORBS) && re.test(t)).map(String)
+}
+
+/** « il », « elle », « lui » (comme les repère le quiz) : dans une citation, le pronom trahirait le genre de l'entité. */
+const PRONOUN = /(?:^|[\s(])(?:ils?|elles?|lui)\b/i
+/** Le nom commun qui souffle l'entité (le caviardage ne touche qu'au nom propre, avec sa majuscule). */
+const OWN_NOUN: Record<string, RegExp> = {
+  shade: /\bombres?\b/,
+  'the-twins': /\bjumea(?:u|ux)\b/,
+  phantom: /\bfantômes?\b/,
+  spirit: /\besprits?\b/,
+  wraith: /\bspectres?\b/,
+  demon: /\bdémons?\b/,
+  mare: /\bcauchemars?\b/,
+  'the-mimic': /\bmimic\b/,
+}
+
+/** Ce que le quiz et les cartes citent sans nommer l'entité : signes et capacités « 0 preuve », tests et observations décisifs, profils. */
+function quotable(g: (typeof GHOSTS)[number]): string[] {
+  return [
+    ...[...g.tells, ...g.abilities, ...g.behaviors].filter((t) => t.zeroEvidence).map((t) => t.text),
+    ...g.confirmationTests.filter((t) => t.definitive && !t.requires).map((t) => t.text),
+    ...g.observations.filter((o) => o.strength === 'definitive' && !o.requires).map((o) => o.text),
+    g.speed.summary,
+    g.huntSanity.summary,
+  ]
+}
 
 /**
  * Validation du jeu de données : à relancer après chaque mise à jour des fiches
@@ -75,10 +109,45 @@ describe('fiches des entités', () => {
         }
       })
 
-      it('a des signes clés qui décrivent un comportement, pas ses preuves', () => {
+      // la révision ne garde que ce qui sert sans preuve : les preuves restent visibles dans le codex
+      it('a des signes clés et un résumé qui décrivent un comportement, pas ses preuves', () => {
         for (const t of g.keyTells) {
-          expect(evidenceNames(t), t).toBeLessThan(2)
+          expect(evidenceCited(t, g.id), t).toEqual([])
           expect(plain(t), t).not.toMatch(/garanti/i)
+        }
+        expect(evidenceCited(g.summary, g.id), g.summary).toEqual([])
+      })
+
+      it('a des signes et capacités « 0 preuve » qui ne passent par aucune preuve', () => {
+        for (const t of [...g.tells, ...g.abilities, ...g.behaviors].filter((x) => x.zeroEvidence)) {
+          expect(evidenceCited(t.text, g.id), t.text).toEqual([])
+        }
+      })
+
+      it('signale la preuve dont dépend un test ou une observation', () => {
+        const items = [...g.confirmationTests.filter((t) => t.definitive), ...g.observations]
+        for (const t of items) {
+          if (t.requires) {
+            expect(EVIDENCE_IDS, t.text).toContain(t.requires)
+            expect(g.evidence, t.text).toContain(t.requires)
+            continue
+          }
+          // « Si tu trouves plus de preuves que… » : un test sur les preuves trouvées, déjà écarté du sans-preuve
+          const first = plain(t.text).split(/(?<=[.!?])\s+/)[0].replace(/\b(?:0|sans|aucune) preuves?\b/gi, '')
+          if (/\bpreuves?\b/i.test(first)) continue
+          expect(evidenceCited(t.text, g.id), t.text).toEqual([])
+        }
+      })
+
+      it('a des citations qui ne trahissent ni son genre ni son nom', () => {
+        const bare = (n: string) => n.replace(/^(The |Le |Les |La |L['’])/, '')
+        const names = [g.name, bare(g.name), g.nameEn, bare(g.nameEn)].filter((n) => n.length > 2)
+        for (const t of quotable(g)) {
+          const s = plain(t)
+          expect(s, t).not.toMatch(PRONOUN)
+          if (OWN_NOUN[g.id]) expect(s, t).not.toMatch(OWN_NOUN[g.id])
+          // un libellé entre « » (média du journal…) garde son nom : il soufflerait la réponse
+          for (const [, label] of s.matchAll(/«([^»]*)»/g)) for (const n of names) expect(label, t).not.toContain(n)
         }
       })
 
@@ -126,5 +195,15 @@ describe('mécaniques', () => {
     for (const t of MECHANICS.topics.filter((t) => t.id !== 'equipement' && t.id !== 'preuves')) {
       for (const f of t.facts as Flagged[]) expect(f.evidence, f.id).toBeUndefined()
     }
+  })
+
+  // une carte ou une question qui fait relever une preuve (empreinte de l'Obake, neige et orbes, respiration
+  // sous 5 °C) est « bon à savoir » ; seules les orbes restent, car le Mimic s'y repère même à 0 preuve
+  it('ne retient aucun fait qui fait relever une preuve, hormis les orbes du Mimic', () => {
+    const notOrbs = (s: string) => evidenceCited(s).filter((re) => re !== String(ORBS))
+    for (const t of MECHANICS.topics) {
+      for (const f of t.facts.filter((x) => !x.evidence)) expect(notOrbs(`${f.q} ${f.a}`), f.id).toEqual([])
+    }
+    for (const tf of MECHANICS.trueFalse.filter((x) => !x.evidence)) expect(notOrbs(tf.claim), tf.id).toEqual([])
   })
 })

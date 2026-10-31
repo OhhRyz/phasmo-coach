@@ -41,7 +41,7 @@
   ],
   "tells": [
     {
-      "text": "Presque aveugle : en chasse, il ne voit un joueur (et ne gagne de la vitesse en LdV) que si ce joueur bouge à moins de 5 m de lui.",
+      "text": "Presque aveugle : en chasse, ne voit un joueur (et ne gagne de la vitesse en LdV) que si ce joueur bouge à moins de 5 m.",
       "zeroEvidence": true
     },
     {
@@ -49,13 +49,13 @@
       "zeroEvidence": true
     },
     {
-      "text": "Si tu restes complètement immobile sans faire de bruit au micro, il ne peut pas te détecter (tu peux quand même mourir s'il passe sur toi par hasard).",
+      "text": "Ne peut pas te détecter si tu restes complètement immobile sans faire de bruit au micro (tu peux quand même mourir si l'entité passe sur toi par hasard).",
       "zeroEvidence": true
     }
   ],
   "behaviors": [
     {
-      "text": "Après avoir détecté un joueur, il se déplace à la vitesse correspondante jusqu'à la dernière position connue de ce joueur.",
+      "text": "Après avoir détecté un joueur à plus de 5 m (bruit de pas, voix, électronique), file à 2,21 m/s vers la dernière position connue de ce joueur, jusqu'à l'atteindre.",
       "zeroEvidence": true
     },
     {
@@ -69,13 +69,13 @@
   ],
   "abilities": [
     {
-      "text": "Son seuil de chasse passe de 50 % à 70 % si un joueur sprinte dans la même pièce que lui.",
+      "text": "Son seuil de chasse passe de 50 % à 70 % si un joueur sprinte dans la même pièce que l'entité.",
       "zeroEvidence": true
     }
   ],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse, avant qu'il ne t'ait repéré, reste totalement immobile et silencieux (micro coupé, aucun appareil électronique actif) dans un endroit dégagé. Si l'entité passe à proximité sans se diriger vers toi, puis te trouve dès que tu te remets à marcher, c'est un Kormos.",
+      "text": "Pendant une chasse, avant d'être repéré, reste totalement immobile et silencieux (micro coupé, aucun appareil électronique actif) dans un endroit dégagé. Si l'entité passe à proximité sans se diriger vers toi, puis te trouve dès que tu te remets à marcher, c'est un Kormos.",
       "definitive": true
     },
     {

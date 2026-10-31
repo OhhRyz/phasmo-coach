@@ -35,11 +35,11 @@
   ],
   "tells": [
     {
-      "text": "Seule entité qui peut fermer une porte de sortie, ou interagir avec elle, en dehors d'une chasse ou d'un événement.",
+      "text": "Seule entité qui peut fermer ou toucher une porte de sortie en dehors d'une chasse ou d'un événement.",
       "zeroEvidence": true
     },
     {
-      "text": "Doit ouvrir ou fermer complètement une porte quand il interagit avec elle (en dehors d'une chasse).",
+      "text": "Doit ouvrir ou fermer complètement chaque porte touchée (en dehors d'une chasse).",
       "zeroEvidence": true
     }
   ],
@@ -50,7 +50,7 @@
     },
     {
       "text": "Ne peut pas donner la preuve D.O.T.S sous les effets d'un encens (90 s).",
-      "zeroEvidence": true
+      "zeroEvidence": false
     },
     {
       "text": "Bug connu : peut ouvrir partiellement les portes de casier.",
@@ -129,7 +129,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Tu regardes la porte de sortie, restée grande ouverte : elle pivote toute seule et se referme complètement, d'un seul mouvement, alors qu'aucune chasse ni aucun événement n'est en cours.",
+      "text": "Tu regardes la porte de sortie, restée grande ouverte : la porte pivote toute seule et se referme complètement, d'un seul mouvement, alors qu'aucune chasse ni aucun événement n'est en cours.",
       "kind": "interaction",
       "strength": "definitive"
     },

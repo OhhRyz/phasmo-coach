@@ -54,7 +54,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "La cible perd 15 % de santé mentale si elle touche l'entité pendant un événement de chant (10 % normalement).",
+      "text": "La cible perd 15 % de santé mentale au lieu de 10 % en touchant l'entité pendant un événement de chant.",
       "zeroEvidence": true
     },
     {
@@ -84,13 +84,13 @@
       "zeroEvidence": true
     },
     {
-      "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« Je souhaite être en vie » : il ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), elle reste la cible même morte. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, elle ne chasserait jamais), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
+      "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« Je souhaite être en vie » : ce vœu ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), ce joueur reste la cible, même mort. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, plus aucune chasse), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
       "zeroEvidence": true
     }
   ],
   "abilities": [
     {
-      "text": "66 % de chances de traquer sa cible ou d'errer vers elle sans laisser d'EMF, si la cible est à l'intérieur (elle ne peut pas la suivre d'un étage à l'autre, sauf vers un sous-sol d'une seule pièce).",
+      "text": "66 % de chances de traquer sa cible ou d'errer vers cette cible sans laisser d'EMF, si la cible est à l'intérieur (pas de suivi d'un étage à l'autre, sauf vers un sous-sol d'une seule pièce).",
       "zeroEvidence": true
     }
   ],
@@ -100,7 +100,7 @@
       "definitive": true
     },
     {
-      "text": "En multijoueur, que tout le monde soit à l'intérieur quand l'entité chasse. Si elle ne poursuit pas les joueurs qui ne sont pas sa cible, ou si ceux-ci peuvent la toucher sans mourir, c'est une Banshee.",
+      "text": "En multijoueur, que tout le monde soit à l'intérieur quand l'entité chasse. Si l'entité ne poursuit pas les joueurs qui ne sont pas sa cible, ou si ceux-ci peuvent la toucher sans mourir, c'est une Banshee.",
       "definitive": true
     },
     {
@@ -140,7 +140,7 @@
     },
     {
       "with": "thaye",
-      "why": "Orbes + D.O.T.S en commun. Le Thayé jeune chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : écriture vs UV."
+      "why": "Orbes + D.O.T.S en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : écriture vs UV."
     },
     {
       "with": "hantu",
@@ -240,7 +240,7 @@
         "Le détecteur de mouvement"
       ],
       "answer": 2,
-      "explain": "Le cri s'entend au microphone parabolique, avec 33 % de chances. Les respirations dans la Spirit Box, c'est le Deogen."
+      "explain": "Le cri s'entend au microphone parabolique (et peut aussi se capter à l'enregistreur de son), avec 33 % de chances."
     },
     {
       "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",

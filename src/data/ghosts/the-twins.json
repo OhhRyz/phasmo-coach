@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,5 ou 1,9 m/s selon le jumeau · accélère en LdV",
+    "summary": "1,5 ou 1,9 m/s selon la chasse · accélère en LdV",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
       "La vitesse lente correspondrait à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
@@ -32,7 +32,7 @@
   "keyTells": [
     "Deux interactions quasi simultanées, dont une loin de l'entité",
     "Vitesse de chasse ~1,5 ou ~1,9 m/s, qui change d'une chasse à l'autre",
-    "Capteurs, sel et Spirit Box réagissent seulement à sa position réelle"
+    "Capteurs de mouvement et sel ne réagissent qu'à sa position réelle"
   ],
   "tells": [
     { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true },
@@ -58,11 +58,11 @@
     { "with": "dayan", "why": "Même EMF 5 + Spirit Box, mais la Dayan a les orbes au lieu des glaciales ; à moins de 10 m, sa vitesse dépend de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile). Elle est toujours de sexe féminin." },
     { "with": "jinn", "why": "Même EMF 5 + glaciales, mais le Djinn a l'UV au lieu de la Spirit Box ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m." },
     { "with": "shade", "why": "Même EMF 5 + glaciales, mais l'Ombre a l'écriture au lieu de la Spirit Box ; elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
-    { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il est plus visible en chasse (il clignote plus souvent) et ne fait jamais l'événement « brouillard fantomatique »." },
+    { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il est plus visible en chasse (il reste visible plus longtemps à chaque clignotement) et ne fait jamais l'événement « brouillard fantomatique »." },
     { "with": "onryo", "why": "Même Spirit Box + glaciales, mais l'Onryo a les orbes au lieu de l'EMF ; il chasse dès 60 % et tente une chasse après chaque 3e flamme soufflée." },
     { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors avoir une vitesse proche de celle du jumeau rapide." },
     { "with": "the-mimic", "why": "Le Mimic a Spirit Box + glaciales (+ UV et de faux orbes) et copie la vitesse de l'entité qu'il imite : trouver de l'UV ou des orbes exclut les Jumeaux." },
-    { "with": "obambo", "why": "L'Obambo (écriture, UV, D.O.T.S) alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif) : en 0 preuve, ce duo de vitesses ressemble beaucoup à celui des Jumeaux. Ses seuils (10 % calme, 65 % agressif) aident à trancher." },
+    { "with": "obambo", "why": "L'Obambo (écriture, UV, D.O.T.S) a un duo de vitesses qui ressemble beaucoup à celui des Jumeaux en 0 preuve. L'Obambo alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif) selon un minuteur, parfois en pleine chasse, et chasse à 10 % (calme) ou 65 % (agressif)." },
     { "with": "aswang", "why": "L'Aswang (D.O.T.S, écriture, glaciales) chasse toujours à 1,53 m/s, comme un jumeau lent, mais sa vitesse de base ne change jamais d'une chasse à l'autre et il accélère bien plus vite en LdV." },
     { "with": "poltergeist", "why": "L'explosion du Poltergeist projette plusieurs objets d'un coup autour d'un même point, alors que les Jumeaux agissent à deux endroits éloignés. Une seule preuve en commun (Spirit Box)." }
   ],
@@ -91,13 +91,13 @@
       "q": "Vrai ou faux : les Jumeaux sont deux entités distinctes.",
       "choices": ["Faux : une seule entité avec deux portées d'interaction", "Vrai : deux entités qui chassent chacune leur tour", "Vrai : deux entités qui peuvent chasser en même temps", "Faux : une entité qui se téléporte à chaque interaction"],
       "answer": 0,
-      "explain": "C'est une seule entité qui peut interagir dans une petite et une grande portée. Les capteurs, le sel et la Spirit Box ne réagissent qu'à sa vraie position."
+      "explain": "C'est une seule entité qui peut interagir dans une petite et une grande portée. Les capteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
     },
     {
-      "q": "Où se déclenchent les capteurs de mouvement et les réponses à la Spirit Box avec les Jumeaux ?",
+      "q": "Avec les Jumeaux, où les capteurs de mouvement se déclenchent-ils et où le sel est-il perturbé ?",
       "choices": ["Uniquement à sa position physique réelle", "Aux deux endroits où elle interagit", "Uniquement dans sa portée étendue", "N'importe où sur la carte"],
       "answer": 0,
-      "explain": "Seules les interactions profitent de la portée étendue ; capteurs de mouvement, sel et Spirit Box ne réagissent qu'à l'endroit où se trouve réellement l'entité."
+      "explain": "Seules les interactions profitent de la portée étendue ; capteurs de mouvement et sel ne réagissent qu'à l'endroit où se trouve réellement l'entité."
     },
     {
       "q": "En LdV continue, quelle vitesse maximale atteint le jumeau rapide ?",

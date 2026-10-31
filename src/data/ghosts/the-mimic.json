@@ -2,7 +2,11 @@
   "id": "the-mimic",
   "name": "Le Mimic",
   "nameEn": "The Mimic",
-  "evidence": ["spiritbox", "uv", "freezing"],
+  "evidence": [
+    "spiritbox",
+    "uv",
+    "freezing"
+  ],
   "forcedEvidence": null,
   "fakeEvidence": "orbs",
   "speed": {
@@ -31,29 +35,29 @@
   },
   "summary": "Entité imitatrice qui copie le comportement d'une autre entité et en change toutes les 30 s à 2 min, mais qui se trahit par de faux orbes, présents même à 0 preuve.",
   "keyTells": [
-    "Orbes fantomatiques en plus de ses preuves, même en partie à 0 preuve",
+    "Toujours des orbes fantomatiques dans sa pièce, même en partie à 0 preuve",
     "Change d'entité imitée toutes les 30 s à 2 min",
     "Comportement qui change du tout au tout d'une chasse à l'autre",
     "Copie vitesse, seuil et capacités de l'entité imitée : ne l'élimine jamais sur sa vitesse"
   ],
   "tells": [
     {
-      "text": "Montre toujours des Orbes fantomatiques comme preuve supplémentaire, même en partie à 0 preuve.",
+      "text": "Montre toujours des orbes fantomatiques dans sa pièce favorite, même en partie à 0 preuve.",
       "zeroEvidence": true
     },
     {
-      "text": "Ses orbes se comportent exactement comme ceux des autres entités : ils restent dans la pièce favorite et n'ont aucune différence visuelle.",
-      "zeroEvidence": true
+      "text": "Ses orbes se comportent exactement comme ceux des autres entités : les orbes restent dans la pièce favorite et n'ont aucune différence visuelle.",
+      "zeroEvidence": false
     }
   ],
   "behaviors": [],
   "abilities": [
     {
-      "text": "Change de comportement toutes les 30 s à 2 min, ce qui donne un comportement incohérent selon l'entité qu'il imite à ce moment-là.",
+      "text": "Change de comportement toutes les 30 s à 2 min, ce qui donne un comportement incohérent selon l'entité imitée à ce moment-là.",
       "zeroEvidence": true
     },
     {
-      "text": "Copie le comportement et les capacités des autres entités, mais ne montre que ses propres preuves (UV, Spirit Box, Températures glaciales + faux orbes) : (presque) n'importe quel test de confirmation d'une autre entité peut donc aussi correspondre au Mimic.",
+      "text": "Copie le comportement et les capacités des autres entités, mais ne montre que ses propres preuves : (presque) n'importe quel test de confirmation d'une autre entité peut donc aussi correspondre au Mimic.",
       "zeroEvidence": true
     }
   ],
@@ -63,7 +67,7 @@
       "definitive": true
     },
     {
-      "text": "Observe le comportement de l'entité à chaque chasse. S'il change radicalement d'une chasse à l'autre (on dirait une entité différente à chaque fois), c'est le Mimic.",
+      "text": "Compare les chasses d'une même partie. Si l'entité y montre deux façons de chasser qu'aucune autre entité ne réunit (par exemple une chasse à 1,0 m/s qui passe d'un coup à 3,0 m/s quand tu es repéré, puis une autre qui fonce à 3,0 m/s et ralentit à 0,4 m/s une fois sur toi), c'est le Mimic.",
       "definitive": true
     },
     {
@@ -132,12 +136,12 @@
       "strength": "strong"
     },
     {
-      "text": "Dans le même contrat, une chasse se déroule à pas très lents (environ 1 m/s) jusqu'à ce que l'entité te repère, puis d'un coup à environ 3 m/s ; lors d'une autre chasse, elle fonce droit sur toi à environ 3 m/s puis avance presque au ralenti (environ 0,4 m/s) une fois collée à toi.",
+      "text": "Dans le même contrat, une chasse se déroule à pas très lents (environ 1 m/s) jusqu'à ce que l'entité te repère, puis d'un coup à environ 3 m/s ; lors d'une autre chasse, l'entité fonce droit sur toi à environ 3 m/s puis avance presque au ralenti (environ 0,4 m/s) une fois collée à toi.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Son activité change de nature au fil de la partie : par moments très calme, puis soudain portée sur des interactions qu'elle ne faisait pas jusque-là.",
+      "text": "L'activité de l'entité change de nature au fil de la partie : par moments très calme, puis soudain portée sur des interactions jamais vues jusque-là.",
       "kind": "behavior",
       "strength": "hint"
     },

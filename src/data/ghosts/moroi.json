@@ -2,7 +2,11 @@
   "id": "moroi",
   "name": "Moroi",
   "nameEn": "Moroi",
-  "evidence": ["spiritbox", "writing", "freezing"],
+  "evidence": [
+    "spiritbox",
+    "writing",
+    "freezing"
+  ],
   "forcedEvidence": "spiritbox",
   "fakeEvidence": null,
   "speed": {
@@ -35,7 +39,7 @@
     "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
     "Peut atteindre 3,71 m/s : l'entité la plus rapide du jeu",
     "Encens en chasse : aveuglé 7 s au lieu de 5 s",
-    "Malédiction via Spirit Box, micro parabolique ou enregistreur de son : santé qui baisse 2× plus vite"
+    "Malédiction quand tu l'entends au micro parabolique ou à l'enregistreur de son : santé qui baisse 2× plus vite"
   ],
   "tells": [
     {
@@ -72,7 +76,7 @@
       "definitive": true
     },
     {
-      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroi. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit lui aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (preuves, ou chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
+      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroi. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
       "definitive": true
     },
     {
@@ -139,7 +143,7 @@
     },
     {
       "with": "gallu",
-      "why": "Gallu : seule la Spirit Box en commun (EMF 5 + UV au lieu de l'Écriture et des Températures glaciales), mais il imite deux tests du Moroi : en état affaibli, l'encens l'aveugle 6 s, et sa vitesse change d'une chasse à l'autre (1,7 / 1,96 / 1,36 m/s). Ses changements suivent le sel, l'encens et le crucifix, pas la santé mentale."
+      "why": "Gallu : seule la Spirit Box en commun (EMF 5 + UV au lieu de l'Écriture et des Températures glaciales), mais il imite deux tests du Moroi. En état affaibli, l'encens aveugle le Gallu 6 s, et sa vitesse change d'une chasse à l'autre (1,7 / 1,96 / 1,36 m/s), mais selon le sel, l'encens et le crucifix, pas selon la santé mentale."
     }
   ],
   "observations": [
@@ -149,7 +153,7 @@
       "strength": "strong"
     },
     {
-      "text": "En pleine chasse, tu l'encenses (encens de rang 1) : elle reste désorientée nettement plus longtemps que d'habitude, environ 7 s au lieu de 5, avant de reprendre sa traque.",
+      "text": "En pleine chasse, tu encenses l'entité (encens de rang 1) : elle reste désorientée nettement plus longtemps que d'habitude, environ 7 s au lieu de 5, avant de reprendre sa traque.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -219,11 +223,11 @@
       "choices": [
         "En le prenant en photo",
         "En marchant dans son sel",
-        "En entendant sa réponse à la Spirit Box, ou un son paranormal au micro parabolique ou à l'enregistreur de son",
+        "En entendant un de ses sons paranormaux au micro parabolique ou à l'enregistreur de son",
         "En restant dans sa pièce favorite"
       ],
       "answer": 2,
-      "explain": "La malédiction tombe sur celui qui l'entend à la Spirit Box, au micro parabolique ou à l'enregistreur de son (si le son est enregistré) : sa santé baisse ensuite 2× plus vite, même dans la lumière."
+      "explain": "La malédiction tombe sur celui qui l'entend au micro parabolique ou à l'enregistreur de son (si le son est enregistré) : sa santé baisse ensuite 2× plus vite, même dans la lumière."
     },
     {
       "q": "Santé moyenne sous 40 % : tu prends des pilules en pleine chasse et l'entité ralentit aussitôt. De quelle entité s'agit-il ?",

@@ -39,7 +39,7 @@
   "tells": [
     { "text": "Pendant les événements et les chasses, provoque des perturbations électroniques dans un rayon de 15 m au lieu de 10 m.", "zeroEvidence": true },
     { "text": "Vitesse accrue en chasse quand un équipement électronique actif se trouve à moins de 6 m, 8 m ou 10 m (respectivement sur petite, moyenne et grande carte).", "zeroEvidence": true },
-    { "text": "Peut chasser à 65 % lorsqu'il est près d'un équipement électronique actif.", "zeroEvidence": true }
+    { "text": "Peut chasser à 65 % près d'un équipement électronique actif.", "zeroEvidence": true }
   ],
   "behaviors": [
     { "text": "Bug connu : le rayon des battements de cœur est actuellement de 15 m au lieu de 10 m.", "zeroEvidence": true },
@@ -47,8 +47,8 @@
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Place des appareils électroniques actifs près de la pièce de l'entité. Pendant une chasse, cache-toi et écoute-la passer près des appareils : si elle est rapide près d'eux mais ralentit en s'en éloignant, c'est un Raiju.", "definitive": true },
-    { "text": "Pendant qu'elle chasse à proximité, allume et éteins un appareil électronique (tenu en main ou posé au sol ; posé au sol, tu ne trahis pas ta position). Si sa vitesse augmente et diminue en fonction de l'appareil, c'est un Raiju. Préfère l'appareil posé : tenu en main, il peut te faire repérer, et un Revenant (3,0 m/s) ou un Kormos (2,21 m/s) qui te détecte accélère aussi, sans revenir aussitôt à sa vitesse quand tu l'éteins.", "definitive": true },
+    { "text": "Place des appareils électroniques actifs près de la pièce de l'entité. Pendant une chasse, cache-toi et écoute l'entité passer près des appareils : si l'entité est rapide près d'eux mais ralentit en s'en éloignant, c'est un Raiju.", "definitive": true },
+    { "text": "Pendant que l'entité chasse à proximité, allume et éteins un appareil électronique (tenu en main ou posé au sol ; posé au sol, tu ne trahis pas ta position). Si sa vitesse augmente et diminue en fonction de l'appareil, c'est un Raiju. Préfère l'appareil posé : tenu en main, l'appareil peut te faire repérer, et un Revenant (3,0 m/s) ou un Kormos (2,21 m/s) qui te détecte accélère aussi, sans revenir aussitôt à sa vitesse quand tu l'éteins.", "definitive": true },
     { "text": "Si l'entité chasse tôt, entre 50 % et 65 %, ça pourrait être un Raiju.", "definitive": false }
   ],
   "eliminationTests": [
@@ -69,7 +69,7 @@
     { "with": "revenant", "why": "Le Revenant (orbes, écriture, glaciales) fonce à 3,0 m/s dès qu'il te détecte (voix, électronique active, vue) et rampe à 1,0 m/s sinon." }
   ],
   "observations": [
-    { "text": "Pendant une chasse, caché, tu entends les pas de l'entité devenir nettement plus rapides quand elle passe près de l'appareil électronique allumé que tu as laissé au sol, puis ralentir une fois qu'elle s'en éloigne.", "kind": "hunt", "strength": "definitive" },
+    { "text": "Pendant une chasse, caché, tu entends les pas de l'entité devenir nettement plus rapides près de l'appareil électronique allumé que tu as laissé au sol, puis ralentir une fois l'appareil dépassé.", "kind": "hunt", "strength": "definitive" },
     { "text": "En pleine chasse, alors que l'entité passe non loin, tu allumes et éteins plusieurs fois le micro parabolique posé au sol à côté de toi : ses pas accélèrent chaque fois que tu l'allumes et ralentissent dès que tu l'éteins.", "kind": "hunt", "strength": "definitive" },
     { "text": "Près de tes appareils électroniques allumés, l'entité avance à une vitesse fixe d'environ 2,5 m/s, qui ne bouge plus tant qu'elle reste à côté d'eux, même quand elle te voit.", "kind": "hunt", "strength": "strong" },
     { "text": "Pendant une chasse, ta lampe torche se met à grésiller alors que l'entité est encore à une douzaine de mètres de toi, plus loin que d'habitude.", "kind": "hunt", "strength": "strong" },

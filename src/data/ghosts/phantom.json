@@ -41,15 +41,15 @@
   ],
   "tells": [
     {
-      "text": "N'apparaît sur aucune photo ni vidéo de type « Fantôme », y compris quand tu le photographies dans le D.O.T.S. Bug connu : il reste visible dans les vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse ».",
+      "text": "Une photo de l'entité est bien classée comme photo d'entité dans le journal, mais l'entité n'y figure pas.",
       "zeroEvidence": true
     },
     {
-      "text": "La prendre en photo ou en vidéo la fait disparaître (y compris en état D.O.T.S).",
+      "text": "Disparaît aussitôt quand tu prends l'entité en photo ou en vidéo.",
       "zeroEvidence": true
     },
     {
-      "text": "Moins visible pendant les chasses : elle reste invisible plus longtemps entre deux clignotements.",
+      "text": "Moins visible pendant les chasses : reste invisible plus longtemps entre deux clignotements.",
       "zeroEvidence": true
     },
     {
@@ -60,7 +60,7 @@
   "behaviors": [],
   "abilities": [
     {
-      "text": "Peut errer vers un joueur choisi au hasard, en laissant un EMF 2 à l'endroit où elle se rend (au niveau de la tête).",
+      "text": "Peut errer vers un joueur choisi au hasard, en laissant un EMF 2 à son point d'arrivée (au niveau de la tête).",
       "zeroEvidence": true
     },
     {
@@ -70,15 +70,15 @@
   ],
   "confirmationTests": [
     {
-      "text": "Prends l'entité en photo pendant un événement ou quand elle est visible dans le D.O.T.S. Si elle disparaît (alors que les sons de l'événement continuent) et qu'elle n'apparaît pas sur la photo « Fantôme » du journal, c'est un Fantôme.",
+      "text": "Prends l'entité en photo pendant un événement. Si l'entité disparaît (alors que les sons de l'événement continuent) et n'apparaît pas sur la photo d'entité du journal, c'est un Fantôme.",
       "definitive": true
     },
     {
-      "text": "Filme l'entité pendant un événement ou quand elle est visible dans le D.O.T.S. Si elle disparaît (alors que les sons de l'événement continuent) et que la vidéo est de type « Fantôme », c'est un Fantôme. À noter : le Fantôme n'est absent de la pellicule que sous sa forme complète (vidéo « Fantôme ») ; il apparaît toujours dans les vidéos « Fantôme translucide », « Fantôme ombre » et « Trace D.O.T.S ».",
+      "text": "Filme l'entité pendant un événement. Si l'entité disparaît (alors que les sons de l'événement continuent) et que la vidéo, classée par le journal comme vidéo de l'entité sous sa forme complète, ne la montre pas, c'est un Fantôme.",
       "definitive": true
     },
     {
-      "text": "Observe l'entité pendant une chasse : si elle paraît presque invisible, c'est un Fantôme.",
+      "text": "Pendant une chasse, si l'entité paraît presque invisible, c'est un Fantôme.",
       "definitive": true
     },
     {
@@ -146,7 +146,7 @@
   ],
   "observations": [
     {
-      "text": "Tu prends l'entité en photo pendant un événement : elle disparaît aussitôt, alors que les sons de l'événement continuent.",
+      "text": "Tu prends une photo pendant un événement : l'entité disparaît aussitôt, alors que les sons de l'événement continuent.",
       "kind": "event",
       "strength": "definitive"
     },
@@ -156,7 +156,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, tu ne vois presque pas l'entité : elle reste invisible longtemps entre deux clignotements.",
+      "text": "Pendant la chasse, tu ne vois presque pas l'entité : de longues phases d'invisibilité séparent ses clignotements.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -187,7 +187,7 @@
         "L'événement s'arrête et il réapparaît dans sa pièce favorite"
       ],
       "answer": 1,
-      "explain": "Une photo fait disparaître le Fantôme (même en état D.O.T.S), et il n'apparaît pas sur la photo « Fantôme » du journal, alors que les sons de l'événement continuent."
+      "explain": "Une photo fait disparaître le Fantôme, et il n'apparaît pas sur la photo d'entité du journal, alors que les sons de l'événement continuent."
     },
     {
       "q": "Quelle photo prouve que ce n'est PAS un Fantôme ?",

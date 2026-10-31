@@ -41,7 +41,7 @@
   ],
   "tells": [
     {
-      "text": "Attend 180 s après avoir été encensée avant de tenter une nouvelle chasse, au lieu des 90 s standard.",
+      "text": "Attend 180 s après un encens avant de tenter une nouvelle chasse, au lieu des 90 s standard.",
       "zeroEvidence": true
     }
   ],
@@ -93,11 +93,11 @@
     },
     {
       "with": "moroi",
-      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
+      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
     },
     {
       "with": "deogen",
-      "why": "Spirit Box + écriture en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, chasse à 40 % et peut respirer fort dans la Spirit Box. 3e preuve : D.O.T.S vs EMF 5."
+      "why": "Spirit Box + écriture en commun. Le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de sa cible, et chasse à 40 %. 3e preuve : D.O.T.S vs EMF 5."
     },
     {
       "with": "gallu",
@@ -114,7 +114,7 @@
   ],
   "observations": [
     {
-      "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans qu'aucun objet maudit ait été utilisé, elle lance une chasse moins d'une minute après ce second encensement.",
+      "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans qu'aucun objet maudit ait été utilisé, une chasse démarre moins d'une minute après ce second encensement.",
       "kind": "hunt",
       "strength": "definitive"
     },

@@ -1,6 +1,24 @@
 import type { Ghost, Mechanics } from '../data/types'
-import { de, isFeminine, le, mentionsEvidence, REVERSE_PER_GHOST, TESTS_PER_GHOST, zeroTests } from './cards'
-import { fr, NBSP, NNBSP, redactGhostName } from './format'
+import {
+  de,
+  fitsToo,
+  isFeminine,
+  le,
+  mentionsEvidence,
+  MIMIC,
+  namesGhost,
+  needsEvidence,
+  numbersFit,
+  reverseTells,
+  speedValues,
+  standardSanity,
+  standardSpeed,
+  TESTS_PER_GHOST,
+  thresholds,
+  withoutEvidenceAsides,
+  zeroTests,
+} from './cards'
+import { fr, NBSP, NNBSP, redactGhostName as redact } from './format'
 import { pick, sample, shuffle, weightedPick, type Rng } from './random'
 
 /**
@@ -52,89 +70,67 @@ export interface QuizOptions {
 
 type Gen = (g: Ghost, ctx: QuizOptions) => Question | null
 
-/** Le Mimic copie vitesses, seuils et comportements : il ne peut jamais servir de mauvaise réponse. */
-const MIMIC = 'the-mimic'
-
 const known = (g: Ghost) => g.speed.min >= 0
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const uncap = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
-
-/** Vitesse « standard » : 1,7 m/s et accélération normale en ligne de vue. */
-const standardSpeed = (g: Ghost) =>
-  g.speed.min === 1.7 && g.speed.max == null && g.speed.alt == null && !g.speed.isRange && g.speed.los && !g.speed.losVaries
-/** Seuil « standard » : 50 % dans tous les cas. */
-const standardSanity = (g: Ghost) => g.huntSanity.low === 50 && g.huntSanity.normal === 50 && g.huntSanity.high === 50
+/** Un corrigé ne commence jamais par « Mais » (reste d'une phrase dont on a retiré le début). */
+const noLeadingMais = (s: string) => cap(s.replace(/^Mais\s+/u, ''))
 
 function ghostChoice(g: Ghost): Choice {
   return { id: g.id, label: g.name !== g.nameEn ? `${g.name} (${g.nameEn})` : g.name }
 }
 
-/** Masque le nom de l'entité ; « d'un Deogen » devient « de cette entité » (et non « d'cette entité »). */
-const redact = (text: string, g: Ghost) =>
-  redactGhostName(text, g).replace(/(?<![\p{L}])(d|D|qu|Qu|n|N|s|S)['’]cette entité/gu, '$1e cette entité')
+/** Le texte nomme-t-il cette entité (y compris entre « ») ? */
+const names = namesGhost
 
-/** Le texte nomme-t-il cette entité ? */
-const names = (text: string, g: Ghost) => redactGhostName(text, g) !== text
-
-/* ---------- une seule bonne réponse : écarter les mauvaises réponses qui pourraient aussi convenir ---------- */
-
-const WORD = /\p{L}{5,}/gu
-const wordsOf = (text: string) => new Set(text.toLowerCase().match(WORD) ?? [])
-
-interface Lexicon {
-  /** mots de la fiche de chaque entité (ses signes, capacités, comportements, tests, vitesses, seuils) */
-  words: Map<string, Set<string>>
-  /** nombre d'entités dont la fiche contient le mot */
-  df: Map<string, number>
+/**
+ * Une citation prête à poser : caviardée, sans aparté qui passe par une preuve. Null si elle passe
+ * encore par une preuve, ou si elle nomme l'entité entre « » (le caviardage n'y touche pas).
+ */
+function quoteFor(text: string, g: Ghost): string | null {
+  const quote = redact(withoutEvidenceAsides(text), g)
+  return needsEvidence(quote) || names(quote, g) ? null : quote
 }
-const lexicons = new WeakMap<readonly Ghost[], Lexicon>()
 
-function lexicon(all: readonly Ghost[]): Lexicon {
-  const cached = lexicons.get(all)
-  if (cached) return cached
-  const nameWords = new Set(all.flatMap((g) => [...wordsOf(`${g.name} ${g.nameEn}`)]))
-  const words = new Map<string, Set<string>>()
-  const df = new Map<string, number>()
-  for (const g of all) {
-    const texts = [
-      ...g.keyTells,
-      ...[...g.tells, ...g.abilities, ...g.behaviors, ...g.observations, ...g.confirmationTests].map((t) => t.text),
-      g.speed.summary,
-      ...g.speed.details,
-      g.huntSanity.summary,
-      ...g.huntSanity.details,
-    ]
-    const set = new Set([...wordsOf(texts.join(' '))].filter((w) => !nameWords.has(w)))
-    words.set(g.id, set)
-    for (const w of set) df.set(w, (df.get(w) ?? 0) + 1)
+/** Calculé une fois par entité : les fiches ne changent pas, seul le tirage varie. */
+function perGhost<T>(f: (g: Ghost) => T): (g: Ghost) => T {
+  const cache = new WeakMap<Ghost, T>()
+  return (g) => {
+    if (!cache.has(g)) cache.set(g, f(g))
+    return cache.get(g)!
   }
-  const lex = { words, df }
-  lexicons.set(all, lex)
-  return lex
 }
 
 /**
- * L'énoncé pourrait-il aussi décrire une autre entité ? On écarte les entités au seuil ou à la vitesse
- * particuliers quand l'énoncé en parle, et celles dont la fiche partage les mots rares de l'énoncé.
+ * « Elle ne poursuit que sa cible » ne peut pas parler du Démon : le pronom trahirait la mauvaise réponse
+ * (ou la bonne). « Il faut », « il y a » ne désignent personne.
  */
-function fitsToo(statement: string, all: readonly Ghost[]): (o: Ghost) => boolean {
-  const sanityTalk = /chass/iu.test(statement) && /%|santé mentale|seuil/iu.test(statement)
-  const speedTalk = /m\/s|vitesse|rapide|ralenti|accél|\blente?\b/iu.test(statement)
-  const { words, df } = lexicon(all)
-  const rare = [...wordsOf(statement)].filter((w) => (df.get(w) ?? 0) <= 3)
-  return (o) => {
-    if (sanityTalk && !standardSanity(o)) return true
-    if (speedTalk && !standardSpeed(o)) return true
-    const theirs = words.get(o.id)
-    const shared = theirs ? rare.filter((w) => theirs.has(w)).length : 0
-    return shared >= 2 || (rare.length <= 2 && shared >= 1)
-  }
+function pronounClash(text: string, g: Ghost): boolean {
+  const fem = /(?:^|[\s(])[Ee]lles?\b/u.test(text)
+  const masc = /(?:^|[\s(])(?:[Ii]ls?|[Ll]ui)\b(?!\s+(?:faut|suffit|y\s+a)\b)/u.test(text)
+  return isFeminine(g.name) ? masc && !fem : fem && !masc
 }
 
-/** Trois mauvaises réponses plausibles (entités souvent confondues avec g), qui ne collent pas à l'énoncé. */
+/**
+ * Les mauvaises réponses que le pronom de l'énoncé n'écarte pas d'emblée (« moins elle a de chances » :
+ * pas d'entité masculine). Un pronom qui ne colle pas à g lui-même désigne autre chose : on n'en tient pas compte.
+ */
+function sameGender(statement: string, g: Ghost): (o: Ghost) => boolean {
+  if (pronounClash(statement, g)) return () => true
+  return (o) => !pronounClash(statement, o)
+}
+
+/* ---------- une seule bonne réponse : écarter les mauvaises réponses qui pourraient aussi convenir ---------- */
+
+/**
+ * Trois mauvaises réponses plausibles (entités souvent confondues avec g), qui ne collent pas à l'énoncé
+ * et dont le genre ne contredit pas un pronom de l'énoncé. Une entité nommée dans l'énoncé (« la Banshee
+ * est elle aussi féminine ») n'est jamais une mauvaise réponse.
+ */
 function pickDistractors(g: Ghost, statement: string, ctx: QuizOptions, n = 3): Ghost[] | null {
   const fits = fitsToo(statement, ctx.allGhosts)
-  const pool = ctx.allGhosts.filter((o) => o.id !== g.id && o.id !== MIMIC && !fits(o))
+  const gender = sameGender(statement, g)
+  const pool = ctx.allGhosts.filter((o) => o.id !== g.id && o.id !== MIMIC && !fits(o) && gender(o) && !names(statement, o))
   if (pool.length < n) return null
   const partners = new Set(g.confusions.map((c) => c.with))
   const shared = (o: Ghost) => o.evidence.filter((e) => g.evidence.includes(e)).length
@@ -153,12 +149,24 @@ function distinctBy<T>(items: T[], key: (t: T) => string): T[] {
   })
 }
 
+const subsetOf = <T,>(a: Set<T>, b: Set<T>) => [...a].every((v) => b.has(v))
+
 /* ---------- seuils de chasse ---------- */
 
 const sanityOfGhost: Gen = (g, ctx) => {
   if (g.huntSanity.normal < 0) return null
+  const mine = thresholds(g)
   const others = distinctBy(
-    shuffle(ctx.rng, ctx.allGhosts.filter((o) => o.huntSanity.normal >= 0 && o.huntSanity.summary !== g.huntSanity.summary)),
+    shuffle(
+      ctx.rng,
+      ctx.allGhosts.filter(
+        (o) =>
+          o.huntSanity.normal >= 0 &&
+          o.huntSanity.summary !== g.huntSanity.summary &&
+          // « 50 % » face au Raiju (50 %, 65 % près de l'électronique) : à moitié vrai, pas une mauvaise réponse
+          !subsetOf(thresholds(o), mine),
+      ),
+    ),
     (o) => o.huntSanity.summary,
   ).filter((o) => o.huntSanity.normal !== g.huntSanity.normal || o.huntSanity.high !== g.huntSanity.high)
   if (others.length < 3) return null
@@ -196,16 +204,22 @@ const earlyHunter: Gen = (g, ctx) => {
   }
 }
 
-/** Les seuils possibles d'une entité (bas, normal, haut). */
-const thresholds = (g: Ghost) => new Set([g.huntSanity.low, g.huntSanity.normal, g.huntSanity.high].filter((v) => v >= 0))
-
 /** Seuil particulier → entité. Les mauvaises réponses n'ont aucun des seuils cités : une seule peut convenir. */
 const sanityProfile: Gen = (g, ctx) => {
   if (g.id === MIMIC || standardSanity(g)) return null
   const mine = thresholds(g)
   if (!mine.size) return null
+  const quote = redact(g.huntSanity.summary, g)
+  if (names(quote, g)) return null
+  const gender = sameGender(quote, g)
   const pool = ctx.allGhosts.filter(
-    (o) => o.id !== g.id && o.id !== MIMIC && thresholds(o).size > 0 && ![...thresholds(o)].some((v) => mine.has(v)),
+    (o) =>
+      o.id !== g.id &&
+      o.id !== MIMIC &&
+      thresholds(o).size > 0 &&
+      ![...thresholds(o)].some((v) => mine.has(v)) &&
+      // « 65 % si tu bouges près d'elle » : une entité masculine serait écartée d'emblée
+      gender(o),
   )
   // d'abord d'autres seuils particuliers (plus trompeurs), puis des entités à 50 %
   const ranked = [...shuffle(ctx.rng, pool.filter((o) => !standardSanity(o))), ...shuffle(ctx.rng, pool.filter(standardSanity))]
@@ -216,7 +230,7 @@ const sanityProfile: Gen = (g, ctx) => {
     topic: 'sanity',
     ghostId: g.id,
     prompt: 'Quelle entité a ce seuil de chasse ?',
-    quote: redact(g.huntSanity.summary, g),
+    quote,
     multi: false,
     choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
     correct: [g.id],
@@ -227,10 +241,22 @@ const sanityProfile: Gen = (g, ctx) => {
 
 /* ---------- vitesses ---------- */
 
+/**
+ * La description de vitesse de o est-elle en partie vraie pour g ? Ses vitesses font toutes partie de
+ * celles de g (« 1,7 m/s · accélère en LdV » pour le Raiju, qui reste à 1,7 m/s loin de l'électronique),
+ * ou tombent dans la plage de g avec la même ligne de vue (le Moroi passe par 1,7 m/s et accélère en LdV).
+ */
+function partlyTrueSpeed(o: Ghost, g: Ghost): boolean {
+  const theirs = speedValues(o)
+  if (subsetOf(theirs, speedValues(g))) return true
+  const s = g.speed
+  return s.isRange && s.max != null && o.speed.los === s.los && [...theirs].every((v) => v >= s.min && v <= s.max!)
+}
+
 const speedOfGhost: Gen = (g, ctx) => {
   if (!known(g)) return null
   const others = distinctBy(
-    shuffle(ctx.rng, ctx.allGhosts.filter((o) => known(o) && o.speed.summary !== g.speed.summary)),
+    shuffle(ctx.rng, ctx.allGhosts.filter((o) => known(o) && o.speed.summary !== g.speed.summary && !partlyTrueSpeed(o, g))),
     (o) => o.speed.summary,
   )
   if (others.length < 3) return null
@@ -251,16 +277,18 @@ const speedOfGhost: Gen = (g, ctx) => {
 }
 
 const losOfGhost: Gen = (g) => {
-  if (!known(g) || g.id === MIMIC) return null
+  // ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) : ni oui ni non
+  if (!known(g) || g.id === MIMIC || g.speed.losVaries) return null
   return {
     id: `q:los:${g.id}`,
     topic: 'speed',
     ghostId: g.id,
-    prompt: `${g.name}${NNBSP}: pendant une chasse, l’accélération standard en ligne de vue s’applique-t-elle${NNBSP}?`,
+    // on demande si l'entité accélère, pas si l'accélération est « standard » (Aswang, Jumeaux : particulière)
+    prompt: `${g.name}${NNBSP}: pendant une chasse, l’entité accélère-t-elle quand elle te voit (ligne de vue)${NNBSP}?`,
     multi: false,
     choices: [
-      { id: 'yes', label: 'Oui, accélération en ligne de vue' },
-      { id: 'no', label: 'Non, pas d’accélération standard' },
+      { id: 'yes', label: 'Oui, elle accélère en ligne de vue' },
+      { id: 'no', label: 'Non, jamais d’accélération en ligne de vue' },
     ],
     correct: [g.speed.los ? 'yes' : 'no'],
     explain: `${g.speed.summary}. ${g.speed.details[0] ?? ''}`.trim(),
@@ -269,13 +297,18 @@ const losOfGhost: Gen = (g) => {
 }
 
 /** Les vitesses citées par une entité, hors 1,7 m/s (la vitesse de tout le monde). */
-const speeds = (g: Ghost) => new Set([g.speed.min, g.speed.max, g.speed.alt].filter((v): v is number => v != null && v >= 0 && v !== 1.7))
+const speeds = (g: Ghost) => new Set([...speedValues(g)].filter((v) => v !== 1.7))
 
 /** Profil de vitesse particulier → entité. Les mauvaises réponses n'ont aucune des vitesses citées. */
 const speedProfile: Gen = (g, ctx) => {
   if (!known(g) || g.id === MIMIC || standardSpeed(g)) return null
   const mine = speeds(g)
-  const pool = ctx.allGhosts.filter((o) => o.id !== g.id && o.id !== MIMIC && known(o) && ![...speeds(o)].some((v) => mine.has(v)))
+  const quote = redact(g.speed.summary, g).replace(/\bLdV\b/g, 'ligne de vue')
+  if (names(quote, g)) return null
+  const gender = sameGender(quote, g)
+  const pool = ctx.allGhosts.filter(
+    (o) => o.id !== g.id && o.id !== MIMIC && known(o) && ![...speeds(o)].some((v) => mine.has(v)) && gender(o),
+  )
   const ranked = [...shuffle(ctx.rng, pool.filter((o) => !standardSpeed(o))), ...shuffle(ctx.rng, pool.filter(standardSpeed))]
   const wrong = ranked.slice(0, 3)
   if (wrong.length < 3) return null
@@ -284,7 +317,7 @@ const speedProfile: Gen = (g, ctx) => {
     topic: 'speed',
     ghostId: g.id,
     prompt: 'En chasse, quelle entité se déplace ainsi ?',
-    quote: redact(g.speed.summary, g).replace(/\bLdV\b/g, 'ligne de vue'),
+    quote,
     multi: false,
     choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
     correct: [g.id],
@@ -295,13 +328,19 @@ const speedProfile: Gen = (g, ctx) => {
 
 /* ---------- comportements ---------- */
 
+// les signes clés résument parfois des propriétés partagées (« vitesse standard ») : on n'utilise ici
+// que les signes « 0 preuve » de tybayn, propres à l'entité (k : rang parmi eux)
+const tellQuotes = perGhost((g) =>
+  g.tells
+    .filter((t) => t.zeroEvidence)
+    .map((t, k) => ({ quote: quoteFor(t.text, g), k }))
+    .filter((t): t is { quote: string; k: number } => t.quote != null),
+)
+
 const whichGhostTell: Gen = (g, ctx) => {
-  // les signes clés résument parfois des propriétés partagées (« vitesse standard ») : on n'utilise ici
-  // que les signes « 0 preuve » de tybayn, propres à l'entité
-  const tells = g.tells.filter((t) => t.zeroEvidence).map((t) => t.text)
+  const tells = tellQuotes(g)
   if (!tells.length) return null
-  const k = Math.floor(ctx.rng() * tells.length)
-  const quote = redact(tells[k], g)
+  const { quote, k } = pick(ctx.rng, tells)
   const others = pickDistractors(g, quote, ctx)
   if (!others) return null
   return {
@@ -314,17 +353,23 @@ const whichGhostTell: Gen = (g, ctx) => {
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
     explain: `${g.name}${NNBSP}: ${g.summary}`,
-    cardId: k < REVERSE_PER_GHOST ? `g:${g.id}:rev:${k}` : `g:${g.id}:tells`,
+    cardId: reverseTells(g, ctx.allGhosts).some((r) => r.k === k) ? `g:${g.id}:rev:${k}` : `g:${g.id}:tells`,
   }
 }
 
+// seules les observations décisives garantissent une réponse unique ; celles qui exigent une preuve
+// (D.O.T.S du Goryo, empreintes de l'Obake) n'existent pas sans preuve
+const observationQuotes = perGhost((g) =>
+  g.observations
+    .filter((o) => o.strength === 'definitive' && !o.requires)
+    .map((o) => ({ o, quote: quoteFor(o.text, g) }))
+    .filter((x): x is { o: Ghost['observations'][number]; quote: string } => x.quote != null),
+)
+
 const observationQuestion: Gen = (g, ctx) => {
-  // seules les observations décisives garantissent une réponse unique ; celles qui exigent une preuve
-  // (D.O.T.S du Goryo, empreintes de l'Obake) n'existent pas sans preuve
-  const obs = g.observations.filter((o) => o.strength === 'definitive' && !o.requires)
+  const obs = observationQuotes(g)
   if (!obs.length) return null
-  const o = obs[Math.floor(ctx.rng() * obs.length)]
-  const quote = redact(o.text, g)
+  const { o, quote } = obs[Math.floor(ctx.rng() * obs.length)]
   const others = pickDistractors(g, quote, ctx)
   if (!others) return null
   return {
@@ -348,19 +393,24 @@ const VERB_START = /^(?:Peut|Ne|N['’]|Préfère|Erre|Chasse|Essaie|Change|Copi
 export function abilityStatements(g: Ghost): { text: string; k: number }[] {
   return [...g.abilities, ...g.behaviors]
     .map((t, k) => ({ t, k }))
-    .filter(({ t }) => t.zeroEvidence && !/^(?:Bug|Contrairement)\b/u.test(t.text) && !mentionsEvidence(t.text))
-    .map(({ t, k }) => {
+    .filter(({ t }) => t.zeroEvidence && !/^(?:Bug|Contrairement)\b/u.test(t.text))
+    .map(({ t, k }) => ({ text: withoutEvidenceAsides(t.text), k }))
+    .filter(({ text }) => !mentionsEvidence(text))
+    .map(({ text, k }) => {
       // la première phrase porte la capacité ; la suite, ses exceptions
-      const [first, ...rest] = t.text.split(/(?<=[.!?])\s+(?=\p{Lu})/u)
-      return { text: rest.length && first.length >= 25 ? first : t.text, k }
+      const [first, ...rest] = text.split(/(?<=[.!?])\s+(?=\p{Lu})/u)
+      return { text: rest.length && first.length >= 25 ? first : text, k }
     })
     .filter(({ text }) => text.length <= 240)
 }
 
+/** Les capacités qui ne nomment pas l'entité entre « » (le caviardage n'y touche pas). */
+const abilityItems = perGhost((g) => abilityStatements(g).filter(({ text }) => !names(redact(text, g), g)))
+
 /** « Quelle entité peut … ? » : à partir des capacités et comportements propres à l'entité. */
 const abilityOfGhost: Gen = (g, ctx) => {
   if (g.id === MIMIC) return null
-  const items = abilityStatements(g)
+  const items = abilityItems(g)
   if (!items.length) return null
   const { text, k } = pick(ctx.rng, items)
   const plain = redact(text, g)
@@ -384,14 +434,29 @@ const abilityOfGhost: Gen = (g, ctx) => {
 
 /* ---------- sans preuve : tests et départages ---------- */
 
+// p : rang parmi les tests sans preuve (les premiers ont leur carte)
+const zeroTestQuotes = perGhost((g) =>
+  zeroTests(g)
+    .map((t, p) => ({ ...t, p, quote: quoteFor(t.text, g) }))
+    .filter((t): t is { text: string; k: number; p: number; quote: string } => t.quote != null),
+)
+
 const zeroTest: Gen = (g, ctx) => {
-  const tests = zeroTests(g)
+  const tests = zeroTestQuotes(g)
   if (!tests.length) return null
-  const p = Math.floor(ctx.rng() * tests.length)
-  const t = tests[p]
+  const t = tests[Math.floor(ctx.rng() * tests.length)]
+  const gender = sameGender(t.quote, g)
   const others = shuffle(
     ctx.rng,
-    ctx.allGhosts.filter((o) => o.id !== g.id && o.id !== MIMIC && zeroTests(o).length > 0),
+    ctx.allGhosts.filter(
+      (o) =>
+        o.id !== g.id &&
+        o.id !== MIMIC &&
+        zeroTests(o).length > 0 &&
+        // « le Deogen est lui aussi plus visible » : une entité nommée dans le test s'écarte d'un coup d'œil
+        !names(t.text, o) &&
+        gender(o),
+    ),
   ).slice(0, 3)
   if (others.length < 3) return null
   return {
@@ -399,12 +464,12 @@ const zeroTest: Gen = (g, ctx) => {
     topic: 'zero',
     ghostId: g.id,
     prompt: 'Ce test, s’il réussit, confirme quelle entité ?',
-    quote: redact(t.text, g),
+    quote: t.quote,
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
     explain: `Test de confirmation ${de(g.name)}. ${g.summary}`,
-    cardId: p < TESTS_PER_GHOST ? `g:${g.id}:test:${t.k}` : `g:${g.id}:tells`,
+    cardId: t.p < TESTS_PER_GHOST ? `g:${g.id}:test:${t.k}` : `g:${g.id}:tells`,
   }
 }
 
@@ -412,24 +477,28 @@ const zeroTest: Gen = (g, ctx) => {
 const SHARED_EVIDENCE = /\ben commun\b|\bau lieu (?:de|du|des|d['’])|^\s*Mêmes?\b|\bpartagen?t?\b[^.;]*\b(?:orbes?|Spirit Box)\b/iu
 /** Termine une phrase reprise d'une fiche (« … (sans pouvoir le rallumer) » → « …). »). */
 const endSentence = (s: string) => cap(/[.!?…]$/u.test(s) ? s : `${s}.`)
+/** Coupe un texte en phrases (une phrase commence par une majuscule, « ou un chiffre). */
+const SENTENCES = /(?<=[.!?])\s+(?=[\p{Lu}«\d])/u
 
 /**
  * Le texte d'une confusion sans ce qui parle de preuves (« UV + D.O.T.S en commun », « 3e preuve : … »,
  * « mais le Yurei a les orbes au lieu de l'écriture »), phrase par phrase et proposition par proposition.
+ * Chaque phrase gardée se termine par un point, même si on a retiré la proposition qui le portait.
  * Vide si la confusion ne parle que des preuves.
  */
 export function confusionWithoutEvidence(why: string): string {
-  const kept = why
-    .split(/(?<=[.!?])\s+(?=[\p{Lu}«\d])/u)
+  return why
+    .split(SENTENCES)
     .map((s) =>
       s
         .split(/\s*;\s*/u)
         .filter((c) => c.trim() && !mentionsEvidence(c) && !SHARED_EVIDENCE.test(c))
-        .join(`${NNBSP}; `),
+        .join(`${NNBSP}; `)
+        .trim(),
     )
     .filter(Boolean)
-  const out = kept.join(' ').trim()
-  return out ? endSentence(out) : ''
+    .map(endSentence)
+    .join(' ')
 }
 
 /** Un nom au pluriel (« Les Jumeaux ») ne devient pas « l’autre » sans fausser l'accord. */
@@ -445,31 +514,29 @@ export function partnerClaim(why: string, x: Ghost, partner: Ghost): string {
     // « (la Banshee jusqu'à 87 % via sa cible) » : l'aparté sur x s'en va, la phrase reste
     .replace(/\s*\([^()]*\)/gu, (m) => (names(m, x) ? '' : m))
   const kept = clean
-    .split(/(?<=[.!?])\s+(?=[\p{Lu}«\d])/u)
+    .split(SENTENCES)
     .map((s) =>
       s
         .split(/\s*;\s*/u)
         .filter((c) => !names(c, x))
-        .join(`${NNBSP}; `),
+        .join(`${NNBSP}; `)
+        .trim(),
     )
     .filter(Boolean)
+    .map((s, i) => endSentence(i === 0 ? s.replace(/^Mais\s+/u, '') : s))
     .join(' ')
-    .replace(/^Mais\s+/u, '')
-    .trim()
   if (kept.length < 30) return ''
   // sans sujet (« Plus loin, 1,7 m/s… »), la phrase pourrait décrire n'importe qui
   if (!names(kept, partner) && !/^(?:Il|Elle|Ils|Elles|Son|Sa|Ses|Lui)\b/u.test(kept)) return ''
   // « Il peut imiter le Cauchemar » ne départage rien
   if (/\b(?:imiter|imite|copier|copie)\b/iu.test(kept)) return ''
   if (plural(partner) && names(kept, partner)) return ''
-  return endSentence(kept)
-}
-
-/** « Elle ne poursuit que sa cible » ne peut pas parler du Démon : le pronom trahirait la mauvaise réponse. */
-function pronounClash(text: string, g: Ghost): boolean {
-  const fem = /(?:^|[\s(])[Ee]lles?\b/u.test(text)
-  const masc = /(?:^|[\s(])(?:[Ii]ls?|[Ll]ui)\b/u.test(text)
-  return isFeminine(g.name) ? masc && !fem : fem && !masc
+  // un conseil (« pense plutôt à l'autre ») ou plusieurs « l'autre » (un « l'autre » de la fiche, en plus du
+  // nom de l'entité qui le devient à son tour) : on ne sait plus de qui parle la réponse
+  if (/\bpense\s+plutôt\b/iu.test(kept)) return ''
+  const vague = kept.match(/(?<!\p{L})l['’]autre(?!\p{L})/giu)?.length ?? 0
+  if (vague > 1 || (vague === 1 && names(kept, partner))) return ''
+  return kept
 }
 
 /** Le texte, où l'autre entité devient « l’autre » : son nom ne souffle jamais la réponse. */
@@ -504,6 +571,8 @@ function duelsFor(g: Ghost, all: readonly Ghost[]): Duel[] {
       const claim = partnerClaim(pair.why, x, g)
       if (!claim) continue
       const right = asOther(claim, g)
+      // un nom entre « » n'est pas caviardé : il soufflerait la réponse
+      if (names(right, g)) continue
       const wrong = distinctBy(
         x.confusions
           .filter((c) => c.with !== g.id && c.with !== x.id && c.with !== MIMIC && byId.has(c.with))
@@ -511,12 +580,15 @@ function duelsFor(g: Ghost, all: readonly Ghost[]): Duel[] {
           // une mauvaise réponse ne parle jamais de g (elle ne peut pas être vraie pour g), et son pronom
           // (« elle », « il ») ne l'écarte pas d'emblée
           .filter(({ text }) => text && !names(text, g) && !pronounClash(text, g))
-          .map(({ z, text }) => ({ id: z.id, label: asOther(text, z) })),
+          // ni ne décrit aussi g : « Il chasse à 1,7 m/s et à 50 % » est vrai du Myling comme du Goryo
+          .filter(({ text }) => !fitsToo(text, all, true)(g) && !numbersFit(text, g))
+          .map(({ z, text }) => ({ id: z.id, label: asOther(text, z) }))
+          .filter((c) => !names(c.label, byId.get(c.id)!)),
         (c) => c.label,
       ).filter((c) => c.label !== right)
       if (wrong.length < 3) continue
       // le corrigé garde les deux noms, et ce qui distingue x de son côté
-      const full = confusionWithoutEvidence(pair.why)
+      const full = noLeadingMais(confusionWithoutEvidence(pair.why))
       out.push({ x, right, wrong, explain: names(full, g) ? full : `${g.name}${NNBSP}: ${uncap(full)}` })
     }
   }
@@ -550,7 +622,7 @@ const distinguish: Gen = (g, ctx) => {
 /* ---------- questions rédigées ---------- */
 
 const authored = (g: Ghost, ctx: QuizOptions): Question | null => {
-  // les questions sur les preuves (lesquelles, forcées, combinaisons) restent dans le codex
+  // les questions sur les preuves (lesquelles, forcées, combinaisons, réponses à la Spirit Box) restent dans le codex
   const valid = g.quiz.filter(
     (q) =>
       q.choices.length >= 2 &&
@@ -634,7 +706,7 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     seen.add(q.id)
     misses = 0
     // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
-    out.push({ ...q, prompt: fr(q.prompt), explain: fr(q.explain) })
+    out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)) })
   }
   return out
 }

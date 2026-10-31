@@ -23,7 +23,7 @@
     "normal": 50,
     "low": 45,
     "high": 65,
-    "summary": "50 % · 65 % si tu bouges près d'elle · 45 % immobile",
+    "summary": "50 % · 65 % si tu bouges à moins de 10 m · 45 % immobile",
     "details": [
       "Seuil standard de 50 % quand aucun joueur n'est à moins de 10 m d'elle.",
       "Si le joueur le plus proche, à moins de 10 m, se déplace, le seuil monte à 65 % ; s'il reste immobile, il descend à 45 %."
@@ -37,11 +37,11 @@
     "À moins de 10 m de toi, sa vitesse devient fixe : plus d'accélération en LdV"
   ],
   "tells": [
-    { "text": "Pendant une chasse, à moins de 10 m d'un joueur, elle se déplace à 2,25 m/s si ce joueur bouge et à 1,2 m/s s'il reste immobile.", "zeroEvidence": true },
-    { "text": "Toujours de sexe féminin (nom et modèle) : une entité masculine n'est pas une Dayan. Attention, la Banshee est elle aussi exclusivement féminine depuis décembre 2025.", "zeroEvidence": true }
+    { "text": "Pendant une chasse, à moins de 10 m d'un joueur, l'entité se déplace à 2,25 m/s si ce joueur bouge et à 1,2 m/s s'il reste immobile.", "zeroEvidence": true },
+    { "text": "Toujours de sexe féminin (nom et modèle) : une entité masculine n'est pas une Dayan. Attention, la Banshee aussi est exclusivement féminine depuis décembre 2025.", "zeroEvidence": true }
   ],
   "behaviors": [
-    { "text": "Chasse plus tôt (65 %) quand le joueur le plus proche bouge à moins de 10 m d'elle, et plus tard (45 %) quand il reste immobile.", "zeroEvidence": true }
+    { "text": "Chasse plus tôt (65 %) quand le joueur le plus proche (à moins de 10 m) bouge, et plus tard (45 %) quand ce joueur reste immobile.", "zeroEvidence": true }
   ],
   "abilities": [],
   "confirmationTests": [
@@ -72,7 +72,7 @@
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, l'entité est à quelques mètres de toi : tu t'arrêtes net et elle passe aussitôt à un pas très lent ; dès que tu repars, elle accélère brusquement.",
+      "text": "Pendant la chasse, l'entité est à quelques mètres de toi : tu t'arrêtes net et son pas devient aussitôt très lent ; dès que tu repars, son allure redevient brusquement rapide.",
       "kind": "hunt",
       "strength": "definitive"
     },

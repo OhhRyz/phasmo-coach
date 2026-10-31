@@ -50,15 +50,15 @@
       "zeroEvidence": true
     },
     {
-      "text": "État normal (état de départ) : 1,7 m/s en chasse, sans autre particularité. S'il marche dans du sel, est encensé ou utilise un crucifix, il passe en état enragé (2 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
+      "text": "État normal (état de départ) : 1,7 m/s en chasse, sans autre particularité. Marcher dans du sel, recevoir de l'encens ou utiliser un crucifix fait passer l'entité en état enragé (2 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
       "zeroEvidence": true
     },
     {
-      "text": "État enragé : 1,96 m/s, seuil de 60 % de santé mentale moyenne, aveuglement par l'encens de 4 s, portée du crucifix réduite de 2 m, ne perturbe pas le sel. Il reste enragé jusqu'à la fin d'une chasse, puis passe en état affaibli.",
+      "text": "État enragé : 1,96 m/s, seuil de 60 % de santé mentale moyenne, aveuglement par l'encens de 4 s, portée du crucifix réduite de 2 m, ne perturbe pas le sel. L'état enragé dure jusqu'à la fin d'une chasse, puis laisse place à l'état affaibli.",
       "zeroEvidence": true
     },
     {
-      "text": "État affaibli : 1,36 m/s, seuil de 40 %, aveuglement par l'encens de 6 s, portée du crucifix augmentée de 1 m, perturbe le sel. Il reste affaibli jusqu'à ce qu'il marche dans du sel, soit encensé ou utilise un crucifix, puis revient en état normal (3 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
+      "text": "État affaibli : 1,36 m/s, seuil de 40 %, aveuglement par l'encens de 6 s, portée du crucifix augmentée de 1 m, perturbe le sel. L'état affaibli dure jusqu'au prochain sel traversé, encens reçu ou crucifix utilisé, puis l'entité revient en état normal (3 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
       "zeroEvidence": true
     },
     {
@@ -78,13 +78,13 @@
   ],
   "abilities": [
     {
-      "text": "Ses changements d'état se déclenchent avec du sel de n'importe quel rang, l'encens ou un crucifix qu'il utilise. Le ralentissement causé par le sel de rang 3 est un mécanisme totalement différent, sans lien avec sa capacité.",
+      "text": "Ses changements d'état se déclenchent avec du sel de n'importe quel rang, l'encens ou un crucifix utilisé par l'entité. Le ralentissement causé par le sel de rang 3 est un mécanisme totalement différent, sans lien avec sa capacité.",
       "zeroEvidence": true
     }
   ],
   "confirmationTests": [
     {
-      "text": "Si tu vois une entité à vitesse rapide marcher dans un tas de sel pendant une chasse sans le perturber, c'est un Gallu.",
+      "text": "Si tu vois une entité nettement rapide sans ligne de vue (environ 1,96 m/s) marcher dans un tas de sel pendant une chasse sans le perturber, c'est un Gallu (le Spectre ne perturbe pas le sel non plus, mais reste à 1,7 m/s hors ligne de vue).",
       "definitive": true
     },
     {
@@ -92,11 +92,11 @@
       "definitive": true
     },
     {
-      "text": "Pose du sel de rang 2 ou 3 en 3 lignes espacées de 1 à 2 m, si possible sous l'œil d'une caméra. Lance ou attends une chasse, puis attire l'entité vers toi pour qu'elle traverse les 3 lignes. Dès qu'elle perturbe le premier tas, encense-la : ça la fait passer immédiatement à l'état suivant. Elle continue alors sa route sur les 2e et 3e lignes : si la première est perturbée mais pas les deux suivantes, c'est un Gallu (le Spectre, lui, ne perturbe jamais le sel). Le test marche le mieux si le Gallu est en état normal ; tu peux aussi n'utiliser que du sel de rang 3, qui le ralentit, à condition d'espacer assez les tas pour qu'il mette plus de 3 s à atteindre le suivant. Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
+      "text": "Pose du sel de rang 2 ou 3 en 3 lignes espacées de 1 à 2 m, si possible sous l'œil d'une caméra. Lance ou attends une chasse, puis attire l'entité vers toi pour qu'elle traverse les 3 lignes. Dès qu'elle perturbe le premier tas, encense-la : ça la fait passer immédiatement à l'état suivant. L'entité continue alors sa route sur les 2e et 3e lignes : si la première est perturbée mais pas les deux suivantes, c'est un Gallu (le Spectre ne perturbe jamais le sel). Le test marche le mieux si le Gallu est en état normal ; tu peux aussi n'utiliser que du sel de rang 3, qui ralentit l'entité, à condition d'espacer assez les tas pour qu'elle mette plus de 3 s à atteindre le suivant. Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
       "definitive": true
     },
     {
-      "text": "Après une chasse (avant qu'il n'utilise un crucifix, ne marche dans du sel ou ne soit encensé), pose un seul tas de sel et attends que l'entité le traverse. Si elle fait 5 ou 6 pas audibles juste après avoir marché dans le sel, c'est un Gallu.",
+      "text": "Après une chasse (avant tout crucifix utilisé, sel traversé ou encens reçu), pose un seul tas de sel et attends que l'entité le traverse. Si l'entité fait alors 5 ou 6 pas audibles juste après avoir marché dans le sel, c'est un Gallu.",
       "definitive": true
     },
     {
@@ -195,7 +195,7 @@
       "strength": "strong"
     },
     {
-      "text": "Après une chasse très lente (environ 1,36 m/s), tu l'encenses hors chasse ou elle marche dans ton sel : sa chasse suivante retrouve une allure tout à fait normale.",
+      "text": "Après une chasse très lente (environ 1,36 m/s), tu encenses l'entité hors chasse ou elle marche dans ton sel : sa chasse suivante retrouve une allure tout à fait normale.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -205,7 +205,7 @@
       "strength": "strong"
     },
     {
-      "text": "En pleine chasse, alors qu'elle avance nettement plus vite que la normale, ton encens de rang 1 ne la désoriente qu'environ 4 s, moins longtemps que d'habitude.",
+      "text": "En pleine chasse, alors que l'entité avance nettement plus vite que la normale, ton encens de rang 1 ne la désoriente qu'environ 4 s, moins longtemps que d'habitude.",
       "kind": "hunt",
       "strength": "definitive"
     },

@@ -1,7 +1,8 @@
 import type { Card } from './cards'
 import { dayKey, startOfDay } from './format'
+import { coachNameOf, sameName } from './notes'
 import { cardMastery, isDue, isLearned, type CardState } from './srs'
-import type { Activity, AnswerStats, PersistedState, ReviewEntry, Settings } from '../store/schema'
+import type { Activity, AnswerStats, PersistedState, Profile, ReviewEntry, Settings } from '../store/schema'
 
 export function dueCards(deck: Card[], cards: Record<string, CardState>, now: number): Card[] {
   return deck
@@ -16,27 +17,38 @@ export function newCardsIntroducedToday(log: ReviewEntry[], now: number): number
   return ids.size
 }
 
-export function unseenCards(deck: Card[], cards: Record<string, CardState>, settings: Settings): Card[] {
+/** Une carte tirée d'une note écrite par le coach (et non par la personne qui tient le carnet). */
+export function isCoachCard(c: Card, profile: Profile | undefined): boolean {
+  const coach = profile ? coachNameOf(profile) : ''
+  return c.deck === 'coach' && !!coach && !!c.author && sameName(c.author, coach)
+}
+
+/**
+ * Les nouvelles cartes, dans l'ordre où les découvrir : les notes du coach d'abord, puis ses propres
+ * notes, puis l'ordre pédagogique (les entités ciblées seulement, si la personne en a choisi).
+ */
+export function unseenCards(deck: Card[], cards: Record<string, CardState>, settings: Settings, profile?: Profile): Card[] {
   const focus = settings.focus && settings.focus.length ? new Set(settings.focus) : null
+  const rank = (c: Card) => (isCoachCard(c, profile) ? 0 : c.deck === 'coach' ? 1 : 2)
   return deck
     .filter((c) => !cards[c.id])
     .filter((c) => settings.includeMechanics || c.deck !== 'mechanics')
     .filter((c) => !focus || c.deck !== 'ghost' || (c.ghostId && focus.has(c.ghostId)))
-    .sort((a, b) => {
-      // notes du coach d'abord, puis entités ciblées, puis ordre pédagogique
-      const pa = a.deck === 'coach' ? 0 : 1
-      const pb = b.deck === 'coach' ? 0 : 1
-      return pa - pb || a.order - b.order
-    })
+    .sort((a, b) => rank(a) - rank(b) || a.order - b.order)
 }
 
-/** File de la séance : cartes dues + nouvelles cartes dans la limite du jour. */
+/**
+ * File de la séance : cartes dues + nouvelles cartes dans la limite du jour. Une note du coach toute
+ * neuve passe avant les cartes dues ; les autres nouvelles cartes s'intercalent entre elles.
+ */
 export function buildReviewQueue(state: PersistedState, deck: Card[], now: number, extraNew = 0): Card[] {
   const due = dueCards(deck, state.cards, now)
   const remainingNew = Math.max(0, state.settings.newPerDay - newCardsIntroducedToday(state.log, now)) + extraNew
-  const fresh = unseenCards(deck, state.cards, state.settings).slice(0, remainingNew)
+  const all = unseenCards(deck, state.cards, state.settings, state.profile).slice(0, remainingNew)
+  const coach = all.filter((c) => isCoachCard(c, state.profile))
+  const fresh = all.filter((c) => !isCoachCard(c, state.profile))
   // on intercale les nouvelles cartes pour éviter un bloc monotone
-  const out: Card[] = []
+  const out: Card[] = [...coach]
   let j = 0
   due.forEach((c, i) => {
     out.push(c)

@@ -28,13 +28,13 @@
       "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
     ]
   },
-  "summary": "Entité métamorphe : pendant les chasses, elle change de modèle le temps d'un clignotement, et ses empreintes UV peuvent être anormales (main à six doigts).",
+  "summary": "Entité métamorphe : pendant les chasses, elle change de modèle le temps d'un clignotement, et elle peut « sauter » un bruit de pas après avoir marché dans le sel.",
   "keyTells": [
     "Change de modèle le temps d'un seul clignotement pendant les chasses",
     "Première transformation au 12e clignotement : environ 8 s de chasse",
     "Transformations dans un ordre fixe, toujours du même sexe, qui continue d'une chasse à l'autre",
     "Peut « sauter » un bruit de pas : un pas manquant après le sel le confirme",
-    "Empreintes spéciales : main à 6 doigts, double empreinte sur un interrupteur"
+    "Quand son propre modèle est le suivant, seule sa posture se réinitialise d'un coup au clignotement"
   ],
   "tells": [
     {
@@ -54,11 +54,11 @@
       "zeroEvidence": true
     },
     {
-      "text": "A 25 % de chances de « sauter » un bruit de pas pendant les événements.",
+      "text": "A 25 % de chances de « sauter » un bruit de pas après avoir marché dans le sel.",
       "zeroEvidence": true
     },
     {
-      "text": "Quand son propre modèle est le suivant dans l'ordre, il se transforme en lui-même : ça se voit en général par une posture qui se réinitialise d'un coup.",
+      "text": "Quand son propre modèle est le suivant dans l'ordre, la transformation garde le même modèle : ça se voit en général par une posture qui se réinitialise d'un coup.",
       "zeroEvidence": true
     }
   ],
@@ -76,10 +76,11 @@
     },
     {
       "text": "Passe la lampe UV sur les portes, fenêtres, glacières, interrupteurs et claviers touchés par l'entité. Une main à 6 doigts, une double empreinte sur un interrupteur (au lieu d'une) ou 5 empreintes sur un clavier ou une porte de cellule (au lieu de 4) désignent l'Obake (ou un Mimic en train de l'imiter, qui a lui aussi l'UV).",
-      "definitive": true
+      "definitive": true,
+      "requires": "uv"
     },
     {
-      "text": "Pose un seul tas de sel près de l'entité. Si, après qu'elle a marché dans le sel, tu entends un pas manquant dans la série de bruits de pas (pas… [ ]… pas… au lieu de pas… pas… pas…), c'est un Obake.",
+      "text": "Pose un seul tas de sel près de l'entité. Si, une fois le sel traversé, tu entends un pas manquant dans la série de bruits de pas (pas… [ ]… pas… au lieu de pas… pas… pas…), c'est un Obake.",
       "definitive": true
     }
   ],

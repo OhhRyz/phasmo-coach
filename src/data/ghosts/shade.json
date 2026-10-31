@@ -28,7 +28,7 @@
       "Elle peut en revanche sortir de la pièce et lancer la chasse depuis une pièce adjacente."
     ]
   },
-  "summary": "L'entité la plus timide : elle ne fait presque rien quand tu es dans sa pièce, ne chasse pas avant 35 % de santé mentale et préfère se montrer sous forme d'ombre.",
+  "summary": "L'entité la plus timide : elle ne fait presque rien quand tu es dans sa pièce, ne chasse pas avant 35 % de santé mentale et préfère se montrer en silhouette noire.",
   "keyTells": [
     "Seule à apparaître en ombre au cercle, à la boîte à musique ou à la patte de singe",
     "Aucune interaction, aucun événement, aucune chasse depuis la pièce où tu es",
@@ -37,7 +37,7 @@
   ],
   "tells": [
     {
-      "text": "Seule entité qui peut apparaître sous forme d'ombre lors des événements du cercle d'invocation, de la boîte à musique et de la patte de singe.",
+      "text": "Seule entité qui peut apparaître en silhouette noire et floue lors des événements du cercle d'invocation, de la boîte à musique et de la patte de singe.",
       "zeroEvidence": true
     },
     {
@@ -55,15 +55,15 @@
   ],
   "behaviors": [
     {
-      "text": "Préfère le modèle d'ombre lors des événements.",
+      "text": "Préfère se montrer en silhouette noire et floue lors des événements.",
       "zeroEvidence": true
     },
     {
-      "text": "Ne chasse pas si elle se trouve dans la même pièce qu'un joueur.",
+      "text": "Ne lance jamais de chasse depuis une pièce où se trouve un joueur.",
       "zeroEvidence": true
     },
     {
-      "text": "Ne fait pas d'événement dans la même pièce qu'un joueur (mais elle peut démarrer un événement hors de la pièce et se téléporter jusqu'au joueur).",
+      "text": "Ne fait pas d'événement dans la même pièce qu'un joueur (mais peut démarrer un événement hors de la pièce et se téléporter jusqu'au joueur).",
       "zeroEvidence": true
     },
     {
@@ -71,30 +71,30 @@
       "zeroEvidence": false
     },
     {
-      "text": "Ne fait pas d'interaction donnant EMF 2 ou EMF 3 lorsqu'elle est dans la même pièce que le joueur, y compris souffler des flammes et les interactions avec la poupée vaudou (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
+      "text": "Ne fait pas d'interaction donnant EMF 2 ou EMF 3 quand un joueur est dans la même pièce que l'entité, y compris souffler des flammes et les interactions avec la poupée vaudou (mais peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
       "zeroEvidence": true
     },
     {
-      "text": "Plus la santé mentale moyenne est au-dessus de 50 %, moins elle a de chances de faire des événements (aucun événement possible à 100 % de santé mentale).",
+      "text": "Plus la santé mentale moyenne est au-dessus de 50 %, moins l'entité a de chances de faire des événements (aucun événement possible à 100 % de santé mentale).",
       "zeroEvidence": true
     },
     {
-      "text": "Pendant une chasse, ne souffle pas les bougies si elle est dans la même pièce que le joueur (attention aux limites de pièce, réelles ou buguées).",
+      "text": "Pendant une chasse, ne souffle pas les bougies si l'entité est dans la même pièce que le joueur (attention aux limites de pièce, réelles ou buguées).",
       "zeroEvidence": true
     }
   ],
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as une poupée vaudou, place du sel ou un détecteur de mouvement dans la pièce de l'entité et reste dans cette même pièce. Pose plusieurs objets avec lesquels elle peut interagir (ou qu'elle peut lancer) à portée d'interaction du détecteur ou du sel. Quand l'entité marche dans le sel ou déclenche le détecteur, enfonce une aiguille dans la poupée vaudou : s'il ne se produit aucune interaction (vérifie à l'EMF), c'est une Ombre.",
+      "text": "Si tu as une poupée vaudou, place du sel ou un détecteur de mouvement dans la pièce de l'entité et reste dans cette même pièce. Pose plusieurs objets que l'entité peut toucher ou lancer, à portée d'interaction du détecteur ou du sel. Quand l'entité marche dans le sel ou déclenche le détecteur, enfonce une aiguille dans la poupée vaudou : s'il ne se produit aucune interaction (vérifie à l'EMF), c'est une Ombre.",
       "definitive": true
     },
     {
-      "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît sous forme d'ombre, c'est une Ombre.",
+      "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît en silhouette noire et floue, c'est une Ombre.",
       "definitive": true
     },
     {
-      "text": "Pendant l'événement de la boîte à musique ou de la patte de singe, si l'entité apparaît sous forme d'ombre, c'est une Ombre.",
+      "text": "Pendant l'événement de la boîte à musique ou de la patte de singe, si l'entité apparaît en silhouette noire et floue, c'est une Ombre.",
       "definitive": true
     },
     {
@@ -161,7 +161,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit le joueur entendu à la Spirit Box ou au micro parabolique et accélère quand la santé mentale baisse."
+      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit le joueur qui l'entend au micro parabolique et accélère quand la santé mentale baisse."
     },
     {
       "with": "aswang",

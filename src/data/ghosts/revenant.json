@@ -2,7 +2,11 @@
   "id": "revenant",
   "name": "Revenant",
   "nameEn": "Revenant",
-  "evidence": ["orbs", "writing", "freezing"],
+  "evidence": [
+    "orbs",
+    "writing",
+    "freezing"
+  ],
   "forcedEvidence": null,
   "fakeEvidence": null,
   "speed": {
@@ -11,7 +15,7 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "1,0 m/s · 3,0 m/s s'il te détecte · n'accélère pas en LdV",
+    "summary": "1,0 m/s · 3,0 m/s en te détectant · n'accélère pas en LdV",
     "details": [
       "Vitesse de base en chasse : 1,0 m/s tant qu'il n'a détecté aucun joueur.",
       "Dès qu'il détecte un joueur (par la vue, la voix ou l'utilisation d'un appareil électronique), il accélère immédiatement à 3,0 m/s.",
@@ -38,7 +42,7 @@
   ],
   "tells": [
     {
-      "text": "Pendant une chasse, le Revenant est lent (1,0 m/s) jusqu'à ce qu'il détecte un joueur (voix, équipement électronique actif ou ligne de vue) : il accélère alors immédiatement à 3,0 m/s et garde cette vitesse jusqu'à atteindre la dernière position connue du joueur, où il ralentit progressivement.",
+      "text": "Pendant une chasse, avance lentement (1,0 m/s) jusqu'à détecter un joueur (voix, équipement électronique actif ou ligne de vue) : passe alors immédiatement à 3,0 m/s et garde cette vitesse jusqu'à la dernière position connue du joueur, avant de ralentir progressivement.",
       "zeroEvidence": true
     }
   ],
@@ -46,7 +50,7 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si elle est lente, accélère brusquement quand tu la laisses te détecter, puis ralentit ensuite, c'est un Revenant (il sera plus rapide qu'un Djinn ou un Raiju : compare avec les exemples de vitesses des fiches).",
+      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si l'entité est lente, accélère brusquement dès que tu te laisses détecter, puis ralentit ensuite, c'est un Revenant : l'entité est alors bien plus rapide qu'un Djinn ou un Raiju (3,0 m/s au lieu de 2,5 m/s).",
       "definitive": true
     }
   ],
@@ -98,11 +102,11 @@
     },
     {
       "with": "jinn",
-      "why": "Accélère aussi d'un coup, mais le Djinn part de 1,7 m/s et ne saute qu'à 2,5 m/s (disjoncteur allumé, en LdV, à plus de 3 m du joueur)."
+      "why": "Le Djinn accélère aussi d'un coup, mais part de 1,7 m/s et ne saute qu'à 2,5 m/s (disjoncteur allumé, en LdV, à plus de 3 m du joueur)."
     },
     {
       "with": "raiju",
-      "why": "Accélère aussi d'un coup, mais le Raiju part de 1,7 m/s et passe à 2,5 m/s près d'appareils électroniques actifs."
+      "why": "Le Raiju accélère aussi d'un coup, mais part de 1,7 m/s et passe à 2,5 m/s près d'appareils électroniques actifs."
     },
     {
       "with": "deildegast",
@@ -123,7 +127,7 @@
   ],
   "observations": [
     {
-      "text": "En chasse, l'entité erre loin de toi à pas très lents (environ 1 m/s), puis, à l'instant où elle te repère, passe d'un coup à une allure très rapide (environ 3 m/s), sans aucune montée progressive.",
+      "text": "En chasse, l'entité erre loin de toi à pas très lents (environ 1 m/s), puis passe d'un coup à une allure très rapide (environ 3 m/s) à l'instant même où tu es repéré, sans aucune montée progressive.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -167,7 +171,12 @@
     },
     {
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
-      "choices": ["1,7 m/s", "0,4 m/s", "1,0 m/s", "2,5 m/s"],
+      "choices": [
+        "1,7 m/s",
+        "0,4 m/s",
+        "1,0 m/s",
+        "2,5 m/s"
+      ],
       "answer": 2,
       "explain": "Il rampe à 1,0 m/s. 1,7 m/s est la vitesse standard, 0,4 m/s celle d'un Deogen tout près de toi, 2,5 m/s celle d'un Djinn ou d'un Raiju quand ils accélèrent."
     },

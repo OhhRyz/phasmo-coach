@@ -93,7 +93,7 @@
           "id": "chasses-15",
           "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à ta position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
           "q": "Utiliser la radio globale en chasse révèle-t-il la position des autres joueurs ?",
-          "a": "Non, seulement la vôtre (c'est un appareil électronique tenu)."
+          "a": "Non, seulement la tienne (c'est un appareil électronique tenu)."
         }
       ]
     },
@@ -104,7 +104,7 @@
       "facts": [
         {
           "id": "vitesses-01",
-          "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue (LdV) continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65 fois sa vitesse de base.",
+          "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65 fois sa vitesse de base.",
           "q": "Combien de secondes de LdV continue faut-il à une entité standard pour atteindre sa vitesse maximale ?",
           "a": "13 secondes, jusqu'à 1,65 fois sa vitesse de base."
         },
@@ -117,7 +117,7 @@
         {
           "id": "vitesses-03",
           "text": "Toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. S'y ajoutent le Deildegast (vitesse verrouillée pendant la chasse) et le Kormos (LdV seulement si tu bouges à moins de 5 m) ; les Jumeaux ont une LdV particulière.",
-          "q": "En dehors du Deildegast et du Kormos, quelles entités n'ont pas l'accélération standard en LdV ?",
+          "q": "En dehors du Deildegast et du Kormos, quelles entités n'accélèrent jamais en LdV ?",
           "a": "Revenant, Hantu, Deogen et Thayé."
         },
         {
@@ -207,7 +207,7 @@
         },
         {
           "id": "encens-02",
-          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base de 2,25 m/s. Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
+          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base (1,5 à 2,25 m/s selon la santé mentale moyenne). Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
           "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 ?",
           "a": "7 secondes (contre 5 s en standard)."
         },
@@ -243,7 +243,7 @@
         },
         {
           "id": "encens-08",
-          "text": "Après avoir marché dans le sel, une entité laisse entre 0 et 4 bruits de pas, avec des empreintes UV si elle a la preuve UV. Si elle s'arrête, les pas cessent et ne reprennent pas quand elle repart.",
+          "text": "Après avoir marché dans le sel, une entité laisse entre 0 et 4 bruits de pas. Si elle s'arrête, les pas cessent et ne reprennent pas quand elle repart.",
           "q": "Combien de bruits de pas une entité laisse-t-elle après avoir marché dans le sel ?",
           "a": "Entre 0 et 4."
         },
@@ -280,7 +280,7 @@
         {
           "id": "encens-14",
           "text": "La forte pluie empêche d'allumer les lumières à feu et allume-feux de rang 1 et 2 sous la pluie et les éteint aussitôt. La pluie légère et la Lune de sang n'éteignent pas les lumières à feu.",
-          "q": "Quelle météo empêche d'utiliser les lumières à feu de rang 1 et 2 sous la pluie ?",
+          "q": "Quelle météo empêche d'allumer dehors les lumières à feu de rang 1 et 2 ?",
           "a": "La forte pluie."
         }
       ]
@@ -385,7 +385,8 @@
           "id": "preuves-01",
           "text": "Depuis la v0.9.0.0, on voit sa respiration à toute température inférieure à 5 °C. Voir sa respiration ne prouve donc plus les températures glaciales.",
           "q": "En dessous de quelle température voit-on sa respiration ?",
-          "a": "Sous 5 °C, quelle que soit l'entité."
+          "a": "Sous 5 °C, quelle que soit l'entité.",
+          "evidence": true
         },
         {
           "id": "preuves-02",
@@ -423,7 +424,8 @@
           "id": "preuves-07",
           "text": "L'Obake a 25 % de chances de ne pas laisser de preuve UV et fait disparaître les UV plus vite. Il peut laisser des empreintes uniques : main à 6 doigts (portes, fenêtres, glacières), double empreinte (interrupteurs), 5 empreintes de doigts (claviers, portes de cellule).",
           "q": "Quelle empreinte unique un Obake peut-il laisser sur un interrupteur ?",
-          "a": "Une double empreinte de doigt."
+          "a": "Une double empreinte de doigt.",
+          "evidence": true
         },
         {
           "id": "preuves-08",
@@ -448,7 +450,8 @@
           "id": "preuves-11",
           "text": "Par temps de neige, les flocons peuvent être confondus avec des orbes. La température ambiante de 5 °C permet aussi de voir sa respiration dans les pièces refroidies, voire partout si le disjoncteur est coupé, ce qui masque la pièce de l'entité.",
           "q": "Avec quelle preuve risque-t-on de confondre la neige qui tombe ?",
-          "a": "Avec les orbes fantomatiques."
+          "a": "Avec les orbes fantomatiques.",
+          "evidence": true
         },
         {
           "id": "preuves-12",
@@ -464,8 +467,8 @@
         },
         {
           "id": "preuves-14",
-          "text": "L'Ombre est la seule entité pouvant apparaître avec un modèle d'ombre pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
-          "q": "Quelle entité peut apparaître sous forme d'ombre pendant l'événement d'un objet maudit ?",
+          "text": "L'Ombre est la seule entité pouvant apparaître en silhouette noire et floue (modèle d'ombre) pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
+          "q": "Quelle entité peut apparaître en silhouette noire et floue pendant l'événement d'un objet maudit ?",
           "a": "L'Ombre."
         },
         {
@@ -537,9 +540,9 @@
         },
         {
           "id": "portees-10",
-          "text": "Le Thayé vieillit quand des joueurs restent à moins de 3 m. Bug connu : ce rayon n'est pas bloqué par le plancher, un joueur à l'étage du dessous peut donc le faire vieillir.",
-          "q": "Dans quel rayon un joueur fait-il vieillir le Thayé ?",
-          "a": "3 m, même à travers le plancher (bug)."
+          "text": "Le Thayé vieillit quand un joueur est dans la même pièce que lui. Bug connu : cette détection, d'une portée de 3 m, n'est pas bloquée par le plancher : un joueur à l'étage du dessous peut donc le faire vieillir.",
+          "q": "Pourquoi un joueur à l'étage du dessous peut-il faire vieillir le Thayé ?",
+          "a": "Bug connu : sa détection (portée de 3 m) traverse le plancher."
         },
         {
           "id": "portees-11",
@@ -707,7 +710,7 @@
         },
         {
           "id": "sante-10",
-          "text": "À la planche Ouija, « Suis-je fou ? » répond No (plus de 90 %), Maybe (20–90 %) ou Yes (moins de 20 %). « À quel point suis-je sain ? » (How insane am I?) répond Not Very (plus de 50 %), Very (25–50 %) ou Insane (moins de 25 %).",
+          "text": "À la planche Ouija, « Suis-je fou ? » répond No (plus de 90 %), Maybe (20–90 %) ou Yes (moins de 20 %). « À quel point suis-je fou ? » (How insane am I?) répond Not Very (plus de 50 %), Very (25–50 %) ou Insane (moins de 25 %).",
           "q": "Sous quel seuil la planche Ouija répond-elle Yes à « Suis-je fou ? » ?",
           "a": "Sous 20 % de santé mentale."
         },

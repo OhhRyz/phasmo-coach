@@ -31,6 +31,8 @@ export interface Card {
   backList?: string[]
   /** ordre d'introduction des nouvelles cartes */
   order: number
+  /** auteur d'une note du carnet : celles du coach passent avant les siennes */
+  author?: string
 }
 
 export interface CoachNote {
@@ -58,6 +60,9 @@ const KIND_ORDER: Record<CardKind, number> = {
   fact: 6,
 }
 
+/** Le Mimic copie vitesses, seuils et comportements : il ne sert jamais de mauvaise réponse, ni d'autre entité possible. */
+export const MIMIC = 'the-mimic'
+
 /* ---- ce qui relève des preuves ---- */
 
 /** Les preuves telles qu'on les écrit dans les fiches (« EMF 2 » n'est pas une preuve, « EMF 5 » si). */
@@ -65,20 +70,34 @@ const EVIDENCE_WORDS: Record<EvidenceId, RegExp> = {
   emf: /\bEMF(?:\s*(?:de\s+)?niveau)?\s*5\b/i,
   dots: /D\.O\.T\.S|\bDOTS\b/,
   uv: /\bUV\b|ultraviolet|empreinte/i,
-  freezing: /glaciale|sous\s*0\s*°/i,
+  // « températures glaciales » seulement : « sous 0 °C » est une vitesse du Hantu, qui se mesure sans preuve
+  freezing: /glacial/i,
   orbs: /\borbes?\b/i,
   writing: /écriture/i,
   spiritbox: /spirit\s*box/i,
 }
-/** Des comportements passent par la Spirit Box (Deogen, Moroi) ou les orbes (Mimic en 0 preuve) : seules, elles ne suffisent pas. */
+/** Des comportements passent par la Spirit Box (Moroi) ou les orbes (Mimic en 0 preuve) : seules, elles ne suffisent pas. */
 const EVIDENCE_ONLY: EvidenceId[] = ['emf', 'dots', 'uv', 'freezing', 'writing']
 /** « sans preuve », « 0 preuve », « aucune preuve » : justement ce qu'on veut garder. */
 const NO_EVIDENCE = /\b(?:sans|0|zéro|aucune)\s+preuves?\b/giu
+/** Ce qu'on entend à la Spirit Box (une réponse, la respiration du Deogen) : c'est la preuve elle-même. */
+const SPIRIT_BOX_ANSWER = /(?<!\p{L})(?:répon|réag|respir|question|entend)/iu
 
 /** Preuves citées dans un texte. */
 export function evidenceIn(text: string): EvidenceId[] {
   const t = text.replace(NO_EVIDENCE, '')
   return EVIDENCE_IDS.filter((e) => EVIDENCE_WORDS[e].test(t))
+}
+
+/**
+ * Ce qui ne se voit qu'avec une preuve : EMF 5, D.O.T.S, empreintes UV, températures glaciales, écriture,
+ * ou une réponse de la Spirit Box (voix, respiration). Les orbes seules restent permises : les faux orbes
+ * du Mimic se cherchent justement en partie à 0 preuve.
+ */
+export function needsEvidence(text: string): boolean {
+  const t = text.replace(NO_EVIDENCE, '')
+  if (evidenceIn(t).some((e) => EVIDENCE_ONLY.includes(e))) return true
+  return t.split(/[.;!?]+(?:\s|$)/u).some((c) => EVIDENCE_WORDS.spiritbox.test(c) && SPIRIT_BOX_ANSWER.test(c))
 }
 
 /**
@@ -88,8 +107,12 @@ export function evidenceIn(text: string): EvidenceId[] {
  */
 export function mentionsEvidence(text: string): boolean {
   if (/\bpreuves?\b/iu.test(text.replace(NO_EVIDENCE, ''))) return true
-  const found = evidenceIn(text)
-  return found.length >= 2 || found.some((e) => EVIDENCE_ONLY.includes(e))
+  return evidenceIn(text).length >= 2 || needsEvidence(text)
+}
+
+/** Le texte sans ses apartés qui passent par une preuve (« La prendre en photo la fait disparaître (y compris en état D.O.T.S). »). */
+export function withoutEvidenceAsides(text: string): string {
+  return text.replace(/\s*\([^()]*\)/gu, (m) => (needsEvidence(m) ? '' : m))
 }
 
 /** Combinaison de preuves ou preuve forcée (« Seule entité avec EMF 5 + orbes… », « UV garanti en Cauchemar ») : rien à apprendre. */
@@ -97,10 +120,13 @@ function isEvidenceList(text: string): boolean {
   return evidenceIn(text).length >= 2 || (/\bgaranti/iu.test(text) && /Cauchemar|Démence/u.test(text))
 }
 
-/** Un test dont la condition même porte sur les preuves trouvées (« Si tu trouves plus de preuves que… »). */
+/**
+ * Un test dont la condition même porte sur les preuves trouvées (« Si tu trouves plus de preuves que… »),
+ * ou qui passe par une preuve (lampe UV, réponse à la Spirit Box, D.O.T.S…).
+ */
 function testNeedsEvidence(text: string): boolean {
   const first = text.split(/(?<=[.!?])\s+/u)[0] ?? text
-  return /\bpreuves?\b/iu.test(first.replace(NO_EVIDENCE, ''))
+  return /\bpreuves?\b/iu.test(first.replace(NO_EVIDENCE, '')) || needsEvidence(text)
 }
 
 const zeroTestCache = new WeakMap<Ghost, { text: string; k: number }[]>()
@@ -111,25 +137,208 @@ export function zeroTests(g: Ghost): { text: string; k: number }[] {
   if (!out) {
     out = g.confirmationTests
       .filter((t) => t.definitive)
-      .map((t, k) => ({ text: t.text, k }))
-      .filter((t) => !testNeedsEvidence(t.text))
+      .map((t, k) => ({ t, k }))
+      // « requires » : le test n'existe qu'avec cette preuve (empreintes de l'Obake, respiration du Deogen)
+      .filter(({ t }) => !t.requires && !testNeedsEvidence(t.text))
+      .map(({ t, k }) => ({ text: t.text, k }))
     zeroTestCache.set(g, out)
   }
   return out
 }
+
+/* ---- une seule entité possible : ce qu'une phrase pourrait aussi décrire ---- */
+
+/** Vitesse « standard » : 1,7 m/s et accélération normale en ligne de vue. */
+export const standardSpeed = (g: Ghost) =>
+  g.speed.min === 1.7 && g.speed.max == null && g.speed.alt == null && !g.speed.isRange && g.speed.los && !g.speed.losVaries
+/** Seuil « standard » : 50 % dans tous les cas. */
+export const standardSanity = (g: Ghost) => g.huntSanity.low === 50 && g.huntSanity.normal === 50 && g.huntSanity.high === 50
+/** Les seuils possibles d'une entité (bas, normal, haut). */
+export const thresholds = (g: Ghost) => new Set([g.huntSanity.low, g.huntSanity.normal, g.huntSanity.high].filter((v) => v >= 0))
+/** Les vitesses d'une entité (de base, maximale, autre). */
+export const speedValues = (g: Ghost) => new Set([g.speed.min, g.speed.max, g.speed.alt].filter((v): v is number => v != null && v >= 0))
+
+const WORD = /\p{L}{5,}/gu
+const wordsOf = (text: string) => new Set(text.toLowerCase().match(WORD) ?? [])
+/** Un mot ramené à sa forme simple : « jamais » vaut « pas », « cette (entité) » vaut « l' », sans pluriel. */
+const plainWord = (w: string) => (w === 'jamais' ? 'pas' : w === 'cette' ? 'l' : w.length > 3 ? w.replace(/[sx]$/u, '') : w)
+/**
+ * Les paires de mots qui se suivent (« plus visible », « visible pendant »…), pour reconnaître une même
+ * phrase d'une fiche à l'autre (le nom de l'entité est caviardé de part et d'autre).
+ */
+const bigramsOf = (text: string) => {
+  const w = (text.toLowerCase().match(/\p{L}+|\d+(?:,\d+)?/gu) ?? []).map(plainWord)
+  return new Set(w.slice(1).map((x, i) => `${w[i]} ${x}`))
+}
+
+interface Lexicon {
+  /** mots de la fiche de chaque entité (ses signes, capacités, comportements, tests, vitesses, seuils) */
+  words: Map<string, Set<string>>
+  /** nombre d'entités dont la fiche contient le mot */
+  df: Map<string, number>
+  /** chaque phrase de la fiche, en paires de mots */
+  phrases: Map<string, Set<string>[]>
+  /** toutes les paires de mots de la fiche (tri rapide avant de comparer phrase par phrase) */
+  grams: Map<string, Set<string>>
+}
+const lexicons = new WeakMap<readonly Ghost[], Lexicon>()
+
+function lexicon(all: readonly Ghost[]): Lexicon {
+  const cached = lexicons.get(all)
+  if (cached) return cached
+  const nameWords = new Set(all.flatMap((g) => [...wordsOf(`${g.name} ${g.nameEn}`)]))
+  const words = new Map<string, Set<string>>()
+  const df = new Map<string, number>()
+  const phrases = new Map<string, Set<string>[]>()
+  const grams = new Map<string, Set<string>>()
+  for (const g of all) {
+    const texts = [
+      ...g.keyTells,
+      ...[...g.tells, ...g.abilities, ...g.behaviors, ...g.observations, ...g.confirmationTests].map((t) => t.text),
+      g.speed.summary,
+      ...g.speed.details,
+      g.huntSanity.summary,
+      ...g.huntSanity.details,
+    ]
+    const set = new Set([...wordsOf(texts.join(' '))].filter((w) => !nameWords.has(w)))
+    words.set(g.id, set)
+    const sentences = texts.map((t) => bigramsOf(redact(t, g)))
+    phrases.set(g.id, sentences)
+    grams.set(g.id, new Set(sentences.flatMap((p) => [...p])))
+    for (const w of set) df.set(w, (df.get(w) ?? 0) + 1)
+  }
+  const lex = { words, df, phrases, grams }
+  lexicons.set(all, lex)
+  return lex
+}
+
+/** Une phrase de la fiche de o reprend au moins `ratio` des paires de mots de l'énoncé (3 paires au moins). */
+function restated(grams: string[], o: Ghost, lex: Lexicon, ratio: number): boolean {
+  const phrases = lex.phrases.get(o.id)
+  const union = lex.grams.get(o.id)
+  if (grams.length < 3 || !phrases || !union) return false
+  const allowed = Math.floor((1 - ratio) * grams.length + 1e-9)
+  const within = (p: Set<string>) => {
+    let misses = 0
+    for (const b of grams) if (!p.has(b) && ++misses > allowed) return false
+    return true
+  }
+  // aucune phrase ne peut faire mieux que la fiche entière
+  return within(union) && phrases.some(within)
+}
+
+/**
+ * Une autre entité donne-t-elle (presque) le même signe ? « Plus visible pendant les chasses » est aussi
+ * dans la fiche de l'Oni, « Ne fait pas l'événement brouillard fantomatique » dans celle du Kormos ; « Moins
+ * visible pendant les chasses » (Fantôme) ne compte pas : « moins » n'est pas « plus ».
+ */
+export function restatedBy(statement: string, o: Ghost, all: readonly Ghost[]): boolean {
+  return restated([...bigramsOf(statement)], o, lexicon(all), 0.8)
+}
+
+/** Les nombres cités devant une unité (« 1,7 m/s », « 50 % »). */
+const cited = (text: string, unit: RegExp) =>
+  [...text.matchAll(new RegExp(`(\\d+(?:,\\d+)?)\\s*${unit.source}`, 'gu'))].map((m) => Number(m[1].replace(',', '.')))
+
+/**
+ * L'énoncé pourrait-il aussi décrire une autre entité ? On écarte les entités au seuil ou à la vitesse
+ * particuliers quand l'énoncé en parle, celles dont la fiche partage les mots rares de l'énoncé, et celles
+ * dont la fiche contient la même phrase (« Plus visible pendant les chasses »).
+ *
+ * `precise` : quand l'énoncé cite des vitesses ou des seuils, seules les entités qui ont toutes ces valeurs
+ * conviennent, et il faut que tout ce que l'énoncé dit de la vitesse et du seuil leur convienne (utile quand
+ * il n'y a pas de choix à proposer, comme sur une carte de révision, ou pour savoir si une phrase est aussi
+ * vraie de la bonne réponse). Sinon, parler de vitesse ou de seuil suffit à écarter les entités particulières.
+ */
+export function fitsToo(statement: string, all: readonly Ghost[], precise = false): (o: Ghost) => boolean {
+  const sanityTalk = /chass/iu.test(statement) && /%|santé mentale|seuil/iu.test(statement)
+  const speedTalk = /m\/s|vitesse|rapide|ralenti|accél|\blente?\b/iu.test(statement)
+  const pct = precise && sanityTalk ? cited(statement, /%/u) : []
+  const mps = precise && speedTalk ? cited(statement, /m\/s/u) : []
+  const lex = lexicon(all)
+  const { words, df } = lex
+  const rare = [...wordsOf(statement)].filter((w) => (df.get(w) ?? 0) <= 3)
+  const grams = [...bigramsOf(statement)]
+  // « garde une vitesse standard » : seules les entités qui ont 1,7 m/s conviennent (et non les particulières)
+  const standardTalk = /vitesse\s+(?:standard|normale)/iu.test(statement)
+  return (o) => {
+    const sanity = !sanityTalk ? null : pct.length ? pct.every((v) => thresholds(o).has(v)) : !standardSanity(o)
+    const speed = !speedTalk
+      ? null
+      : mps.length
+        ? mps.every((v) => speedValues(o).has(v))
+        : standardTalk
+          ? speedValues(o).has(1.7)
+          : !standardSpeed(o)
+    if (precise ? (sanity ?? speed) != null && sanity !== false && speed !== false : sanity || speed) return true
+    if (restated(grams, o, lex, 1)) return true
+    const theirs = words.get(o.id)
+    const shared = theirs ? rare.filter((w) => theirs.has(w)).length : 0
+    return shared >= 2 || (rare.length <= 2 && shared >= 1)
+  }
+}
+
+/**
+ * Les vitesses et seuils cités sont tous ceux de g : « Il chasse à 1,7 m/s et à 50 % » décrit aussi
+ * n'importe quelle entité standard.
+ */
+export function numbersFit(text: string, g: Ghost): boolean {
+  const mps = cited(text, /m\/s/u)
+  const pct = /chass|seuil/iu.test(text) ? cited(text, /%/u) : []
+  if (!mps.length && !pct.length) return false
+  return mps.every((v) => speedValues(g).has(v)) && pct.every((v) => thresholds(g).has(v))
+}
+
+/** Le texte nomme-t-il l'entité, y compris entre « » (où le caviardage ne touche à rien) ? */
+export function namesGhost(text: string, g: Ghost): boolean {
+  const open = text.replace(/[«»]/gu, ' ')
+  return redact(open, g) !== open
+}
+
+/* ---- les cartes ---- */
 
 /** Cartes de test par entité (les suivants ne sortent qu'en quiz). */
 export const TESTS_PER_GHOST = 2
 /** Cartes « signe à reconnaître » par entité. */
 export const REVERSE_PER_GHOST = 2
 
+const reverseCache = new WeakMap<readonly Ghost[], Map<string, { text: string; k: number }[]>>()
+
+/**
+ * Les signes « 0 preuve » qui deviennent des cartes « Quelle entité correspond à ce signe ? », déjà caviardés
+ * (k : rang parmi les signes 0 preuve, identifiant de carte stable). Une carte ne propose aucun choix : le
+ * signe doit être propre à l'entité. On écarte donc ceux qui passent par une preuve, qui gardent le nom
+ * (entre « ») et ceux qu'une autre entité donne aussi (sa fiche dit presque la même chose).
+ */
+export function reverseTells(g: Ghost, all: readonly Ghost[]): { text: string; k: number }[] {
+  let byGhost = reverseCache.get(all)
+  if (!byGhost) reverseCache.set(all, (byGhost = new Map()))
+  const cached = byGhost.get(g.id)
+  if (cached) return cached
+  const others = all.filter((o) => o.id !== g.id && o.id !== MIMIC)
+  const out = g.tells
+    .filter((t) => t.zeroEvidence)
+    .map((t, k) => ({ text: redact(withoutEvidenceAsides(t.text), g), k }))
+    .filter(
+      ({ text }) =>
+        !needsEvidence(text) &&
+        !namesGhost(text, g) &&
+        // « Attention, la Banshee est elle aussi exclusivement féminine » : le signe vaut pour deux entités
+        !others.some((o) => namesGhost(text, o) || restatedBy(text, o, all)),
+    )
+    .slice(0, REVERSE_PER_GHOST)
+  byGhost.set(g.id, out)
+  return out
+}
+
 /** Les faits de mécaniques à retenir (les autres, utiles pour relever les preuves, restent « bon à savoir »). */
 export const isRetained = (f: Pick<MechanicsFact, 'evidence'>) => !f.evidence
 
-export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
+export function ghostCards(g: Ghost, ghostIndex: number, all: readonly Ghost[] = [g]): Card[] {
   const base = 1000 + ghostIndex * 20
   const cards: Card[] = []
-  const keyTells = g.keyTells.filter((t) => !isEvidenceList(t))
+  // « Silhouette D.O.T.S visible seulement à la caméra », « Respiration à la Spirit Box » : rien à apprendre sans preuve
+  const keyTells = g.keyTells.filter((t) => !isEvidenceList(t) && !needsEvidence(t))
 
   if (keyTells.length) {
     cards.push({
@@ -137,7 +346,7 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
       deck: 'ghost',
       kind: 'tells',
       ghostId: g.id,
-      front: `Comment reconnaître ${le(g.name)} ? Cite ses signes clés.`,
+      front: `Comment reconnaître ${le(g.name)} ? Cite ${/^Les\s/u.test(g.name) ? 'leurs' : 'ses'} signes clés.`,
       back: g.summary,
       backList: keyTells,
       order: base + KIND_ORDER.tells,
@@ -184,23 +393,20 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
       })
     })
 
-  // cartes inversées : à partir des signes « 0 preuve », propres à l'entité
-  g.tells
-    .filter((t) => t.zeroEvidence)
-    .slice(0, REVERSE_PER_GHOST)
-    .forEach((t, k) => {
-      cards.push({
-        id: `g:${g.id}:rev:${k}`,
-        deck: 'ghost',
-        kind: 'reverse',
-        ghostId: g.id,
-        front: 'Quelle entité correspond à ce signe ?',
-        quote: redact(t.text, g),
-        back: `${g.name}${g.nameEn !== g.name ? ` (${g.nameEn})` : ''}`,
-        backList: [g.summary],
-        order: base + KIND_ORDER.reverse,
-      })
+  // cartes inversées : à partir des signes « 0 preuve » propres à l'entité
+  reverseTells(g, all).forEach(({ text, k }) => {
+    cards.push({
+      id: `g:${g.id}:rev:${k}`,
+      deck: 'ghost',
+      kind: 'reverse',
+      ghostId: g.id,
+      front: 'Quelle entité correspond à ce signe ?',
+      quote: text,
+      back: `${g.name}${g.nameEn !== g.name ? ` (${g.nameEn})` : ''}`,
+      backList: [g.summary],
+      order: base + KIND_ORDER.reverse,
     })
+  })
 
   return cards
 }
@@ -235,7 +441,7 @@ export function noteCards(notes: CoachNote[]): Card[] {
     const body = n.body?.trim() ?? ''
     // sans question explicite, on demande de se souvenir du contenu de la note
     const title = n.title.trim()
-    const front = question || (/[?!…]$/.test(title) ? `Que retenir de «\u202f${title}\u202f»` : `Que retenir de «\u202f${title}\u202f»\u202f?`)
+    const front = question || (/[?!…]$/.test(title) ? `Que retenir de « ${title} »` : `Que retenir de « ${title} » ?`)
     const back = answer || body
     if (!back) return
     out.push({
@@ -247,13 +453,14 @@ export function noteCards(notes: CoachNote[]): Card[] {
       back,
       backList: answer && body && body !== answer ? [body] : [],
       order: i,
+      author: n.author,
     })
   })
   return out
 }
 
 export function buildDeck(ghosts: Ghost[], mechanics: Mechanics, notes: CoachNote[]): Card[] {
-  return [...noteCards(notes), ...ghosts.flatMap((g, i) => ghostCards(g, i)), ...mechanicsCards(mechanics)]
+  return [...noteCards(notes), ...ghosts.flatMap((g, i) => ghostCards(g, i, ghosts)), ...mechanicsCards(mechanics)]
 }
 
 /* ---- petites aides de français ---- */

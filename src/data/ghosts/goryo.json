@@ -26,19 +26,19 @@
       "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
     ]
   },
-  "summary": "Une entité discrète et casanière, dont la silhouette D.O.T.S ne se voit qu'à travers une caméra vidéo et jamais quand quelqu'un est dans la pièce.",
+  "summary": "Une entité casanière : elle s'éloigne rarement de sa pièce et ne change jamais d'elle-même de pièce favorite.",
   "keyTells": [
     "Ne change jamais seul de pièce favorite et s'en éloigne peu",
     "Activité groupée dans sa pièce et à ses abords : rien ne bouge à l'autre bout de la carte",
-    "Silhouette D.O.T.S visible uniquement à la caméra vidéo, jamais à l'œil nu",
-    "Pas de D.O.T.S quand un joueur est dans la même pièce"
+    "Pas de longue errance : les capteurs de mouvement des couloirs autour de sa pièce ne se déclenchent presque jamais hors chasse",
+    "Vitesse (1,7 m/s) et seuil (50 %) standard : ce sont ses déplacements qui le trahissent, pas ses chasses"
   ],
   "tells": [
     { "text": "Le D.O.T.S n'apparaît que sur une caméra vidéo et ne se montre pas si un joueur est dans la même pièce (l'état D.O.T.S peut toutefois commencer hors de la pièce et entrer dans la pièce où se trouve un joueur).", "zeroEvidence": false }
   ],
   "behaviors": [
     { "text": "Ne peut pas changer de pièce favorite. Exception valable pour toutes les entités : le vœu « Je souhaite être sain d'esprit » de la patte de singe déplace la pièce favorite dans une pièce aléatoire.", "zeroEvidence": true },
-    { "text": "S'éloigne rarement de sa pièce et ne peut pas faire de longue errance : il reste plus souvent dans sa pièce.", "zeroEvidence": true },
+    { "text": "S'éloigne rarement de sa pièce et ne peut pas faire de longue errance : reste plus souvent dans sa pièce.", "zeroEvidence": true },
     { "text": "Depuis la mise à jour Chronicle (v0.13, juin 2025), a davantage de chances d'entrer dans l'état D.O.T.S.", "zeroEvidence": false }
   ],
   "abilities": [],

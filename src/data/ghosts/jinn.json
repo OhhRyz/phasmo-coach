@@ -66,7 +66,7 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse (disjoncteur allumé), place-toi à plus de 3 m de l'entité. Si elle passe de 1,7 m/s à 2,5 m/s quand elle te voit, puis ralentit une fois à moins de 3 m de toi, c'est un Djinn. Méfie-toi de l'électronique allumée, pour ne pas confondre avec l'accélération du Raiju.",
+      "text": "Pendant une chasse (disjoncteur allumé), place-toi à plus de 3 m de l'entité. Si l'entité passe de 1,7 m/s à 2,5 m/s en te voyant, puis ralentit une fois à moins de 3 m de toi, c'est un Djinn. Méfie-toi de l'électronique allumée, pour ne pas confondre avec l'accélération du Raiju.",
       "definitive": true
     }
   ],

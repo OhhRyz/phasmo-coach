@@ -86,7 +86,8 @@ function Welcome() {
           onSubmit={(e) => {
             e.preventDefault()
             if (!name.trim()) return
-            // le rôle reste celui du carnet (seul·e par défaut, coaché·e si un lien de notes a déjà été ouvert)
+            // le rôle reste celui du carnet (seul·e par défaut, coaché·e si le lien d'un coach a déjà été ouvert ;
+            // onboardProfile repasse en seul·e quand ce « coach » porte le prénom saisi)
             dispatch({ type: 'onboard', profile: { name: name.trim() } })
             // même adresse, autre écran : on repart du haut de la page
             window.scrollTo({ top: 0 })
