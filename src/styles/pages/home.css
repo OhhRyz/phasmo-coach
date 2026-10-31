@@ -1,0 +1,6 @@
+/* Page : accueil */
+.steps-doodle { display: block; width: 100%; max-width: 170px; margin-top: 8px; color: var(--ink-2); }
+.notes-empty { grid-column: 1 / -1; font-size: 16.5px; color: var(--ink-2); max-width: 32em; }
+.suspects .hint.pencil-note { color: var(--pencil); font-size: 20px; }
+.welcome-form { max-width: 520px; }
+.registry .nm .rough { color: var(--red-pen); }

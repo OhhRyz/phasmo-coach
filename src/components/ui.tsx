@@ -2,24 +2,28 @@ import { useEffect, type CSSProperties, type ReactNode } from 'react'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost } from '../data/types'
 import { masteryLevel } from '../engine/progress'
+import { H } from './journal/Journal'
 
+type Style = CSSProperties & Record<`--${string}`, string | number>
+
+/** Nom d'une preuve, souligné dans sa couleur du jeu. */
 export function Evidence({ id, forced, fake, short }: { id: EvidenceId; forced?: boolean; fake?: boolean; short?: boolean }) {
   const ev = EVIDENCE[id]
   return (
     <span
-      className={`evi${forced ? ' forced' : ''}`}
-      style={{ '--c': ev.color } as CSSProperties}
+      className={`evw${forced ? ' forced' : ''}`}
+      style={{ '--c': ev.color } as Style}
       title={forced ? `${ev.label} : preuve forcée` : fake ? `${ev.label} : fausse preuve` : ev.label}
     >
       {short ? ev.short : ev.label}
-      {fake && <span className="faint">(fausse)</span>}
+      {fake && <span className="faint"> (fausse)</span>}
     </span>
   )
 }
 
 export function GhostEvidence({ ghost, short }: { ghost: Ghost; short?: boolean }) {
   return (
-    <span className="evi-list">
+    <span className="evw-list">
       {ghost.evidence.map((e) => (
         <Evidence key={e} id={e} short={short} forced={ghost.forcedEvidence === e} />
       ))}
@@ -28,28 +32,29 @@ export function GhostEvidence({ ghost, short }: { ghost: Ghost; short?: boolean 
   )
 }
 
-/** Maîtrise : pourcentage + fine barre. */
+/** Maîtrise : coup de surligneur proportionnel + pourcentage tapé. */
 export function Mastery({ value, showLabel }: { value: number; showLabel?: boolean }) {
   const pct = Math.round(value * 100)
   return (
     <span className="mastery" title={`Maîtrise : ${pct} % (${masteryLevel(value).label})`}>
-      <span className="bar" aria-hidden>
-        <i style={{ width: `${Math.max(2, pct)}%` }} />
-      </span>
+      <span className="mastery-hl" style={{ '--m': value } as Style} aria-hidden />
       <span className="pct">{pct} %</span>
-      {showLabel && <span className="faint small">{masteryLevel(value).label}</span>}
+      {showLabel && <span className="hand mastery-word">{masteryLevel(value).label.toLowerCase()}</span>}
     </span>
   )
 }
 
+/** Avancement d'une séance : un trait de crayon qui se remplit à l'encre rouge. */
 export function ProgressBar({ value, label }: { value: number; label?: string }) {
+  const pct = Math.min(100, Math.max(0, value * 100))
   return (
-    <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)} aria-label={label}>
-      <i style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} />
+    <div className="pbar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={label}>
+      <i style={{ width: `${pct}%` }} />
     </div>
   )
 }
 
+/** Choix exclusif : l'option retenue est entourée au stylo. */
 export function Seg<T extends string | number>({
   value,
   options,
@@ -62,9 +67,9 @@ export function Seg<T extends string | number>({
   label: string
 }) {
   return (
-    <div className="seg" role="group" aria-label={label}>
+    <div className="opts" role="group" aria-label={label}>
       {options.map((o) => (
-        <button key={String(o.value)} type="button" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
+        <button key={String(o.value)} type="button" className="opt" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}
@@ -110,20 +115,21 @@ export function Modal({
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="empty">
-      <h2>{title}</h2>
+    <div className="empty-note">
+      <H>{title}</H>
       {children}
     </div>
   )
 }
 
+/** Ancien en-tête de page : conservé le temps de migrer toutes les pages vers le carnet. */
 export function PageHead({ title, children, actions, crumb }: { title: ReactNode; children?: ReactNode; actions?: ReactNode; crumb?: ReactNode }) {
   return (
-    <header className="page-head">
+    <header className="legacy-head">
       {crumb}
-      <h1>{title}</h1>
-      {children && <p className="lead">{children}</p>}
-      {actions && <div className="row actions">{actions}</div>}
+      <H as="h1">{title}</H>
+      {children && <p className="prose">{children}</p>}
+      {actions && <div className="row">{actions}</div>}
     </header>
   )
 }

@@ -1,0 +1,188 @@
+/* ==========================================================================
+   Éléments propres à l'application, dans la langue du journal d'enquête
+   ========================================================================== */
+
+/* carnet à une seule page (écrans d'exercice, réglages…) */
+.notebook--single { grid-template-columns: 1fr; max-width: 900px; }
+.notebook--single > .page--left { padding-right: 64px; }
+@media (max-width: 1180px) {
+  .notebook--single { max-width: 760px; }
+}
+@media (max-width: 759px) {
+  .notebook--single > .page--left { padding-right: 16px; }
+}
+
+.desk-foot {
+  max-width: 1320px; margin: 0 auto; padding: 0 28px 34px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 22px;
+  font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .04em; color: var(--desk-ink-2);
+}
+.desk-foot a { color: var(--desk-ink); }
+@media (max-width: 759px) { .desk-foot { padding: 4px 18px 26px; } }
+
+.save-warning {
+  max-width: 1320px; margin: 0 auto 10px; padding: 10px 18px;
+  font-family: "Courier Prime", monospace; font-size: 14px; color: #fff3ea; background: var(--cta);
+}
+
+.who { text-decoration: none; }
+.who:hover b { color: var(--red-pen); }
+
+/* boutons */
+button.btn-tape { border: 0; cursor: pointer; }
+.btn-wrap.is-disabled { opacity: .45; pointer-events: none; }
+.link-btn { border: 0; background: none; padding: 0; cursor: pointer; }
+.stamp--ink { color: var(--ink); }
+.box .x { color: var(--pencil); }
+
+/* bouton secondaire : une étiquette de papier collée */
+.paper-btn {
+  --r: .8deg;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px 7px;
+  font-family: "Elite", monospace; font-size: 14.5px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.1;
+  color: var(--ink); background: var(--label); border: 0; cursor: pointer; text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transform: rotate(var(--r));
+  transition: transform .18s ease;
+}
+.paper-btn:hover { transform: rotate(0) translateY(-1px); color: var(--red-pen); }
+.paper-btn:disabled { opacity: .45; cursor: not-allowed; transform: rotate(var(--r)); }
+.paper-btn[aria-pressed="true"] { color: var(--red-pen); }
+
+/* options entourées au stylo (remplace les sélecteurs) */
+.opts { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.opt {
+  position: relative; border: 0; background: none; cursor: pointer;
+  padding: 5px 10px 4px;
+  font-family: "Courier Prime", monospace; font-size: 15px; color: var(--ink-2);
+  border: 2px solid transparent;
+  border-radius: 48% 52% 45% 55% / 60% 42% 58% 40%;
+}
+.opt:hover { color: var(--ink); }
+.opt[aria-pressed="true"] {
+  color: var(--ink); font-weight: 700;
+  border-color: var(--red-pen);
+  transform: rotate(-1.5deg);
+}
+
+/* champs : on écrit sur la ligne */
+.field { display: grid; gap: 4px; }
+.field-label, .field > span:first-child {
+  font-family: "Courier Prime", monospace; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2);
+}
+.field small { font-family: "Caslon", serif; font-size: 14.5px; color: var(--ink-3); font-style: italic; }
+.input, .textarea, .select {
+  width: 100%; padding: 6px 2px 5px;
+  font-family: "Caveat", cursive; font-size: 25px; line-height: 1.2; color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1.5px solid var(--ink-3); border-radius: 0;
+}
+.textarea {
+  min-height: 140px; resize: vertical; line-height: 32px; padding-top: 2px;
+  background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--ink-3) 31px 32px);
+  border-bottom: 0;
+}
+.select { font-family: "Courier Prime", monospace; font-size: 16px; padding: 8px 2px; }
+.input::placeholder, .textarea::placeholder { color: var(--ink-3); opacity: .7; }
+.input:focus, .textarea:focus, .select:focus { outline: none; border-bottom-color: var(--red-pen); }
+.textarea:focus { background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--red-pen) 31px 32px); }
+.range { width: 100%; accent-color: var(--red-pen); }
+.input.typed { font-family: "Courier Prime", monospace; font-size: 17px; }
+
+/* case à cocher du journal dans les formulaires */
+.check-line { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; cursor: pointer; }
+.check-line input { position: absolute; opacity: 0; width: 26px; height: 26px; margin: 0; cursor: pointer; }
+.check-line .box { position: relative; width: 22px; height: 22px; margin-top: 3px; }
+.check-line .box svg { position: absolute; inset: -8px; width: 38px; height: 38px; overflow: visible; }
+.check-line .box .b { color: var(--ink-2); }
+.check-line .box .t { color: var(--red-pen); }
+.check-line input:focus-visible + .box { outline: 2px dashed var(--red-pen); outline-offset: 4px; }
+.check-line .txt { font-size: 17px; line-height: 1.4; }
+.check-line .txt small { display: block; font-size: 14.5px; color: var(--ink-3); font-style: italic; }
+
+/* fenêtre : une fiche bristol posée sur la page */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 8, 5, .5);
+}
+.modal {
+  width: min(580px, 100%); max-height: calc(100dvh - 32px); overflow: auto;
+  padding: 18px 26px 24px; transform: rotate(-.4deg);
+  background:
+    linear-gradient(var(--card-head), var(--card-head)) 0 58px / 100% 1.6px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--card-rule) 27px 28px) 0 59px / 100% calc(100% - 59px) no-repeat,
+    var(--card);
+  box-shadow: var(--shadow-md), 0 30px 60px -20px rgba(0, 0, 0, .6);
+  line-height: 28px;
+}
+.modal h2 { margin: 0 0 18px; height: 40px; font-family: "Elite", monospace; font-weight: 400; font-size: 17px; letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: flex-end; }
+.modal-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 14px 22px; margin-top: 24px; }
+
+/* message éphémère : un bout de papier scotché */
+.toasts { position: fixed; z-index: 80; left: 50%; bottom: 26px; transform: translateX(-50%); display: grid; gap: 10px; pointer-events: none; width: min(420px, calc(100vw - 32px)); }
+.toast {
+  position: relative; justify-self: center; padding: 12px 18px 10px;
+  font-family: "Caveat", cursive; font-size: 24px; line-height: 1.1; color: var(--ink);
+  background: var(--label); box-shadow: var(--shadow-md); transform: rotate(-1deg);
+  animation: settle .5s cubic-bezier(.2, .9, .3, 1.15) both;
+}
+.toast::before { content: ""; position: absolute; left: 50%; top: -10px; width: 64px; height: 20px; margin-left: -32px; background: var(--tape); transform: rotate(3deg); }
+@media (max-width: 759px) { .toasts { bottom: calc(96px + env(safe-area-inset-bottom)); } }
+
+/* état vide */
+.empty-note { padding: 26px 0; }
+.empty-note .h { margin-bottom: 10px; }
+.empty-note p { color: var(--ink-2); font-size: 17px; }
+
+/* raccourcis clavier discrets */
+.kbd { font-family: "Courier Prime", monospace; font-size: 11px; letter-spacing: .06em; color: var(--ink-3); border: 1px solid var(--ink-3); border-radius: 2px; padding: 0 4px; }
+@media (hover: none) { .kbd { display: none; } }
+
+/* paragraphes courants dans les pages */
+.page p { margin: 0 0 12px; }
+.prose { font-size: 17px; line-height: 1.6; max-width: 38em; }
+.prose + .prose { margin-top: 10px; }
+.typed-label { font-family: "Courier Prime", monospace; font-size: 12.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.pre { white-space: pre-wrap; }
+.stack { display: grid; gap: var(--gap, 18px); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap, 12px 22px); }
+.row.between { justify-content: space-between; }
+
+/* preuves soulignées dans leur couleur */
+.evw-list { display: inline-flex; flex-wrap: wrap; gap: 2px 14px; }
+.evw.forced { text-decoration-style: double; }
+
+/* maîtrise au surligneur */
+.mastery { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.mastery-hl { position: relative; display: inline-block; width: 58px; height: 12px; }
+.mastery-hl::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: calc(max(var(--m), .04) * 100%);
+  background: var(--hl); border-radius: 2px 7px 3px 6px / 6px 3px 7px 2px; transform: skewX(-8deg);
+  box-shadow: 0 0 10px var(--hl-glow); mix-blend-mode: var(--blend);
+}
+.mastery-hl::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--ink-3); opacity: .5; }
+.mastery .pct { font-family: "Courier Prime", monospace; font-size: 12.5px; color: var(--ink-2); min-width: 3.2em; }
+.mastery-word { font-size: 22px; }
+
+/* avancement */
+.pbar { position: relative; height: 6px; flex: 1; background: linear-gradient(var(--ink-3), var(--ink-3)) 0 50% / 100% 1px no-repeat; }
+.pbar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--red-pen); border-radius: 3px 1px 4px 2px; transition: width .4s ease; }
+
+/* carnet de preuves (cases du journal cliquables) */
+.tracker { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+.tracker .ev { display: block; padding: 0; min-height: 0; }
+.tracker .ev-btn {
+  display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: center;
+  width: 100%; min-height: 44px; padding: 6px 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit;
+}
+.tracker .ev-btn:hover .ev-name { color: var(--red-pen); }
+.tracker .ev .side { font-size: 19px; }
+.tracker .ev.impossible .ev-name { color: var(--ink-3); }
+.tracker .ev.impossible .box { opacity: .45; }
+.tracker--compact { grid-template-columns: 1fr; }
+@media (max-width: 759px) { .tracker { grid-template-columns: 1fr 1fr; column-gap: 14px; } }
+
+/* annotations de l'app (pas la voix du coach) : au crayon */
+.pencil-note { font-family: "Caveat", cursive; font-weight: 500; color: var(--pencil); line-height: 1.05; }

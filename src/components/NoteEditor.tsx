@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { GHOSTS } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { newId, useStore } from '../store/store'
+import { CheckLine, PaperButton, TapeButton, TypedLink } from './journal/Journal'
 import { useToast } from './Toast'
 
+type Style = CSSProperties & Record<`--${string}`, string | number>
+
+/** Écrire une note du coach : une page de bloc-notes, au stylo. */
 export function NoteEditor({
   ghostId = null,
   note,
@@ -60,40 +64,40 @@ export function NoteEditor({
 
   if (!open) {
     return (
-      <button type="button" className="btn note-add" onClick={() => setOpen(true)}>
-        Ajouter une note du coach
-      </button>
+      <p className="note-add">
+        <PaperButton onClick={() => setOpen(true)} rotate={-1}>
+          + Ajouter une note du coach
+        </PaperButton>
+      </p>
     )
   }
 
   return (
-    <form className="panel stack note-editor" onSubmit={submit}>
-      <div className="grid-2">
-        <label className="field">
-          <span>Titre</span>
-          <input
-            className="input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="ex. Le piège du Démon et de l’encens"
-            maxLength={120}
-            autoFocus={!note}
-          />
-        </label>
-        <label className="field">
-          <span>Entité concernée</span>
-          <select className="select" value={ghost ?? ''} onChange={(e) => setGhost(e.target.value || null)}>
-            <option value="">Général (aucune entité)</option>
-            {GHOSTS.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+    <form className="note-form" onSubmit={submit} style={{ '--r': note ? '0deg' : '-.4deg' } as Style}>
       <label className="field">
-        <span>Ce que je t’explique</span>
+        <span>Titre</span>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="ex. Le piège du Démon et de l’encens"
+          maxLength={120}
+          autoFocus={!note}
+        />
+      </label>
+      <label className="field">
+        <span>Entité concernée</span>
+        <select className="select" value={ghost ?? ''} onChange={(e) => setGhost(e.target.value || null)}>
+          <option value="">Général (aucune entité)</option>
+          {GHOSTS.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        <span>Ce que j’explique</span>
         <textarea
           className="textarea"
           value={body}
@@ -102,21 +106,15 @@ export function NoteEditor({
           maxLength={4000}
         />
       </label>
-      <label className="check">
-        <input type="checkbox" checked={asCard} onChange={(e) => setAsCard(e.target.checked)} />
-        <span>
-          Ajouter à la révision espacée
-          <span className="faint small" style={{ display: 'block' }}>
-            La note reviendra d’elle-même au bon moment, pour ne pas être oubliée.
-          </span>
-        </span>
-      </label>
+      <CheckLine checked={asCard} onChange={setAsCard} seed={`asCard-${note?.id ?? 'new'}`} hint="La note reviendra d’elle-même au bon moment, pour ne pas être oubliée.">
+        Ajouter à la révision espacée
+      </CheckLine>
       {asCard && (
-        <div className="grid-2">
+        <div className="note-qa-fields">
           <label className="field">
             <span>Question (facultatif)</span>
             <input className="input" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="ex. Combien de temps l’encens bloque-t-il un Démon ?" />
-            <small>Sinon, le titre sert de question.</small>
+            <small>Sinon, on te demandera de te souvenir du titre.</small>
           </label>
           <label className="field">
             <span>Réponse attendue (facultatif)</span>
@@ -125,22 +123,20 @@ export function NoteEditor({
           </label>
         </div>
       )}
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
+      <div className="row note-actions">
+        <TapeButton type="submit" disabled={!title.trim() && !body.trim()} arrow={false}>
+          {note ? 'Enregistrer' : 'Coller la note'}
+        </TapeButton>
         {(compact || note) && (
-          <button
-            type="button"
-            className="btn btn-quiet"
+          <TypedLink
             onClick={() => {
               if (!note) setOpen(false)
               onDone?.()
             }}
           >
-            Annuler
-          </button>
+            annuler
+          </TypedLink>
         )}
-        <button type="submit" className="btn btn-primary" disabled={!title.trim() && !body.trim()}>
-          {note ? 'Enregistrer' : 'Ajouter la note'}
-        </button>
       </div>
     </form>
   )

@@ -1,60 +1,212 @@
-import { useMemo, type ReactNode } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { buildReviewQueue } from '../engine/progress'
 import { useStore } from '../store/store'
-import { useTheme, type ThemeChoice } from '../theme'
+import { useTheme } from '../theme'
+import { InkFilter } from './journal/Journal'
+import { roughEllipse, roughRng } from './journal/rough'
 
 const TRAIN_PATHS = ['/entrainement', '/quiz', '/enquete', '/oreille']
 
-const THEME_LABEL: Record<ThemeChoice, string> = { system: 'Thème auto', light: 'Thème clair', dark: 'Thème sombre' }
-const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: 'light', light: 'dark', dark: 'system' }
+function reducedMotion() {
+  return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/** Lumière de fenêtre le jour, lampe torche la nuit (suit le pointeur ou le doigt). */
+function Ambient() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const amb = ref.current
+    if (!amb) return
+    const root = document.documentElement
+    const reduced = reducedMotion()
+    let x = innerWidth * 0.66
+    let y = innerHeight * 0.36
+    let tx = x
+    let ty = y
+    let raf = 0
+    const t0 = performance.now()
+    const r1 = (n: number) => Math.round(n * 10) / 10
+    const paint = () => {
+      amb.style.setProperty('--mx', `${r1(x)}px`)
+      amb.style.setProperty('--my', `${r1(y)}px`)
+      document.querySelectorAll<HTMLElement>('.uv').forEach((u) => {
+        const b = u.getBoundingClientRect()
+        u.style.setProperty('--lx', `${r1(x - b.left)}px`)
+        u.style.setProperty('--ly', `${r1(y - b.top)}px`)
+      })
+    }
+    const loop = (now: number) => {
+      raf = 0
+      if (root.dataset.theme !== 'dark') return
+      const sway = reduced ? 0 : 1
+      const t = (now - t0) / 1000
+      const sx = tx + Math.sin(t * 1.3) * 3 * sway
+      const sy = ty + Math.cos(t * 1.7) * 2.5 * sway
+      x += (sx - x) * 0.16
+      y += (sy - y) * 0.16
+      paint()
+      if (!reduced && !document.hidden) raf = requestAnimationFrame(loop)
+    }
+    const kick = () => {
+      paint()
+      if (!raf && root.dataset.theme === 'dark') raf = requestAnimationFrame(loop)
+    }
+    const onPointer = (e: PointerEvent) => {
+      tx = e.clientX
+      ty = e.clientY
+      kick()
+    }
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (!t) return
+      tx = t.clientX
+      ty = t.clientY
+      kick()
+    }
+    addEventListener('pointermove', onPointer, { passive: true })
+    addEventListener('touchstart', onTouch, { passive: true })
+    addEventListener('touchmove', onTouch, { passive: true })
+    addEventListener('scroll', paint, { passive: true })
+    addEventListener('resize', paint)
+    document.addEventListener('visibilitychange', kick)
+    const obs = new MutationObserver(kick)
+    obs.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    kick()
+
+    // de temps en temps, la lampe vacille
+    let flickTimer = 0
+    if (!reduced) {
+      const flick = () => {
+        if (root.dataset.theme === 'dark' && !document.hidden) {
+          amb.querySelectorAll('.beam, .beam-dark').forEach((b) => {
+            b.classList.remove('flicker')
+            void (b as HTMLElement).offsetWidth
+            b.classList.add('flicker')
+          })
+        }
+        flickTimer = window.setTimeout(flick, 28000 + Math.random() * 30000)
+      }
+      flickTimer = window.setTimeout(flick, 22000)
+    }
+    return () => {
+      removeEventListener('pointermove', onPointer)
+      removeEventListener('touchstart', onTouch)
+      removeEventListener('touchmove', onTouch)
+      removeEventListener('scroll', paint)
+      removeEventListener('resize', paint)
+      document.removeEventListener('visibilitychange', kick)
+      obs.disconnect()
+      if (raf) cancelAnimationFrame(raf)
+      window.clearTimeout(flickTimer)
+    }
+  }, [])
+  return (
+    <div className="ambient" ref={ref} aria-hidden>
+      <div className="window-light" />
+      <div className="window-mullions" />
+      <div className="beam-dark" />
+      <div className="beam" />
+      <div className="blackout" />
+    </div>
+  )
+}
+
+/** Le disjoncteur du jeu : bascule entre jour et nuit, avec une brève coupure de courant. */
+function Breaker() {
+  const [, setTheme] = useTheme()
+  const flip = () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    const blackout = document.querySelector('.blackout')
+    if (reducedMotion() || !blackout) return setTheme(next)
+    blackout.classList.remove('on')
+    void (blackout as HTMLElement).offsetWidth
+    blackout.classList.add('on')
+    window.setTimeout(() => setTheme(next), 120)
+  }
+  const dark = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
+  return (
+    <button className="breaker" type="button" aria-pressed={dark} aria-label="Disjoncteur : passer en thème clair ou sombre" onClick={flip}>
+      <span className="breaker-box">
+        <span className="breaker-lever" />
+      </span>
+      <span className="breaker-txt">
+        <span>Lumière</span>
+        <span>{dark ? 'OFF' : 'ON'}</span>
+      </span>
+    </button>
+  )
+}
+
+function CountCircle({ n }: { n: number }) {
+  const label = n > 99 ? '99+' : String(n)
+  const w = 12 + label.length * 9
+  const d = roughEllipse(w, 20, roughRng('count'), 0.05, 0.1)
+  return (
+    <b className="count" aria-label={`${n} cartes à réviser`}>
+      {label}
+      <svg className="draw" viewBox={`0 0 ${w + 14} 32`} aria-hidden>
+        <path d={d} transform="translate(7 6)" pathLength={1} strokeWidth={1.6} style={{ ['--d' as string]: '1.2s' }} />
+      </svg>
+    </b>
+  )
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const { state, deck, saveFailed } = useStore()
   const { pathname } = useLocation()
-  const [theme, setTheme] = useTheme()
+  useTheme() // garde le thème synchronisé (choix « comme l'appareil »)
   const due = useMemo(() => buildReviewQueue(state, deck, Date.now()).length, [state, deck])
   const trainActive = TRAIN_PATHS.some((p) => pathname.startsWith(p))
-  const cls = (active: boolean) => (active ? 'active' : undefined)
+  const current = (active: boolean) => (active ? ('page' as const) : undefined)
 
   return (
-    <div className="app">
-      <header className="header">
-        <div className="header-inner">
-          <Link to="/" className="wordmark">
-            Phasmo <em>Coach</em>
+    <>
+      <InkFilter />
+      <Ambient />
+      <header className="desk-top">
+        <Link className="brand" to="/">
+          <span className="brand-name">
+            Phasmo <i>Coach</i>
+          </span>
+          <span className="brand-sub">Carnet d’enquête{state.profile.name ? ` de ${state.profile.name}` : ''}</span>
+        </Link>
+        <div className="desk-tools">
+          <Link to="/profil" className="who">
+            <b>{state.profile.name || 'Profil'}</b>
+            {state.profile.role === 'coach' ? 'coach' : state.profile.coachName ? `coachée par ${state.profile.coachName}` : 'réglages'}
           </Link>
-          <nav className="nav" aria-label="Navigation principale">
-            <NavLink to="/" end className={({ isActive }) => cls(isActive)}>
-              Accueil
-            </NavLink>
-            <NavLink to="/revision" className={({ isActive }) => cls(isActive)}>
-              Réviser
-              {due > 0 && <span className="count">{due > 99 ? '99+' : due}</span>}
-            </NavLink>
-            <NavLink to="/entrainement" className={() => cls(trainActive)}>
-              S’entraîner
-            </NavLink>
-            <NavLink to="/codex" className={({ isActive }) => cls(isActive)}>
-              Codex
-            </NavLink>
-            <NavLink to="/mecaniques" className={({ isActive }) => cls(isActive)}>
-              Mécaniques
-            </NavLink>
-            <NavLink to="/carnet" className={({ isActive }) => cls(isActive)}>
-              Carnet
-            </NavLink>
-          </nav>
-          <div className="header-side">
-            <button type="button" className="theme-toggle" onClick={() => setTheme(NEXT_THEME[theme])} title="Changer de thème">
-              {THEME_LABEL[theme]}
-            </button>
-            <NavLink to="/profil" className={({ isActive }) => cls(isActive)}>
-              {state.profile.name || 'Profil'}
-            </NavLink>
-          </div>
+          <Breaker />
         </div>
       </header>
+
+      <nav className="tabs" aria-label="Navigation principale">
+        <Link className="tab" to="/" aria-current={current(pathname === '/')}>
+          <span className="long">Aujourd’hui</span>
+          <span className="short">Accueil</span>
+        </Link>
+        <Link className="tab" to="/revision" aria-current={current(pathname.startsWith('/revision'))}>
+          <span className="long">Réviser</span>
+          <span className="short">Réviser</span>
+          {due > 0 && <CountCircle n={due} />}
+        </Link>
+        <Link className="tab" to="/codex" aria-current={current(pathname.startsWith('/codex'))}>
+          <span className="long">Codex</span>
+          <span className="short">Codex</span>
+        </Link>
+        <Link className="tab" to="/entrainement" aria-current={current(trainActive)}>
+          <span className="long">S’entraîner</span>
+          <span className="short">Exercices</span>
+        </Link>
+        <Link className="tab" to="/mecaniques" aria-current={current(pathname.startsWith('/mecaniques'))}>
+          <span className="long">Mécaniques</span>
+          <span className="short">Méca</span>
+        </Link>
+        <Link className="tab" to="/carnet" aria-current={current(pathname.startsWith('/carnet'))}>
+          <span className="long">Carnet</span>
+          <span className="short">Carnet</span>
+        </Link>
+      </nav>
 
       {saveFailed && (
         <p className="save-warning" role="alert">
@@ -62,35 +214,13 @@ export function Layout({ children }: { children: ReactNode }) {
           profil pour ne rien perdre.
         </p>
       )}
-      <main className="main" id="contenu">
-        {children}
-      </main>
 
-      <footer className="footer">
-        <div className="footer-inner">
-          <span>Projet de fan, non affilié à Kinetic Games. Données issues de l’Unofficial Phasmo Cheat Sheet de Ty Bayn.</span>
-          <Link to="/a-propos">Sources, licence et fonctionnement</Link>
-        </div>
+      {children}
+
+      <footer className="desk-foot">
+        <span>Projet de fan, non affilié à Kinetic Games. Données issues de l’Unofficial Phasmo Cheat Sheet de Ty Bayn.</span>
+        <Link to="/a-propos">Sources, licence et fonctionnement</Link>
       </footer>
-
-      <nav className="tabbar" aria-label="Navigation">
-        <NavLink to="/" end className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>
-          Accueil
-        </NavLink>
-        <NavLink to="/revision" className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>
-          Réviser
-          {due > 0 && <span className="count">{due > 99 ? '99+' : due}</span>}
-        </NavLink>
-        <NavLink to="/entrainement" className={() => `tab${trainActive ? ' active' : ''}`}>
-          S’entraîner
-        </NavLink>
-        <NavLink to="/codex" className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>
-          Codex
-        </NavLink>
-        <NavLink to="/carnet" className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>
-          Carnet
-        </NavLink>
-      </nav>
-    </div>
+    </>
   )
 }

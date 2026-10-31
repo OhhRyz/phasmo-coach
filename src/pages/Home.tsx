@@ -1,61 +1,86 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { Mastery, Seg } from '../components/ui'
+import {
+  CheckLine,
+  Envelope,
+  FileHead,
+  H,
+  IndexCard,
+  MarginNote,
+  Notebook,
+  Page,
+  Polaroid,
+  RoughCircle,
+  Stamp,
+  Sticky,
+  Tally,
+  TapeButton,
+  TypedLink,
+} from '../components/journal/Journal'
+import { UvPrint } from '../components/journal/Charts'
+import { Seg } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
-import { formatDate } from '../engine/format'
-import { buildReviewQueue, learnedCount, masteryLevel, streak } from '../engine/progress'
+import { buildReviewQueue, streak } from '../engine/progress'
+import { dayKey } from '../engine/format'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { WEAK_COUNT } from './Quiz'
 
-function greeting(): string {
-  const h = new Date().getHours()
-  if (h < 5) return 'Bonne nuit'
-  if (h < 18) return 'Bonjour'
-  return 'Bonsoir'
-}
+type Style = CSSProperties & Record<`--${string}`, string | number>
 
-function planText(due: number, fresh: number): string {
-  const s = (n: number) => (n > 1 ? 's' : '')
-  if (due && fresh) return `${due + fresh} cartes, dont ${fresh} nouvelle${s(fresh)}.`
-  if (fresh) return `${fresh} nouvelle${s(fresh)} carte${s(fresh)} à découvrir.`
-  return `${due} carte${s(due)} à revoir.`
-}
+const WEEKDAY = new Intl.DateTimeFormat('fr-FR', { weekday: 'long' })
+const DAY_MONTH = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
+const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 function Welcome() {
   const { dispatch } = useStore()
   const [name, setName] = useState('')
   const [coachName, setCoachName] = useState('')
   const [role, setRole] = useState<'student' | 'coach'>('student')
+  const [ok, setOk] = useState(true)
   return (
-    <div className="page narrow">
-      <header className="page-head welcome-head">
-        <h1>Un carnet pour apprendre les entités, et les retenir.</h1>
-        <p className="lead">
-          Le codex des {GHOSTS.length} entités, des quiz, des enquêtes simulées, et une révision qui garde en mémoire ce que tu sais
-          déjà pour ne te reposer que ce qui commence à s’effacer. Tout reste sur cet appareil.
-        </p>
-      </header>
-      <form
-        className="panel stack"
-        onSubmit={(e) => {
-          e.preventDefault()
-          dispatch({ type: 'onboard', profile: { name: name.trim(), coachName: coachName.trim(), role } })
-        }}
-      >
-        <div className="field">
-          <span className="field-label">Qui utilise l’app sur cet appareil ?</span>
-          <Seg
-            label="Rôle"
-            value={role}
-            onChange={setRole}
-            options={[
-              { value: 'student', label: 'Je m’entraîne' },
-              { value: 'coach', label: 'Je suis le coach' },
-            ]}
-          />
+    <Notebook single>
+      <Page section="1" label="Nouveau carnet">
+        <FileHead>
+          <span>Nouveau carnet</span>
+          <span>
+            Entrée n° <b>1</b>
+          </span>
+        </FileHead>
+        <div className="entry">
+          <h1 className="entry-date">
+            <em>Un carnet pour</em>apprendre les entités
+          </h1>
+          <Stamp thunk rotate={-6}>
+            Confidentiel
+          </Stamp>
+          <p className="entry-line">
+            Le codex des {GHOSTS.length} entités, des quiz, des enquêtes simulées, et une révision qui retient ce que tu sais déjà
+            pour ne te reposer que ce qui commence à s’effacer. Tout reste sur cet appareil.
+          </p>
         </div>
-        <div className="grid-2">
+        <form
+          className="stack welcome-form"
+          style={{ '--gap': '26px' } as Style}
+          onSubmit={(e) => {
+            e.preventDefault()
+            dispatch({ type: 'onboard', profile: { name: name.trim(), coachName: coachName.trim(), role } })
+          }}
+        >
+          <div className="field">
+            <span className="field-label">Qui tient ce carnet ?</span>
+            <Seg
+              label="Rôle"
+              value={role}
+              onChange={setRole}
+              options={[
+                { value: 'student', label: 'Je m’entraîne' },
+                { value: 'coach', label: 'Je suis le coach' },
+              ]}
+            />
+          </div>
           <label className="field">
             <span>Ton prénom</span>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus />
@@ -66,14 +91,17 @@ function Welcome() {
               <input className="input" value={coachName} onChange={(e) => setCoachName(e.target.value)} placeholder="Prénom ou pseudo du coach" />
             </label>
           )}
-        </div>
-        <div>
-          <button type="submit" className="btn btn-primary btn-lg">
-            Commencer
-          </button>
-        </div>
-      </form>
-    </div>
+          <CheckLine checked={ok} onChange={setOk} seed="welcome-ok" hint="Aucun compte, aucun serveur : tu peux exporter ta progression depuis le profil.">
+            J’ai compris que tout est enregistré sur cet appareil.
+          </CheckLine>
+          <div>
+            <TapeButton type="submit" disabled={!ok}>
+              Ouvrir le carnet
+            </TapeButton>
+          </div>
+        </form>
+      </Page>
+    </Notebook>
   )
 }
 
@@ -81,161 +109,270 @@ export function Home() {
   const { state, deck } = useStore()
   const mastery = useMastery()
   const now = useMemo(() => Date.now(), [])
-
   const queue = useMemo(() => buildReviewQueue(state, deck, now), [state, deck, now])
+
   const days = streak(state, now)
-  const learned = learnedCount(deck, state.cards)
-  const mastered = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
-  const quizAcc = useMemo(() => {
-    const recent = Object.entries(state.answers)
-      .filter(([k]) => k.startsWith('topic:'))
-      .flatMap(([, v]) => v.recent)
-    return recent.length >= 3 ? recent.reduce((a, b) => a + b, 0) / recent.length : null
-  }, [state.answers])
-  const weak = useMemo(() => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, WEAK_COUNT), [mastery])
-  const notes = state.notes.slice(0, 3)
-  const recent = [...state.activity].reverse().slice(0, 5)
+  const activeDays = useMemo(() => {
+    const set = new Set<string>()
+    state.log.forEach((l) => set.add(dayKey(l.t)))
+    state.activity.forEach((a) => set.add(dayKey(a.t)))
+    return set.size
+  }, [state.log, state.activity])
+  const weak = useMemo(() => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, 3), [mastery])
   const dueCount = queue.filter((c) => state.cards[c.id]).length
   const newCount = queue.length - dueCount
   const minutes = Math.max(1, Math.round(queue.length * 0.4))
+  const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)!.name)
+  const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
+  const untouched = GHOSTS.filter((g) => (mastery[g.id] ?? 0) === 0).length
+  const notes = state.notes.slice(0, 2)
+  const lastOf = (kind: string) => [...state.activity].reverse().find((a) => a.kind === kind)
+  const lastQuiz = lastOf('quiz')
+  const lastScenario = lastOf('scenario')
+  const lastEar = lastOf('ear')
+  const coach = state.profile.role === 'coach' ? state.profile.name : state.profile.coachName
 
   if (!state.onboarded) return <Welcome />
 
   return (
-    <div className="page">
-      <header className="page-head">
-        <p className="faint small">{formatDate(now)}</p>
-        <h1>
-          {greeting()}
-          {state.profile.name ? `, ${state.profile.name}` : ''}.
-        </h1>
-        <p className="lead">
-          {queue.length > 0
-            ? `Aujourd’hui : ${planText(dueCount, newCount)} Compte environ ${minutes} minute${minutes > 1 ? 's' : ''}.`
-            : 'Tout est révisé pour aujourd’hui. Une enquête pour garder la main ?'}
-        </p>
-        <div className="row actions">
-          {queue.length > 0 ? (
-            <Link to="/revision" className="btn btn-primary btn-lg">
-              Commencer la révision
-            </Link>
-          ) : (
-            <Link to="/enquete" className="btn btn-primary btn-lg">
-              Lancer une enquête
-            </Link>
-          )}
-          <Link to="/quiz" className="btn btn-lg">
-            Quiz rapide
-          </Link>
-        </div>
-      </header>
+    <>
+      <Notebook>
+        {/* ===================== page de gauche : aujourd'hui ===================== */}
+        <Page side="left" section="1" label="Aujourd’hui">
+          <FileHead>
+            <span>
+              Carnet de <b>{state.profile.name || '—'}</b>
+            </span>
+            {coach && (
+              <span>
+                Coach : <b>{coach}</b>
+              </span>
+            )}
+            <span>
+              Entrée n° <b>{activeDays + 1}</b>
+            </span>
+          </FileHead>
 
-      <dl className="figures">
-        <div>
-          <dt>Série</dt>
-          <dd>
-            {days} jour{days > 1 ? 's' : ''}
-          </dd>
-        </div>
-        <div>
-          <dt>Cartes apprises</dt>
-          <dd>
-            {learned} <span className="faint">sur {deck.length}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Entités maîtrisées</dt>
-          <dd>
-            {mastered} <span className="faint">sur {GHOSTS.length}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Réussite récente</dt>
-          <dd>{quizAcc == null ? '—' : `${Math.round(quizAcc * 100)} %`}</dd>
-        </div>
-      </dl>
-
-      <div className="home-cols">
-        <section className="section">
-          <div className="section-head">
-            <h2>Où tu en es</h2>
-            <Link to="/codex" className="small">
-              Ouvrir le codex
-            </Link>
+          <div className="entry">
+            <h1 className="entry-date">
+              <em>{cap(WEEKDAY.format(now))}</em>
+              {DAY_MONTH.format(now)}
+            </h1>
+            <Stamp thunk rotate={-7} delay={0.35}>
+              Entrée n° {activeDays + 1}
+            </Stamp>
+            <p className="entry-line">
+              {days > 1
+                ? `${days} jours d’affilée sans sauter une séance.`
+                : days === 1
+                  ? 'Une séance aujourd’hui : la série commence.'
+                  : 'Pas encore de séance aujourd’hui. Quelques minutes suffisent pour lancer la série.'}
+            </p>
+            {days > 0 && (
+              <MarginNote className="tally-note" style={{ left: -104, top: 6, width: 80, '--r': '-4deg' }}>
+                <Tally n={days} />
+                <span>
+                  {days} jour{days > 1 ? 's' : ''}
+                </span>
+              </MarginNote>
+            )}
           </div>
-          <ul className="mastery-grid">
-            {GHOSTS.map((g) => {
-              const m = mastery[g.id] ?? 0
-              return (
-                <li key={g.id}>
-                  <Link to={`/codex/${g.id}`} className={`mg-item lvl-${masteryLevel(m).tone}`} title={masteryLevel(m).label}>
-                    <span className="mg-name">{g.name}</span>
-                    <span className="pct">{Math.round(m * 100)}</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
 
-        <aside>
-          <section className="section">
-            <h2>À travailler</h2>
-            <ol className="weak">
-              {weak.map((g) => (
-                <li key={g.id}>
-                  <Link to={`/codex/${g.id}`}>{g.name}</Link>
-                  <Mastery value={mastery[g.id] ?? 0} />
-                </li>
+          <IndexCard className="plan settle" head="Révision du jour" right={SHORT.format(now)} clip rotate={-0.6}>
+            {queue.length > 0 ? (
+              <>
+                <div className="plan-n">
+                  <b>{queue.length}</b>
+                  <span>carte{queue.length > 1 ? 's' : ''}</span>
+                  <small>environ {minutes} min</small>
+                </div>
+                <p>
+                  <strong>
+                    {dueCount > 0 && `${dueCount} à revoir`}
+                    {dueCount > 0 && newCount > 0 && ', '}
+                    {newCount > 0 && `${newCount} nouvelle${newCount > 1 ? 's' : ''}`}.
+                  </strong>{' '}
+                  {onMenu.length > 0 &&
+                    `Au menu : ${onMenu.slice(0, 4).join(', ')}${onMenu.length > 4 ? `… et ${onMenu.length - 4} autre${onMenu.length - 4 > 1 ? 's' : ''}` : ''}.`}
+                </p>
+                <div className="plan-actions">
+                  <TapeButton to="/revision">Ouvrir la séance</TapeButton>
+                  <TypedLink to="/quiz">ou un quiz éclair</TypedLink>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="plan-n">
+                  <b>0</b>
+                  <span>carte à revoir</span>
+                </div>
+                <p>Tout est révisé pour aujourd’hui. Les cartes reviendront d’elles-mêmes au bon moment.</p>
+                <div className="plan-actions">
+                  <TapeButton to="/enquete">Lancer une enquête</TapeButton>
+                  <TypedLink to="/revision">apprendre de nouvelles cartes</TypedLink>
+                </div>
+              </>
+            )}
+          </IndexCard>
+
+          <section className="suspects" aria-labelledby="h-suspects">
+            <H id="h-suspects" count={`tes ${weak.length} points faibles`}>
+              Les suspects
+            </H>
+            <div className="polaroids">
+              {weak.map((g, i) => (
+                <div className="suspect" key={g.id}>
+                  <Polaroid
+                    ghostId={g.id}
+                    to={`/codex/${g.id}`}
+                    caption={g.name}
+                    small={`${Math.round((mastery[g.id] ?? 0) * 100)} %`}
+                    rotate={[-4, 3, -2][i]}
+                    delay={0.45 + i * 0.13}
+                  />
+                  {g.keyTells[0] && <p className="hint pencil-note">{g.keyTells[0]}</p>}
+                </div>
               ))}
+            </div>
+            <div className="after">
+              <TypedLink to="/quiz?pool=weak">Quiz sur mes {WEAK_COUNT} points faibles</TypedLink>
+              <TypedLink to="/codex">Ouvrir le codex</TypedLink>
+            </div>
+          </section>
+        </Page>
+
+        {/* ===================== page de droite : le registre ===================== */}
+        <Page side="right" section="1" label="Ta progression">
+          <UvPrint style={{ right: 4, top: 170, width: 112, transform: 'rotate(-16deg)', ['--ur' as string]: '220px' }} />
+          <div className="coffee" style={{ right: 24, bottom: 30 }} />
+          <FileHead>
+            <span>Registre</span>
+            <span>Mis à jour le {SHORT.format(now)}</span>
+          </FileHead>
+
+          <section aria-labelledby="h-reg">
+            <H id="h-reg" count={`${acquired} acquise${acquired > 1 ? 's' : ''} sur ${GHOSTS.length}`}>
+              Les {GHOSTS.length} entités
+            </H>
+            <p className="registry-legend">Ta maîtrise est surlignée ; les entités acquises sont entourées.</p>
+            <ol className="registry">
+              {GHOSTS.map((g, i) => {
+                const m = mastery[g.id] ?? 0
+                const ok = m >= 0.85
+                const cls = ok ? 'ok' : m === 0 ? 'zero' : m < 0.4 ? 'weak' : undefined
+                return (
+                  <li key={g.id} className={cls} style={{ '--m': m } as Style}>
+                    <span className="num">{String(i + 1).padStart(2, '0')}</span>
+                    <Link className="nm" to={`/codex/${g.id}`} style={{ '--i': i } as Style}>
+                      {ok ? (
+                        <RoughCircle seed={g.id} delay={1.1 + i * 0.03}>
+                          {g.name}
+                        </RoughCircle>
+                      ) : (
+                        g.name
+                      )}
+                    </Link>
+                    <span className="pct">{m === 0 ? '–' : Math.round(m * 100)}</span>
+                  </li>
+                )
+              })}
             </ol>
-            <Link to="/quiz?pool=weak" className="btn btn-block" style={{ marginTop: 14 }}>
-              Quiz sur ces points faibles
-            </Link>
+            <div className="registry-sum">
+              <span>
+                <b>{acquired}</b> acquise{acquired > 1 ? 's' : ''}
+              </span>
+              <span>
+                <b>{GHOSTS.length - acquired - untouched}</b> en cours
+              </span>
+              <span>
+                <b>{untouched}</b> pas encore ouverte{untouched > 1 ? 's' : ''}
+              </span>
+            </div>
           </section>
 
-          {recent.length > 0 && (
-            <section className="section">
-              <h2>Dernières séances</h2>
-              <ul className="list small">
-                {recent.map((r, i) => (
-                  <li key={i} className="row between">
-                    <span>{r.label}</span>
-                    <span className="pct">{r.kind === 'scenario' ? `${r.score} pts` : `${r.score}/${r.total}`}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </aside>
-      </div>
+          <section className="notes" aria-labelledby="h-notes">
+            <H id="h-notes">{coach ? `Mots de ${coach}` : 'Mots du coach'}</H>
+            {notes.length > 0 ? (
+              notes.map((n, i) => (
+                <Sticky
+                  key={n.id}
+                  rotate={i === 0 ? 1.4 : -1.6}
+                  delay={0.9 + i * 0.15}
+                  meta={`${SHORT.format(n.createdAt)}${n.ghostId ? ` · ${getGhost(n.ghostId)?.name ?? ''}` : ''}`}
+                  sign={n.author ? `— ${n.author}` : undefined}
+                >
+                  {n.title}
+                </Sticky>
+              ))
+            ) : (
+              <p className="notes-empty">
+                Le carnet du coach est encore vide. Chaque explication notée dans le <Link to="/carnet">carnet</Link> devient une carte de
+                révision : plus besoin de la répéter.
+              </p>
+            )}
+            <div className="notes-foot">
+              <TypedLink to="/carnet">
+                Tout le carnet ({state.notes.length} note{state.notes.length > 1 ? 's' : ''})
+              </TypedLink>
+            </div>
+          </section>
+        </Page>
+      </Notebook>
 
-      <section className="section">
-        <div className="section-head">
-          <h2>Derniers conseils du coach</h2>
-          <Link to="/carnet" className="small">
-            Tout le carnet
-          </Link>
+      {/* ===================== sur le bureau : les exercices ===================== */}
+      <section className="desk-shelf" aria-labelledby="h-shelf">
+        <h2 className="shelf-label" id="h-shelf">
+          Pièces à conviction
+        </h2>
+        <div className="envelopes">
+          <Envelope
+            to="/quiz"
+            piece="Pièce n° 1"
+            title="Quiz"
+            text="Preuves, seuils, vitesses, comportements et tests sans preuve."
+            hand={lastQuiz ? `dernier : ${lastQuiz.score}/${lastQuiz.total}` : 'jamais ouvert'}
+            rotate={-1.5}
+            delay={0.2}
+          />
+          <Envelope
+            to="/enquete"
+            piece="Pièce n° 2"
+            title="Mise en situation"
+            text="Un contrat raconté minute par minute. À toi de trancher."
+            hand={lastScenario ? `dernière : ${lastScenario.score} pts` : 'jamais ouverte'}
+            rotate={1.2}
+            labelRotate={-0.8}
+            delay={0.3}
+          />
+          <Envelope
+            to="/oreille"
+            piece="Pièce n° 3"
+            title="À l’oreille"
+            text="Reconnaître la vitesse d’une entité au rythme de ses pas."
+            hand={lastEar ? `dernière : ${lastEar.score}/${lastEar.total}` : 'au casque, c’est mieux'}
+            rotate={-0.8}
+            delay={0.4}
+          >
+            <svg viewBox="0 0 170 22" className="steps-doodle" aria-hidden>
+              <g fill="currentColor">
+                {[8, 30, 52, 74, 91, 106, 119, 131, 142, 152, 162].map((x, i) => (
+                  <ellipse key={x} cx={x} cy={i % 2 ? 7 : 15} rx="4.5" ry="2.6" />
+                ))}
+              </g>
+            </svg>
+          </Envelope>
+          <Envelope
+            to="/codex"
+            piece="Pièce n° 4"
+            title="Codex"
+            text={`Les ${GHOSTS.length} fiches : preuves, vitesses, seuils et tests sans preuve.`}
+            hand="tout est dedans"
+            rotate={1.8}
+            labelRotate={0.4}
+            delay={0.5}
+          />
         </div>
-        {notes.length === 0 ? (
-          <p className="muted">
-            Pas encore de conseil. Le coach peut écrire ses explications dans le <Link to="/carnet">carnet</Link> : elles deviennent
-            des cartes de révision, et n’ont plus besoin d’être répétées.
-          </p>
-        ) : (
-          <ul className="list">
-            {notes.map((n) => (
-              <li key={n.id}>
-                <Link to="/carnet" className="note-line">
-                  <strong>{n.title}</strong>
-                  {n.ghostId && <span className="faint"> · {getGhost(n.ghostId)?.name}</span>}
-                </Link>
-                {n.body && <p className="muted small clamp-2">{n.body}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
-    </div>
+    </>
   )
 }

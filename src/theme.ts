@@ -24,7 +24,7 @@ let current: ThemeChoice = read()
 export function applyTheme(choice: ThemeChoice) {
   const dark = choice === 'dark' || (choice === 'system' && systemDark())
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#141311' : '#f4f1ea')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a0c0b' : '#33413a')
 }
 
 function setTheme(choice: ThemeChoice) {
