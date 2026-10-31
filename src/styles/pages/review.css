@@ -1,1 +1,193 @@
-/* Page : review */
+/* Page : révision — une fiche bristol à la fois, posée sur la pile du jour */
+
+.rv .h { margin-bottom: 28px; }
+
+/* ---------- la pile : une tranche de carte par fiche restante ---------- */
+.rv-pile {
+  --left: 0;
+  position: relative; max-width: 640px;
+  margin: 0; padding-bottom: calc(var(--left) * 3px);
+  scroll-margin-top: 16px;
+}
+.rv-pile::before { /* tranches des cartes encore à voir */
+  content: ""; position: absolute; z-index: 0; left: 7px; right: -3px; bottom: 0;
+  height: calc(var(--left) * 3px + 24px);
+  background: linear-gradient(to bottom, rgba(70, 50, 20, .22) 0 1px, var(--card) 1px 3px) 0 100% / 100% 3px repeat-y, var(--card);
+  box-shadow: 0 1px 1px rgba(25, 18, 8, .12), 0 10px 16px -10px rgba(25, 18, 8, .45);
+  transition: height .35s ease;
+}
+:root[data-theme="dark"] .rv-pile::before {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .55) 0 1px, var(--card) 1px 3px) 0 100% / 100% 3px repeat-y, var(--card);
+  box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .8);
+}
+.rv-pile > .index-card { z-index: 1; }
+.rv-pile-n {
+  max-width: 640px; margin: 14px 0 0 !important; text-align: right;
+  font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+
+/* ---------- la fiche ---------- */
+.rv-card { display: flex; flex-direction: column; min-height: 320px; padding: 15px 30px 24px; }
+.rv-card .ic-head span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; }
+.rv-card .ic-head span:last-child { white-space: nowrap; }
+.rv-card .clip { left: 46%; }
+.rv-front { display: flex; flex-direction: column; flex: 1 0 auto; }
+
+.rv-question {
+  margin: 12px 0 0; font-family: "Fell", serif; font-weight: 400; font-size: 30px; line-height: 1.12; letter-spacing: -.005em;
+  text-wrap: pretty;
+}
+.rv-quote {
+  margin: 16px 0 0; padding: 0 0 0 16px;
+  border-left: 2px solid var(--pencil);
+  font-style: italic; font-size: 17.5px; line-height: 28px; color: var(--ink-2);
+}
+.rv-front-foot {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 18px;
+  min-height: 52px; margin-top: auto; padding-top: 22px;
+}
+.rv-front-foot:empty { display: none; }
+.rv-front-foot .stamp { margin-left: auto; }
+.rv-front-foot .paper-btn { min-height: 46px; font-size: 15px; padding: 10px 16px 9px; }
+.rv-front-foot .paper-btn .kbd { margin-left: 6px; letter-spacing: .04em; text-transform: none; }
+
+/* le verso : un double filet rouge, comme le dos de la fiche */
+.rv-back { position: relative; margin-top: 18px; padding-top: 8px; }
+.rv-back::before {
+  content: ""; position: absolute; left: -30px; right: -30px; top: 0;
+  height: 1.6px; background: var(--card-head); box-shadow: 0 4px 0 var(--card-head);
+}
+html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes rv-flip { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.rv-verso {
+  margin: 0 !important; line-height: 28px;
+  font-family: "Courier Prime", monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+}
+.rv-answer { margin: 0 !important; font-size: 19px; line-height: 28px; text-wrap: pretty; }
+.rv-evidence { display: flex; flex-wrap: wrap; gap: 0 22px; margin: 0 !important; font-size: 21px; line-height: 34px; }
+.rv-evidence .evw { text-decoration-thickness: 4px; text-underline-offset: 3px; }
+.rv-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.rv-list li { position: relative; padding-left: 22px; font-size: 16.5px; line-height: 28px; color: var(--ink-2); }
+.rv-list li::before { content: "—"; position: absolute; left: 0; color: var(--ink-3); }
+.rv-hand { margin: 0 !important; font-size: 31px; line-height: 30px; padding-top: 2px; }
+.rv-list--hand li { padding-left: 0; font-size: 26px; line-height: 28px; color: var(--red-pen); }
+.rv-list--hand li::before { content: none; }
+.rv-sign { margin: 4px 0 0 !important; text-align: right; font-size: 26px; line-height: 28px; font-weight: 700; }
+.rv-more { margin: 8px 0 -6px !important; line-height: 28px; }
+.rv-more .link { display: inline-flex; align-items: center; min-height: 40px; }
+
+/* ---------- page de droite : les quatre tampons ---------- */
+.rv-grades .h { margin-bottom: 4px; }
+.rv-hint { margin: 0 0 20px !important; min-height: 24px; font-size: 21px; }
+.rv-stamps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 22px; max-width: 470px; }
+.rv-grade {
+  --gr: -.8deg;
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 12px;
+  min-height: 112px; padding: 22px 10px 14px;
+  border: 0; cursor: pointer; color: var(--ink);
+  background: var(--label); box-shadow: var(--shadow-sm);
+  transform: rotate(var(--gr));
+  transition: transform .18s ease, box-shadow .18s ease, opacity .25s ease;
+}
+.rv-grade:nth-child(2) { --gr: .9deg; --i: 1; }
+.rv-grade:nth-child(3) { --gr: .5deg; --i: 2; }
+.rv-grade:nth-child(4) { --gr: -1.1deg; --i: 3; }
+.rv-grade .stamp { font-size: 17px; opacity: .88; transition: opacity .15s ease; }
+.rv-grade.easy .stamp { outline-offset: 3px; }
+.rv-grade:not(:disabled):hover, .rv-grade:focus-visible { transform: rotate(0deg) translateY(-3px); box-shadow: var(--shadow-md); }
+.rv-grade:not(:disabled):hover .stamp, .rv-grade:focus-visible .stamp { opacity: 1; }
+.rv-grade:not(:disabled):active { transform: translateY(1px) scale(.97); box-shadow: var(--shadow-sm); }
+.rv-grade:disabled { cursor: default; opacity: .42; box-shadow: none; }
+.rv-grade:disabled .stamp { filter: url(#ink) grayscale(.6); }
+html.js .rv-grades:not(.is-idle) .rv-grade { animation: rv-drop .45s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes rv-drop { from { opacity: .42; translate: 0 -8px; } to { opacity: 1; translate: 0 0; } }
+.rv-when { font-family: "Courier Prime", monospace; font-size: 13.5px; letter-spacing: .04em; color: var(--ink-2); }
+.rv-grade .kbd { position: absolute; right: 9px; top: 8px; }
+
+/* fiche de séance : une ligne par carte notée, avec son tampon */
+.rv-log { margin-top: 50px; }
+.rv-session { max-width: 400px; margin-top: 0; padding-bottom: 20px; }
+.rv-session .cols, .rv-session li { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+.rv-session .cols span:last-child { text-align: right; }
+.rv-session li { min-width: 0; }
+.rv-s-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; overflow: hidden; white-space: nowrap; font-family: "Fell", serif; font-size: 18px; line-height: 1; }
+.rv-s-name small { overflow: hidden; text-overflow: ellipsis; font-family: "Courier Prime", monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.rv-s-empty, .rv-more-rows .rv-s-name { font-family: "Courier Prime", monospace; font-size: 13px; color: var(--ink-3); }
+.rv-session .stamp--sm { font-size: 10.5px; padding: 2px 6px 1px; justify-self: end; }
+
+.rv-foot {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px;
+  max-width: 470px; margin-top: 40px; padding-top: 6px; border-top: 1px solid var(--ink-3);
+  font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+.rv-foot .link { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* ---------- fin de séance ---------- */
+.rv-title { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 54px; line-height: .98; letter-spacing: -.012em; }
+.rv-title em { display: block; margin-bottom: 6px; font-size: 25px; letter-spacing: .01em; color: var(--ink-2); }
+.rv-count { display: flex; align-items: baseline; gap: 14px; margin: 30px 0 4px !important; }
+.rv-count b { font-family: "Fell", serif; font-weight: 400; font-size: 96px; line-height: 72px; letter-spacing: -.03em; }
+.rv-count span { font-family: "Fell", serif; font-size: 32px; line-height: 1; }
+.rv-lead { margin: 22px 0 0 !important; max-width: 30em; font-size: 18px; line-height: 1.5; }
+.rv-count + .rv-lead { margin-top: 12px !important; }
+.rv-next { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 26px; margin-top: 34px; }
+.rv-next .btn-tape { white-space: nowrap; }
+.rv-next-links { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.rv-next-links .link { display: inline-flex; align-items: center; min-height: 44px; }
+.rv-unseen { margin: 22px 0 0 !important; font-size: 22px; transform: rotate(-1.5deg); transform-origin: left center; }
+
+.rv-done .rv-session { margin-bottom: 56px; }
+.rv-libcard { margin-top: 6px; max-width: 360px; padding-bottom: 30px; }
+.rv-libcard .cols, .rv-libcard li { grid-template-columns: 1.35fr .6fr .8fr; column-gap: 8px; }
+.rv-libcard .cols span:not(:first-child), .rv-libcard li > span:not(:first-child) { text-align: right; justify-self: end; }
+.rv-libcard .d { font-size: 13.5px; letter-spacing: .08em; white-space: nowrap; }
+.rv-libcard .n { font-family: "Courier Prime", monospace; font-size: 14px; color: var(--ink-2); white-space: nowrap; }
+.rv-libcard .res.hand { font-size: 27px; color: var(--red-pen); }
+.rv-libcard li.is-now .d { color: var(--stamp); }
+.rv-libstamp { position: absolute !important; right: -12px; bottom: -18px; font-size: 18px !important; }
+.rv-session .rv-libstamp { bottom: -14px; }
+
+/* ---------- téléphone ---------- */
+@media (max-width: 759px) {
+  .rv .h { margin-bottom: 20px; }
+  .rv .h .h-count { font-size: 11.5px; }
+  .rv-card { min-height: 0; padding: 15px 16px 18px; }
+  .rv-card .clip { left: auto; right: 26px; }
+  .rv-card--coach .ic-head span:last-child { display: none; }
+  .rv-card .ic-head { font-size: 13px; letter-spacing: .1em; }
+  .rv-card .ic-head span:last-child { font-size: 11px; }
+  .rv-back::before { left: -16px; right: -16px; }
+  .rv-question { font-size: 25px; margin-top: 8px; }
+  .rv-answer { font-size: 18px; }
+  .rv-evidence { font-size: 19px; gap: 0 16px; }
+  .rv-hand { font-size: 28px; }
+  .rv-front-foot { padding-top: 18px; }
+  .rv-pile-n { font-size: 11px; }
+
+  .rv-grades.is-idle, .rv-grades .rv-hint:has(.rv-keys), .rv-log.is-empty { display: none; }
+  .rv .kbd { display: none; }
+  .rv-grades .h { margin-bottom: 18px; }
+  .rv-grades { scroll-margin-top: 12px; }
+  .rv-hint { margin-bottom: 14px !important; }
+  .rv-keys { display: none; }
+  .rv-stamps { gap: 14px 12px; }
+  .rv-grade { min-height: 92px; padding: 18px 6px 10px; gap: 9px; scroll-margin-bottom: 100px; }
+  .rv-grade .stamp { font-size: 14.5px; }
+  .rv-when { font-size: 12.5px; }
+  .rv-log { margin-top: 34px; }
+  .rv-session { max-width: none; margin-right: 4px; }
+  .rv-foot { margin-top: 30px; }
+
+  .rv-title { font-size: 44px; }
+  .rv-title em { font-size: 21px; }
+  .rv-count b { font-size: 76px; }
+  .rv-count span { font-size: 26px; }
+  .rv-lead { font-size: 17px; }
+  .rv-libcard { max-width: none; margin: 6px 6px 18px 0; }
+  .rv-done .rv-session { margin-bottom: 44px; }
+  .rv-libstamp { right: 2px; font-size: 16px !important; }
+}
+
+@media (hover: none) {
+  .rv-keys { display: none; }
+}

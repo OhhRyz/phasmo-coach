@@ -1,1 +1,251 @@
-/* Page : ear */
+/* Pages : S'entraîner (le tiroir des exercices) et À l'oreille (bande de pas + règle en m/s) */
+
+/* ==========================================================================
+   S'entraîner : une page d'intro tapée, puis les enveloppes sur le bureau
+   ========================================================================== */
+.tr .notebook { margin-bottom: 46px; }
+.tr-head { display: grid; grid-template-columns: minmax(0, 1fr) 318px; gap: 24px 40px; align-items: start; }
+.tr-title { margin: 0 0 24px; text-wrap: balance; }
+.tr .tr-memo { max-width: 29em; font-family: "Courier Prime", ui-monospace, monospace; font-size: 16.5px; line-height: 1.6; color: var(--ink); }
+.tr .tr-memo p { margin: 0 0 6px; }
+.tr .tr-memo .tr-memo-obj { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .06em; color: var(--ink-2); }
+.tr-memo-obj b { font-weight: 400; text-transform: uppercase; letter-spacing: .14em; color: var(--ink); }
+.tr .tr-down {
+  display: flex; align-items: flex-end; gap: 4px; width: max-content; max-width: 100%;
+  margin: 30px 0 -26px auto; font-size: 22px; transform: rotate(-2.5deg);
+}
+.tr-down svg { flex: none; color: var(--pencil); overflow: visible; margin-bottom: -20px; }
+
+.tr-libcard { margin-top: 10px; max-width: none; }
+.tr-libcard h2 { margin: 0; font-family: "Elite", monospace; font-weight: 400; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; text-align: center; }
+.tr-libcard .cols, .tr-libcard li { grid-template-columns: 74px minmax(0, 1fr) auto; column-gap: 10px; }
+.tr-libcard .d { white-space: nowrap; font-size: 14px; }
+.tr-libcard .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Courier Prime", monospace; font-size: 14px; color: var(--ink); }
+.tr-libcard .res { color: var(--red-pen); font-size: 23px; text-align: right; }
+.tr-libcard .tape { left: 50%; margin-left: -46px; }
+
+.tr-shelf { max-width: 980px; }
+.tr-shelf .envelopes { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 34px; }
+.tr-shelf .envelope { min-height: 230px; }
+.tr-shelf .envelope .hand .rough { color: inherit; }
+.tr-shelf .envelope .hand > span { margin-right: 2px; }
+
+@media (max-width: 960px) {
+  .tr-shelf .envelopes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 759px) {
+  .tr .notebook { margin-bottom: 0; }
+  .tr-head { grid-template-columns: 1fr; gap: 30px; }
+  .tr-title { margin-bottom: 18px; }
+  .tr .tr-memo { font-size: 16.5px; }
+  .tr .tr-down { margin: 18px 0 0 auto; font-size: 20px; }
+  .tr-down svg { width: 38px; height: 44px; margin-bottom: -14px; }
+  .tr-libcard { margin: 6px 4px 8px; }
+  .tr-libcard .cols, .tr-libcard li { grid-template-columns: 72px minmax(0, 1fr) auto; }
+  .tr-shelf { margin-top: 34px; }
+  .tr-shelf .envelopes { gap: 18px 14px; }
+  .tr-shelf .envelope { min-height: 0; }
+}
+
+/* ==========================================================================
+   À l'oreille
+   ========================================================================== */
+.ear-entry { margin-bottom: 34px; }
+.ear-title { margin: 0 0 14px; }
+.ear .ear-lead { margin: 0; max-width: 31em; font-style: italic; font-size: 18px; line-height: 1.5; }
+
+.ear .ear-step { margin-top: 0; }
+.ear .ear-go + .ear-step { margin-top: 58px; }
+.ear .filehead a { display: inline-block; margin: -12px 0; padding: 12px 0; }
+.ear-step-h { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
+.ear-step-n {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  font-family: "Elite", monospace; font-size: 13px; letter-spacing: 0; color: var(--paper);
+  background: var(--ink-2); border-radius: 2px; transform: rotate(-3deg);
+}
+
+/* ---------- la bande de papier où s'impriment les pas ---------- */
+.ear-bench { position: relative; margin: 0 -26px 0 -40px; }
+.ear-cap {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 0 30px 8px 40px;
+  font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2);
+}
+.ear-status { font-family: "Caveat", cursive; font-size: 21px; font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1; color: var(--pencil); }
+.ear-status.is-on { color: var(--ink); }
+.ear-strip-wrap { position: relative; filter: drop-shadow(0 1px 1px rgba(25, 18, 8, .2)) drop-shadow(0 8px 10px rgba(25, 18, 8, .2)); }
+:root[data-theme="dark"] .ear-strip-wrap { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .6)) drop-shadow(0 10px 14px rgba(0, 0, 0, .55)); }
+.ear-strip-wrap .tape { width: 64px; height: 22px; z-index: 3; }
+.ear-strip {
+  --n: 14;
+  position: relative; height: 122px; overflow: hidden;
+  background:
+    radial-gradient(circle, var(--paper) 0 2.5px, transparent 3.1px) 0 1px / 22px 12px repeat-x,
+    radial-gradient(circle, var(--paper) 0 2.5px, transparent 3.1px) 0 calc(100% - 1px) / 22px 12px repeat-x,
+    linear-gradient(var(--card-rule), var(--card-rule)) 0 16px / 100% 1px no-repeat,
+    linear-gradient(var(--card-rule), var(--card-rule)) 0 calc(100% - 16px) / 100% 1px no-repeat,
+    var(--card);
+  clip-path: polygon(1.1% 0, 98.9% 0, 100% 9%, 99.1% 21%, 100% 34%, 99.3% 47%, 100% 61%, 99% 75%, 100% 88%, 98.8% 100%, 1% 100%, 0 89%, .9% 76%, 0 62%, .7% 48%, 0 35%, 1% 22%, 0 9%);
+}
+.ear-strip-line {
+  position: absolute; left: 2%; right: 2%; top: 50%;
+  border-top: 1.5px dashed color-mix(in srgb, var(--pencil) 40%, transparent);
+}
+.ear-prints { position: absolute; inset: 0 3%; filter: url(#ink); }
+.ear-print {
+  position: absolute; top: 50%; left: calc((var(--k) + .5) / var(--n) * 100%);
+  width: 50px; height: 23px; margin: -11.5px 0 0 -25px;
+  transform: translateY(-19px) rotate(-4deg);
+}
+.ear-print:nth-child(even) { transform: translateY(19px) scaleY(-1) rotate(-4deg); }
+.ear-print svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ear-print .out path { fill: none; stroke: var(--pencil); stroke-width: .9; stroke-dasharray: 2 2.2; opacity: .42; }
+.ear-print .ink { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.ear-print .ink path { fill: var(--ink); }
+.ear-strip.is-run .ink,
+.ear-strip.is-paused .ink {
+  animation: ear-step calc(var(--step) * var(--n)) linear infinite;
+  animation-delay: calc(var(--step) * var(--k));
+}
+.ear-strip.is-paused .ink { animation-play-state: paused; }
+@keyframes ear-step {
+  0% { opacity: 0; transform: scale(1.45); }
+  3% { opacity: .92; transform: scale(1); }
+  50% { opacity: .82; }
+  80% { opacity: .2; }
+  100% { opacity: .12; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ear-strip.is-run .ink, .ear-strip.is-paused .ink { opacity: .8; }
+}
+
+/* ---------- la règle en m/s ---------- */
+.ear-ruler { margin: 10px 0 0; min-height: 132px; }
+.ear-ruler svg { display: block; overflow: visible; }
+.ear-ruler-band { fill: var(--label); stroke: color-mix(in srgb, var(--ink) 26%, transparent); stroke-width: 1; }
+.ear-ruler-edge { stroke: color-mix(in srgb, var(--ink) 18%, transparent); stroke-width: 1; fill: none; }
+.ear-ruler-ticks { stroke: var(--ink); stroke-width: 1; fill: none; }
+.ear-ruler-n { font-family: "Courier Prime", monospace; font-weight: 700; font-size: 14px; fill: var(--ink); }
+.ear-ruler-unit { font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .08em; fill: var(--ink-2); }
+.ear-ruler-ref { stroke: var(--ink-2); stroke-width: 1.3; stroke-dasharray: 3 3; fill: none; }
+.ear-ruler-refn { font-family: "Courier Prime", monospace; font-size: 12.5px; fill: var(--ink-2); }
+.ear-pencil { font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; fill: var(--pencil); }
+.ear-dot { fill: var(--pencil); opacity: .85; }
+.ear-zones { color: var(--pencil); }
+.ear-zones path { stroke-width: 1.6; }
+.ear-cand path { fill: none; stroke: var(--pencil); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.ear-cand text { font-family: "Elite", monospace; font-size: 15px; fill: var(--ink-2); }
+.ear-cand.is-picked text { fill: var(--ink); }
+.ear-cand-ring { color: var(--pencil); }
+.ear-cand-ring path { stroke-width: 1.5; }
+.ear-truth { color: var(--red-pen); }
+.ear-truth path { stroke-width: 2.2; }
+.ear-truth .ear-truth-line { stroke: var(--red-pen); stroke-width: 2.6; stroke-linecap: round; }
+.ear-truth-t { font-family: "Caveat", cursive; font-weight: 700; font-size: 25px; fill: var(--red-pen); }
+
+.ear .ear-legend { margin: 2px 0 0; font-family: "Courier Prime", monospace; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
+.ear-listen { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 18px; }
+.ear-listen .paper-btn { min-height: 44px; }
+.ear-bpm { font-size: 22px; }
+
+.ear .opts { margin-left: -10px; }
+.ear .opt { min-height: 44px; font-size: 16px; }
+.ear .ear-mode-hint { margin: 8px 0 0; font-size: 16.5px; font-style: italic; color: var(--ink-2); max-width: 32em; }
+.ear-go { margin-top: 30px; }
+.ear .ear-small { margin: 22px 0 0; max-width: 36em; font-size: 14.5px; line-height: 1.5; color: var(--ink-3); }
+.ear-small .pencil-note { font-size: 21px; white-space: nowrap; }
+
+/* ---------- une écoute ---------- */
+.ear-quit {
+  margin: -12px 0; padding: 12px 0;
+  font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+}
+.ear-quit:hover { color: var(--red-pen); }
+.ear-progress { display: flex; align-items: center; gap: 14px; margin: -10px 0 30px; }
+.ear-progress .typed-label { font-size: 11.5px; }
+.ear-progress-n { font-family: "Courier Prime", monospace; font-size: 12.5px; color: var(--ink-2); }
+.ear--run .h { margin-bottom: 22px; }
+
+.ear-answer { margin: 30px 0 0; padding: 0; border: 0; min-width: 0; }
+.ear-answer > legend { float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.ear-choices {
+  clear: both; list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 0 22px;
+}
+.ear-choices--class { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ear-choices--exact { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ear-choices li { min-width: 0; border-top: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent); border-bottom: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent); }
+.ear-choice {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; min-height: 64px; padding: 10px 6px;
+  border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background-color .15s ease;
+}
+.ear-letter { flex: none; font-family: "Elite", monospace; font-size: 16px; color: var(--ink-3); }
+.ear-label { position: relative; display: grid; gap: 3px; font-family: "Elite", monospace; font-size: 19px; line-height: 1.25; letter-spacing: .01em; color: var(--ink); }
+.ear-main { justify-self: start; }
+.ear-sub { font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.ear-main { position: relative; }
+.ear-main::after { /* le crayon qui hésite au survol */
+  content: ""; position: absolute; inset: -8px -10px; border: 1.5px solid var(--pencil);
+  border-radius: 48% 52% 45% 55% / 60% 42% 58% 40%; opacity: 0; transform: rotate(-2deg); transition: opacity .15s ease;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .ear-choice:not(:disabled):hover .ear-main::after { opacity: .5; }
+}
+.ear-choice:focus-visible { outline-offset: -3px; }
+.ear-choice:disabled { cursor: default; }
+.ear-choice.idle { opacity: .45; }
+.ear-choice.wrong .ear-main {
+  text-decoration: line-through; text-decoration-color: var(--red-pen); text-decoration-thickness: 2.4px; text-decoration-skip-ink: none;
+}
+.ear-choice .rough { color: var(--red-pen); }
+
+.ear-fix { margin-top: 26px; }
+.ear-fix-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.ear-fix-top .stamp { font-size: 16px; }
+.ear .ear-fix-line { margin: 0; font-size: 19px; line-height: 1.4; }
+.ear-fix-line b { font-family: "Fell", serif; font-weight: 400; font-size: 30px; letter-spacing: -.01em; }
+.ear .ear-ghosts { display: grid; gap: 4px; margin: 18px 0 0; max-width: 40em; }
+.ear-names { font-family: "Fell", serif; font-size: 22px; line-height: 1.35; }
+.ear-next-row { display: flex; justify-content: flex-end; margin-top: 24px; }
+.ear-next, .ear-next .btn-tape { scroll-margin-top: 24px; scroll-margin-bottom: 130px; }
+
+/* ---------- fin de série ---------- */
+.ear-result { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 46px; align-items: center; margin-top: 10px; }
+.ear-grade { padding: 10px 6px; }
+.ear-grade .rough { color: var(--red-pen); }
+.ear-grade-n { display: inline-block; padding: 8px 14px 2px; font-size: 104px; line-height: .86; font-weight: 600; letter-spacing: -.02em; }
+.ear-grade-n small { font-size: .46em; letter-spacing: 0; }
+.ear .ear-result-line { margin: 0; font-size: 18px; }
+.ear .ear-verdict { margin: 12px 0 0; font-size: 27px; transform: rotate(-1.5deg); transform-origin: left center; }
+.ear-end-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 40px; }
+.ear-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (max-width: 759px) {
+  .ear-entry { margin-bottom: 28px; }
+  .ear .ear-lead { font-size: 17.5px; }
+  .ear-bench { margin: 0 -16px 0 -22px; }
+  .ear-cap { padding: 0 16px 6px 22px; }
+  .ear-strip { --n: 9; height: 104px; }
+  .ear-print { width: 36px; height: 16px; margin: -8px 0 0 -18px; transform: translateY(-14px) rotate(-4deg); }
+  .ear-print:nth-child(even) { transform: translateY(14px) scaleY(-1) rotate(-4deg); }
+  .ear-print:nth-child(n + 10) { display: none; }
+  .ear-strip-wrap .tape { display: none; }
+  .ear-pencil { font-size: 19px; }
+  .ear-truth-t { font-size: 23px; }
+  .ear-listen { gap: 14px 18px; }
+  .ear-choices--class { grid-template-columns: 1fr; }
+  .ear-choices--class li + li { border-top: 0; }
+  .ear-choices--exact { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+  .ear-choices--exact li:nth-child(n + 3) { border-top: 0; }
+  .ear-choice { min-height: 54px; }
+  .ear-label { font-size: 18px; }
+  .ear-fix-line b { font-size: 26px; }
+  .ear-names { font-size: 20px; }
+  .ear-next-row { justify-content: flex-start; }
+  .ear-result { grid-template-columns: 1fr; gap: 6px; }
+  .ear-grade { justify-self: start; }
+  .ear-grade-n { font-size: 88px; }
+}

@@ -168,7 +168,7 @@ export function Codex() {
           </div>
 
           <div className="cx-tracker">
-            <MarginNote className="cx-legend" style={{ left: -110, top: 4, width: 86, '--r': '-4deg' }}>
+            <MarginNote className="cx-legend" style={{ left: -108, top: 4, width: 82, '--r': '-4deg' }}>
               <span>1 clic : trouvée</span>
               <span>2 : exclue</span>
               <span>3 : effacée</span>

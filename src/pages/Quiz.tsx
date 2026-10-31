@@ -1,17 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Evidence, PageHead, ProgressBar, Seg } from '../components/ui'
+import { Evidence, Seg } from '../components/ui'
+import {
+  CheckLine,
+  FileHead,
+  H,
+  JournalBox,
+  Notebook,
+  Page,
+  Polaroid,
+  RoughCircle,
+  Stamp,
+  Tape,
+  TapeButton,
+  TypedLink,
+} from '../components/journal/Journal'
+import { crossPath, roughLine, roughRng, tickPath } from '../components/journal/rough'
 import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
-import { buildQuiz, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
+import { buildQuiz, isCorrect, QUIZ_TOPICS, type Choice, type Question, type QuizTopic } from '../engine/quiz'
 import { useMastery } from '../store/hooks'
 import { ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
 
 type Pool = 'all' | 'weak' | 'one'
+type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const LETTERS = 'ABCDEFGHIJ'
 export const WEAK_COUNT = 6
+
+const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+const STAMP_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' })
 
 interface Answer {
   q: Question
@@ -19,11 +38,93 @@ interface Answer {
   correct: boolean
 }
 
+/** Les chiffres « elzéviriens » de Fell font lire « 0 » comme un « o » : on les compose en Caslon. */
+function Digits({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\d+)/).map((part, i) =>
+        /^\d+$/.test(part) ? (
+          <span key={i} className="qz-digits">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  )
+}
+
+/** Espaces insécables de la typographie française : « ? » ou « : » ne partent pas seuls à la ligne. */
+const fr = (s: string) => s.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0')
+
+/** Au-delà, une réponse court sur plusieurs lignes : on entoure sa lettre, ou on la souligne, plutôt que tout le bloc. */
+const SHORT_ANSWER = 22
+
+const topicLabel = (id: QuizTopic) => QUIZ_TOPICS.find((t) => t.id === id)?.label ?? ''
+const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
+
+/** Libellé d'une réponse (une preuve est soulignée dans sa couleur). */
+function ChoiceText({ c }: { c: Choice }) {
+  return c.evidence ? <Evidence id={c.evidence} /> : <>{c.label}</>
+}
+
+/** Petite marque de correction au stylo rouge (coche ou trait) dans la grille de la copie. */
+function GridMark({ ok, seed }: { ok: boolean; seed: string }) {
+  const r = roughRng(seed)
+  const d = ok ? tickPath(14, r) : crossPath(14, r)
+  return (
+    <svg className="draw qz-grid-mark" viewBox="0 0 30 30" aria-hidden>
+      <path d={d} pathLength={1} strokeWidth={ok ? 2.4 : 1.9} style={{ '--d': '.05s', '--dur': '.35s' } as Style} />
+    </svg>
+  )
+}
+
+/** Double trait rouge sous la note, comme au bas d'une copie. */
+function ScoreRule() {
+  const r = roughRng('qz-score-rule')
+  return (
+    <svg className="draw qz-score-rule" viewBox="0 0 220 18" preserveAspectRatio="none" aria-hidden>
+      <path d={roughLine(4, 6, 214, 4, r, 1.6)} pathLength={1} strokeWidth={2.4} style={{ '--d': '.9s', '--dur': '.45s' } as Style} />
+      <path d={roughLine(14, 14, 206, 12, r, 1.6)} pathLength={1} strokeWidth={2} style={{ '--d': '1.2s', '--dur': '.4s' } as Style} />
+    </svg>
+  )
+}
+
+/** Mot du correcteur à côté de la note. */
+function scoreWord(pct: number): string {
+  if (pct >= 90) return 'propre !'
+  if (pct >= 70) return 'bien'
+  if (pct >= 50) return 'en progrès'
+  return 'à reprendre'
+}
+
+/** Feuille ronéotypée (encre violette) : sujet, copie, corrigé. */
+function Mimeo({
+  className = '',
+  children,
+  rotate = -0.5,
+  label,
+  ref,
+}: {
+  className?: string
+  children: ReactNode
+  rotate?: number
+  label?: string
+  ref?: Ref<HTMLElement>
+}) {
+  return (
+    <article ref={ref} className={`mimeo ${className}`} style={{ '--r': `${rotate}deg` } as Style} aria-label={label}>
+      {children}
+    </article>
+  )
+}
+
 export function Quiz() {
   const [params] = useSearchParams()
   const focusGhost = params.get('ghost')
   const mastery = useMastery()
-  const { dispatch } = useStore()
+  const { state, dispatch } = useStore()
 
   const topicParam = QUIZ_TOPICS.find((t) => t.id === params.get('topic'))?.id
   const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : ['evidence', 'speed', 'sanity', 'behavior'])
@@ -35,6 +136,8 @@ export function Quiz() {
   const [selected, setSelected] = useState<string[]>([])
   const [answers, setAnswers] = useState<Answer[]>([])
   const [checked, setChecked] = useState(false)
+  const nextRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLElement>(null)
 
   const weak = useMemo(
     () => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, WEAK_COUNT),
@@ -120,75 +223,199 @@ export function Quiz() {
     return () => window.removeEventListener('keydown', onKey)
   }, [q, checked, selected, next, check])
 
+  // « Question suivante » prend le focus dès la correction (comme un autoFocus)
+  useEffect(() => {
+    if (checked) nextRef.current?.querySelector<HTMLElement>('.btn-tape')?.focus()
+  }, [checked, index])
+
+  // présentation seulement : chaque nouvelle feuille (sujet, question, corrigé) s'ouvre par le haut
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [questions])
+  useEffect(() => {
+    if (index === 0) return
+    const el = sheetRef.current
+    if (!el) window.scrollTo({ top: 0 })
+    else if (el.getBoundingClientRect().top < 0) {
+      const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' })
+    }
+  }, [index])
+
+  const quizzes = state.activity.filter((a) => a.kind === 'quiz')
+  const student = state.profile.name || 'sans nom'
+
   /* ---------- configuration ---------- */
   if (!questions) {
+    const poolLabel = pool === 'one' && one ? one.name : pool === 'weak' ? `tes ${WEAK_COUNT} points faibles` : `les ${GHOSTS.length} entités`
+    const history = quizzes.slice(-5).reverse()
     return (
-      <div className="page narrow">
-        <PageHead title="Quiz">
-          Des questions tirées des fiches, en priorité sur ce que tu maîtrises le moins. Chaque erreur fait revenir la carte
-          correspondante en révision.
-        </PageHead>
-        <form
-          className="stack"
-          style={{ '--gap': '26px' } as React.CSSProperties}
-          onSubmit={(e) => {
-            e.preventDefault()
-            start()
-          }}
-        >
-          <fieldset className="fieldset">
-            <legend className="field-label">Thèmes</legend>
-            <div className="topic-list">
-              {QUIZ_TOPICS.map((t) => (
-                <label key={t.id} className="check">
-                  <input
-                    type="checkbox"
+      <form
+        className="qz qz-setup"
+        onSubmit={(e) => {
+          e.preventDefault()
+          start()
+        }}
+      >
+        <Notebook>
+          <Page side="left" section="4" label="Préparer le quiz">
+            <FileHead>
+              <Link to="/entrainement">‹ S’entraîner</Link>
+              <span>Quiz</span>
+              <span>
+                Copie n° <b>{String(quizzes.length + 1).padStart(2, '0')}</b>
+              </span>
+            </FileHead>
+
+            <header className="qz-entry">
+              <h1 className="qz-title">
+                <em>Quiz</em>
+                Interrogation écrite
+              </h1>
+              <p className="qz-lead">
+                Des questions tirées des fiches, en priorité sur ce que tu maîtrises le moins. Chaque erreur fait revenir la carte
+                correspondante en révision.
+              </p>
+            </header>
+
+            <fieldset className="qz-field">
+              <legend className="typed-label">
+                <span className="qz-step">1</span> Thèmes
+              </legend>
+              <div className="qz-topics">
+                {QUIZ_TOPICS.map((t) => (
+                  <CheckLine
+                    key={t.id}
+                    seed={`qz-topic-${t.id}`}
                     checked={topics.includes(t.id)}
-                    onChange={(e) => setTopics(e.target.checked ? [...topics, t.id] : topics.filter((x) => x !== t.id))}
-                  />
-                  <span>
-                    {t.label}
-                    <span className="faint small" style={{ display: 'block' }}>
-                      {t.description}
+                    onChange={(v) => setTopics(v ? [...topics, t.id] : topics.filter((x) => x !== t.id))}
+                    hint={t.description}
+                  >
+                    <span className="qz-topic-name">
+                      <Digits text={t.label} />
                     </span>
-                  </span>
-                </label>
-              ))}
+                  </CheckLine>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="qz-field qz-field--row">
+              <div>
+                <span className="typed-label">
+                  <span className="qz-step">2</span> Nombre de questions
+                </span>
+                <Seg label="Nombre de questions" value={count} onChange={setCount} options={[5, 10, 20, 30].map((n) => ({ value: n, label: String(n) }))} />
+              </div>
+              <div>
+                <span className="typed-label">
+                  <span className="qz-step">3</span> Entités
+                </span>
+                <Seg
+                  label="Entités"
+                  value={pool}
+                  onChange={setPool}
+                  options={[
+                    { value: 'all' as Pool, label: 'Toutes' },
+                    { value: 'weak' as Pool, label: 'Points faibles' },
+                    ...(one ? [{ value: 'one' as Pool, label: one.name }] : []),
+                  ]}
+                />
+              </div>
             </div>
-          </fieldset>
-          <div className="grid-2">
-            <div className="field">
-              <span className="field-label">Nombre de questions</span>
-              <Seg label="Nombre de questions" value={count} onChange={setCount} options={[5, 10, 20, 30].map((n) => ({ value: n, label: String(n) }))} />
+            {pool === 'weak' && <p className="pencil-note qz-weak">Points faibles : {weak.map((g) => g.name).join(', ')}.</p>}
+          </Page>
+
+          <Page side="right" section="4" label="La copie">
+            <FileHead>
+              <span>Sujet du jour</span>
+              <span>
+                <b>{quizzes.length}</b> {plural(quizzes.length, 'copie rendue', 'copies rendues')}
+              </span>
+            </FileHead>
+
+            <Mimeo className="qz-cover settle" rotate={-0.8} label="Aperçu de la copie">
+              {pool === 'one' && one && (
+                <div className="qz-cover-photo">
+                  <Polaroid ghostId={one.id} caption={one.name} rotate={5} delay={0.3} />
+                </div>
+              )}
+              <p className="qz-sheet-top">
+                <span>Épreuve écrite</span>
+                <span>Copie n° {String(quizzes.length + 1).padStart(2, '0')}</span>
+              </p>
+              <h2 className="qz-cover-title">Connaissance des entités</h2>
+              <dl className="qz-cover-fields">
+                <div>
+                  <dt>Nom</dt>
+                  <dd>{student}</dd>
+                </div>
+                <div>
+                  <dt>Sujet</dt>
+                  <dd>{topics.length ? QUIZ_TOPICS.filter((t) => topics.includes(t.id)).map((t) => t.label).join(', ') : 'aucun thème coché'}</dd>
+                </div>
+                <div>
+                  <dt>Entités</dt>
+                  <dd>{poolLabel}</dd>
+                </div>
+                <div>
+                  <dt>Durée</dt>
+                  <dd>{count} questions</dd>
+                </div>
+              </dl>
+              <div className="qz-cover-note" aria-hidden>
+                <span>Note</span>
+                <span className="qz-blank" />
+                <span>/ {count}</span>
+              </div>
+              <p className="qz-cover-rules">Coche la bonne case, ou les bonnes cases quand la question le précise.</p>
+            </Mimeo>
+
+            {empty && (
+              <p className="qz-empty" role="alert">
+                <Stamp small tone="pencil" rotate={-2}>
+                  Rien à tirer
+                </Stamp>
+                <span>
+                  Pas de question disponible avec ces réglages (par exemple, cette entité n’a pas de test sans preuve définitif). Ajoute un
+                  autre thème.
+                </span>
+              </p>
+            )}
+            {!topics.length && <p className="pencil-note qz-need">coche au moins un thème</p>}
+            <div className="qz-go">
+              <TapeButton type="submit" disabled={!topics.length}>
+                Distribuer la copie
+              </TapeButton>
             </div>
-            <div className="field">
-              <span className="field-label">Entités</span>
-              <Seg
-                label="Entités"
-                value={pool}
-                onChange={setPool}
-                options={[
-                  { value: 'all' as Pool, label: 'Toutes' },
-                  { value: 'weak' as Pool, label: 'Points faibles' },
-                  ...(one ? [{ value: 'one' as Pool, label: one.name }] : []),
-                ]}
-              />
-            </div>
-          </div>
-          {pool === 'weak' && <p className="faint small">Points faibles : {weak.map((g) => g.name).join(', ')}.</p>}
-          {empty && (
-            <p className="note accent">
-              Pas de question disponible avec ces réglages (par exemple, cette entité n’a pas de test sans preuve définitif). Ajoute
-              un autre thème.
-            </p>
-          )}
-          <div>
-            <button type="submit" className="btn btn-primary btn-lg" disabled={!topics.length}>
-              Lancer le quiz
-            </button>
-          </div>
-        </form>
-      </div>
+
+            {history.length > 0 && (
+              <section className="qz-history" aria-labelledby="h-qz-hist">
+                <H id="h-qz-hist" as="h2" count={`${quizzes.length} au total`}>
+                  Copies rendues
+                </H>
+                <div className="libcard qz-libcard settle" style={{ '--r': '1.2deg', '--d': '.4s' } as Style}>
+                  <Tape />
+                  <h3>Relevé de notes</h3>
+                  <div className="cols">
+                    <span>Date</span>
+                    <span>Note</span>
+                  </div>
+                  <ol>
+                    {history.map((a, k) => (
+                      <li key={a.t} style={{ '--r': `${[-2, 1, -1, 2, -1.5][k]}deg` } as Style}>
+                        <span className="d">{STAMP_DATE.format(a.t)}</span>
+                        <span className="res">
+                          {a.score}/{a.total}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </section>
+            )}
+          </Page>
+        </Notebook>
+      </form>
     )
   }
 
@@ -201,159 +428,292 @@ export function Quiz() {
       return { t, total: list.length, ok: list.filter((a) => a.correct).length }
     }).filter((x) => x.total > 0)
     const mistakes = answers.filter((a) => !a.correct)
+    const label = (a: Answer, ids: string[]) =>
+      a.q.choices
+        .filter((c) => ids.includes(c.id))
+        .map((c) => c.label)
+        .join(', ')
     return (
-      <div className="page narrow">
-        <PageHead title={`${score} sur ${answers.length}`}>
-          {pct >= 90
-            ? 'Impressionnant, rien à redire.'
-            : pct >= 70
-              ? 'Très bon résultat, il reste quelques détails.'
-              : pct >= 50
-                ? 'C’est en bonne voie, on consolide.'
-                : 'On a trouvé ce qu’il faut retravailler, c’est le but.'}
-        </PageHead>
-        <table className="score-table">
-          <tbody>
-            {byTopic.map(({ t, total, ok }) => (
-              <tr key={t.id}>
-                <th scope="row">{t.label}</th>
-                <td>
-                  <ProgressBar value={ok / total} label={t.label} />
-                </td>
-                <td className="pct">
-                  {ok}/{total}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {mistakes.length > 0 && (
-          <section className="section">
-            <h2>À retenir</h2>
-            <ul className="list">
-              {mistakes.map((a, i) => (
-                <li key={i} className="stack" style={{ '--gap': '8px' } as React.CSSProperties}>
-                  <p>
-                    <strong>{a.q.prompt}</strong>
-                  </p>
-                  {a.q.quote && <blockquote className="quote small">{a.q.quote}</blockquote>}
-                  {a.q.evidenceShown && (
-                    <p className="evi-list">
-                      {a.q.evidenceShown.map((e) => (
-                        <Evidence key={e} id={e} />
-                      ))}
-                    </p>
-                  )}
-                  <p>
-                    Réponse :{' '}
-                    {a.q.choices
-                      .filter((c) => a.q.correct.includes(c.id))
-                      .map((c) => c.label)
-                      .join(', ')}
-                  </p>
-                  <p className="muted small">{a.q.explain}</p>
-                  {a.q.ghostId && (
-                    <p className="small">
-                      <Link to={`/codex/${a.q.ghostId}`}>Relire la fiche</Link>
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
+      <Notebook className="qz qz-results">
+        <Page side="left" section="4" label="Copie corrigée">
+          <FileHead>
+            <span>Quiz · copie corrigée</span>
+            <span>{SHORT.format(Date.now())}</span>
+            <span>
+              Copie n° <b>{String(Math.max(1, quizzes.length)).padStart(2, '0')}</b>
+            </span>
+          </FileHead>
+
+          <div className="qz-stick">
+          <Mimeo className="qz-graded settle" rotate={-0.6} label="Copie corrigée">
+            <p className="qz-sheet-top">
+              <span>Épreuve écrite</span>
+              <span>Nom : {student}</span>
+            </p>
+            <div className="qz-score" aria-label={`Note : ${score} sur ${answers.length}`}>
+              <span className="qz-score-n hand">
+                {score}
+                <span className="qz-score-of">/{answers.length}</span>
+                <ScoreRule />
+              </span>
+              <span className="qz-score-word hand">{scoreWord(pct)}</span>
+            </div>
+            <p className="qz-verdict">
+              {pct >= 90
+                ? 'Impressionnant, rien à redire.'
+                : pct >= 70
+                  ? 'Très bon résultat, il reste quelques détails.'
+                  : pct >= 50
+                    ? 'C’est en bonne voie, on consolide.'
+                    : 'On a trouvé ce qu’il faut retravailler, c’est le but.'}
+            </p>
+            <table className="qz-breakdown">
+              <caption className="sr-only">Résultat par thème</caption>
+              <tbody>
+                {byTopic.map(({ t, total, ok }, k) => (
+                  <tr key={t.id}>
+                    <th scope="row">{t.label}</th>
+                    <td className="qz-bar-cell">
+                      <span className="qz-bar" style={{ '--m': ok / total, '--i': k } as Style} aria-hidden />
+                    </td>
+                    <td className="qz-bar-n">
+                      {ok}/{total}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Mimeo>
+
+          <div className="qz-end-actions">
+            <TapeButton onClick={start}>Nouvelle copie</TapeButton>
+            <TypedLink onClick={() => setQuestions(null)}>Changer les réglages</TypedLink>
+          </div>
+          </div>
+        </Page>
+
+        <Page side="right" section="4" label="Corrections">
+          <FileHead>
+            <span>Corrigé</span>
+            <span>
+              <b>{mistakes.length}</b> {plural(mistakes.length, 'erreur')} sur {answers.length}
+            </span>
+          </FileHead>
+          <section aria-labelledby="h-qz-fix">
+            <H id="h-qz-fix" count={mistakes.length ? `${mistakes.length} ${plural(mistakes.length, 'carte')} en révision` : undefined}>
+              À retenir
+            </H>
+            {mistakes.length === 0 ? (
+              <div className="qz-clean">
+                <Stamp thunk rotate={-6} delay={0.6}>
+                  Sans faute
+                </Stamp>
+                <p>Aucune erreur sur cette copie. Monte d’un cran : plus de questions, ou les questions expertes.</p>
+              </div>
+            ) : (
+              <ol className="qz-fixes">
+                {mistakes.map((a) => {
+                  const n = answers.indexOf(a) + 1
+                  const mine = label(a, a.selected)
+                  const right = label(a, a.q.correct)
+                  return (
+                    <li key={a.q.id + n} className="qz-fix">
+                      <p className="qz-fix-head">
+                        <span>Question {n}</span>
+                        <span>{topicLabel(a.q.topic)}</span>
+                      </p>
+                      <p className="qz-fix-q">{fr(a.q.prompt)}</p>
+                      {a.q.quote && <blockquote className="qz-quote">{fr(a.q.quote)}</blockquote>}
+                      {a.q.evidenceShown && (
+                        <p className="qz-evi">
+                          {a.q.evidenceShown.map((e) => (
+                            <Evidence key={e} id={e} />
+                          ))}
+                        </p>
+                      )}
+                      <p className="qz-fix-line">
+                        <span className="qz-fix-k">Ta réponse</span>
+                        <span className="qz-struck">{mine || 'sans réponse'}</span>
+                      </p>
+                      <p className="qz-fix-line">
+                        <span className="qz-fix-k">Réponse</span>
+                        {right.length <= SHORT_ANSWER ? (
+                          <span className="qz-right">
+                            <RoughCircle seed={`fix-${a.q.id}`} padX={0.05} padY={0.22} delay={0.5}>
+                              <Digits text={right} />
+                            </RoughCircle>
+                          </span>
+                        ) : (
+                          <span className="qz-right qz-right--long">
+                            <Digits text={right} />
+                          </span>
+                        )}
+                      </p>
+                      <p className="qz-explain">{fr(a.q.explain)}</p>
+                      {a.q.ghostId && (
+                        <p className="qz-fix-more">
+                          <TypedLink to={`/codex/${a.q.ghostId}`}>Relire la fiche</TypedLink>
+                        </p>
+                      )}
+                    </li>
+                  )
+                })}
+              </ol>
+            )}
           </section>
-        )}
-        <div className="row" style={{ marginTop: 28 }}>
-          <button type="button" className="btn btn-primary" onClick={start}>
-            Nouveau quiz
-          </button>
-          <button type="button" className="btn" onClick={() => setQuestions(null)}>
-            Changer les réglages
-          </button>
-        </div>
-      </div>
+        </Page>
+      </Notebook>
     )
   }
 
   /* ---------- question ---------- */
   const ok = checked && isCorrect(q, selected)
+  const last = index + 1 >= questions.length
   return (
-    <div className="page narrow">
-      <div className="session-bar">
-        <button type="button" className="link-btn muted-link small" onClick={() => setQuestions(null)}>
-          Quitter
-        </button>
-        <ProgressBar value={index / questions.length} label="Progression du quiz" />
-        <span className="pct">
-          {index + 1} / {questions.length}
-        </span>
-      </div>
-
-      <article className="flashcard">
-        <p className="flash-meta">
-          {QUIZ_TOPICS.find((t) => t.id === q.topic)?.label}
-          {q.multi && ` · ${q.correct.length} réponses à trouver`}
-        </p>
-        <h2 className="flash-front">{q.prompt}</h2>
-        {q.quote && <blockquote className="quote">{q.quote}</blockquote>}
-        {q.evidenceShown && (
-          <p className="evi-list">
-            {q.evidenceShown.map((e) => (
-              <Evidence key={e} id={e} />
-            ))}
-          </p>
-        )}
-
-        <div className={`choices${q.choices.length > 4 ? ' many' : ''}`}>
-          {q.choices.map((c, i) => {
-            const isSel = selected.includes(c.id)
-            const isRight = q.correct.includes(c.id)
-            const state = checked ? (isRight ? 'right' : isSel ? 'wrong' : 'idle') : isSel ? 'sel' : ''
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className={`choice ${state}`}
-                disabled={checked}
-                aria-pressed={q.multi ? isSel : undefined}
-                onClick={() => {
-                  if (q.multi) setSelected((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))
-                  else check([c.id])
-                }}
-              >
-                <span className="choice-key">{LETTERS[i]}</span>
-                <span className="choice-label">{c.evidence ? <Evidence id={c.evidence} /> : c.label}</span>
-                {checked && isRight && <span className="choice-mark">bonne réponse</span>}
-                {checked && isSel && !isRight && <span className="choice-mark">ton choix</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        {q.multi && !checked && (
-          <button type="button" className="btn btn-primary btn-block" disabled={!selected.length} onClick={() => check(selected)}>
-            Valider ({selected.length} sur {q.correct.length}) <span className="kbd">Entrée</span>
+    <Notebook single className="qz qz-run">
+      <Page section="4" label={`Question ${index + 1} sur ${questions.length}`}>
+        <FileHead>
+          <button type="button" className="link-btn qz-quit" onClick={() => setQuestions(null)}>
+            ‹ Quitter la copie
           </button>
-        )}
+          <span>Quiz · {topicLabel(q.topic)}</span>
+          <span>
+            Question <b>{index + 1}</b> / {questions.length}
+          </span>
+        </FileHead>
 
-        {checked && (
-          <div className={`feedback ${ok ? 'ok' : 'ko'}`}>
-            <p className="feedback-title">{ok ? 'Exact.' : 'Pas tout à fait.'}</p>
-            <p>{q.explain}</p>
-            <div className="row between">
-              {q.ghostId ? (
-                <Link to={`/codex/${q.ghostId}`} className="small" target="_blank" rel="noreferrer">
-                  Ouvrir la fiche
-                </Link>
-              ) : (
-                <span />
-              )}
-              <button type="button" className="btn btn-primary" onClick={next} autoFocus>
-                {index + 1 >= questions.length ? 'Voir le résultat' : 'Question suivante'} <span className="kbd">Entrée</span>
-              </button>
-            </div>
+        <Mimeo ref={sheetRef} className="qz-sheet" rotate={-0.35} label={`Question ${index + 1}`}>
+          <header className="qz-sheet-head">
+            <p className="qz-sheet-top">
+              <span>Épreuve écrite</span>
+              <span>Nom : {student}</span>
+            </p>
+            <ol className="qz-grid" aria-hidden>
+              {questions.map((qq, i) => {
+                const a = answers[i]
+                const cls = a ? (a.correct ? 'is-ok' : 'is-ko') : i === index ? 'is-now' : undefined
+                return (
+                  <li key={qq.id + i} className={cls}>
+                    <span>{i + 1}</span>
+                    {a && <GridMark ok={a.correct} seed={`grid-${qq.id}-${i}`} />}
+                  </li>
+                )
+              })}
+            </ol>
+          </header>
+
+          <div className="qz-q">
+            <h2 className="qz-prompt">
+              <span className="qz-num">{index + 1}.</span>
+              {fr(q.prompt)}
+            </h2>
+            {q.multi && (
+              <p className="qz-instr">
+                {q.correct.length} réponses à cocher{!checked && ` · ${selected.length} cochée${selected.length > 1 ? 's' : ''}`}
+              </p>
+            )}
+            {q.quote && <blockquote className="qz-quote">{fr(q.quote)}</blockquote>}
+            {q.evidenceShown && (
+              <p className="qz-evi">
+                {q.evidenceShown.map((e) => (
+                  <Evidence key={e} id={e} />
+                ))}
+              </p>
+            )}
           </div>
-        )}
-      </article>
-    </div>
+
+          <div className={`qz-body${checked ? ' is-checked' : ''}`}>
+            <ol className={`qz-choices${q.choices.length > 4 ? ' many' : ''}`} key={q.id}>
+              {q.choices.map((c, i) => {
+                const isSel = selected.includes(c.id)
+                const isRight = q.correct.includes(c.id)
+                const circleLetter = checked && isRight && c.label.length > SHORT_ANSWER
+                const st = checked ? (isRight ? (isSel ? 'right' : 'missed') : isSel ? 'wrong' : 'idle') : isSel ? 'sel' : ''
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className={`choice qz-choice ${st}`}
+                      disabled={checked}
+                      aria-pressed={q.multi ? isSel : undefined}
+                      aria-keyshortcuts={LETTERS[i].toLowerCase()}
+                      onClick={() => {
+                        if (q.multi) setSelected((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))
+                        else check([c.id])
+                      }}
+                    >
+                      <JournalBox state={isSel ? 'yes' : 'empty'} seed={`${q.id}-${c.id}`} delay={0.05 + i * 0.04} />
+                      <span className="qz-letter">
+                        {circleLetter ? (
+                          <RoughCircle seed={`${q.id}-${c.id}-ok`} padX={0.3} padY={0.12} delay={0.25} width={2}>
+                            {LETTERS[i]}
+                          </RoughCircle>
+                        ) : (
+                          LETTERS[i]
+                        )}
+                        .
+                      </span>
+                      <span className="qz-label">
+                        {checked && isRight && !circleLetter ? (
+                          <RoughCircle seed={`${q.id}-${c.id}-ok`} padX={0.05} padY={0.2} delay={0.25} width={2}>
+                            <ChoiceText c={c} />
+                          </RoughCircle>
+                        ) : (
+                          <ChoiceText c={c} />
+                        )}
+                      </span>
+                      {checked && isRight && <span className="sr-only"> : bonne réponse</span>}
+                      {checked && isSel && !isRight && <span className="sr-only"> : ton choix, faux</span>}
+                    </button>
+                  </li>
+                )
+              })}
+            </ol>
+
+            <aside className="qz-margin" aria-live="polite" aria-label="Correction">
+              {checked ? (
+                <div className="qz-correction">
+                  <Stamp thunk tone={ok ? 'ink' : 'red'} rotate={ok ? -5 : -7} delay={0.1}>
+                    {ok ? 'Exact' : 'À revoir'}
+                  </Stamp>
+                  <p className="qz-explain">{fr(q.explain)}</p>
+                  {q.ghostId && (
+                    <Link to={`/codex/${q.ghostId}`} className="link" target="_blank" rel="noreferrer">
+                      Ouvrir la fiche
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <p className="qz-margin-empty">Réservé à la correction</p>
+              )}
+            </aside>
+          </div>
+
+          <div className="qz-actions">
+            {!checked && (
+              <p className="qz-keys" aria-hidden>
+                touches A à {LETTERS[q.choices.length - 1]}
+                {q.multi && ', puis Entrée'}
+              </p>
+            )}
+            {q.multi && !checked && (
+              <TapeButton disabled={!selected.length} onClick={() => check(selected)}>
+                Valider · {selected.length} sur {q.correct.length}
+              </TapeButton>
+            )}
+            {checked && (
+              <>
+                <p className="qz-keys" aria-hidden>
+                  Entrée pour continuer
+                </p>
+                <div ref={nextRef} className="qz-next">
+                  <TapeButton onClick={next}>{last ? 'Voir le résultat' : 'Question suivante'}</TapeButton>
+                </div>
+              </>
+            )}
+          </div>
+        </Mimeo>
+      </Page>
+    </Notebook>
   )
 }

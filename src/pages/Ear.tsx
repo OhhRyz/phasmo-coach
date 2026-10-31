@@ -1,10 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { PageHead, ProgressBar, Seg } from '../components/ui'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { FileHead, H, Notebook, Page, PaperButton, RoughCircle, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
+import { roughEllipse, roughLine, roughRng } from '../components/journal/rough'
+import { ProgressBar, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { num } from '../engine/format'
 import { createRng, pick, shuffle, type Rng } from '../engine/random'
 import { useStore } from '../store/store'
+
+type Style = CSSProperties & Record<`--${string}`, string | number>
 
 type Mode = 'class' | 'exact'
 
@@ -23,6 +28,9 @@ function classOf(v: number): 'slow' | 'normal' | 'fast' {
 }
 
 const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: 'Normale (1,7 m/s)', fast: 'Plus rapide que la normale' }
+const MODE_LABEL: Record<Mode, string> = { class: 'Lente, normale ou rapide', exact: 'Vitesse exacte' }
+/** CLASS_LABEL découpé pour l'affichage : le mot entouré, puis sa précision tapée. */
+const CLASS_SPLIT = { slow: ['Plus lente', 'que la normale'], normal: ['Normale', '1,7 m/s'], fast: ['Plus rapide', 'que la normale'] } as const
 
 /** Toutes les vitesses distinctes présentes dans les fiches. */
 function allSpeeds(): number[] {
@@ -54,6 +62,223 @@ function makeRounds(mode: Mode, rng: Rng): Round[] {
   })
 }
 
+/* ------------------------------------------------------------------ la bande de papier */
+
+const PRINTS = 14
+/** Empreinte de semelle, pointe vers la droite (repère 44 × 20). */
+const SOLE = 'M15.5 5.2 C22 2.4 33.5 1.8 39.6 5.2 C44 7.8 43.6 12.9 39.2 15.3 C33.2 18.4 23 17.7 16.4 14.6 C13.2 13 12.8 7 15.5 5.2 Z'
+const HEEL = 'M1.8 10.2 C1.8 6.6 4.4 4.8 7.4 4.8 C10.6 4.8 12.6 7 12.6 10.2 C12.6 13.4 10.4 15.4 7.3 15.4 C4.2 15.4 1.8 13.6 1.8 10.2 Z'
+
+type StripState = 'idle' | 'run' | 'paused'
+
+/** Bande de papier sur laquelle les pas s'impriment à la cadence entendue. */
+function FootprintStrip({ speed, status, runId, caption }: { speed: number | null; status: StripState; runId: number; caption: ReactNode }) {
+  const step = 60 / speedToBpm(speed ?? BASE)
+  return (
+    <figure className="ear-bench">
+      <figcaption className="ear-cap">
+        <span>Relevé des pas</span>
+        <span className={`ear-status${status === 'run' ? ' is-on' : ''}`}>{caption}</span>
+      </figcaption>
+      <div className="ear-strip-wrap" aria-hidden>
+        <Tape style={{ left: -26, top: -6, transform: 'rotate(-38deg)' }} />
+        <Tape style={{ right: -26, bottom: -6, transform: 'rotate(-34deg)' }} />
+        <div className={`ear-strip is-${status}`} style={{ '--step': `${step.toFixed(3)}s` } as Style}>
+        <span className="ear-strip-line" />
+        <div className="ear-prints" key={runId}>
+          {Array.from({ length: PRINTS }, (_, k) => (
+            <span key={k} className="ear-print" style={{ '--k': k } as Style}>
+              <svg viewBox="0 0 44 20">
+                <g className="out">
+                  <path d={SOLE} />
+                  <path d={HEEL} />
+                </g>
+                <g className="ink">
+                  <path d={SOLE} />
+                  <path d={HEEL} />
+                </g>
+              </svg>
+            </span>
+          ))}
+        </div>
+        </div>
+      </div>
+    </figure>
+  )
+}
+
+/* ------------------------------------------------------------------ la règle en m/s */
+
+function useWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [w, setW] = useState(0)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setW(el.clientWidth)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return [ref, w] as const
+}
+
+/** Écarte les étiquettes trop proches les unes des autres (gauche → droite). */
+function spread(xs: number[], gap: number): number[] {
+  const out = [...xs]
+  for (let k = 1; k < out.length; k++) if (out[k] - out[k - 1] < gap) out[k] = out[k - 1] + gap
+  return out
+}
+
+interface RulerProps {
+  max: number
+  /** vitesses des fiches (points au crayon) */
+  dots?: number[]
+  /** propositions de l'exercice « vitesse exacte » */
+  cands?: { v: number; letter: string }[]
+  /** lettre choisie (crayon) */
+  picked?: string | null
+  /** flèches « plus lente / plus rapide » (exercice par classes) */
+  zones?: boolean
+  /** la vraie vitesse, au stylo rouge, une fois la réponse donnée */
+  truth?: number | null
+  label: string
+}
+
+function SpeedRuler({ max, dots, cands, picked, zones, truth, label }: RulerProps) {
+  const [ref, w] = useWidth<HTMLDivElement>()
+  const H0 = 44 // bord haut de la règle
+  const H1 = 90 // bord bas
+  const L = 22
+  const R = 44
+  const x = (v: number) => L + (Math.max(0, Math.min(max, v)) / max) * (w - L - R)
+  const xr = x(BASE)
+  const ticks = Array.from({ length: max * 10 + 1 }, (_, i) => i / 10)
+  const r = roughRng('ruler' + (truth ?? '') + (picked ?? ''))
+  const truthSide = truth == null ? 0 : truth > BASE + 0.01 ? 1 : truth < BASE - 0.01 ? -1 : 0
+
+  let arc = ''
+  let head = ''
+  if (truth != null && truthSide !== 0) {
+    const xt = x(truth)
+    const d = Math.abs(xt - xr)
+    const peak = H0 - 8 - Math.min(16, d * 0.18)
+    arc = `M${xr} ${H0 - 4} C ${xr + truthSide * d * 0.25} ${peak}, ${xt - truthSide * d * 0.3} ${peak}, ${xt - truthSide * 5} ${H0 - 9}`
+    head = `M${xt - truthSide * 13} ${H0 - 12} L${xt - truthSide * 4.5} ${H0 - 8.5} L${xt - truthSide * 9} ${H0 - 18}`
+  }
+  const candX = cands ? spread(cands.map((c) => x(c.v)), 26) : []
+
+  return (
+    <div className="ear-ruler" ref={ref}>
+      {w > 0 && (
+        /* remonté à chaque largeur : un tracé « dessiné » garde sinon l'échelle de son premier rendu */
+        <svg key={w} width={w} height="132" viewBox={`0 0 ${w} 132`} role="img" aria-label={label}>
+          <defs>
+            <filter id="ear-ruler-shadow" x="-2%" y="-20%" width="104%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity=".22" />
+            </filter>
+          </defs>
+          {/* la règle */}
+          <rect className="ear-ruler-band" filter="url(#ear-ruler-shadow)" x="2" y={H0} width={w - 4} height={H1 - H0} rx="3" />
+          <path className="ear-ruler-edge" d={`M4 ${H0 + 1.5} H${w - 4}`} />
+          <path
+            className="ear-ruler-ticks"
+            d={ticks.map((t) => `M${x(t)} ${H0}v${Math.round(t * 10) % 10 === 0 ? 17 : Math.round(t * 10) % 5 === 0 ? 11 : 6}`).join('')}
+          />
+          {Array.from({ length: max + 1 }, (_, v) => (
+            <text key={v} className="ear-ruler-n" x={x(v)} y={H0 + 34} textAnchor="middle">
+              {v}
+            </text>
+          ))}
+          <text className="ear-ruler-unit" x={w - 10} y={H0 + 34} textAnchor="end">
+            m/s
+          </text>
+
+          {/* la référence */}
+          <path className="ear-ruler-ref" d={`M${xr} ${H0 - 2} V${H0 + 21} M${xr} ${H0 + 40} V${H1}`} />
+          <text className="ear-ruler-refn" x={xr} y={H0 + 34} textAnchor="middle">
+            1,7
+          </text>
+          {!(truth != null && truthSide === 0) && (
+            <text
+              className="ear-pencil"
+              x={truthSide > 0 ? xr - 7 : truthSide < 0 ? xr + 7 : xr}
+              y={H0 - 8}
+              textAnchor={truthSide > 0 ? 'end' : truthSide < 0 ? 'start' : 'middle'}
+            >
+              référence
+            </text>
+          )}
+
+          {/* vitesses des fiches */}
+          {dots?.map((v) => <circle key={v} className="ear-dot" cx={x(v)} cy={H1 + 9} r="3" />)}
+
+          {/* plus lente / plus rapide */}
+          {zones && (
+            <g className="ear-zones draw">
+              <path d={roughLine(xr - 14, H1 + 14, Math.max(L + 6, xr - 110), H1 + 15, r, 1)} pathLength={1} />
+              <path d={`M${Math.max(L + 6, xr - 110) + 7} ${H1 + 9} L${Math.max(L + 6, xr - 110)} ${H1 + 15} L${Math.max(L + 6, xr - 110) + 7} ${H1 + 21}`} pathLength={1} />
+              <path d={roughLine(xr + 14, H1 + 14, Math.min(w - R, xr + 110), H1 + 13, r, 1)} pathLength={1} />
+              <path d={`M${Math.min(w - R, xr + 110) - 7} ${H1 + 7} L${Math.min(w - R, xr + 110)} ${H1 + 13} L${Math.min(w - R, xr + 110) - 7} ${H1 + 19}`} pathLength={1} />
+              <text className="ear-pencil" x={Math.max(L + 2, xr - 112)} y={H1 + 38} textAnchor="start">
+                plus lente
+              </text>
+              <text className="ear-pencil" x={Math.min(w - R + 4, xr + 112)} y={H1 + 38} textAnchor="end">
+                plus rapide
+              </text>
+            </g>
+          )}
+
+          {/* propositions A, B, C, D */}
+          {cands?.map((c, k) => (
+            <g key={c.letter} className={`ear-cand${picked === c.letter ? ' is-picked' : ''}`}>
+              <path d={`M${x(c.v)} ${H1} V${H1 + 9} L${candX[k]} ${H1 + 17}`} />
+              <text x={candX[k]} y={H1 + 33} textAnchor="middle">
+                {c.letter}
+              </text>
+              {picked === c.letter && (
+                <g className="draw ear-cand-ring">
+                  <path d={roughEllipse(18, 18, roughRng('pick' + c.letter), 0.1, 0.1)} transform={`translate(${candX[k] - 9} ${H1 + 18})`} pathLength={1} />
+                </g>
+              )}
+            </g>
+          ))}
+
+          {/* la vraie vitesse, au stylo rouge */}
+          {truth != null && (
+            <g className="ear-truth draw">
+              {arc && <path d={arc} pathLength={1} style={{ '--d': '.35s' } as Style} />}
+              {head && <path d={head} pathLength={1} style={{ '--d': '.85s', '--dur': '.25s' } as Style} />}
+              <path d={roughEllipse(14, 14, roughRng('truth' + truth), 0.1, 0.1)} transform={`translate(${x(truth) - 7} ${H0 - 7})`} pathLength={1} style={{ '--d': '.1s', '--dur': '.5s' } as Style} />
+              <path className="ear-truth-line" d={`M${x(truth)} ${H0} V${H0 + 21} M${x(truth)} ${H0 + 40} V${H1}`} />
+              <text className="ear-truth-t" x={Math.max(60, Math.min(w - 60, x(truth)))} y="18" textAnchor="middle">
+                {num(truth)} m/s{truthSide === 0 ? ' : la référence' : ''}
+              </text>
+            </g>
+          )}
+        </svg>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ boutons */
+
+/** Bande Dymo qui prend le focus à son apparition (la TapeButton partagée n'a pas d'autoFocus). */
+function FocusTape({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <span className="btn-wrap ear-next">
+      <button className="btn-tape" type="button" onClick={onClick} autoFocus>
+        {children}
+        <svg className="arrow" viewBox="0 0 26 12" aria-hidden>
+          <path d="M1 6.5 C8 5.5 15 6.8 24 6 M18 1.5 L24.5 6 L18.5 10.5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </span>
+  )
+}
+
 export function Ear() {
   const { dispatch } = useStore()
   const [mode, setMode] = useState<Mode>('class')
@@ -64,6 +289,8 @@ export function Ear() {
   const [playing, setPlaying] = useState<'q' | 'ref' | null>(null)
   const steps = useRef<Footsteps | null>(null)
   const speeds = useMemo(allSpeeds, [])
+  /** dernière écoute imprimée sur la bande (affichage seulement) */
+  const [trail, setTrail] = useState<{ v: number; which: 'q' | 'ref'; id: number; at: number } | null>(null)
 
   useEffect(() => {
     steps.current = createFootsteps(() => setPlaying(null))
@@ -109,60 +336,152 @@ export function Ear() {
     setAnswer(null)
   }
 
+  /* affichage : la bande garde l'empreinte de la dernière écoute de cet écran */
+  const screen = rounds ? i : -1
+  const listen = (v: number, which: 'q' | 'ref') => {
+    if (playing !== which) setTrail({ v, which, id: Date.now(), at: screen })
+    play(v, which)
+  }
+  const shown = trail && trail.at === screen ? trail : null
+  const stripStatus: StripState = !shown ? 'idle' : playing === shown.which ? 'run' : 'paused'
+  const max = Math.max(...speeds) > 3.05 ? 4 : 3
+
   if (!rounds) {
+    const refBpm = Math.round(speedToBpm(BASE))
     return (
-      <div className="page narrow">
-        <PageHead title="À l’oreille">
-          En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7 m/s), et entraîne
-          ton oreille à reconnaître les entités lentes et rapides.
-        </PageHead>
-        <div className="stack" style={{ '--gap': '24px' } as React.CSSProperties}>
-          <div className="field">
-            <span className="field-label">Exercice</span>
-            <Seg
-              label="Exercice"
-              value={mode}
-              onChange={setMode}
-              options={[
-                { value: 'class', label: 'Lente, normale ou rapide' },
-                { value: 'exact', label: 'Vitesse exacte' },
-              ]}
-            />
-          </div>
-          <div className="row">
-            <button type="button" className="btn" onClick={() => play(BASE, 'ref')} aria-pressed={playing === 'ref'}>
-              {playing === 'ref' ? 'Arrêter' : 'Écouter la référence (1,7 m/s)'}
-            </button>
-            <span className="faint small">environ {Math.round(speedToBpm(BASE))} pas par minute</span>
-          </div>
-          <p className="faint small">
-            Vitesses présentes dans les fiches : {speeds.map((s) => num(s)).join(' · ')} m/s. Les pas sont générés par l’app, pas
-            enregistrés dans le jeu : la cadence est fidèle, le son est simplifié. Un casque aide beaucoup.
-          </p>
-          <div>
-            <button type="button" className="btn btn-primary btn-lg" onClick={start}>
-              Commencer ({ROUNDS} écoutes)
-            </button>
-          </div>
-        </div>
+      <div className="ear">
+        <Notebook single>
+          <Page section="4" label="À l’oreille">
+            <FileHead>
+              <Link to="/entrainement">‹ S’entraîner</Link>
+              <span>À l’oreille</span>
+              <span>
+                Série de <b>{ROUNDS}</b> écoutes
+              </span>
+            </FileHead>
+
+            <header className="ear-entry">
+              <h1 className="entry-date ear-title">
+                <em>À l’oreille</em>
+                Le rythme des pas
+              </h1>
+              <p className="ear-lead">
+                En chasse, le rythme des pas trahit la vitesse de l’entité. Écoute, compare à la vitesse normale (1,7 m/s), et
+                entraîne ton oreille à reconnaître les entités lentes et rapides.
+              </p>
+            </header>
+
+            <section className="ear-step" aria-labelledby="h-ear-mode">
+              <h2 className="typed-label ear-step-h" id="h-ear-mode">
+                L’exercice
+              </h2>
+              <Seg
+                label="Exercice"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'class', label: 'Lente, normale ou rapide' },
+                  { value: 'exact', label: 'Vitesse exacte' },
+                ]}
+              />
+              <p className="ear-mode-hint">
+                {mode === 'class'
+                  ? 'Trois cases : plus lente que la référence, normale, ou plus rapide.'
+                  : 'Quatre vitesses proposées sur la règle : retrouve la bonne au rythme des pas.'}
+              </p>
+            </section>
+
+            <div className="ear-go">
+              <TapeButton
+                onClick={() => {
+                  setTrail(null)
+                  start()
+                }}
+              >
+                Commencer ({ROUNDS} écoutes)
+              </TapeButton>
+            </div>
+            <section className="ear-step" aria-labelledby="h-ear-ref">
+              <h2 className="typed-label ear-step-h" id="h-ear-ref">
+                La référence, pour t’étalonner
+              </h2>
+              <FootprintStrip
+                speed={shown?.v ?? null}
+                status={stripStatus}
+                runId={shown?.id ?? 0}
+                caption={stripStatus === 'run' ? 'à l’écoute…' : shown ? '1,7 m/s · référence' : 'en attente'}
+              />
+              <SpeedRuler max={max} dots={speeds} label={`Règle de 0 à ${max} m/s : référence à 1,7 m/s, ${speeds.length} vitesses relevées dans les fiches`} />
+              <p className="ear-legend">
+                Points au crayon : les vitesses présentes dans les fiches, {speeds.map((s) => num(s)).join(' · ')} m/s.
+              </p>
+              <div className="ear-listen">
+                <PaperButton onClick={() => listen(BASE, 'ref')} pressed={playing === 'ref'}>
+                  {playing === 'ref' ? 'Arrêter' : 'Écouter la référence (1,7 m/s)'}
+                </PaperButton>
+                <span className="pencil-note ear-bpm">environ {refBpm} pas par minute</span>
+              </div>
+            </section>
+
+            <p className="ear-small">
+              Les pas sont générés par l’app, pas enregistrés dans le jeu : la cadence est fidèle, le son est simplifié.{' '}
+              <span className="pencil-note">Un casque aide beaucoup.</span>
+            </p>
+          </Page>
+        </Notebook>
       </div>
     )
   }
 
   if (!round) {
+    const good = score >= 8
     return (
-      <div className="page narrow">
-        <PageHead title={`${score} sur ${rounds.length}`}>
-          {score >= 8 ? 'Belle oreille. Essaie la vitesse exacte.' : 'L’oreille se travaille : refais une série demain.'}
-        </PageHead>
-        <div className="row">
-          <button type="button" className="btn btn-primary" onClick={start}>
-            Nouvelle série
-          </button>
-          <button type="button" className="btn" onClick={() => setRounds(null)}>
-            Changer d’exercice
-          </button>
-        </div>
+      <div className="ear">
+        <Notebook single>
+          <Page section="4" label="Résultat de la série">
+            <FileHead>
+              <span>À l’oreille · série terminée</span>
+              <span>{MODE_LABEL[mode]}</span>
+              <span>
+                <b>{rounds.length}</b> écoutes
+              </span>
+            </FileHead>
+            <div className="ear-result">
+              <div className="ear-grade" aria-label={`Note : ${score} sur ${rounds.length}`}>
+                <RoughCircle seed={`ear-grade-${score}`} padX={0.12} padY={0.14} width={2.4} delay={0.5}>
+                  <span className="ear-grade-n hand">
+                    {score}
+                    <small>/{rounds.length}</small>
+                  </span>
+                </RoughCircle>
+              </div>
+              <div>
+                <h1 className="entry-date ear-title">
+                  <em>À l’oreille</em>
+                  Série terminée
+                </h1>
+                <p className="ear-result-line">
+                  {score} bonne{score > 1 ? 's' : ''} réponse{score > 1 ? 's' : ''} sur {rounds.length} écoutes.
+                </p>
+                <p className="ear-verdict pencil-note">
+                  {good ? 'Belle oreille. Essaie la vitesse exacte.' : 'L’oreille se travaille : refais une série demain.'}
+                </p>
+              </div>
+            </div>
+            <div className="ear-end-actions">
+              <TapeButton
+                onClick={() => {
+                  setTrail(null)
+                  start()
+                }}
+              >
+                Nouvelle série
+              </TapeButton>
+              <TypedLink onClick={() => setRounds(null)}>Changer d’exercice</TypedLink>
+              <TypedLink to="/entrainement">Retour aux exercices</TypedLink>
+            </div>
+          </Page>
+        </Notebook>
       </div>
     )
   }
@@ -172,60 +491,133 @@ export function Ear() {
       ? (['slow', 'normal', 'fast'] as const).map((k) => ({ key: k, label: CLASS_LABEL[k] }))
       : round.choices.map((c) => ({ key: String(c), label: `${num(c)} m/s` }))
 
+  const ok = answer === correctKey
+  const pickedLetter = answer && mode === 'exact' ? 'ABCD'[options.findIndex((o) => o.key === answer)] : null
+  const names = answer ? ghostsAt(round.speed) : []
+  const statusText =
+    stripStatus === 'run' ? (shown?.which === 'ref' ? 'référence · à l’écoute…' : 'à l’écoute…') : shown ? (shown.which === 'ref' ? 'référence 1,7 m/s' : `écoute n° ${i + 1}`) : 'en attente'
+
   return (
-    <div className="page narrow">
-      <div className="session-bar">
-        <button
-          type="button"
-          className="link-btn muted-link small"
-          onClick={() => {
-            steps.current?.stop()
-            setRounds(null)
-          }}
-        >
-          Quitter
-        </button>
-        <ProgressBar value={i / rounds.length} label="Progression" />
-        <span className="pct">
-          {i + 1} / {rounds.length}
-        </span>
-      </div>
-      <article className="flashcard ear">
-        <h2 className="flash-front">Quelle vitesse entends-tu ?</h2>
-        <div className="row">
-          <button type="button" className={`btn btn-lg${playing === 'q' ? '' : ' btn-primary'}`} onClick={() => play(round.speed, 'q')}>
-            {playing === 'q' ? 'Arrêter' : 'Écouter les pas'}
-          </button>
-          <button type="button" className="btn btn-lg" onClick={() => play(BASE, 'ref')}>
-            {playing === 'ref' ? 'Arrêter' : 'Référence 1,7 m/s'}
-          </button>
-        </div>
-        <div className="choices">
-          {options.map((o, k) => {
-            const state = answer ? (o.key === correctKey ? 'right' : o.key === answer ? 'wrong' : 'idle') : ''
-            return (
-              <button key={o.key} type="button" className={`choice ${state}`} disabled={!!answer} onClick={() => choose(o.key)}>
-                <span className="choice-key">{'ABCD'[k]}</span>
-                <span className="choice-label">{o.label}</span>
-              </button>
-            )
-          })}
-        </div>
-        {answer && (
-          <div className={`feedback ${answer === correctKey ? 'ok' : 'ko'}`}>
-            <p className="feedback-title">
-              {answer === correctKey ? 'Exact.' : 'Raté.'} {num(round.speed)} m/s, soit {Math.round(speedToBpm(round.speed))} pas par
-              minute.
-            </p>
-            <p>Entités concernées : {ghostsAt(round.speed).join(', ') || 'vitesse de référence'}.</p>
-            <div className="row" style={{ justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-primary" onClick={next} autoFocus>
-                {i + 1 >= rounds.length ? 'Voir le résultat' : 'Suivante'}
-              </button>
-            </div>
+    <div className="ear ear--run">
+      <Notebook single>
+        <Page section="4" label={`Écoute ${i + 1} sur ${rounds.length}`}>
+          <FileHead>
+            <button
+              type="button"
+              className="link-btn ear-quit"
+              onClick={() => {
+                steps.current?.stop()
+                setRounds(null)
+              }}
+            >
+              ‹ Quitter la série
+            </button>
+            <span>À l’oreille · {MODE_LABEL[mode]}</span>
+            <span>
+              Écoute n° <b>{i + 1}</b> / {rounds.length}
+            </span>
+          </FileHead>
+          <div className="ear-progress">
+            <span className="typed-label">Série</span>
+            <ProgressBar value={i / rounds.length} label="Progression" />
+            <span className="ear-progress-n">
+              {i} / {rounds.length}
+            </span>
           </div>
-        )}
-      </article>
+
+          <H as="h1" count={mode === 'class' ? 'trois cases' : 'quatre vitesses'}>
+            Quelle vitesse entends-tu ?
+          </H>
+
+          <FootprintStrip speed={shown?.v ?? null} status={stripStatus} runId={shown?.id ?? 0} caption={statusText} />
+          <SpeedRuler
+            max={max}
+            zones={mode === 'class'}
+            cands={mode === 'exact' ? round.choices.map((c, k) => ({ v: c, letter: 'ABCD'[k] })) : undefined}
+            picked={pickedLetter}
+            truth={answer ? round.speed : null}
+            label={
+              answer
+                ? `Règle de 0 à ${max} m/s : la vraie vitesse, ${num(round.speed)} m/s, est marquée en rouge ; la référence est à 1,7 m/s.`
+                : `Règle de 0 à ${max} m/s, référence à 1,7 m/s.`
+            }
+          />
+
+          <div className="ear-listen">
+            {answer ? (
+              <PaperButton onClick={() => listen(round.speed, 'q')} pressed={playing === 'q'}>
+                {playing === 'q' ? 'Arrêter' : 'Réécouter les pas'}
+              </PaperButton>
+            ) : (
+              <TapeButton onClick={() => listen(round.speed, 'q')} arrow={false}>
+                {playing === 'q' ? 'Arrêter' : 'Écouter les pas'}
+              </TapeButton>
+            )}
+            <PaperButton onClick={() => listen(BASE, 'ref')} pressed={playing === 'ref'} rotate={-0.8}>
+              {playing === 'ref' ? 'Arrêter' : 'Référence 1,7 m/s'}
+            </PaperButton>
+          </div>
+
+          <fieldset className="ear-answer">
+            <legend className="typed-label">{answer ? 'Ta réponse' : 'Entoure ta réponse'}</legend>
+            <ol className={`ear-choices ear-choices--${mode}`}>
+              {options.map((o, k) => {
+                const state = answer ? (o.key === correctKey ? 'right' : o.key === answer ? 'wrong' : 'idle') : ''
+                return (
+                  <li key={o.key}>
+                    <button type="button" className={`ear-choice ${state}`} disabled={!!answer} onClick={() => choose(o.key)}>
+                      <span className="ear-letter">{'ABCD'[k]}.</span>
+                      <span className="ear-label">
+                        {(() => {
+                          const main = mode === 'class' ? CLASS_SPLIT[o.key as keyof typeof CLASS_SPLIT][0] : o.label
+                          return (
+                            <>
+                              <span className="ear-main">
+                                {state === 'right' ? (
+                                  <RoughCircle seed={`ear-${i}-${o.key}`} padX={0.05} padY={0.3} delay={0.15}>
+                                    {main}
+                                  </RoughCircle>
+                                ) : (
+                                  main
+                                )}
+                              </span>
+                              {mode === 'class' && <span className="ear-sub"> {CLASS_SPLIT[o.key as keyof typeof CLASS_SPLIT][1]}</span>}
+                            </>
+                          )
+                        })()}
+                      </span>
+                      {state === 'right' && <span className="sr-only"> : bonne réponse</span>}
+                      {state === 'wrong' && <span className="sr-only"> : ton choix, faux</span>}
+                    </button>
+                  </li>
+                )
+              })}
+            </ol>
+          </fieldset>
+
+          <div className="ear-fix" aria-live="polite">
+            {answer && (
+              <>
+                <div className="ear-fix-top">
+                  <Stamp thunk tone={ok ? 'ink' : 'red'} rotate={ok ? -5 : -7} delay={0.1}>
+                    {ok ? 'Exact' : 'Raté'}
+                  </Stamp>
+                  <p className="ear-fix-line">
+                    <b>{num(round.speed)} m/s</b>, soit {Math.round(speedToBpm(round.speed))} pas par minute.
+                  </p>
+                </div>
+                <p className="ear-ghosts">
+                  <span className="typed-label">Entités concernées</span>
+                  <span className="ear-names">{names.join(', ') || 'vitesse de référence'}</span>
+                </p>
+                <div className="ear-next-row">
+                  <FocusTape onClick={next}>{i + 1 >= rounds.length ? 'Voir le résultat' : 'Suivante'}</FocusTape>
+                </div>
+              </>
+            )}
+          </div>
+        </Page>
+      </Notebook>
     </div>
   )
 }
