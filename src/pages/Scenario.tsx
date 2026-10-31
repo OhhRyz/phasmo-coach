@@ -75,7 +75,11 @@ export function Scenario() {
     if (revealed > 2) timelineEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [revealed])
 
-  useEffect(() => setSheetOpen(false), [scenario, outcome])
+  // nouveau contrat, abandon ou verdict : on referme le volet et on remonte en haut du carnet
+  useEffect(() => {
+    setSheetOpen(false)
+    window.scrollTo({ top: 0 })
+  }, [scenario, outcome])
   useEffect(() => {
     if (!sheetOpen) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheetOpen(false)
@@ -174,8 +178,7 @@ export function Scenario() {
               Confidentiel
             </Stamp>
             <p className="sc-lead">
-              Une enquête simulée : les rapports arrivent au fil du contrat, comme en partie. Note tes preuves, élimine, et désigne
-              l’entité avec le moins de rapports possible.
+              Un contrat raconté rapport par rapport, comme en partie. Note tes preuves, élimine, et désigne l’entité au plus vite.
             </p>
           </header>
 
@@ -233,6 +236,7 @@ export function Scenario() {
 
         <Page side="right" section="4" label="Règlement et registre des contrats">
           <UvPrint style={{ right: 6, top: 300, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '210px' }} />
+          <div className="coffee" style={{ right: 40, bottom: 46 }} />
           <FileHead>
             <span>Règlement</span>
             <span>
@@ -263,7 +267,7 @@ export function Scenario() {
           </section>
 
           <section aria-labelledby="h-past">
-            <H id="h-past" count={recent.length ? `les ${recent.length} derniers` : undefined}>
+            <H id="h-past" count={pastContracts.length > recent.length ? `les ${recent.length} derniers sur ${pastContracts.length}` : undefined}>
               Derniers contrats
             </H>
             {recent.length === 0 ? (

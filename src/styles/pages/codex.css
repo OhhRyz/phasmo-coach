@@ -1,1 +1,209 @@
-/* Page : codex */
+/* Page : codex — à gauche le carnet de preuves, à droite le registre des 30 entités */
+
+/* ==========================================================================
+   Page de gauche : le carnet de preuves
+   ========================================================================== */
+.cx-book .cx-intro { margin: -4px 0 24px; max-width: 30em; font-size: 17px; line-height: 1.5; color: var(--ink-2); }
+
+/* options entourées : de vraies cibles tactiles */
+.cx-book .opt { min-height: 40px; padding: 7px 12px 6px; }
+
+.cx-count-field { display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; margin-bottom: 18px; }
+.cx-count-field .typed-label { margin-right: 2px; }
+.cx-count-field .opts { gap: 2px 4px; }
+.cx-count-field .opt { min-width: 40px; font-size: 16px; }
+.cx-count-hint { flex-basis: 100%; font-size: 19px; }
+
+.cx-tracker { position: relative; margin-bottom: 24px; }
+.cx-tracker .tracker { column-gap: 20px; }
+.cx-tracker .ev-name { font-size: 16px; }
+.cx-book .cx-tracker-hint { margin: 8px 0 0; font-size: 19px; }
+
+/* légende au crayon, dans la marge */
+.margin-note.cx-legend {
+  display: grid; gap: 9px;
+  font-size: 17.5px; line-height: 1; color: var(--pencil); white-space: nowrap;
+}
+
+/* chercher : on écrit sur la ligne */
+.cx-search { margin: 0 0 16px; }
+.cx-search .input { font-size: 24px; }
+.cx-search .input::-webkit-search-cancel-button { cursor: pointer; }
+
+.cx-more-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 22px; }
+.cx-more-bar .link { display: inline-flex; align-items: center; min-height: 40px; }
+.cx-more-n { margin-left: 4px; color: var(--red-pen); font-weight: 700; }
+
+.cx-more {
+  display: grid; gap: 14px;
+  margin-top: 8px; padding: 16px 0 2px;
+  border-top: 1.5px dashed color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.cx-more .field { gap: 0; }
+.cx-more .opts { margin-left: -10px; }
+.cx-field-hint { font-size: 18px; }
+
+/* l'action principale et la conclusion */
+.cx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 30px; }
+.cx-actions--verdict { margin: 0 0 30px; }
+.cx-row.is-only .rough { color: var(--red-pen); }
+.cx-action-hint { flex: 1 1 180px; font-size: 19px; max-width: 15em; }
+.cx-book .cx-verdict { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin: 0 0 10px; }
+.cx-verdict .rough { color: var(--red-pen); }
+.cx-verdict-name { font-family: "Fell", serif; font-size: 40px; line-height: 1.05; padding: 0 4px; }
+
+/* ==========================================================================
+   Page de droite : le registre
+   ========================================================================== */
+.cx-reg-section .h { margin-bottom: 4px; }
+
+.cx-count {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 20px;
+  min-height: 48px; margin: 0 0 14px; padding-top: 6px;
+  font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+}
+.cx-count-n { font-family: "Elite", monospace; font-size: 18px; letter-spacing: .04em; text-transform: none; color: var(--ink); white-space: nowrap; }
+.cx-count-n b { font-weight: 400; font-size: 30px; letter-spacing: 0; margin-right: 6px; }
+.cx-count-n .rough { color: var(--red-pen); }
+.cx-count-out { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; }
+.cx-out-toggle { text-transform: none; letter-spacing: 0; display: inline-flex; align-items: center; min-height: 40px; }
+.cx-count-note { flex: 1 1 200px; font-size: 19px; text-transform: none; letter-spacing: 0; }
+
+/* colonnes du registre */
+.cx-cols,
+.cx-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 92px 160px;
+  column-gap: 12px;
+}
+.cx-cols {
+  padding: 0 0 6px;
+  border-bottom: 1.5px solid var(--ink-2);
+  font-family: "Courier Prime", monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+}
+.cx-cols span:first-child { letter-spacing: .02em; }
+
+.cx-reg { list-style: none; margin: 0; padding: 0; }
+.cx-row {
+  position: relative;
+  grid-template-areas:
+    "num name mast speed"
+    "num ev   ev   san";
+  align-items: baseline; row-gap: 0;
+  padding: 7px 0 7px;
+  border-bottom: 1px solid var(--rule);
+  transition: background-color .2s ease;
+}
+.cx-main, .cx-data { display: contents; }
+.cx-num { grid-area: num; font-family: "Courier Prime", monospace; font-size: 12px; color: var(--ink-3); }
+.cx-name { grid-area: name; min-width: 0; display: flex; align-items: baseline; gap: 0 7px; flex-wrap: wrap; }
+.cx-link { font-family: "Fell", serif; font-size: 21px; line-height: 1.15; color: var(--ink); text-decoration: none; }
+.cx-link::after { content: ""; position: absolute; inset: 0; z-index: 1; } /* toute la ligne ouvre la fiche */
+.cx-en { font-family: "Fell", serif; font-style: italic; font-size: 14.5px; color: var(--ink-3); white-space: nowrap; }
+.cx-mast { grid-area: mast; }
+.cx-mast .mastery { gap: 6px; }
+.cx-mast .mastery-hl { width: 44px; }
+.cx-mast .mastery .pct { min-width: 0; font-size: 12px; }
+.cx-ev { grid-area: ev; min-width: 0; }
+.cx-ev .evw-list { gap: 0 13px; }
+.cx-ev .evw { font-size: 14.5px; line-height: 1.45; text-decoration-thickness: 2.5px; text-underline-offset: 3px; }
+.cx-ev .faint { font-weight: 400; }
+.cx-speed, .cx-san { font-family: "Courier Prime", monospace; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+.cx-speed { grid-area: speed; }
+.cx-san { grid-area: san; }
+/* sur ordinateur, l'en-tête des colonnes suffit : l'étiquette reste pour les lecteurs d'écran */
+.cx-san .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* « n'accélère pas à vue » : une remarque au crayon dans la marge */
+.cx-los {
+  position: absolute; left: calc(100% + 32px); top: 8px; width: 76px;
+  font-size: 17px; line-height: 1; transform: rotate(-2deg);
+}
+
+.cx-row:hover { background-color: color-mix(in srgb, var(--ink) 4%, transparent); }
+.cx-row:hover .cx-link { color: var(--red-pen); }
+.cx-link:focus-visible { outline: none; }
+.cx-row:has(.cx-link:focus-visible) { outline: 2px dashed var(--red-pen); outline-offset: 2px; }
+
+/* éliminée : barrée au crayon, estompée, jamais cachée */
+.cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san) { opacity: .42; }
+:root[data-theme="dark"] .cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san) { opacity: .4; }
+.cx-row.is-out .cx-link { color: var(--ink-2); }
+.cx-row.is-out .mastery-hl::before { filter: grayscale(1); }
+.cx-row.is-out .cx-los { opacity: .5; }
+.cx-strike {
+  position: absolute; left: 30px; top: 14px; width: calc(100% - 24px); height: 10px;
+  max-width: none; overflow: visible; pointer-events: none; color: var(--pencil);
+}
+/* viewBox étiré en largeur : sur un trait presque horizontal, l'épaisseur reste celle donnée ici */
+.cx-strike path { stroke-width: 1.6; }
+
+.cx-book .cx-foot { margin: 14px 0 0; font-size: 19px; text-align: right; }
+
+/* ==========================================================================
+   Ordinateur : le carnet de preuves reste sous la main pendant qu'on parcourt le registre
+   ========================================================================== */
+@media (min-width: 1181px) {
+  .cx-book .page--left > .cx-sticky.is-fit { position: sticky; top: 20px; }
+}
+
+/* ==========================================================================
+   Tablette : une seule page, la marge passe à gauche
+   ========================================================================== */
+@media (max-width: 1180px) {
+  .cx-los { left: auto; right: calc(100% + 26px); width: 80px; text-align: right; transform: rotate(2deg); }
+}
+
+/* ==========================================================================
+   Téléphone : filtres d'abord, puis le registre en lignes serrées
+   ========================================================================== */
+@media (max-width: 759px) {
+  .cx-book :is(a, button, input) { scroll-margin-bottom: 110px; }
+  .cx-book .cx-intro { font-size: 16.5px; margin-bottom: 18px; }
+  .cx-count-field { gap: 0 10px; margin-bottom: 12px; }
+  .cx-count-hint { font-size: 18px; }
+
+  .margin-note.cx-legend {
+    display: flex; flex-wrap: wrap; gap: 0 16px; margin: 0 0 4px;
+    font-size: 18px; transform: rotate(-1deg);
+  }
+  .cx-tracker { margin-bottom: 20px; }
+  .cx-tracker .tracker { column-gap: 14px; }
+  .cx-tracker .ev-name { font-size: 16px !important; }
+  .cx-book .cx-tracker-hint { font-size: 18px; }
+
+  .cx-search .input { font-size: 23px; }
+  .cx-more .opts { margin-left: -6px; }
+  .cx-actions { margin-top: 26px; }
+  .cx-verdict-name { font-size: 34px; }
+
+  .cx-count { min-height: 0; gap: 0 16px; }
+  .cx-count-n b { font-size: 27px; }
+
+  .cx-cols { display: flex; justify-content: space-between; font-size: 10.5px; }
+  .cx-cols span:nth-child(1), .cx-cols span:nth-child(4) { display: none; }
+
+  /* ligne 1 : nom et preuves · ligne 2 : vitesse, seuil, maîtrise */
+  .cx-row {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num main main"
+      "num data mast";
+    column-gap: 8px; row-gap: 1px;
+    padding: 8px 0 7px;
+  }
+  .cx-main { grid-area: main; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; min-width: 0; }
+  .cx-num { font-size: 10.5px; }
+  .cx-link { font-size: 20px; }
+  .cx-en { display: none; }
+  .cx-ev .evw-list { gap: 0 9px; }
+  .cx-ev .evw { font-size: 13.5px; }
+  .cx-mast .mastery-hl { width: 30px; height: 11px; }
+  .cx-mast .mastery .pct { font-size: 11px; }
+  .cx-data { grid-area: data; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; min-width: 0; }
+  .cx-speed, .cx-san { font-size: 11.5px; white-space: nowrap; }
+  .cx-san .k { position: static; width: auto; height: auto; overflow: visible; clip: auto; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .cx-los { position: static; grid-column: 2 / -1; width: auto; font-size: 17px; transform: none; text-align: left; }
+  .cx-strike { left: 26px; top: 15px; width: calc(100% - 26px); }
+  .cx-book .cx-foot { text-align: left; }
+}

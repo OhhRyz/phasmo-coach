@@ -1,1 +1,321 @@
-/* Page : scenario */
+/* Page : mise en situation (le rapport de terrain) */
+
+/* ---------- voix communes ---------- */
+.sc .typed-label { display: flex; align-items: baseline; gap: 10px; padding: 0; }
+.sc-step {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  font-family: "Elite", monospace; font-size: 13px; letter-spacing: 0; color: var(--paper);
+  background: var(--ink-2); border-radius: 2px; transform: rotate(-3deg);
+}
+.sc-lead { margin: 0; max-width: 31em; font-style: italic; font-size: 19px; line-height: 1.5; color: var(--ink); }
+.sc .pencil-note { font-size: 21px; }
+
+/* ==========================================================================
+   Ordre de mission (configuration)
+   ========================================================================== */
+.sc-entry { position: relative; margin-bottom: 24px; }
+.sc-title { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 54px; line-height: .98; letter-spacing: -.012em; }
+.sc-title em { display: block; margin-bottom: 4px; font-size: 25px; letter-spacing: .01em; color: var(--ink-2); }
+.sc-entry .stamp { position: absolute; right: 0; top: -8px; }
+.sc-entry .sc-lead { margin-top: 12px; max-width: none; font-size: 18px; }
+
+.sc-field { margin: 0 0 22px; padding: 0; border: 0; min-width: 0; }
+.sc-field > .typed-label, .sc-field > legend { margin-bottom: 8px; }
+
+.sc-diff-grid { display: grid; grid-template-columns: minmax(0, 1fr) 176px; gap: 18px; align-items: center; }
+.sc-diffs { border-top: 1px solid var(--rule); }
+.sc-radio { align-items: center; min-height: 48px; padding: 4px 0 5px; border-bottom: 1px solid var(--rule); }
+.sc-radio input { top: 50%; margin-top: -13px; }
+.sc-radio .box { margin-top: 0; }
+.sc-radio .txt { display: grid; gap: 1px; }
+.sc-radio .txt b { font-family: "Fell", serif; font-weight: 400; font-size: 23px; line-height: 1.1; }
+.sc-radio .txt small {
+  display: block; font-family: "Courier Prime", monospace; font-style: normal; font-size: 12px; line-height: 1.35;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+@media (hover: hover) { .sc-radio:hover .txt b { color: var(--red-pen); } }
+.sc-radio.is-on .txt small { color: var(--ink-2); }
+
+.sc-warn { position: relative; display: grid; grid-template-columns: 14px 1fr; gap: 8px; margin: 0; font-size: 19.5px !important; line-height: 1.08; transform: rotate(-1.2deg); }
+.sc-brace { width: 14px; height: 100%; min-height: 120px; color: var(--pencil); overflow: visible; }
+
+.sc-field .opts { margin-left: -10px; }
+.sc-field .opt { min-height: 42px; }
+.sc-hint { margin: 4px 0 0; font-size: 20px !important; }
+
+.sc-go { margin-top: 4px; padding-bottom: 6px; }
+
+/* page de droite : règlement + registre */
+.sc-rules { list-style: none; margin: 0; padding: 0; }
+.sc-rules li { display: grid; grid-template-columns: 40px 1fr; gap: 8px; padding: 11px 0 12px; border-bottom: 1px solid var(--rule); }
+.sc-rules li:first-child { border-top: 1px solid var(--rule); }
+.sc-rules .n { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .08em; color: var(--ink-3); padding-top: 3px; }
+.sc-rules p { margin: 0; font-size: 16.5px; line-height: 1.5; }
+
+.sc-empty { font-size: 16.5px; color: var(--ink-2); max-width: 30em; }
+.sc-libcard { max-width: 420px; margin: 26px 0 8px; }
+.sc-libcard .cols, .sc-libcard li { grid-template-columns: 96px minmax(0, 1fr) auto; column-gap: 10px; }
+.sc-libcard .cols span:last-child { text-align: right; }
+.sc-lib-name { font-family: "Fell", serif; font-size: 19px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-libcard .res { text-align: right; white-space: nowrap; }
+
+/* ==========================================================================
+   Rapport de terrain (enquête en cours)
+   ========================================================================== */
+.sc-quit { font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; min-height: 24px; }
+.sc-quit:hover { color: var(--red-pen); }
+
+.sc-case { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 18px; margin-bottom: 26px; }
+.sc-place { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 44px; line-height: 1.02; letter-spacing: -.01em; }
+.sc-place em { display: block; margin-bottom: 6px; font-size: 22px; letter-spacing: .01em; color: var(--ink-2); }
+.sc-case > .stamp { margin-bottom: 8px; font-size: 14px; }
+.sc-meta {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 26px; margin: 14px 0 0; padding: 9px 0 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+  font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+.sc-meta > div { display: flex; align-items: baseline; gap: 8px; }
+.sc-meta dt { font-weight: 400; }
+.sc-meta dd { margin: 0; color: var(--ink); font-weight: 700; letter-spacing: .04em; }
+.sc-clock { margin-left: auto; }
+.sc-clock dd { font-family: "Elite", monospace; font-weight: 400; font-size: 17px; letter-spacing: .06em; color: var(--ink); }
+
+/* les rapports */
+.sc-log { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.sc-report { position: relative; padding: 13px 0 15px; border-bottom: 1px solid var(--rule); }
+.sc-report-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 26px; }
+.sc-report-n, .sc-contract .sc-report-n {
+  font-family: "Courier Prime", monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+.sc-report-marks { display: inline-flex; align-items: center; gap: 12px; flex: none; }
+.sc-report-text { margin: 4px 0 0 !important; font-size: 17px; line-height: 1.52; }
+.sc-report .stamp--sm { font-size: 11.5px; }
+html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes sc-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+/* preuve trouvée ou non : la case du journal */
+.sc-ev { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 0 !important; }
+.sc-ev .box { position: relative; flex: none; width: 22px; height: 22px; }
+.sc-ev .box svg { position: absolute; inset: -8px; width: 38px; height: 38px; overflow: visible; }
+.sc-ev .box .b { color: var(--ink-2); }
+.sc-ev .box .t { color: var(--c); }
+.sc-ev-name {
+  font-weight: 700; font-size: 16.5px;
+  background: linear-gradient(transparent 62%, color-mix(in srgb, var(--c) 34%, transparent) 62%, color-mix(in srgb, var(--c) 34%, transparent) 92%, transparent 92%);
+}
+:root[data-theme="dark"] .sc-ev-name { background: linear-gradient(transparent 74%, color-mix(in srgb, var(--c) 78%, transparent) 74%, color-mix(in srgb, var(--c) 78%, transparent) 88%, transparent 88%); }
+.sc-ev.is-missing .sc-ev-name {
+  font-weight: 400; color: var(--ink-3); background: none;
+  text-decoration: line-through; text-decoration-color: var(--pencil); text-decoration-thickness: 1.5px;
+}
+.sc-ev.is-missing .box .b { color: color-mix(in srgb, var(--c) 45%, var(--ink-3)); }
+.sc-ev .pencil-note { font-size: 20px; }
+
+.sc-listen { margin-top: 12px; }
+
+.sc-end { scroll-margin-bottom: 150px; }
+
+/* fausse piste */
+.sc-miss { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 24px 0 0; }
+.sc-miss-stamp { font-size: 19px; padding: 8px 14px 6px; }
+
+.sc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 24px; margin-top: 26px; }
+.sc-sealed { margin: 16px 0 0 !important; font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+
+/* page de droite : le carnet */
+.sc-sheet-toggle, .sc-scrim { display: none; }
+.sc-how { margin: -6px 0 10px !important; color: var(--pencil); font-size: 19.5px !important; }
+.sc-board section + section { margin-top: 40px; }
+.sc-board .tracker { margin-bottom: 4px; }
+
+.sc-cands {
+  list-style: none; margin: 0 0 8px; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px;
+  border-top: 1px solid var(--rule);
+}
+.sc-cands li { min-width: 0; border-bottom: 1px solid var(--rule); }
+.sc-cand {
+  position: relative; display: inline-flex; align-items: center; max-width: 100%; min-width: 44px; min-height: 42px;
+  padding: 2px 4px; margin-left: -4px; border: 0; background: none; cursor: pointer; text-align: left;
+  font-family: "Fell", serif; font-size: 20.5px; line-height: 1.05; color: var(--ink);
+  transition: color .2s;
+}
+.sc-cand::after { /* le trait de crayon */
+  content: ""; position: absolute; left: 0; right: 0; top: 54%; height: 2px; border-radius: 2px;
+  background: var(--pencil);
+  transform: rotate(-4deg) scaleX(0); transform-origin: left center;
+  transition: transform .3s cubic-bezier(.5, .1, .3, 1);
+}
+@media (hover: hover) { .sc-cand:hover { color: var(--red-pen); } }
+.sc-cand.is-struck { color: var(--ink-3); }
+.sc-cand.is-struck::after { transform: rotate(-4deg) scaleX(1); }
+.sc-cand.is-wrong { cursor: default; }
+.sc-cand.is-wrong::after { background: var(--red-pen); height: 2.5px; transform: rotate(-6deg) scaleX(1); }
+
+/* au doigt, le survol reste « collé » après un toucher : pas de rouge fantôme dans le carnet */
+@media (hover: none) {
+  .sc-board .tracker .ev-btn:hover .ev-name { color: inherit; }
+  .sc-board .tracker .ev.impossible .ev-btn:hover .ev-name { color: var(--ink-3); }
+}
+
+/* ==========================================================================
+   Désigner l'entité (fiche posée)
+   ========================================================================== */
+.sc-guess-note { margin: 0 0 14px !important; font-size: 21px !important; line-height: 28px !important; }
+.sc-guess .opts { gap: 4px 6px; }
+.sc-guess .opt { min-height: 44px; padding: 4px 12px 3px; font-family: "Fell", serif; font-size: 21px; line-height: 1.1; }
+
+/* ==========================================================================
+   Rapport de clôture (résultat)
+   ========================================================================== */
+.sc-verdict { position: relative; display: grid; grid-template-columns: 196px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 6px 28px; margin: 6px 0 22px; }
+.sc-verdict .polaroid { --w: 196px; grid-row: 1 / 3; align-self: start; margin-top: 10px; padding-bottom: 46px; }
+.sc-verdict .polaroid .cap { font-size: 24px; }
+.sc-verdict-side { padding-top: 22px; }
+.sc-big-stamp { display: inline-grid; justify-items: center; padding: 10px 18px 8px; border-width: 3.5px; outline-width: 1.5px; outline-offset: 3px; white-space: normal; text-align: center; line-height: 1.08; }
+.sc-big-stamp .l1 { font-size: 17px; letter-spacing: .2em; }
+.sc-big-stamp .l2 { font-size: 34px; letter-spacing: .1em; }
+.is-dead .sc-big-stamp .l2 { font-size: 46px; letter-spacing: .18em; padding: 0 6px; }
+.sc-was { margin: 16px 0 0 !important; font-family: "Fell", serif; font-size: 30px; line-height: 1.1; }
+
+.sc-score { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; margin: 0 !important; align-self: end; }
+.sc-score-n { font-family: "Caveat", cursive; font-weight: 700; font-size: 64px; line-height: 1; color: var(--red-pen); padding: 0 6px; }
+.sc-score-n .rough { color: var(--red-pen); }
+.sc-score-of { font-family: "Caveat", cursive; font-weight: 600; font-size: 25px; color: var(--red-pen); }
+
+.sc-outcome { margin: 0 0 24px !important; }
+
+.sc-facts { margin: 0; border-top: 1px solid var(--rule); }
+.sc-facts > div { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 4px 16px; padding: 10px 0 11px; border-bottom: 1px solid var(--rule); }
+.sc-facts dt { padding-top: 4px; font-family: "Courier Prime", monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.sc-facts dd { margin: 0; font-size: 16.5px; line-height: 1.5; }
+.sc-ghost-link { display: block; font-family: "Fell", serif; font-size: 25px; line-height: 1.1; text-decoration: none; }
+.sc-ghost-link:hover { color: var(--red-pen); }
+.sc-summary { display: block; margin-top: 4px; font-style: italic; color: var(--ink-2); }
+.sc-wrongs { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.sc-wrongs s { font-family: "Fell", serif; font-size: 20px; color: var(--ink-2); text-decoration-color: var(--red-pen); text-decoration-thickness: 2px; }
+
+.sc-notes { margin-top: 34px !important; }
+.sc-notes .h { font-size: 28px; }
+.sc-notes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; align-items: start; }
+.sc-notes-row .sticky { font-size: 22px; padding: 18px 18px 16px; }
+.sc-notes-row .sticky:only-child { max-width: 300px; }
+.sc-sticky-title { display: block; font-weight: 700; }
+.sc-sticky-body { display: block; margin-top: 6px; font-size: .88em; }
+
+.sc-actions--end { margin-top: 34px; }
+
+/* le rapport complet */
+.sc-intro { margin: -4px 0 18px !important; font-size: 16px; color: var(--ink-2); max-width: 34em; }
+.sc-intro .pencil-note { font-size: 21px; }
+.sc-contract { display: grid; gap: 2px; margin: 0 0 14px !important; padding: 0; font-family: "Courier Prime", monospace; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.sc-remaining { font-size: 21px !important; color: var(--pencil); white-space: nowrap; }
+.sc-report.is-dim .sc-report-text, .sc-report.is-dim .sc-ev { opacity: .58; }
+.sc-report.is-dim .sc-report-n::after { content: " · non lu"; }
+.sc-cut {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  margin: 14px 0 -6px !important; font-size: 21px !important; color: var(--pencil);
+}
+.sc-cut::before, .sc-cut::after { content: ""; flex: 1; height: 0; border-top: 1.5px dashed var(--pencil); opacity: .7; }
+.sc-cut::before { flex: 0 0 22px; }
+
+/* ==========================================================================
+   Tablette
+   ========================================================================== */
+@media (max-width: 1180px) {
+  .sc-notes-row .sticky:only-child { max-width: 340px; }
+}
+
+/* ==========================================================================
+   Téléphone
+   ========================================================================== */
+@media (max-width: 759px) {
+  .sc-title { font-size: 44px; }
+  .sc-title em { font-size: 21px; }
+  .sc-entry { margin-bottom: 24px; }
+  .sc-entry .stamp { position: static; margin: 10px 0 0; --r: -3deg !important; }
+  .sc-lead { font-size: 17.5px; }
+
+  .sc-diff-grid { grid-template-columns: 1fr; gap: 14px; }
+  .sc-warn { grid-template-columns: 12px 1fr; font-size: 19px !important; transform: rotate(-.6deg); }
+  .sc-brace { min-height: 90px; }
+  .sc-radio .txt b { font-size: 21px; }
+
+  .sc-place { font-size: 34px; }
+  .sc-place em { font-size: 19px; }
+  .sc-case { grid-template-columns: 1fr auto; }
+  .sc-case > .stamp { font-size: 12px; padding: 4px 9px 3px; align-self: start; margin: 0; }
+  .sc-meta { gap: 4px 18px; font-size: 11.5px; }
+  .sc-clock { margin-left: 0; }
+  .sc-report-text { font-size: 16.5px; }
+
+  /* le carnet de preuves devient un volet au-dessus des onglets */
+  body:has(.sc--play) { padding-bottom: calc(76px + 58px + env(safe-area-inset-bottom)); }
+  .sc-end { scroll-margin-bottom: 270px; }
+  .sc--play > .sc-board {
+    position: fixed; z-index: 26; left: 0; right: 0;
+    bottom: calc(62px + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 62px - 70px - env(safe-area-inset-bottom));
+    display: flex; flex-direction: column;
+    padding: 0 0 0 0;
+    border-top: 5px solid var(--section);
+    box-shadow: 0 -10px 26px rgba(0, 0, 0, .38);
+    transform: translateY(calc(100% - 58px));
+    transition: transform .34s cubic-bezier(.3, .8, .3, 1), background-color .5s ease;
+  }
+  .sc--play > .sc-board.is-open { transform: none; }
+  .sc--play > .sc-board::after { left: 24px; }
+  .sc-sheet-toggle {
+    display: flex; align-items: center; gap: 10px; flex: none;
+    width: 100%; min-height: 53px; padding: 6px 16px 4px 34px;
+    border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink);
+  }
+  .sc-sheet-toggle::before { /* languette */
+    content: ""; position: absolute; left: 50%; top: 6px; width: 38px; height: 3px; margin-left: -19px; border-radius: 2px; background: var(--ink-3); opacity: .5;
+  }
+  .sc-sheet-title { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
+  .sc-sheet-sum { font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; line-height: 1; color: var(--pencil); }
+  .sc-sheet-act {
+    margin-left: auto; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .06em;
+    text-decoration: underline; text-decoration-color: var(--red-pen); text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+  }
+  .sc-board-body {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 6px 16px 26px 34px;
+    visibility: hidden; transition: visibility 0s .34s;
+  }
+  .sc-board.is-open .sc-board-body { visibility: visible; transition: none; }
+  .sc-board .filehead { margin-bottom: 18px; }
+  .sc-board section + section { margin-top: 28px; }
+  .sc-scrim {
+    display: block; position: fixed; z-index: 25; left: 0; right: 0; top: 0;
+    bottom: calc(62px + env(safe-area-inset-bottom));
+    border: 0; padding: 0; background: rgba(10, 8, 5, .42); cursor: pointer;
+  }
+
+  .sc-cands { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; }
+  .sc-cand { font-size: 19.5px; }
+
+  .sc-guess .opt { font-size: 19.5px; padding: 4px 10px 3px; }
+
+  /* résultat */
+  .sc-verdict { grid-template-columns: 132px minmax(0, 1fr); gap: 4px 16px; margin-bottom: 18px; }
+  .sc-verdict .polaroid { --w: 132px; padding: 6px 6px 32px; margin-top: 4px; }
+  .sc-verdict .polaroid .cap { left: 8px; right: 6px; bottom: 6px; font-size: 18px; }
+  .sc-verdict .polaroid .cap small { display: none; }
+  .sc-verdict .polaroid .tape { width: 62px; height: 20px; margin-left: -31px; top: -9px; }
+  .sc-verdict-side { padding-top: 6px; }
+  .sc-big-stamp { padding: 7px 10px 6px; border-width: 3px; }
+  .sc-big-stamp .l1 { font-size: 12.5px; letter-spacing: .14em; }
+  .sc-big-stamp .l2 { font-size: 21px; letter-spacing: .06em; }
+  .is-dead .sc-big-stamp .l2 { font-size: 32px; }
+  .sc-was { font-size: 23px; margin-top: 12px !important; }
+  .sc-score-n { font-size: 50px; }
+  .sc-score-of { font-size: 21px; }
+  .sc-facts > div { grid-template-columns: 1fr; gap: 2px; }
+  .sc-facts dt { padding-top: 0; }
+  .sc-notes-row { grid-template-columns: 1fr; }
+  .sc-notes-row .sticky:nth-child(2) { margin-left: 18px; }
+  .sc-report-head { flex-wrap: wrap; }
+}

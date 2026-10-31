@@ -3,9 +3,19 @@ import { Link } from 'react-router-dom'
 import type { Ghost } from '../data/types'
 import { sanityText, speedText } from '../engine/format'
 import { roughLine, roughRng } from './journal/rough'
+import { RoughCircle } from './journal/Journal'
 import { GhostEvidence, Mastery } from './ui'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
+
+/** Le nom anglais n'apporte rien quand il ne diffère que par l'article ou un accent (Démon / Demon, Le Mimic / The Mimic). */
+function bare(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/^(le |la |les |the )/, '')
+}
 
 export function losText(ghost: Ghost): string {
   if (ghost.speed.min < 0 || ghost.id === 'the-mimic') return 'Variable'
@@ -27,43 +37,66 @@ function Strike({ seed }: { seed: string }) {
  * Une ligne du registre du codex : numéro, nom, maîtrise, preuves, vitesse et seuil.
  * `dimmed` : entité éliminée par le carnet de preuves (barrée au crayon, pas cachée).
  */
-export function GhostRow({ ghost, mastery, dimmed, n }: { ghost: Ghost; mastery: number; dimmed?: boolean; n?: number }) {
+export function GhostRow({
+  ghost,
+  mastery,
+  dimmed,
+  n,
+  circled,
+}: {
+  ghost: Ghost
+  mastery: number
+  dimmed?: boolean
+  n?: number
+  /** seule entité encore possible : entourée au stylo */
+  circled?: boolean
+}) {
   const los = losText(ghost)
   return (
-    <li className={`cx-row${dimmed ? ' is-out' : ''}`}>
+    <li className={`cx-row${dimmed ? ' is-out' : ''}${circled ? ' is-only' : ''}`}>
       {n != null && (
         <span className="cx-num" aria-hidden>
           {String(n).padStart(2, '0')}
         </span>
       )}
-      <span className="cx-name">
-        <Link to={`/codex/${ghost.id}`} className="cx-link">
-          {ghost.name}
-          {dimmed && <span className="sr-only"> (éliminée)</span>}
-        </Link>
-        {ghost.nameEn !== ghost.name && <span className="cx-en">{ghost.nameEn}</span>}
+      <span className="cx-main">
+        <span className="cx-name">
+          <Link to={`/codex/${ghost.id}`} className="cx-link">
+            {circled ? (
+              <RoughCircle seed={`row-${ghost.id}`} padX={0.06} padY={0.18} delay={0.35}>
+                {ghost.name}
+              </RoughCircle>
+            ) : (
+              ghost.name
+            )}
+            {dimmed && <span className="sr-only"> (éliminée)</span>}
+          </Link>
+          {!bare(ghost.name).includes(bare(ghost.nameEn)) && (
+            <span className="cx-en" lang="en">
+              {ghost.nameEn}
+            </span>
+          )}
+        </span>
+        <span className="cx-ev">
+          <span className="sr-only">Preuves : </span>
+          <GhostEvidence ghost={ghost} short />
+        </span>
       </span>
       <span className="cx-mast">
         <span className="sr-only">Maîtrise : </span>
         <Mastery value={mastery} />
       </span>
-      <span className="cx-l2">
-        <span className="cx-ev">
-          <span className="sr-only">Preuves : </span>
-          <GhostEvidence ghost={ghost} short />
+      <span className="cx-data">
+        <span className="cx-speed">
+          <span className="sr-only">Vitesse : </span>
+          {speedText(ghost)}
         </span>
-        <span className="cx-data">
-          <span className="cx-speed">
-            <span className="sr-only">Vitesse : </span>
-            {speedText(ghost)}
-          </span>
-          <span className="cx-san">
-            <span className="sr-only">, seuil de chasse : </span>
-            {sanityText(ghost)}
-          </span>
+        <span className="cx-san">
+          <span className="k">seuil </span>
+          {sanityText(ghost)}
         </span>
-        {los !== 'Oui' && <span className="cx-los pencil-note">{los === 'Non' ? 'n’accélère pas à vue' : 'accélération variable'}</span>}
       </span>
+      {los !== 'Oui' && <span className="cx-los pencil-note">{los === 'Non' ? 'n’accélère pas à vue' : 'accélération variable'}</span>}
       {dimmed && <Strike seed={ghost.id} />}
     </li>
   )

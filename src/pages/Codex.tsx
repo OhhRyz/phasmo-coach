@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { EvidenceTracker } from '../components/EvidenceTracker'
 import { GhostRow } from '../components/GhostRow'
 import { UvPrint } from '../components/journal/Charts'
@@ -8,8 +8,6 @@ import { GHOSTS } from '../data'
 import { EMPTY_FILTER, filterGhosts, marked, possibleEvidence, type FilterState } from '../engine/filter'
 import type { SpeedClass } from '../engine/format'
 import { useMastery } from '../store/hooks'
-
-type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const SPEEDS: { value: SpeedClass; label: string }[] = [
   { value: 'slow', label: 'Lente' },
@@ -107,6 +105,23 @@ export function Codex() {
     return GHOSTS.map((g, i) => ({ g, n: i + 1 })).filter(({ g }) => keep.has(g))
   }, [matching, out, showOut])
 
+  // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const [fits, setFits] = useState(false)
+  useLayoutEffect(() => {
+    const el = stickyRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const measure = () => setFits(el.offsetHeight + 40 <= window.innerHeight)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
+
   const found = marked(filter, 'found').length
   const excluded = marked(filter, 'excluded').length
   const searching = active || query.trim() !== ''
@@ -117,7 +132,7 @@ export function Codex() {
     <Notebook className="cx-book">
       {/* ===================== page de gauche : le carnet de preuves ===================== */}
       <Page side="left" section="3" label="Mon carnet de preuves" className="cx-left">
-        <div className="cx-sticky">
+        <div className={`cx-sticky${fits ? ' is-fit' : ''}`} ref={stickyRef}>
           <FileHead>
             <span>
               <b>Codex</b> · carnet de preuves
@@ -153,16 +168,29 @@ export function Codex() {
           </div>
 
           <div className="cx-tracker">
-            <MarginNote className="cx-legend" style={{ left: -106, top: -4, width: 86, '--r': '-3deg' }}>
-              <span>un clic : trouvée</span>
-              <span>deux : exclue</span>
-              <span>trois : on efface</span>
+            <MarginNote className="cx-legend" style={{ left: -110, top: 4, width: 86, '--r': '-4deg' }}>
+              <span>1 clic : trouvée</span>
+              <span>2 : exclue</span>
+              <span>3 : effacée</span>
             </MarginNote>
             <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
             {found + excluded > 0 && (
-              <p className="cx-tracker-hint pencil-note">les preuves grisées ne peuvent plus sortir avec ce qui reste</p>
+              <p className="cx-tracker-hint pencil-note">preuve grisée : impossible avec ce qui reste</p>
             )}
           </div>
+
+          {/* la conclusion arrive là où l'œil se trouve : juste sous les preuves */}
+          {only && (
+            <div className="cx-actions cx-actions--verdict">
+              <p className="cx-verdict">
+                <span className="typed-label">Il ne reste que</span>
+                <RoughCircle seed={`only-${only.id}`} padX={0.08} padY={0.22} delay={0.2}>
+                  <span className="cx-verdict-name">{only.name}</span>
+                </RoughCircle>
+              </p>
+              <TapeButton to={`/codex/${only.id}`}>Ouvrir sa fiche</TapeButton>
+            </div>
+          )}
 
           <label className="field cx-search">
             <span>Chercher dans le codex</span>
@@ -223,24 +251,12 @@ export function Codex() {
             </div>
           )}
 
-          <div className="cx-actions">
-            {only ? (
-              <>
-                <p className="cx-verdict">
-                  <span className="typed-label">Il ne reste que</span>
-                  <RoughCircle seed={`only-${only.id}`} padX={0.08} padY={0.22} delay={0.2}>
-                    <span className="cx-verdict-name">{only.name}</span>
-                  </RoughCircle>
-                </p>
-                <TapeButton to={`/codex/${only.id}`}>Ouvrir sa fiche</TapeButton>
-              </>
-            ) : (
-              <>
-                <TapeButton to="/enquete">Lancer une enquête</TapeButton>
-                <span className="pencil-note cx-action-hint">et remplis ce carnet sur un contrat raconté minute par minute</span>
-              </>
-            )}
-          </div>
+          {!only && (
+            <div className="cx-actions">
+              <TapeButton to="/enquete">Lancer une enquête</TapeButton>
+              <span className="pencil-note cx-action-hint">et remplis ce carnet sur un contrat raconté minute par minute</span>
+            </div>
+          )}
         </div>
         <span className="folio">— ii —</span>
       </Page>
@@ -257,36 +273,32 @@ export function Codex() {
           <H id="cx-h-reg">Les {GHOSTS.length} entités</H>
 
           <div className="cx-count" aria-live="polite">
-            {searching ? (
-              <>
-                <span className="cx-count-n">
-                  {only ? (
-                    <RoughCircle seed="cx-count-one" padX={0.08} padY={0.25} delay={0.15}>
-                      <b>1</b> possible
-                    </RoughCircle>
-                  ) : (
-                    <>
-                      <b>{matching.length}</b> {active ? `possible${matching.length > 1 ? 's' : ''}` : `trouvée${matching.length > 1 ? 's' : ''}`}
-                    </>
-                  )}
-                </span>
-                {out.length > 0 && (
-                  <span className="cx-count-out">
-                    {s(out.length, 'éliminée')}
-                    <button type="button" className="link link-btn cx-out-toggle" onClick={() => setShowOut((v) => !v)}>
-                      {showOut ? 'masquer' : 'voir'} les {s(out.length, 'éliminée')}
-                    </button>
-                  </span>
-                )}
-              </>
-            ) : (
-              <>
-                <span className="cx-count-n">
-                  <b>{GHOSTS.length}</b> entités
-                </span>
-                <span className="pencil-note cx-count-note">coche une preuve : celles qui ne collent plus seront barrées</span>
-              </>
+            <span className="cx-count-n">
+              {only ? (
+                <RoughCircle seed="cx-count-one" padX={0.1} padY={0.1} delay={0.15}>
+                  <b>1</b> possible
+                </RoughCircle>
+              ) : (
+                <>
+                  <b>{matching.length}</b> {!active && query.trim() ? 'trouvée' : 'possible'}
+                  {matching.length > 1 ? 's' : ''}
+                </>
+              )}
+            </span>
+            {out.length > 0 && (
+              <span className="cx-count-out">
+                {s(out.length, 'éliminée')}
+                <button
+                  type="button"
+                  className="link link-btn cx-out-toggle"
+                  aria-label={`${showOut ? 'Masquer' : 'Voir'} les ${s(out.length, 'éliminée')}`}
+                  onClick={() => setShowOut((v) => !v)}
+                >
+                  {showOut ? 'les masquer' : 'les revoir'}
+                </button>
+              </span>
             )}
+            {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
           </div>
 
           {matching.length === 0 && (
@@ -305,7 +317,7 @@ export function Codex() {
               </div>
               <ol className="cx-reg">
                 {rows.map(({ g, n }) => (
-                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} />
+                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} circled={only === g} />
                 ))}
               </ol>
             </>
