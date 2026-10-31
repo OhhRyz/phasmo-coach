@@ -29,23 +29,23 @@
     "summary": "50 %",
     "details": [
       "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
-      "Il fait baisser la santé plus vite autour de lui pendant les chasses et les événements (0,5 % par seconde dans la portée des battements de cœur), ce qui peut avancer ses chasses."
+      "Il fait baisser la santé de toute l'équipe pendant les chasses et les événements (0,5 % par seconde, multiplié par le nombre de joueurs dans la portée des battements de cœur), ce qui peut avancer ses chasses."
     ]
   },
   "summary": "Entité insaisissable : elle disparaît quand tu la prends en photo, n'apparaît pas sur la photo et reste presque invisible pendant les chasses.",
   "keyTells": [
     "Une photo de l'entité la fait disparaître, et elle n'est pas visible sur la photo",
     "Presque invisible en chasse : longues phases d'invisibilité entre les clignotements",
-    "Te draine 0,5 %/s de santé à portée de battements de cœur (chasses et événements)",
+    "Draine 0,5 %/s de santé à toute l'équipe, multiplié par le nombre de joueurs à portée de battements de cœur (chasses et événements)",
     "Peut errer vers un joueur pris au hasard et laisser un EMF 2"
   ],
   "tells": [
     {
-      "text": "N'apparaît pas sur les photos de l'entité (y compris les photos de sa silhouette D.O.T.S).",
+      "text": "N'apparaît sur aucune photo ni vidéo de type « Fantôme », y compris quand tu le photographies dans le D.O.T.S. Bug connu : il reste visible dans les vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse ».",
       "zeroEvidence": true
     },
     {
-      "text": "La prendre en photo la fait disparaître (y compris en état D.O.T.S).",
+      "text": "La prendre en photo ou en vidéo la fait disparaître (y compris en état D.O.T.S).",
       "zeroEvidence": true
     },
     {
@@ -53,14 +53,18 @@
       "zeroEvidence": true
     },
     {
-      "text": "Le joueur perd 0,5 % de santé mentale par seconde tant qu'il est dans la portée des battements de cœur de l'entité, pendant les chasses et les événements.",
+      "text": "Pendant les chasses et les événements, tous les joueurs perdent 0,5 % de santé mentale par seconde, multiplié par le nombre de joueurs qui se trouvent dans la portée des battements de cœur de l'entité.",
       "zeroEvidence": true
     }
   ],
   "behaviors": [],
   "abilities": [
     {
-      "text": "Peut errer vers un joueur choisi au hasard, en laissant un EMF 2 à l'endroit où elle se rend.",
+      "text": "Peut errer vers un joueur choisi au hasard, en laissant un EMF 2 à l'endroit où elle se rend (au niveau de la tête).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Peut errer vers un joueur qui se trouve dehors, à condition qu'il reste à moins de 5 m de la zone d'enquête.",
       "zeroEvidence": true
     }
   ],
@@ -70,17 +74,25 @@
       "definitive": true
     },
     {
+      "text": "Filme l'entité pendant un événement ou quand elle est visible dans le D.O.T.S. Si elle disparaît (alors que les sons de l'événement continuent) et que la vidéo est de type « Fantôme », c'est un Fantôme. À noter : le Fantôme n'est absent de la pellicule que sous sa forme complète (vidéo « Fantôme ») ; il apparaît toujours dans les vidéos « Fantôme translucide », « Fantôme ombre » et « Trace D.O.T.S ».",
+      "definitive": true
+    },
+    {
       "text": "Observe l'entité pendant une chasse : si elle paraît presque invisible, c'est un Fantôme.",
       "definitive": true
     },
     {
       "text": "Si, pendant ton enquête, tu obtiens un EMF 2 sans aucune interaction près de toi, c'est peut-être le Fantôme qui a utilisé sa capacité d'errance.",
       "definitive": false
+    },
+    {
+      "text": "Place des détecteurs de mouvement ou du sel jusqu'à la porte d'entrée, et un lecteur EMF à la porte d'entrée. Reste dehors, à moins de 5 m de la porte, et attends. Si l'entité vient jusqu'à la porte d'entrée et y laisse un EMF 2, ça pourrait être un Fantôme.",
+      "definitive": false
     }
   ],
   "eliminationTests": [
     {
-      "text": "Si l'entité apparaît sur une photo étiquetée « Fantôme » (photo de l'entité) dans le journal, ce n'est pas un Fantôme. Ne te fie qu'à cette photo : un bug connu laisse le Fantôme visible sur la pellicule des vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse »."
+      "text": "Si l'entité apparaît sur une photo étiquetée « Fantôme » (photo de l'entité) dans le journal, ce n'est pas un Fantôme. Ne te fie pas aux vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse » : un bug connu y laisse le Fantôme visible sur la pellicule."
     },
     {
       "text": "Si l'entité clignote normalement, ou plus souvent que la normale, pendant une chasse, ce n'est pas un Fantôme."
@@ -215,11 +227,11 @@
       "choices": [
         "25 % d'un coup",
         "2 % par objet lancé",
-        "0,5 % par seconde dans la portée des battements de cœur",
+        "0,5 % par seconde, multiplié par le nombre de joueurs à portée de battements de cœur",
         "15 % si tu le touches"
       ],
       "answer": 2,
-      "explain": "Le Fantôme draine 0,5 % par seconde dans la portée des battements de cœur. 25 % d'un coup, c'est le Djinn ; 2 % par objet, l'explosion du Poltergeist ; 15 % au toucher, la Banshee pendant son chant."
+      "explain": "Le Fantôme draine 0,5 % par seconde à toute l'équipe, multiplié par le nombre de joueurs dans la portée des battements de cœur. 25 % d'un coup, c'est le Djinn ; 2 % par objet, l'explosion du Poltergeist ; 15 % au toucher, la Banshee pendant son chant."
     },
     {
       "q": "Quelle capacité du Fantôme peut laisser un EMF 2 près d'un joueur ?",
@@ -235,7 +247,7 @@
   ],
   "changes": [
     "v0.18.0.0 (21 juillet 2026) : un agrégateur de notes de patch (patched.gg) mentionne la correction du bug qui permettait au Fantôme d'utiliser sa capacité sur des joueurs morts ou à l'extérieur ; non confirmé, car le wiki tybayn (28/10/2026) le liste encore comme bug connu.",
-    "Depuis la refonte des médias (Chronicle, v0.13, juin 2025), il existe des médias vidéo : bug connu, le Fantôme reste visible sur la pellicule de certaines vidéos. Seule la photo « Fantôme » compte pour le test.",
+    "Depuis la refonte des médias (Chronicle, v0.13, juin 2025), il existe des médias vidéo : bug connu, le Fantôme reste visible sur la pellicule de certaines vidéos. Seules la photo « Fantôme » et la vidéo de type « Fantôme » comptent pour le test.",
     "Nouvelles entités partageant deux preuves : Gallu (Spirit Box + UV) et Obambo (UV + D.O.T.S), toutes deux en décembre 2025, puis Kormos (Spirit Box + UV, mai 2026)."
   ],
   "sources": [

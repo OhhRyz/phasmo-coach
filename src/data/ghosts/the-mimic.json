@@ -21,12 +21,12 @@
   },
   "huntSanity": {
     "normal": 50,
-    "low": 12,
+    "low": 10,
     "high": 100,
-    "summary": "Copie le seuil de l'entité imitée (12 à 100 %)",
+    "summary": "Copie le seuil de l'entité imitée (10 à 100 %)",
     "details": [
       "Copie le seuil de chasse de l'entité qu'il imite : il peut chasser très tôt (en copiant une entité capable de chasser à n'importe quelle santé, comme le Démon) ou très tard.",
-      "Bornes de la sauvegarde tybayn (déc. 2024) : 12 % au plus bas, 100 % au plus haut, 50 % par défaut."
+      "Bornes affichées par tybayn (v0.19.1.0) : 10 % au plus bas, 100 % au plus haut, 50 % par défaut."
     ]
   },
   "summary": "Entité imitatrice qui copie le comportement d'une autre entité et en change toutes les 30 s à 2 min, mais qui se trahit par de faux orbes, présents même à 0 preuve.",
@@ -53,7 +53,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Copie le comportement et les capacités des autres entités, mais ne montre que ses propres preuves (UV, Spirit Box, Températures glaciales + faux orbes).",
+      "text": "Copie le comportement et les capacités des autres entités, mais ne montre que ses propres preuves (UV, Spirit Box, Températures glaciales + faux orbes) : (presque) n'importe quel test de confirmation d'une autre entité peut donc aussi correspondre au Mimic.",
       "zeroEvidence": true
     }
   ],
@@ -249,7 +249,7 @@
     "https://mp1st.com/title-updates-and-patches/phasmophobia-hotfix-update-1-000-018-first-chronicle-fixes"
   ],
   "uncertain": [
-    "Bornes du seuil (12 à 100 %) issues de 2024 : elles changent s'il imite les entités récentes (Obambo calme vers 10 %…).",
+    "Bornes du seuil (10 à 100 %) reprises de tybayn v0.19.1.0 : elles dépendent des entités qu'il peut imiter (10 % = Obambo calme) et peuvent évoluer avec les prochaines entités.",
     "Peut-il imiter chacune des entités de 2025–2026 ? Phasmopedia ne le confirme que pour le Kormos et le Deildegast.",
     "Un Mimic au modèle masculin peut-il imiter la Banshee ou la Dayan (entités féminines) ? Non vérifié.",
     "Commence-t-il comme une entité standard, avec un 1er changement 1 min après l'ouverture de la porte et aucun changement en chasse ? Phasmopedia seulement."

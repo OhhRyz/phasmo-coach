@@ -44,6 +44,10 @@
     {
       "text": "Ne chasse pas avant 40 % de santé mentale moyenne quand l'interrupteur de la pièce où il se trouve est en position allumée (quel que soit l'état du disjoncteur) ; chasse dès 60 % si l'interrupteur est en position éteinte ou si les ampoules sont cassées (quelle que soit la position de l'interrupteur).",
       "zeroEvidence": true
+    },
+    {
+      "text": "Seule entité qui ne peut pas faire clignoter les lumières en laissant un EMF 2 à l'interrupteur.",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
@@ -56,7 +60,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Ne peut pas allumer les lumières (hors téléviseurs et ordinateurs). Bug connu : en pratique, il ne peut pas non plus allumer téléviseurs et ordinateurs, contrairement à ce qu'annonçaient les notes de patch.",
+      "text": "Ne peut pas allumer les lumières, téléviseurs et ordinateurs compris (les lumières à détecteur de mouvement font exception). Les notes de patch annonçaient qu'il pourrait allumer téléviseurs et ordinateurs : en pratique, il ne le peut pas.",
       "zeroEvidence": true
     }
   ],
@@ -64,9 +68,17 @@
     {
       "text": "Peut éteindre immédiatement un interrupteur (ou une lampe) qu'un joueur vient d'allumer à moins de 4 m de l'entité.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Peut utiliser sa capacité pendant les événements : c'est la seule entité capable d'actionner un interrupteur pendant un événement.",
+      "zeroEvidence": true
     }
   ],
   "confirmationTests": [
+    {
+      "text": "Pendant un événement de l'entité, allume les interrupteurs à moins de 4 m d'elle. Si elle les éteint alors que l'événement continue, c'est un Cauchemar.",
+      "definitive": true
+    },
     {
       "text": "Toutes les 10 s, chaque joueur peut tenter de déclencher la capacité du Cauchemar en allumant un interrupteur ou une lampe, puis en regardant si l'entité l'éteint aussitôt (une fois par joueur et par interrupteur). Si c'est le cas, ça pourrait être un Cauchemar. Pour tester plus vite, place des détecteurs de mouvement sous les interrupteurs pour savoir où se trouve l'entité par rapport à eux. À noter : le Cauchemar ne peut pas utiliser sa capacité dans une pièce aux ampoules cassées. D'autres entités peuvent sembler le faire par coïncidence : mieux vaut voir la capacité plusieurs fois.",
       "definitive": false
@@ -75,6 +87,9 @@
   "eliminationTests": [
     {
       "text": "Si l'entité allume un interrupteur, ce n'est pas un Cauchemar."
+    },
+    {
+      "text": "Si tu vois les lumières clignoter, va vérifier l'interrupteur au lecteur EMF. Si l'interrupteur donne une lecture EMF, ce n'est pas un Cauchemar."
     }
   ],
   "confusions": [
@@ -234,7 +249,7 @@
   ],
   "changes": [
     "Le wiki tybayn actuel corrige l'ancienne fiche : le Cauchemar erre davantage quand sa pièce est éclairée, sans préférence pour les pièces sombres (la sauvegarde de 2024 disait qu'il partait vers les pièces sombres).",
-    "Bug connu (wiki tybayn) : il ne peut pas allumer téléviseurs et ordinateurs, contrairement aux notes de patch.",
+    "Wiki tybayn : il ne peut pas allumer téléviseurs et ordinateurs, contrairement aux notes de patch (listé en bug connu, désormais écrit tel quel dans sa fiche v0.19.1.0).",
     "Nouvelles entités partageant deux preuves : Dayan (Spirit Box + orbes, décembre 2025) et Kormos (Spirit Box + orbes, mai 2026)."
   ],
   "sources": [

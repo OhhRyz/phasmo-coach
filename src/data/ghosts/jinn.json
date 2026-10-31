@@ -56,11 +56,11 @@
   ],
   "abilities": [
     {
-      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale d'un joueur proche, avec un EMF 2 ou un EMF 5 au disjoncteur.",
+      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale d'un joueur proche (à moins de 3 m ou dans la même pièce), avec un EMF 2 ou un EMF 5 au disjoncteur.",
       "zeroEvidence": false
     },
     {
-      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale des joueurs proches, avec un EMF 2 au disjoncteur.",
+      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale des joueurs proches (à moins de 3 m ou dans la même pièce), avec un EMF 2 au disjoncteur.",
       "zeroEvidence": true
     }
   ],
@@ -243,7 +243,6 @@
     "https://progameguides.com/phasmophobia/all-ghost-changes-in-the-phasmophobia-apocalypse-update/"
   ],
   "uncertain": [
-    "Portée exacte de « joueur proche » pour sa capacité : non chiffrée (même pièce ou 3 m selon les guides).",
     "Le disjoncteur peut-il quand même sauter avec un Djinn ? Oui selon le wiki Fandom : seule une coupure directe par l'entité l'éliminerait."
   ]
 }

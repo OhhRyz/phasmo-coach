@@ -24,7 +24,7 @@
     "high": 50,
     "summary": "50 %",
     "details": [
-      "Seuil de chasse standard : 50 % de santé mentale moyenne (guides concordants)."
+      "Seuil de chasse standard : 50 % de santé mentale moyenne (tybayn et guides concordants)."
     ]
   },
   "summary": "Un chasseur un peu lent au départ qui prend de la vitesse plus vite que les autres quand il te voit, mais dont la chasse s'arrête net s'il te rejoint dans une cachette officielle… et qui s'en souvient à la chasse suivante.",
@@ -46,6 +46,7 @@
   "abilities": [],
   "confirmationTests": [
     { "text": "Laisse l'entité te voir pendant une chasse, puis cache-toi dans une cachette officielle. Si elle atteint ta cachette et que la chasse s'arrête aussitôt sans que tu meures, c'est un Aswang. Attention : si ce n'en est pas un, tu meurs.", "definitive": true },
+    { "text": "Place du sel ou des détecteurs de mouvement près de la pièce de l'entité. Si elle marche dans le sel ou déclenche les détecteurs pendant la période de grâce d'une chasse, c'est un Aswang (c'est ce qui arrive à la chasse qui suit celle où il a trouvé un joueur caché). Attention : une chasse lancée avec un objet maudit réduit la période de grâce à 1 s.", "definitive": true },
     { "text": "Chronomètre la prise de vitesse en LdV : si l'entité passe de son allure de base (un peu lente) à sa vitesse maximale en moins de 9 s de LdV continue, au lieu d'environ 13 s, c'est probablement un Aswang.", "definitive": false },
     { "text": "Si, après t'avoir trouvé caché, l'entité fonce droit vers ta position dès le début de la chasse suivante, ça pourrait être un Aswang.", "definitive": false }
   ],
@@ -156,8 +157,7 @@
   ],
   "uncertain": [
     "Preuve garantie en Cauchemar et Démence : aucune selon la seule source qui en parle (Fextralife).",
-    "À la chasse suivante, fonce-t-il vers ta cachette pendant la période de grâce ou juste après ? Les sources divergent.",
-    "Seuil de chasse de 50 % : donné par les guides, pas documenté par tybayn.",
+    "À la chasse suivante, fonce-t-il vers ta position dès la période de grâce (tybayn v0.19.1.0, qui en fait un test) ou juste après ? Les autres sources divergent.",
     "Cas non vérifiés : plusieurs joueurs cachés en même temps, ou joueur caché qui n'était pas celui qu'il avait détecté."
   ]
 }

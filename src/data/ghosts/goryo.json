@@ -38,7 +38,7 @@
   ],
   "behaviors": [
     { "text": "Ne peut pas changer de pièce favorite. Exception valable pour toutes les entités : le vœu « Je souhaite être sain d'esprit » de la patte de singe déplace la pièce favorite dans une pièce aléatoire.", "zeroEvidence": true },
-    { "text": "S'éloigne rarement de sa pièce.", "zeroEvidence": true },
+    { "text": "S'éloigne rarement de sa pièce et ne peut pas faire de longue errance : il reste plus souvent dans sa pièce.", "zeroEvidence": true },
     { "text": "Depuis la mise à jour Chronicle (v0.13, juin 2025), a davantage de chances d'entrer dans l'état D.O.T.S.", "zeroEvidence": false }
   ],
   "abilities": [],

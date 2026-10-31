@@ -14,7 +14,7 @@
     "summary": "1,5 ou 1,9 m/s selon le jumeau · accélère en LdV",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
-      "D'après la sauvegarde tybayn, la vitesse lente correspond à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
+      "D'après tybayn, la vitesse lente correspond à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
       "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
       "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer les Jumeaux."
     ]
@@ -36,7 +36,7 @@
   ],
   "tells": [
     { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true },
-    { "text": "En chasse, sa vitesse est d'environ ±10 % de la vitesse normale de 1,7 m/s (≈1,5 m/s ou ≈1,9 m/s).", "zeroEvidence": true }
+    { "text": "En chasse, sa vitesse sera soit de 1,5 m/s, soit de 1,9 m/s (0,2 m/s de moins ou de plus que la vitesse normale de 1,7 m/s).", "zeroEvidence": true }
   ],
   "behaviors": [
     { "text": "Le déclenchement des capteurs de mouvement, les pas dans le sel et les réponses à la Spirit Box ne se produisent qu'à sa position physique réelle.", "zeroEvidence": false },
@@ -45,7 +45,7 @@
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Si la vitesse de l'entité alterne entre une chasse plus lente (~1,5 m/s, -10 %) et une chasse plus rapide (~1,9 m/s, +10 %), ce sont probablement les Jumeaux. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s).", "definitive": false },
+    { "text": "Si la vitesse de l'entité alterne entre 1,5 m/s et 1,9 m/s d'une chasse à l'autre, ça pourrait être les Jumeaux. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s).", "definitive": false },
     { "text": "Si des interactions ont souvent lieu loin de la pièce de l'entité, ça pourrait être les Jumeaux.", "definitive": false }
   ],
   "eliminationTests": [

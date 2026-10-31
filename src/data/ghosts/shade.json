@@ -37,7 +37,19 @@
   ],
   "tells": [
     {
-      "text": "Seule entité qui peut apparaître sous forme d'ombre ou de modèle translucide lors de l'événement du cercle d'invocation ; d'après le wiki tybayn actuel, c'est aussi la seule à pouvoir apparaître en ombre pendant les événements de la boîte à musique et de la patte de singe.",
+      "text": "Seule entité qui peut apparaître sous forme d'ombre lors des événements du cercle d'invocation, de la boîte à musique et de la patte de singe.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Plus susceptible de faire des événements de brouillard fantomatique.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut pas faire d'événement de chant.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut pas faire l'interaction « soulever un objet et le lancer sur le joueur ».",
       "zeroEvidence": true
     }
   ],
@@ -55,22 +67,30 @@
       "zeroEvidence": true
     },
     {
-      "text": "Ne fait pas d'interaction donnant EMF 2, EMF 3 ou EMF 5 lorsqu'elle est dans la même pièce que le joueur, y compris l'écriture fantomatique et souffler des flammes (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
+      "text": "Ne fait pas d'interaction donnant EMF 2, EMF 3 ou EMF 5 lorsqu'elle est dans la même pièce que le joueur, y compris l'écriture fantomatique, souffler des flammes et les interactions avec la poupée vaudou (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
       "zeroEvidence": false
     },
     {
-      "text": "Ne fait pas d'interaction donnant EMF 2 ou EMF 3 lorsqu'elle est dans la même pièce que le joueur, y compris souffler des flammes (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
+      "text": "Ne fait pas d'interaction donnant EMF 2 ou EMF 3 lorsqu'elle est dans la même pièce que le joueur, y compris souffler des flammes et les interactions avec la poupée vaudou (elle peut sortir juste de la pièce et interagir avec des objets à l'intérieur).",
       "zeroEvidence": true
     },
     {
-      "text": "Fait davantage d'événements quand la santé mentale moyenne est basse (aucun événement possible à 100 % de santé mentale).",
+      "text": "Plus la santé mentale moyenne est au-dessus de 50 %, moins elle a de chances de faire des événements (aucun événement possible à 100 % de santé mentale).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Pendant une chasse, ne souffle pas les bougies si elle est dans la même pièce que le joueur (attention aux limites de pièce, réelles ou buguées).",
       "zeroEvidence": true
     }
   ],
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît sous forme d'ombre ou de modèle translucide, c'est une Ombre.",
+      "text": "Si tu as une poupée vaudou, place du sel ou un détecteur de mouvement dans la pièce de l'entité et reste dans cette même pièce. Pose plusieurs objets avec lesquels elle peut interagir (ou qu'elle peut lancer) à portée d'interaction du détecteur ou du sel. Quand l'entité marche dans le sel ou déclenche le détecteur, enfonce une aiguille dans la poupée vaudou : s'il ne se produit aucune interaction (vérifie à l'EMF), c'est une Ombre.",
+      "definitive": true
+    },
+    {
+      "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît sous forme d'ombre, c'est une Ombre.",
       "definitive": true
     },
     {
@@ -80,9 +100,16 @@
     {
       "text": "Une fois la pièce favorite connue, place un crucifix qui couvre toute la pièce et des capteurs de mouvement à toutes ses entrées. Suis la position de l'entité grâce aux capteurs : si elle ne fait rien pendant qu'elle est dans la pièce (alors que tu y es aussi), ça peut être une Ombre.",
       "definitive": false
+    },
+    {
+      "text": "Place plusieurs bougies allumées dans une pièce, loin de ses limites. Fais tourner l'entité ou garde-la sur place en t'assurant qu'elle est dans la même pièce que toi pendant la chasse (attention aux limites de pièce buguées). Si, après plusieurs chasses, elle n'a éteint aucune bougie en chassant dans la même pièce que toi, ça peut être une Ombre.",
+      "definitive": false
     }
   ],
   "eliminationTests": [
+    {
+      "text": "Si l'entité fait un événement de chant, ce n'est pas une Ombre."
+    },
     {
       "text": "Si l'entité fait une interaction ou un événement donnant EMF 2, 3 ou 4 dans la même pièce qu'un joueur, ce n'est pas une Ombre."
     },
@@ -94,6 +121,9 @@
     },
     {
       "text": "Si l'entité fait un événement alors que la santé mentale moyenne est à 100 %, ce n'est pas une Ombre."
+    },
+    {
+      "text": "Pendant une chasse, si l'entité souffle une bougie alors qu'elle est dans la même pièce que toi (attention aux limites de pièce, réelles ou buguées), ce n'est pas une Ombre."
     }
   ],
   "confusions": [
@@ -144,7 +174,7 @@
   ],
   "observations": [
     {
-      "text": "Tu allumes les bougies du cercle d'invocation : l'entité apparaît sous la forme d'une silhouette noire et floue, ou translucide, au lieu de son apparence complète.",
+      "text": "Tu allumes les bougies du cercle d'invocation : l'entité apparaît sous la forme d'une silhouette noire et floue, au lieu de son apparence complète.",
       "kind": "event",
       "strength": "definitive"
     },
@@ -222,7 +252,7 @@
         "Allumer le cercle d'invocation et la voir apparaître sous forme d'ombre"
       ],
       "answer": 3,
-      "explain": "Seule l'Ombre peut apparaître en ombre ou en modèle translucide au cercle d'invocation. Les autres propositions sont compatibles avec beaucoup d'entités."
+      "explain": "Seule l'Ombre peut apparaître en ombre au cercle d'invocation (et à la boîte à musique ou à la patte de singe). Les autres propositions sont compatibles avec beaucoup d'entités."
     },
     {
       "q": "La santé mentale moyenne est encore à 100 % et un événement se produit. Qu'en conclus-tu ?",
@@ -264,6 +294,7 @@
   ],
   "uncertain": [
     "Peut-elle écrire dans le livre en présence d'un joueur ? Certains guides disent oui, tybayn dit non.",
-    "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle selon Phasmopedia) : non confirmée."
+    "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle selon Phasmopedia) : non confirmée.",
+    "Modèle translucide au cercle d'invocation : l'ancienne fiche le disait propre à l'Ombre, mais la fiche tybayn v0.19.1.0 ne cite plus que la forme d'ombre ; ne t'en sers pas comme preuve."
   ]
 }

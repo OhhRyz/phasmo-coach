@@ -32,11 +32,20 @@
   "keyTells": [
     "En chasse, n'entend la voix et ne détecte l'électronique qu'à 2,5 m ou moins",
     "Peut chasser jusqu'à 80 % si l'on parle dans sa pièce",
-    "Plus actif quand on parle près de lui"
+    "Plus actif quand on parle près de lui",
+    "Boîte à musique : démarre l'événement à 2,5 m (au lieu de 5 m) et ne le termine qu'à 0,5 m (au lieu de 1 m)"
   ],
   "tells": [
     {
       "text": "Pendant les chasses, sa distance d'écoute et de détection est de 2,5 m ou moins.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Déclenche l'événement de la boîte à musique à 2,5 m de celle-ci au lieu des 5 m habituels.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Termine l'événement de la boîte à musique quand sa tête est à 0,5 m de la boîte au lieu du 1 m habituel.",
       "zeroEvidence": true
     }
   ],
@@ -55,6 +64,10 @@
   "confirmationTests": [
     {
       "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue, et regarde si l'entité vient vers toi. Si elle ne te détecte pas, c'est un Yokai.",
+      "definitive": true
+    },
+    {
+      "text": "Après avoir repéré la zone de l'entité, localise-la précisément (capteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si elle s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : elle doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, elle peut se retrouver hors de portée de toutes les entités.",
       "definitive": true
     }
   ],
@@ -147,6 +160,11 @@
       "text": "Pendant les chasses, l'entité ne semble te trouver que lorsqu'elle te voit ou passe presque sur toi : ta voix ne l'attire jamais de loin.",
       "kind": "hunt",
       "strength": "hint"
+    },
+    {
+      "text": "Accroupi, tu actives la boîte à musique que tu tiens en main : l'entité arrive sur toi en moins de 5 s, reste quelques secondes au-dessus de la boîte, puis la referme et tente une chasse.",
+      "kind": "event",
+      "strength": "definitive"
     }
   ],
   "quiz": [

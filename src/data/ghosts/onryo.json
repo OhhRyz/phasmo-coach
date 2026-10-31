@@ -19,12 +19,13 @@
   },
   "huntSanity": {
     "normal": 60,
-    "low": 60,
+    "low": 40,
     "high": 100,
-    "summary": "60 % · à toute santé mentale à chaque 3e flamme éteinte",
+    "summary": "60 % · pas avant 40 % près d'une flamme allumée · à toute santé mentale après 3 flammes éteintes",
     "details": [
       "Chasse normalement à partir de 60 % de santé mentale moyenne.",
-      "Sa capacité lui permet de tenter une chasse à n'importe quel niveau de santé mentale après chaque 3e flamme éteinte."
+      "Quand il est près de lumières à feu allumées, il ne peut pas chasser avant 40 % de santé mentale moyenne.",
+      "Sa capacité lui permet de tenter une chasse à n'importe quel niveau de santé mentale après avoir éteint 3 flammes ou plus depuis sa dernière tentative de chasse due à sa capacité."
     ]
   },
   "summary": "Une entité liée au feu : chaque 3e flamme soufflée déclenche une tentative de chasse, et une flamme allumée près d'elle bloque ses chasses comme un crucifix.",
@@ -32,10 +33,13 @@
     "Tente de chasser à n'importe quelle santé mentale après chaque 3e flamme éteinte",
     "Une flamme à moins de 4 m agit comme un crucifix : elle la souffle au lieu de chasser",
     "Utilise les flammes en priorité sur les crucifix pour empêcher ses chasses",
-    "Seuil de chasse normal à 60 %"
+    "Seuil de chasse normal à 60 %, mais pas avant 40 % près de lumières à feu allumées",
+    "Seule entité capable d'éteindre deux fois la même flamme en moins de 20 s"
   ],
   "tells": [
-    { "text": "Tentera de chasser à n'importe quel niveau de santé mentale après avoir éteint chaque 3e flamme.", "zeroEvidence": true }
+    { "text": "Tentera de chasser à n'importe quel niveau de santé mentale après avoir éteint 3 flammes ou plus depuis sa dernière tentative de chasse due à sa capacité.", "zeroEvidence": true },
+    { "text": "Seule entité qui peut éteindre la même lumière à feu deux fois en moins de 20 s.", "zeroEvidence": true },
+    { "text": "Ne peut pas allumer de source de feu.", "zeroEvidence": true }
   ],
   "behaviors": [
     { "text": "Les flammes agissent comme des crucifix : si l'entité tente de chasser à moins de 4 m d'une flamme, elle la souffle à la place. Elle donne la priorité aux flammes sur les crucifix pour empêcher une chasse.", "zeroEvidence": true },
@@ -53,10 +57,12 @@
     { "text": "Si tu l'encenses après que le compteur a atteint 3 mais avant qu'elle utilise sa capacité, celle-ci est retardée plutôt que réinitialisée : des encens répétés peuvent la repousser de plusieurs minutes.", "zeroEvidence": false }
   ],
   "confirmationTests": [
+    { "text": "Si l'entité éteint deux fois la même flamme en moins de 20 s, c'est un Onryo.", "definitive": true },
     { "text": "Si ta santé mentale est au-dessus de 75 % : pose une bougie sur un crucifix de rang 1 ou 2. Si le crucifix est utilisé après que la bougie a été éteinte 3 fois, ça pourrait être un Onryo.", "definitive": false },
     { "text": "Si ta santé mentale est sous 35 % : place une ou plusieurs bougies dans la pièce de l'entité et garde-les allumées en permanence. Si l'entité n'a ni chassé ni utilisé de crucifix au bout d'un long moment, ça pourrait être un Onryo.", "definitive": false }
   ],
   "eliminationTests": [
+    { "text": "Si l'entité allume une source de feu, ce n'est pas un Onryo." },
     { "text": "Pose une bougie sur un crucifix (attention : le crucifix de rang 3 a une portée plus grande que la bougie pour empêcher une chasse d'Onryo, il te faudra peut-être plusieurs bougies pour tout couvrir). Si le crucifix est utilisé alors que la bougie est encore allumée, ce n'est pas un Onryo." }
   ],
   "confusions": [
@@ -77,7 +83,7 @@
     { "text": "Alors que la santé mentale moyenne est encore au-dessus de 75 %, la bougie posée sur ton crucifix est soufflée à trois reprises (tu la rallumes à chaque fois) ; peu après la troisième, alors qu'elle est encore éteinte, le crucifix brûle.", "kind": "interaction", "strength": "strong" },
     { "text": "Une chasse démarre à plus de 80 % de santé mentale moyenne, sans aucun objet maudit, peu après que tu as entendu une bougie s'éteindre près de l'entité.", "kind": "hunt", "strength": "strong" },
     { "text": "Tu viens de compter une troisième flamme soufflée et tu encenses aussitôt l'entité : aucune chasse pendant l'effet de l'encens, puis une chasse démarre peu après sa dissipation, alors que la santé mentale moyenne est encore au-dessus de 80 %.", "kind": "hunt", "strength": "strong" },
-    { "text": "Tu rallumes la bougie que l'entité vient de souffler : quelques secondes plus tard, elle est de nouveau soufflée, alors qu'une flamme qu'on vient de rallumer ne peut d'habitude pas être soufflée avant au moins 20 s.", "kind": "interaction", "strength": "strong" },
+    { "text": "Tu rallumes la bougie que l'entité vient de souffler : quelques secondes plus tard, elle est de nouveau soufflée, alors qu'une flamme qu'on vient de rallumer ne peut d'habitude pas être soufflée avant au moins 20 s.", "kind": "interaction", "strength": "definitive" },
     { "text": "Plus tes coéquipiers meurent, plus les bougies et les lumières à feu sont soufflées souvent.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
@@ -130,7 +136,5 @@
     "https://allthings.how/phasmophobia-how-to-identify-the-onryo/",
     "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/"
   ],
-  "uncertain": [
-    "Portée de 4 m d'une flamme qui empêche sa chasse : sauvegarde de 2024, pas reprise par le wiki actuel."
-  ]
+  "uncertain": []
 }

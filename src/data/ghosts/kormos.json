@@ -8,9 +8,9 @@
   "speed": {
     "min": 1.7,
     "max": 2.21,
-    "alt": 3.65,
+    "alt": null,
     "isRange": false,
-    "los": false,
+    "los": true,
     "losVaries": true,
     "summary": "1,7 m/s · 2,21 m/s vers un bruit · accélère en LdV à < 5 m",
     "details": [
@@ -19,7 +19,7 @@
       "Pseudo-LdV : il ne te voit, et ne gagne de la vitesse en LdV, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
       "Si tu sors de ces 5 m et qu'il ne te détecte plus, il arrête d'accélérer et perd peu à peu la vitesse accumulée.",
       "La vitesse de LdV accumulée se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
-      "Il n'a donc pas l'accélération en LdV standard : ne l'élimine pas pour autant si tu l'as vu accélérer alors que tu bougeais tout près de lui."
+      "tybayn le classe avec accélération en LdV, mais elle ne s'applique que quand tu bouges à moins de 5 m de lui : ne l'élimine jamais sur ce seul critère, qu'il accélère ou non."
     ]
   },
   "huntSanity": {
@@ -59,7 +59,11 @@
       "zeroEvidence": true
     },
     {
-      "text": "Ne fait jamais l'événement où l'entité apparaît et marche vers un joueur.",
+      "text": "Ne fait jamais l'événement de poursuite (l'entité apparaît et marche vers un joueur) ni l'événement « brouillard fantomatique » (bulle d'air).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut faire que des événements de chant ou d'apparition éclair (une seule image) dans les pièces aux lumières cassées.",
       "zeroEvidence": true
     }
   ],
@@ -77,6 +81,10 @@
     {
       "text": "Si une chasse démarre juste après qu'un joueur a sprinté dans la pièce de l'entité, alors que la santé moyenne est entre 50 % et 70 %, ça peut être un Kormos.",
       "definitive": false
+    },
+    {
+      "text": "Avec des cartes de tarot, va te placer dans une pièce aux lumières cassées. Si, après avoir tiré « Le Diable », l'entité ne fait qu'un événement de chant dans cette même pièce, ou si la carte semble n'avoir aucun effet, ça peut être un Kormos.",
+      "definitive": false
     }
   ],
   "eliminationTests": [
@@ -87,7 +95,7 @@
       "text": "Si l'entité te repère et te prend en chasse alors que tu étais déjà immobile, silencieux, sans électronique active et à plus de 5 m d'elle, ce n'est pas un Kormos."
     },
     {
-      "text": "Si l'entité fait l'événement où elle apparaît et marche vers un joueur, ce n'est pas un Kormos."
+      "text": "Si l'entité fait l'événement de poursuite (elle apparaît et marche vers un joueur) ou un « brouillard fantomatique » (bulle d'air), ce n'est pas un Kormos."
     },
     {
       "text": "Si l'entité tente de chasser au-dessus de 70 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Kormos."
@@ -269,9 +277,8 @@
     "Portée de mise à mort : 0,5 m sans LdV selon les wikis, 1,5 m à travers les obstacles selon d'anciens guides (sans doute corrigé).",
     "Poursuit-il toujours en priorité un joueur qui sprinte ? Une seule source.",
     "Effet de l'encens (aveuglement standard de 5 s ?) : non documenté.",
-    "Événements possibles : seule l'absence de l'apparition qui marche vers un joueur est confirmée par deux sources.",
-    "Classé sans accélération standard en LdV (tableau tybayn), alors qu'il accélère si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
-    "Condition exacte du seuil de 70 % : joueur qui sprinte dans sa pièce, ou simplement près de lui ? Les sources divergent.",
-    "Fait-il l'événement de brouillard fantomatique ? Une seule source dit non."
+    "Événements possibles : tybayn v0.19.1.0 exclut la poursuite et le brouillard fantomatique et limite ses événements dans les pièces aux lumières cassées (chant ou apparition éclair) ; le reste n'est pas documenté.",
+    "Classé avec accélération en LdV sur la fiche tybayn v0.19.1.0 (l'ancien tableau tybayn le classait sans), alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
+    "Condition exacte du seuil de 70 % : joueur qui sprinte dans la même pièce (tybayn v0.19.1.0), ou simplement près de lui (d'autres sources) ?"
   ]
 }

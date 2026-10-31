@@ -62,11 +62,15 @@
   ],
   "confirmationTests": [
     {
-      "text": "Lance un chronomètre au moment où tu ouvres une porte de sortie (la porte d'entrée) pour la première fois. Les phases agressives vont de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00, etc. Si toutes les chasses au-dessus de 10 % tombent dans ces fenêtres, c'est un fort indice d'Obambo.",
+      "text": "Écoute les pas pendant toute une chasse : si l'entité passe d'un coup de ≈1,96 m/s à ≈1,45 m/s, ou de ≈1,45 m/s à ≈1,96 m/s, sans ligne de vue ni autre cause visible, c'est un Obambo.",
+      "definitive": true
+    },
+    {
+      "text": "Si l'entité alterne entre ≈1,45 m/s et ≈1,96 m/s d'une chasse à l'autre, ça peut être un Obambo. Attention : les Jumeaux ont des vitesses très proches (environ 1,5 / 1,9 m/s).",
       "definitive": false
     },
     {
-      "text": "Écoute les pas pendant toute une chasse : un passage brutal de pas lents (≈1,45 m/s) à des pas rapides (≈1,96 m/s), ou l'inverse, sans ligne de vue ni autre cause visible, désigne fortement un Obambo.",
+      "text": "Lance un chronomètre au moment où tu ouvres une porte de sortie (la porte d'entrée) pour la première fois. Les phases agressives vont de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00, etc. Si toutes les chasses au-dessus de 10 % tombent dans ces fenêtres, c'est un fort indice d'Obambo.",
       "definitive": false
     }
   ],
@@ -135,7 +139,7 @@
     {
       "text": "Pendant une chasse, alors que tu restes caché sans bouger ni parler, loin de tout appareil allumé, les pas de l'entité passent d'un coup d'un rythme un peu lent à un rythme nettement rapide (environ 1,45 puis 1,96 m/s), ou l'inverse.",
       "kind": "hunt",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
       "text": "Une chasse a lieu vers 60 % de santé mentale moyenne ; ensuite, alors que l'équipe est descendue sous la moitié, l'entité ne chasse plus pendant près de deux minutes.",
@@ -243,6 +247,6 @@
     "Activité hors chasse : plus calme ou plus active en état agressif ? Les sources divergent.",
     "Vitesse maximale en LdV : non publiée.",
     "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes de sortie : non vérifiés.",
-    "Aucun test tybayn pour l'Obambo : les tests viennent du wiki Fandom, de Phasmopedia et de guides."
+    "tybayn v0.19.1.0 ne donne que les deux tests de vitesse (saut en pleine chasse, alternance d'une chasse à l'autre) ; le test du chronomètre et les tests d'élimination viennent du wiki Fandom, de Phasmopedia et de guides."
   ]
 }

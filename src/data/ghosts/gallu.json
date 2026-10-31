@@ -60,6 +60,14 @@
     {
       "text": "État affaibli : 1,36 m/s, seuil de 40 %, aveuglement par l'encens de 6 s, portée du crucifix augmentée de 1 m, perturbe le sel. Il reste affaibli jusqu'à ce qu'il marche dans du sel, soit encensé ou utilise un crucifix, puis revient en état normal (3 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
       "zeroEvidence": true
+    },
+    {
+      "text": "En état enragé, peut lancer une chasse juste au-dessus d'un crucifix de rang 1 posé au sol.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Seule entité qui peut faire plus de 4 pas juste après avoir marché dans du sel.",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
@@ -76,7 +84,23 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pose plusieurs lignes de sel espacées sur son trajet, si possible sous l'œil d'une caméra. En état normal, il perturbe la première ligne, devient enragé 2 s plus tard, puis traverse les lignes suivantes sans les perturber. Un sel perturbé puis un sel intact sur le même passage désigne fortement le Gallu (le Spectre, lui, ne perturbe jamais le sel). Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
+      "text": "Si tu vois une entité à vitesse rapide marcher dans un tas de sel pendant une chasse sans le perturber, c'est un Gallu.",
+      "definitive": true
+    },
+    {
+      "text": "Pendant une chasse, si une entité à vitesse normale ou lente accélère 2 ou 3 s après avoir marché dans un tas de sel de rang 1 ou 2, c'est un Gallu.",
+      "definitive": true
+    },
+    {
+      "text": "Pose du sel de rang 2 ou 3 en 3 lignes espacées de 1 à 2 m, si possible sous l'œil d'une caméra. Lance ou attends une chasse, puis attire l'entité vers toi pour qu'elle traverse les 3 lignes. Dès qu'elle perturbe le premier tas, encense-la : ça la fait passer immédiatement à l'état suivant. Elle continue alors sa route sur les 2e et 3e lignes : si la première est perturbée mais pas les deux suivantes, c'est un Gallu (le Spectre, lui, ne perturbe jamais le sel). Le test marche le mieux si le Gallu est en état normal ; tu peux aussi n'utiliser que du sel de rang 3, qui le ralentit, à condition d'espacer assez les tas pour qu'il mette plus de 3 s à atteindre le suivant. Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
+      "definitive": true
+    },
+    {
+      "text": "Après une chasse (avant qu'il n'utilise un crucifix, ne marche dans du sel ou ne soit encensé), pose un seul tas de sel et attends que l'entité le traverse. Si elle fait 5 ou 6 pas audibles juste après avoir marché dans le sel, c'est un Gallu.",
+      "definitive": true
+    },
+    {
+      "text": "Si l'entité alterne entre perturber le sel et ne pas le perturber, ça peut être un Gallu.",
       "definitive": false
     },
     {
@@ -158,7 +182,7 @@
     {
       "text": "Sur le même trajet, l'entité perturbe ta première ligne de sel, puis traverse la suivante sans la toucher.",
       "kind": "interaction",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
       "text": "Peu après que tu l'as encensée hors chasse ou qu'elle a marché dans ton sel, sa chasse suivante est nettement plus rapide que la précédente, qui était à vitesse normale (environ 1,96 m/s contre 1,7).",

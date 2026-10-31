@@ -15,7 +15,8 @@
     "summary": "1,7 m/s · accélère en LdV · 2,5 m/s près de l'électronique",
     "details": [
       "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération en LdV standard.",
-      "Près d'un équipement électronique actif du joueur, posé ou tenu en main, il passe aussitôt à une vitesse fixe de 2,5 m/s (à 100 % de vitesse d'entité).",
+      "Près d'un équipement électronique actif du joueur, posé ou tenu en main (à moins de 6 m, 8 m ou 10 m sur petite, moyenne ou grande carte), il passe aussitôt à une vitesse fixe de 2,5 m/s (à 100 % de vitesse d'entité).",
+      "Il a l'accélération en LdV tant qu'il n'est pas à portée d'un équipement électronique actif. Une fois à portée, l'accélération en LdV ne s'applique plus, mais elle continue de s'accumuler en arrière-plan.",
       "Sur un relevé de vitesse, cela donne des « plateaux » plats autour de 2,5 m/s qui interrompent une courbe de chasse standard : c'est son plus gros indice. En quittant la zone, il reprend la vitesse de son accélération en LdV et peut continuer d'accélérer jusqu'à son maximum."
     ]
   },
@@ -32,12 +33,12 @@
   "summary": "Une entité électrique qui fonce à 2,5 m/s près de ton équipement électronique allumé et perturbe tes appareils de plus loin que les autres.",
   "keyTells": [
     "Vitesse fixe de 2,5 m/s près d'un appareil électronique actif (posé ou tenu)",
-    "Perturbe l'électronique à 15 m en chasse (10 m d'habitude)",
+    "Perturbe l'électronique à 15 m en événement et en chasse (10 m d'habitude)",
     "Peut chasser dès 65 % près d'un appareil électronique actif"
   ],
   "tells": [
-    { "text": "Pendant une chasse, provoque des perturbations électroniques dans un rayon de 15 m au lieu de 10 m.", "zeroEvidence": true },
-    { "text": "Vitesse accrue près d'un équipement électronique actif pendant les chasses.", "zeroEvidence": true },
+    { "text": "Pendant les événements et les chasses, provoque des perturbations électroniques dans un rayon de 15 m au lieu de 10 m.", "zeroEvidence": true },
+    { "text": "Vitesse accrue en chasse quand un équipement électronique actif se trouve à moins de 6 m, 8 m ou 10 m (respectivement sur petite, moyenne et grande carte).", "zeroEvidence": true },
     { "text": "Peut chasser à 65 % lorsqu'il est près d'un équipement électronique actif.", "zeroEvidence": true }
   ],
   "behaviors": [
@@ -72,6 +73,7 @@
     { "text": "En pleine chasse, alors que l'entité passe non loin, tu allumes et éteins plusieurs fois le micro parabolique posé au sol à côté de toi : ses pas accélèrent chaque fois que tu l'allumes et ralentissent dès que tu l'éteins.", "kind": "hunt", "strength": "definitive" },
     { "text": "Près de tes appareils électroniques allumés, l'entité avance à une vitesse fixe d'environ 2,5 m/s, qui ne bouge plus tant qu'elle reste à côté d'eux, même quand elle te voit.", "kind": "hunt", "strength": "strong" },
     { "text": "Pendant une chasse, ta lampe torche se met à grésiller alors que l'entité est encore à une douzaine de mètres de toi, plus loin que d'habitude.", "kind": "hunt", "strength": "strong" },
+    { "text": "Pendant un événement, l'entité apparaît à une douzaine de mètres de toi et ta lampe torche grésille déjà.", "kind": "event", "strength": "strong" },
     { "text": "Pendant une chasse, tu entends les battements de cœur alors que l'entité est encore à une douzaine de mètres de toi.", "kind": "hunt", "strength": "hint" },
     { "text": "Une chasse démarre alors que la santé mentale moyenne est encore vers 63 %, avec plusieurs appareils électroniques allumés posés dans la pièce de l'entité.", "kind": "hunt", "strength": "hint" }
   ],
@@ -129,9 +131,7 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Portée de l'accélération (6 / 8 / 10 m selon la taille de la carte ?) : antisèche communautaire seulement.",
     "Le Kormos et le Revenant accélèrent aussi vers un appareil tenu en main : déduit de tybayn, pas testé côte à côte.",
-    "L'accélération en LdV continue-t-elle de s'accumuler près de l'électronique ? Déduit du graphique tybayn.",
     "Liste exacte de l'« électronique active » (radio globale, capteurs posés…) : non vérifiée."
   ]
 }

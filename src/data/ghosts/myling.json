@@ -29,19 +29,22 @@
   "summary": "Une entité silencieuse en chasse — tu ne l'entends qu'à 12 m au lieu de 20 m — mais bavarde au micro parabolique.",
   "keyTells": [
     "En chasse, pas et voix inaudibles au-delà de 12 m (20 m normalement)",
-    "Plus de sons paranormaux au micro parabolique",
+    "Plus de sons paranormaux au micro parabolique et à l'enregistreur (deux en moins de 80 s : Myling)",
     "Vitesse et seuil de chasse standards (1,7 m/s, 50 %)"
   ],
   "tells": [
     { "text": "Ses pas et ses sons vocaux ne s'entendent pas à plus de 12 m pendant les chasses (contre 20 m normalement).", "zeroEvidence": true },
-    { "text": "Produit davantage de sons au micro parabolique.", "zeroEvidence": true }
+    { "text": "Produit davantage de sons au micro parabolique et à l'enregistreur de son que les autres entités.", "zeroEvidence": true },
+    { "text": "Le grésillement de l'enregistreur de son commence à 5 m / 6,5 m / 7,5 m (rang 1 / 2 / 3) du son paranormal, au lieu des 4 m / 5,5 m / 6,5 m habituels.", "zeroEvidence": true }
   ],
   "behaviors": [
     { "text": "Contrairement à une idée reçue, le Myling émet bien des sons vocaux pendant les chasses ; c'est sa portée d'audition réduite (12 m au lieu de 20 m) qui le rend aussi un peu plus discret qu'une entité normale à distance égale.", "zeroEvidence": false }
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true }
+    { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true },
+    { "text": "Si l'entité émet deux sons paranormaux au micro parabolique ou à l'enregistreur de son à moins de 80 s d'intervalle, c'est un Myling.", "definitive": true },
+    { "text": "Prends un enregistreur de son de rang 1 ou 3 et attends un son paranormal. Quand il se produit, entre et sors de la zone de grésillement (le voyant passe au rouge ou la boussole apparaît). Si le grésillement commence 1 m plus loin que la normale pour le rang de ton enregistreur, c'est un Myling.", "definitive": true }
   ],
   "eliminationTests": [
     { "text": "Si tu entends l'entité entre 12 m et 20 m de toi pendant une chasse, ce n'est pas un Myling." }
@@ -64,7 +67,9 @@
     { "text": "Les chasses te paraissent étonnamment silencieuses : les pas surgissent d'un coup, alors que l'entité est déjà assez proche.", "kind": "hunt", "strength": "strong" },
     { "text": "Pendant une chasse, tu ne commences à entendre les pas de l'entité qu'un instant avant que ta lampe torche se mette à grésiller.", "kind": "hunt", "strength": "strong" },
     { "text": "Au micro parabolique, tu captes nettement plus de sons paranormaux que d'habitude autour de sa pièce.", "kind": "behavior", "strength": "hint" },
-    { "text": "Pendant les chasses, l'entité te surprend souvent au détour d'un couloir : tu ne l'as pas entendue arriver de loin.", "kind": "hunt", "strength": "hint" }
+    { "text": "Pendant les chasses, l'entité te surprend souvent au détour d'un couloir : tu ne l'as pas entendue arriver de loin.", "kind": "hunt", "strength": "hint" },
+    { "text": "Au micro parabolique, tu captes deux sons paranormaux à moins d'une minute d'intervalle.", "kind": "behavior", "strength": "definitive" },
+    { "text": "Avec un enregistreur de son de rang 1, le grésillement commence dès 5 m du son paranormal, alors qu'il ne démarre d'habitude qu'à 4 m.", "kind": "behavior", "strength": "definitive" }
   ],
   "quiz": [
     {
@@ -95,7 +100,7 @@
       "q": "Avec quel équipement entends-tu plus de sons quand l'entité est un Myling ?",
       "choices": ["Le micro parabolique", "La Spirit Box", "Le lecteur EMF", "Le projecteur D.O.T.S"],
       "answer": 0,
-      "explain": "Le Myling produit davantage de sons au micro parabolique. Il n'a pas la Spirit Box comme preuve, et l'EMF ou le D.O.T.S ne captent pas de sons."
+      "explain": "Le Myling produit davantage de sons au micro parabolique (et à l'enregistreur de son). Il n'a pas la Spirit Box comme preuve, et l'EMF ou le D.O.T.S ne captent pas de sons."
     }
   ],
   "changes": [],

@@ -8,7 +8,7 @@
   "speed": {
     "min": 1.5,
     "max": 2.25,
-    "alt": 3.71,
+    "alt": null,
     "isRange": true,
     "los": true,
     "summary": "1,5 → 2,25 m/s selon la santé · accélère en LdV (3,71 max)",
@@ -35,11 +35,11 @@
     "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
     "Peut atteindre 3,71 m/s : l'entité la plus rapide du jeu",
     "Encens en chasse : aveuglé 7 s au lieu de 5 s",
-    "Malédiction via Spirit Box ou micro parabolique : santé qui baisse 2× plus vite"
+    "Malédiction via Spirit Box, micro parabolique ou enregistreur de son : santé qui baisse 2× plus vite"
   ],
   "tells": [
     {
-      "text": "Maudit le joueur qui l'entend à la Spirit Box ou au micro parabolique : sa santé mentale baisse alors passivement deux fois plus vite.",
+      "text": "Maudit le joueur qui entend une réponse à la Spirit Box, un son paranormal au micro parabolique ou un son enregistrable à l'enregistreur de son (il doit être enregistré) : sa santé mentale baisse alors passivement deux fois plus vite, même dans une pièce éclairée.",
       "zeroEvidence": false
     },
     {
@@ -68,7 +68,7 @@
       "definitive": false
     },
     {
-      "text": "Si, après avoir entendu un murmure au micro parabolique, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une (petite) pièce éclairée, c'est un Moroi.",
+      "text": "Si, après avoir entendu un son paranormal au micro parabolique ou à l'enregistreur de son, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une (petite) pièce éclairée, c'est un Moroi.",
       "definitive": true
     },
     {
@@ -76,7 +76,7 @@
       "definitive": true
     },
     {
-      "text": "Si, après avoir entendu un murmure au micro parabolique, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroi.",
+      "text": "Si, après avoir entendu un murmure au micro parabolique ou à l'enregistreur de son, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroi.",
       "definitive": false
     }
   ],
@@ -219,11 +219,11 @@
       "choices": [
         "En le prenant en photo",
         "En marchant dans son sel",
-        "En entendant sa réponse à la Spirit Box ou un murmure au micro parabolique",
+        "En entendant sa réponse à la Spirit Box, ou un son paranormal au micro parabolique ou à l'enregistreur de son",
         "En restant dans sa pièce favorite"
       ],
       "answer": 2,
-      "explain": "La malédiction tombe sur celui qui l'entend à la Spirit Box ou au micro parabolique : sa santé baisse ensuite 2× plus vite, même dans la lumière."
+      "explain": "La malédiction tombe sur celui qui l'entend à la Spirit Box, au micro parabolique ou à l'enregistreur de son (si le son est enregistré) : sa santé baisse ensuite 2× plus vite, même dans la lumière."
     },
     {
       "q": "Santé moyenne sous 40 % : tu prends des pilules en pleine chasse et l'entité ralentit aussitôt. De quelle entité s'agit-il ?",
@@ -264,9 +264,9 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Les pilules lèvent-elles la malédiction ? Le magnétophone peut-il aussi maudire ? Phasmopedia seulement.",
+    "Les pilules lèvent-elles la malédiction ? Phasmopedia seulement (tybayn v0.19.1.0 confirme en revanche la malédiction par l'enregistreur de son, si le son est enregistré).",
     "Test des pilules : un Obambo qui repasse en calme en pleine chasse ralentit aussi ; refais le test en cas de doute.",
     "Durée d'aveuglement avec un encens de rang 2 ou 3 : non documentée.",
-    "Version actuelle des tests tybayn non lue : « plus rapide d'une chasse à l'autre » et « plus de 5 s pour revenir après l'encens » peuvent venir du Gallu ou de l'Obambo."
+    "tybayn v0.19.1.0 classe « plus rapide d'une chasse à l'autre avec accélération en LdV » et « plus de 5 s pour revenir après l'encens » parmi les tests définitifs ; on les garde non définitifs, car les Jumeaux, le Gallu et l'Obambo changent aussi de vitesse d'une chasse à l'autre avec une LdV standard, et un Gallu affaibli reste aveuglé 6 s."
   ]
 }

@@ -17,7 +17,7 @@
       "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
       "Repères (tableau tybayn) : +1 an 2,575 · +2 2,4 · +3 2,225 · +4 2,05 · +5 1,875 · +6 1,7 · +7 1,525 · +8 1,35 · +9 1,175 · +10 1,0 m/s.",
       "Sa vitesse est constante pendant une chasse et ne peut que baisser d'une chasse à l'autre : il ralentit à chaque chasse s'il a été exposé aux joueurs.",
-      "Compte environ 1 à 2 min de présence près de lui par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
+      "Compte environ 1 à 2 min de présence dans sa pièce par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
     ]
   },
   "huntSanity": {
@@ -34,7 +34,7 @@
   "summary": "Entité qui vieillit au contact des joueurs : très active, précoce et rapide au début, elle s'affaiblit et ralentit au fil de la partie.",
   "keyTells": [
     "N'accélère jamais en LdV ; plus lent à chaque chasse (2,75 → 1,0 m/s)",
-    "Au Ouija, l'âge annoncé augmente au fil de la partie",
+    "Au Ouija, l'âge annoncé augmente au fil de la partie (90 ans ou plus : c'est forcément lui)",
     "Chasse dès 75 % quand il est jeune, de plus en plus tard en vieillissant",
     "Très actif au début, de plus en plus calme quand tu restes près de lui"
   ],
@@ -42,11 +42,15 @@
     {
       "text": "L'âge donné par la planche Ouija augmente à mesure que le Thayé vieillit.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Seule entité qui peut annoncer un âge de 90 ans ou plus à la planche Ouija.",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
     {
-      "text": "Vieillit avec le temps (toutes les 1 à 2 min) quand un joueur est à proximité (portée de 3 m, qui traverse même le sol à cause d'un bug).",
+      "text": "Essaie de vieillir toutes les 1 à 2 min : si un joueur est dans la même pièce que lui à ce moment-là, il vieillit ; sinon, il attend 30 s et réessaie (bug connu : la détection, d'une portée de 3 m, traverse le sol, donc un joueur à l'étage du dessous peut aussi le faire vieillir).",
       "zeroEvidence": true
     },
     {
@@ -57,12 +61,16 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé près d'elle, repose la question. Si le nombre a augmenté, c'est un Thayé.",
+      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé dans sa pièce, repose la question. Si le nombre a augmenté, c'est un Thayé.",
       "definitive": true
     },
     {
-      "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en LdV, c'est un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",
+      "text": "Si tu as une planche Ouija, demande l'âge de l'entité : si la planche répond 90 ou plus, c'est un Thayé.",
       "definitive": true
+    },
+    {
+      "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en LdV, ça peut être un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",
+      "definitive": false
     },
     {
       "text": "Pendant une chasse, si l'entité n'accélère pas en LdV, ça peut être un Thayé.",
@@ -145,7 +153,7 @@
     {
       "text": "Alors que l'équipe ne touche à aucun objet, interrupteur, disjoncteur ni robinet entre les chasses, chaque nouvelle chasse est plus lente que la précédente, à allure constante du début à la fin et sans jamais accélérer quand l'entité te voit.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Au Ouija, la réponse à « Quel âge avez-vous ? » est plus élevée qu'en début de partie.",
@@ -200,18 +208,18 @@
         "« Quel est mon niveau de santé mentale ? »"
       ],
       "answer": 2,
-      "explain": "« Quel âge avez-vous ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, c'est un Thayé. « Quand êtes-vous mort ? » donne un nombre aléatoire."
+      "explain": "« Quel âge avez-vous ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, ou s'il atteint 90 ans ou plus, c'est un Thayé. « Quand êtes-vous mort ? » donne un nombre aléatoire."
     },
     {
       "q": "Qu'est-ce qui fait vieillir un Thayé ?",
       "choices": [
         "Chaque chasse qu'il lance",
-        "Le temps qu'un joueur passe près de lui (à moins de 3 m)",
+        "Le temps qu'un joueur passe dans sa pièce",
         "Les lumières allumées dans sa pièce",
         "Les objets que l'équipe ramasse"
       ],
       "answer": 1,
-      "explain": "Il tente de vieillir toutes les 1 à 2 min quand un joueur est près de lui. C'est cette exposition, pas les chasses elles-mêmes, qui le ralentit d'une chasse à l'autre. Les objets ramassés, c'est le Deildegast."
+      "explain": "Il tente de vieillir toutes les 1 à 2 min : il vieillit si un joueur est dans la même pièce que lui, sinon il réessaie 30 s plus tard. C'est cette exposition, pas les chasses elles-mêmes, qui le ralentit d'une chasse à l'autre. Les objets ramassés, c'est le Deildegast."
     },
     {
       "q": "En chasse, quel indice distingue un Thayé d'un Moroi ?",
@@ -252,6 +260,6 @@
   "uncertain": [
     "L'âge au Ouija monte-t-il de 1 à 4 ans par vieillissement, avec un 1er essai 1 min après l'ouverture de la porte ? Phasmopedia seulement.",
     "Un joueur mort le fait-il vieillir ? A-t-il moins d'événements en vieillissant ? Notes de patch v0.9.0.0 lues seulement via des résumés.",
-    "Condition exacte de vieillissement : dans sa pièce, ou à moins de 3 m ?"
+    "Condition exacte de vieillissement : tybayn v0.19.1.0 dit « un joueur dans la même pièce », mais son bug connu évoque une portée de 3 m qui traverse le sol."
   ]
 }

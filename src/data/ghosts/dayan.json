@@ -46,6 +46,7 @@
   "abilities": [],
   "confirmationTests": [
     { "text": "Pendant une chasse, quand l'entité est à moins de 10 m de toi, alterne entre rester parfaitement immobile et marcher. Si sa vitesse bascule entre un pas lent et fixe (~1,2 m/s) et un pas rapide et fixe (~2,25 m/s) au rythme de tes mouvements, c'est une Dayan.", "definitive": true },
+    { "text": "Pendant une chasse, si l'entité ralentit soudainement en arrivant près de toi (même sans LdV), ça pourrait être une Dayan.", "definitive": false },
     { "text": "Si l'entité chasse alors que l'équipe est encore entre 50 % et 65 % de santé mentale, juste au moment où quelqu'un se déplaçait près d'elle, ça pourrait être une Dayan.", "definitive": false }
   ],
   "eliminationTests": [
@@ -157,8 +158,8 @@
     "https://phasmopedia.com/en/ghosts/dayan/"
   ],
   "uncertain": [
-    "Seuil quand un joueur bouge près d'elle : 65 % pour la plupart des sources, 60 % pour Destructoid.",
-    "Seuils 65 % / 45 % et notion de « joueur le plus proche » : wikis communautaires seulement (tybayn ne couvre que la vitesse).",
+    "Seuil quand un joueur bouge près d'elle : 65 % pour tybayn v0.19.1.0 et la plupart des sources, 60 % pour Destructoid.",
+    "Notion de « joueur le plus proche » pour le seuil : wikis communautaires seulement (tybayn v0.19.1.0 donne les seuils 65 % / 45 % / 50 % mais ne parle du joueur le plus proche que pour la vitesse).",
     "Aucune preuve garantie connue en Cauchemar et Démence (une seule source l'affirme).",
     "Ce qui compte comme « bouger » (s'accroupir, marcher accroupi, tourner sur place) : non vérifié."
   ]

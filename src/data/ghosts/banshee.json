@@ -42,7 +42,7 @@
   ],
   "tells": [
     {
-      "text": "33 % de chances de produire un cri unique au microphone parabolique.",
+      "text": "33 % de chances de produire l'un des 20 cris uniques au microphone parabolique ou à l'enregistreur de son.",
       "zeroEvidence": true
     },
     {
@@ -72,6 +72,14 @@
       "zeroEvidence": false
     },
     {
+      "text": "En état D.O.T.S, ne peut pas rester visible plus de 1,76 s si sa cible n'est pas à l'intérieur.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "En état D.O.T.S, ne se dirige jamais vers un autre joueur que sa cible.",
+      "zeroEvidence": false
+    },
+    {
       "text": "Ciblage : un joueur est choisi au hasard en début de contrat et reste la cible jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La cible suivante est le premier joueur vivant dans l'ordre du lobby (en commençant par l'hôte) qui n'était pas la cible précédente. En solo, c'est toujours l'hôte.",
       "zeroEvidence": true
     },
@@ -82,7 +90,7 @@
   ],
   "abilities": [
     {
-      "text": "66 % de chances d'errer vers sa cible sans laisser d'EMF, si la cible est à l'intérieur.",
+      "text": "66 % de chances de traquer sa cible ou d'errer vers elle sans laisser d'EMF, si la cible est à l'intérieur (elle ne peut pas la suivre d'un étage à l'autre, sauf vers un sous-sol d'une seule pièce).",
       "zeroEvidence": true
     }
   ],

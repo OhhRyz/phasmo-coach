@@ -46,6 +46,10 @@
     {
       "text": "N'accélère pas en LdV : sa vitesse est verrouillée pendant toute la chasse.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Le réglage « portes ouvertes au départ » est appliqué un cran plus bas que celui choisi (élevé → moyen, moyen → faible, faible → aucune, aucune → aucune).",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
@@ -68,6 +72,14 @@
   ],
   "abilities": [],
   "confirmationTests": [
+    {
+      "text": "Ramasse ou utilise au moins 26 objets différents (hors équipement). Si, à la chasse suivante, l'entité avance à 0,4 m/s sans être près de toi, c'est un Deildegast.",
+      "definitive": true
+    },
+    {
+      "text": "Fais le tour de la carte avant de toucher à la moindre porte : s'il y a moins de portes ouvertes au départ que prévu pour la difficulté choisie, ça peut être un Deildegast.",
+      "definitive": false
+    },
     {
       "text": "Repère la vitesse d'une première chasse sans avoir touché à rien (environ 3,0 m/s, constante). Avant la chasse suivante, ramasse ou utilise une quinzaine d'objets différents (hors équipement). Si l'entité est alors nettement plus lente (environ 1,5 m/s) et garde cette vitesse toute la chasse, ça peut être un Deildegast. Un Thayé qui a vieilli entre les deux chasses peut donner le même résultat : confirme avec le test suivant.",
       "definitive": false
@@ -254,11 +266,10 @@
     "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
   ],
   "uncertain": [
-    "Seuil de chasse de 50 % : donné par les guides, pas documenté par tybayn.",
     "Version d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source la relie au Deildegast.",
     "Portes, équipement et objets maudits ne compteraient pas (Fextralife) ; tybayn n'exclut que l'équipement.",
     "Aucune preuve garantie selon les wikis ; un guide isolé affirme le contraire.",
-    "Tests de confirmation déduits des mécanismes décrits par tybayn, sans test officiel : un Hantu pourrait brouiller une mesure faite à l'oreille.",
+    "Nos tests de comparaison entre deux chasses sont déduits des mécanismes décrits par tybayn (ses propres tests sont ceux des 26 objets et des portes ouvertes au départ) : un Hantu pourrait brouiller une mesure faite à l'oreille.",
     "Effet de l'encens et du crucifix : supposé standard ; un crucifix qui empêche une chasse remettrait aussi le compteur à zéro (Fextralife)."
   ]
 }

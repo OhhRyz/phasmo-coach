@@ -51,7 +51,7 @@
   "behaviors": [],
   "abilities": [
     {
-      "text": "Peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 ou un EMF 5 à son nouvel emplacement.",
+      "text": "Peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 ou un EMF 5 à son nouvel emplacement (au niveau des pieds). Après la téléportation, il revient à pied jusqu'à sa pièce favorite.",
       "zeroEvidence": false
     },
     {

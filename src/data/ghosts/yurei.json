@@ -37,11 +37,19 @@
     {
       "text": "Seule entité qui peut fermer une porte de sortie, ou interagir avec elle, en dehors d'une chasse ou d'un événement.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Doit ouvrir ou fermer complètement une porte quand il interagit avec elle (en dehors d'une chasse).",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
     {
       "text": "Encenser l'entité la bloque dans sa pièce pendant toute la durée de l'effet de l'encens (90 s).",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut pas donner la preuve D.O.T.S sous les effets d'un encens (90 s).",
       "zeroEvidence": true
     },
     {
@@ -63,7 +71,13 @@
   ],
   "eliminationTests": [
     {
+      "text": "Si, à un moment, l'entité interagit avec une porte (en dehors d'une chasse) et que la porte ne s'ouvre pas ou ne se ferme pas complètement, ce n'est pas un Yurei (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement)."
+    },
+    {
       "text": "Place des capteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei (sans compter un événement, pendant lequel une entité peut se téléporter jusqu'à un joueur)."
+    },
+    {
+      "text": "Encense l'entité et surveille attentivement sa pièce : si, à un moment pendant les 90 s de l'encens, l'entité passe en état D.O.T.S, ce n'est pas un Yurei."
     }
   ],
   "confusions": [
@@ -115,7 +129,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Tu vois la porte de sortie, restée ouverte, pivoter toute seule de quelques degrés alors qu'aucune chasse ni aucun événement n'est en cours.",
+      "text": "Tu regardes la porte de sortie, restée grande ouverte : elle pivote toute seule et se referme complètement, d'un seul mouvement, alors qu'aucune chasse ni aucun événement n'est en cours.",
       "kind": "interaction",
       "strength": "definitive"
     },
@@ -136,6 +150,11 @@
     },
     {
       "text": "Ta santé mentale fond par paliers, souvent juste après qu'une porte s'est refermée près de toi.",
+      "kind": "interaction",
+      "strength": "hint"
+    },
+    {
+      "text": "Hors chasse, chaque porte que l'entité touche s'ouvre ou se ferme jusqu'au bout : tu ne la vois jamais laisser une porte entrouverte à mi-course.",
       "kind": "interaction",
       "strength": "hint"
     }
@@ -209,7 +228,6 @@
   ],
   "uncertain": [
     "Rayon du drain de 15 % : environ 7,5 m selon le wiki Fandom et un guide ; tybayn dit « joueurs proches ».",
-    "Ne déplace-t-il jamais une porte à moitié ? Plusieurs guides le disent, pas tybayn.",
     "Correction (juillet 2026) empêchant d'autres entités d'imiter sa fermeture de porte : vue sur un blog, absente des notes officielles."
   ]
 }

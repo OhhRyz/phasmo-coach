@@ -52,11 +52,19 @@
     {
       "text": "Peut lancer les objets plus vite et plus loin.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Ne peut interagir avec les objets qu'en les lançant. Il peut quand même toucher les portes, actionner les interrupteurs et le disjoncteur (il ne peut pas lancer le livre d'écriture).",
+      "zeroEvidence": true
     }
   ],
   "abilities": [
     {
-      "text": "Explosion de Poltergeist : lance plusieurs objets en même temps, ce qui fait baisser de 2 % par objet lancé la santé mentale des joueurs proches.",
+      "text": "Explosion de Poltergeist : lance plusieurs objets en même temps, ce qui fait baisser de 2 % par objet lancé la santé mentale des joueurs proches. Il existe 4 types de lancers de Poltergeist.",
+      "zeroEvidence": true
+    },
+    {
+      "text": "Seule entité capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée.",
       "zeroEvidence": true
     }
   ],
@@ -68,6 +76,10 @@
     {
       "text": "Pose plusieurs objets proches les uns des autres (pas empilés), en « tas », dans la pièce favorite. Si tous les objets, ou une bonne partie, sont projetés en même temps, c'est un Poltergeist.",
       "definitive": true
+    },
+    {
+      "text": "Si tu vois l'entité lancer un objet alors qu'elle est dans une pièce éclairée, ça pourrait être un Poltergeist. À noter : n'importe quelle entité peut sortir d'une pièce éclairée vers une pièce sombre et interagir quand même avec les objets de la pièce éclairée.",
+      "definitive": false
     }
   ],
   "eliminationTests": [],
