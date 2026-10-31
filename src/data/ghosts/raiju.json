@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · 2,5 m/s près de l'électronique active",
+    "summary": "1,7 m/s · accélère en LdV · 2,5 m/s près de l'électronique",
     "details": [
       "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération en LdV standard.",
       "Près d'un équipement électronique actif du joueur, posé ou tenu en main, il passe aussitôt à une vitesse fixe de 2,5 m/s (à 100 % de vitesse d'entité).",
@@ -55,8 +55,8 @@
   "confusions": [
     { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu du D.O.T.S ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse, sans lien avec l'électronique." },
     { "with": "dayan", "why": "Même EMF 5 + orbes, mais la Dayan a la Spirit Box au lieu du D.O.T.S ; elle accélère (2,25 m/s) quand tu bouges à moins de 10 m et ralentit (1,2 m/s) quand tu restes immobile, appareils allumés ou non." },
-    { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu des orbes ; il ne marche jamais dans le sel et se téléporte vers les joueurs." },
-    { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu des orbes ; plus visible pendant les chasses, il ne fait jamais l'événement « brume fantomatique »." },
+    { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu des orbes ; il ne perturbe jamais le sel et se téléporte vers les joueurs." },
+    { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu des orbes ; plus visible pendant les chasses, il ne fait jamais l'événement « brouillard fantomatique »." },
     { "with": "goryo", "why": "Même EMF 5 + D.O.T.S, mais le Goryo a l'UV au lieu des orbes ; son D.O.T.S n'apparaît qu'à la caméra et il ne change jamais de pièce favorite." },
     { "with": "deildegast", "why": "Même EMF 5 + D.O.T.S, mais le Deildegast a l'écriture au lieu des orbes ; il peut être très rapide (jusqu'à 3,0 m/s), mais sa vitesse dépend du nombre d'objets différents utilisés depuis la dernière chasse et reste fixe pendant la chasse, sans lien avec l'électronique." },
     { "with": "banshee", "why": "Mêmes orbes + D.O.T.S, mais la Banshee a l'UV au lieu de l'EMF ; elle ne poursuit que sa cible et peut pousser un cri unique au micro parabolique." },
@@ -127,9 +127,9 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Portée de l'accélération (souvent citée : 6 / 8 / 10 m selon la taille de la carte) : seulement une antisèche communautaire non officielle, absente des données tybayn ; retirée du contenu enseigné.",
-    "Kormos et Revenant qui accélèrent quand ils détectent un appareil tenu en main : déduit du wiki tybayn (détection par l'électronique), pas testé côte à côte avec un Raiju.",
-    "Que l'accélération en LdV continue de s'accumuler pendant qu'il est près de l'électronique : déduit du graphique tybayn, pas confirmé explicitement.",
-    "La liste exacte des appareils considérés comme « électronique active » (par exemple la radio globale ou les capteurs posés) n'a pas été vérifiée."
+    "Portée de l'accélération (6 / 8 / 10 m selon la taille de la carte ?) : antisèche communautaire seulement.",
+    "Le Kormos et le Revenant accélèrent aussi vers un appareil tenu en main : déduit de tybayn, pas testé côte à côte.",
+    "L'accélération en LdV continue-t-elle de s'accumuler près de l'électronique ? Déduit du graphique tybayn.",
+    "Liste exacte de l'« électronique active » (radio globale, capteurs posés…) : non vérifiée."
   ]
 }

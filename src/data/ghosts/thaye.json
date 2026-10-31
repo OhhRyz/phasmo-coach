@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "2,75 m/s jeune → 1,0 m/s vieux · pas de LdV",
+    "summary": "2,75 m/s jeune → 1,0 m/s vieux · n'accélère pas en LdV",
     "details": [
       "Ne prend jamais de vitesse en LdV.",
       "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
@@ -24,7 +24,7 @@
     "normal": 75,
     "low": 15,
     "high": 75,
-    "summary": "75 % jeune → 15 % vieux (−6 % par âge)",
+    "summary": "75 % jeune → 15 % vieux · −6 % par âge",
     "details": [
       "Seuil de 75 % au plus jeune âge, qui baisse de 6 points à chaque vieillissement, jusqu'à 15 % au plus vieux.",
       "Bug connu : chaque seuil est en réalité 1 % plus bas que prévu (74 % jeune, 14 % vieux).",
@@ -57,7 +57,7 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge as-tu ? », 5 % de santé mentale). Après un moment passé près d'elle, repose la question. Si le nombre a augmenté, c'est un Thayé.",
+      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé près d'elle, repose la question. Si le nombre a augmenté, c'est un Thayé.",
       "definitive": true
     },
     {
@@ -84,7 +84,7 @@
     },
     {
       "with": "deildegast",
-      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit selon les objets que vous utilisez et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ne fait que ralentir. Il chasse à 50 %."
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit selon les objets que l'équipe utilise et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ne fait que ralentir. Il chasse à 50 %."
     },
     {
       "with": "deogen",
@@ -104,7 +104,7 @@
     },
     {
       "with": "mare",
-      "why": "Cauchemar (Mare) : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard et l'accélération en LdV."
+      "why": "Cauchemar : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard et l'accélération en LdV."
     },
     {
       "with": "revenant",
@@ -125,11 +125,15 @@
     {
       "with": "raiju",
       "why": "Raiju : Orbes + D.O.T.S, mais EMF 5 au lieu de l'Écriture ; 2,5 m/s près de l'électronique active et peut chasser à 65 % près de l'équipement."
+    },
+    {
+      "with": "hantu",
+      "why": "Le Hantu n'accélère pas non plus en LdV, mais sa vitesse dépend de la température de la pièce (1,4 à 2,7 m/s) et peut changer en pleine chasse ; celle du Thayé ne dépend que de son âge. Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [
     {
-      "text": "L'entité est très active en début de partie (interactions, événements), puis de plus en plus calme à mesure que vous passez du temps près d'elle.",
+      "text": "L'entité est très active en début de partie (interactions, événements), puis de plus en plus calme à mesure que l'équipe passe du temps près d'elle.",
       "kind": "behavior",
       "strength": "strong"
     },
@@ -144,7 +148,7 @@
       "strength": "strong"
     },
     {
-      "text": "Au Ouija, la réponse à « Quel âge as-tu ? » est plus élevée qu'au début de la partie.",
+      "text": "Au Ouija, la réponse à « Quel âge avez-vous ? » est plus élevée qu'au début de la partie.",
       "kind": "tell",
       "strength": "definitive"
     },
@@ -185,13 +189,13 @@
     {
       "q": "Quelle question au Ouija permet d'identifier un Thayé ?",
       "choices": [
-        "« Où es-tu ? »",
-        "« Quand es-tu mort ? »",
-        "« Quel âge as-tu ? »",
+        "« Où êtes-vous ? »",
+        "« Quand êtes-vous mort ? »",
+        "« Quel âge avez-vous ? »",
         "« Quel est mon niveau de santé mentale ? »"
       ],
       "answer": 2,
-      "explain": "« Quel âge as-tu ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, c'est un Thayé. « Quand es-tu mort ? » donne un nombre aléatoire."
+      "explain": "« Quel âge avez-vous ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, c'est un Thayé. « Quand êtes-vous mort ? » donne un nombre aléatoire."
     },
     {
       "q": "Qu'est-ce qui fait vieillir un Thayé ?",
@@ -242,9 +246,8 @@
     "Notes de patch v0.9.0.0 (Ascension, 2023), via résumés de recherche"
   ],
   "uncertain": [
-    "Selon Phasmopedia, l'âge annoncé au Ouija augmente de 1 à 4 ans à chaque vieillissement, et la première tentative de vieillissement a lieu 1 min après l'ouverture de la porte : non confirmé par tybayn.",
-    "La règle « un joueur mort ne le fait pas vieillir » et « moins d'événements en vieillissant » viennent des notes de patch v0.9.0.0 (2023) relayées par des résumés, pas d'une lecture directe. La règle sur les joueurs morts est retirée du contenu pédagogique faute de confirmation.",
-    "Condition exacte de vieillissement : un guide indique « dans sa pièce ou à moins de 3 m » ; tybayn ne parle que d'un joueur à proximité, avec une portée de 3 m (bug du sol).",
-    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée."
+    "L'âge au Ouija monte-t-il de 1 à 4 ans par vieillissement, avec un 1er essai 1 min après l'ouverture de la porte ? Phasmopedia seulement.",
+    "Un joueur mort le fait-il vieillir ? A-t-il moins d'événements en vieillissant ? Notes de patch v0.9.0.0 lues seulement via des résumés.",
+    "Condition exacte de vieillissement : dans sa pièce, ou à moins de 3 m ?"
   ]
 }

@@ -251,8 +251,7 @@
     "https://www.destructoid.com/how-to-identify-an-obambo-in-phasmophobia/"
   ],
   "uncertain": [
-    "La correction v0.18.0.0 de la capacité du Fantôme (joueurs morts ou dehors) n'a été vue que dans un agrégateur de notes de patch ; le wiki tybayn (28/10/2026) la liste toujours comme bug connu.",
-    "Le bug de la pellicule vidéo est tiré du wiki tybayn ; non vérifié en jeu.",
-    "Les preuves du Kormos (orbes, UV, Spirit Box) viennent de guides tiers concordants (Destructoid, GameSpot), sans source officielle lue."
+    "Bug de sa capacité sur les joueurs morts ou dehors : corrigé en v0.18.0.0 selon un agrégateur, toujours listé par tybayn.",
+    "Bug de la pellicule vidéo : tiré du wiki tybayn, non vérifié en jeu."
   ]
 }

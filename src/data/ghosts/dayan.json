@@ -11,7 +11,7 @@
     "alt": 1.7,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s de loin · 2,25 si tu bouges, 1,2 si immobile",
+    "summary": "1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile",
     "details": [
       "À plus de 10 m de tout joueur : 1,7 m/s avec une accélération en LdV standard.",
       "À moins de 10 m d'un joueur, sa vitesse devient fixe et dépend des mouvements de ce joueur : 2,25 m/s s'il se déplace, 1,2 m/s s'il reste immobile.",
@@ -22,7 +22,7 @@
     "normal": 50,
     "low": 45,
     "high": 65,
-    "summary": "50 % · 65 % si on bouge près d'elle, 45 % si immobile",
+    "summary": "50 % · 65 % si tu bouges près d'elle · 45 % immobile",
     "details": [
       "Seuil standard de 50 % quand aucun joueur n'est à moins de 10 m d'elle.",
       "Si le joueur le plus proche, à moins de 10 m, se déplace, le seuil monte à 65 % ; s'il reste immobile, il descend à 45 %."
@@ -53,8 +53,8 @@
   ],
   "confusions": [
     { "with": "spirit", "why": "Même EMF 5 + Spirit Box, mais l'Esprit a l'écriture au lieu des orbes ; vitesse standard et 180 s sans chasse après un encens (au lieu de 90 s)." },
-    { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des orbes ; il ne marche jamais dans le sel et se téléporte vers les joueurs." },
-    { "with": "the-twins", "why": "Même EMF 5 + Spirit Box, mais Les Jumeaux ont des glaciales au lieu des orbes ; leur vitesse change d'une chasse à l'autre (~1,5 ou ~1,9 m/s), pas selon tes mouvements." },
+    { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des orbes ; il ne perturbe jamais le sel et se téléporte vers les joueurs." },
+    { "with": "the-twins", "why": "Même EMF 5 + Spirit Box, mais les Jumeaux ont des glaciales au lieu des orbes ; leur vitesse change d'une chasse à l'autre (~1,5 ou ~1,9 m/s), pas selon tes mouvements." },
     { "with": "gallu", "why": "Même EMF 5 + Spirit Box, mais le Gallu a l'UV au lieu des orbes ; ses changements de vitesse (1,96 m/s enragé, 1,36 m/s affaibli) viennent du sel, de l'encens et des crucifix." },
     { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu de la Spirit Box ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse." },
     { "with": "raiju", "why": "Même EMF 5 + orbes, mais le Raiju a le D.O.T.S au lieu de la Spirit Box ; il accélère à 2,5 m/s près de l'électronique active, pas selon tes mouvements, et peut chasser dès 65 % près d'un appareil allumé." },
@@ -64,7 +64,9 @@
     { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu de l'EMF. Lui aussi réagit à tes déplacements : quasi aveugle, il te repère à tes pas (jusqu'à 30 m en sprint) et accélère quand il te détecte au-delà de 5 m. Immobile et silencieux, tu deviens indétectable pour lui, mais il ne ralentit pas à 1,2 m/s." },
     { "with": "the-mimic", "why": "Le Mimic affiche de faux orbes, en plus de la Spirit Box, de l'UV et des glaciales : Spirit Box + orbes peut venir d'un Mimic. L'EMF 5 l'exclut." },
     { "with": "banshee", "why": "La Banshee est elle aussi toujours féminine depuis Winter's Jest (décembre 2025) : une entité féminine ne confirme donc pas la Dayan. La Banshee a UV, orbes et D.O.T.S." },
-    { "with": "deogen", "why": "Le Deogen ralentit lui aussi près des joueurs (jusqu'à 0,4 m/s), mais quoi que tu fasses, et il fonce à 3,0 m/s de loin ; il ne partage que la Spirit Box." }
+    { "with": "deogen", "why": "Le Deogen ralentit lui aussi près des joueurs (jusqu'à 0,4 m/s), mais quoi que tu fasses, et il fonce à 3,0 m/s de loin ; il ne partage que la Spirit Box." },
+    { "with": "jinn", "why": "Le Djinn change aussi de vitesse d'un coup selon la distance : disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m, que tu bouges ou non. Une seule preuve en commun (EMF 5)." },
+    { "with": "revenant", "why": "Le Revenant change aussi de vitesse d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, que tu bouges ou non. Une seule preuve en commun (orbes)." }
   ],
   "observations": [
     { "text": "Pendant la chasse, l'entité est tout près ; tu t'arrêtes net et elle passe aussitôt à un pas très lent. Dès que tu repars, elle accélère brusquement.", "kind": "hunt", "strength": "definitive" },
@@ -128,10 +130,9 @@
     "https://phasmopedia.com/en/ghosts/dayan/"
   ],
   "uncertain": [
-    "Seuil quand un joueur bouge près d'elle : 65 % selon le wiki Fandom, Fextralife, brbplay, DualShockers et un guide Steam, contre 60 % chez Destructoid ; 65 % retenu.",
-    "Les seuils 65 % / 45 % et la notion de « joueur le plus proche » viennent des wikis communautaires : les données tybayn du bundle ne couvrent que la vitesse.",
-    "Absence de preuve garantie en Cauchemar et Démence : une seule source l'affirme explicitement (wiki Fextralife) ; retirée du contenu enseigné (forcedEvidence reste à null faute de preuve garantie connue).",
-    "Ce qui compte exactement comme « bouger » (s'accroupir, marcher accroupi, tourner sur place) n'a pas été vérifié.",
-    "Représentation des vitesses : speed.min = 1,2 et speed.max = 2,25 (dans les 10 m), speed.alt = 1,7 (au-delà de 10 m) — choix de modélisation, à aligner si tybayn publie d'autres champs."
+    "Seuil quand un joueur bouge près d'elle : 65 % pour la plupart des sources, 60 % pour Destructoid.",
+    "Seuils 65 % / 45 % et notion de « joueur le plus proche » : wikis communautaires seulement (tybayn ne couvre que la vitesse).",
+    "Aucune preuve garantie connue en Cauchemar et Démence (une seule source l'affirme).",
+    "Ce qui compte comme « bouger » (s'accroupir, marcher accroupi, tourner sur place) : non vérifié."
   ]
 }

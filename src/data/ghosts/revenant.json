@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "1,0 m/s · 3,0 m/s dès qu'il te détecte · pas de LdV",
+    "summary": "1,0 m/s · 3,0 m/s s'il te détecte · n'accélère pas en LdV",
     "details": [
       "Vitesse de base en chasse : 1,0 m/s tant qu'il n'a détecté aucun joueur.",
       "Dès qu'il détecte un joueur (par la vue, la voix ou l'utilisation d'un appareil électronique), il accélère immédiatement à 3,0 m/s.",
@@ -58,7 +58,7 @@
   "confusions": [
     {
       "with": "mare",
-      "why": "Mêmes orbes et écriture. Le Cauchemar (Mare) chasse à 1,7 m/s avec l'accélération standard en LdV et son seuil dépend des lumières (60 % lumière éteinte, 40 % allumée). Le Revenant, lui, traîne à 1,0 m/s puis bondit à 3,0 m/s."
+      "why": "Mêmes orbes et écriture. Le Cauchemar chasse à 1,7 m/s avec l'accélération standard en LdV et son seuil dépend des lumières (60 % lumière éteinte, 40 % allumée). Le Revenant, lui, traîne à 1,0 m/s puis bondit à 3,0 m/s."
     },
     {
       "with": "thaye",
@@ -90,7 +90,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroï augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en LdV) et monte progressivement en LdV ; il ne descend jamais à 1,0 m/s."
+      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroi augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en LdV) et monte progressivement en LdV ; il ne descend jamais à 1,0 m/s."
     },
     {
       "with": "aswang",
@@ -110,7 +110,15 @@
     },
     {
       "with": "dayan",
-      "why": "Seulement les orbes en commun, mais le Dayan change aussi de vitesse d'un coup près des joueurs : à moins de 10 m, 1,2 m/s si tu restes immobile et 2,25 m/s si tu bouges ; plus loin, 1,7 m/s avec LdV standard. Il ne descend pas à 1,0 m/s et ne monte pas à 3,0 m/s."
+      "why": "Seulement les orbes en commun, mais la Dayan change aussi de vitesse d'un coup près des joueurs : à moins de 10 m, 1,2 m/s si tu restes immobile et 2,25 m/s si tu bouges ; plus loin, 1,7 m/s avec LdV standard. Elle ne descend pas à 1,0 m/s et ne monte pas à 3,0 m/s."
+    },
+    {
+      "with": "deogen",
+      "why": "Le Deogen alterne lui aussi lent et rapide (0,4 ↔ 3,0 m/s), mais à l'inverse : il fonce de loin et ralentit une fois sur toi, alors que le Revenant accélère quand il te détecte. Une seule preuve en commun (écriture)."
+    },
+    {
+      "with": "kormos",
+      "why": "Le Kormos accélère lui aussi quand il te détecte de loin (2,21 m/s), mais il ne te voit que si tu bouges à moins de 5 m : immobile et silencieux, tu lui échappes, pas au Revenant. Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [
@@ -145,7 +153,7 @@
         "Spirit Box, Orbes fantomatiques, Écriture fantomatique"
       ],
       "answer": 1,
-      "explain": "Revenant = orbes, écriture, températures glaciales. Orbes + écriture + D.O.T.S, c'est le Thayé ; EMF 5 + écriture + glaciales, l'Ombre ; Spirit Box + orbes + écriture, le Cauchemar (Mare)."
+      "explain": "Revenant = orbes, écriture, températures glaciales. Orbes + écriture + D.O.T.S, c'est le Thayé ; EMF 5 + écriture + glaciales, l'Ombre ; Spirit Box + orbes + écriture, le Cauchemar."
     },
     {
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
@@ -189,13 +197,13 @@
     {
       "q": "Dans quel groupe AUCUNE entité n'a l'accélération standard en ligne de vue ?",
       "choices": [
-        "Revenant, Djinn, Raiju, Moroï",
+        "Revenant, Djinn, Raiju, Moroi",
         "Revenant, Ombre, Démon, Yurei",
         "Revenant, Hantu, Deogen, Thayé",
         "Revenant, Les Jumeaux, Obambo, Gallu"
       ],
       "answer": 2,
-      "explain": "D'après le wiki tybayn, le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroï l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; Les Jumeaux ont une LdV particulière, mais en ont une."
+      "explain": "D'après le wiki tybayn, le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
     }
   ],
   "changes": [],
@@ -212,8 +220,6 @@
     "https://phasmophobia.wiki.fextralife.com/Revenant"
   ],
   "uncertain": [
-    "Rythme du ralentissement après la dernière position connue : le wiki Fandom (page Hunt) parle d'environ 0,75 m/s² (≈ 2,7 s pour redescendre à 1,0 m/s) ; non repris dans le contenu faute de seconde source (tybayn dit seulement « progressivement »).",
-    "Aucun changement du Revenant trouvé dans les notes de mise à jour 2025–2026 ; un guide (Blueprinted) lui attribue des vitesses 2,25 / 1,2 m/s qui sont en réalité celles du Dayan.",
-    "Revue : l'observation « pas très lents qui deviennent d'un coup très rapides » est passée de definitive à strong, car le Dayan (1,2 → 2,25 m/s près d'un joueur), le Djinn et le Raiju (1,7 → 2,5 m/s) produisent aussi des sauts de vitesse instantanés ; seul l'écart 1,0 → 3,0 m/s, mesuré, est propre au Revenant."
+    "Rythme du ralentissement après ta dernière position connue : environ 0,75 m/s² (≈ 2,7 s) selon le wiki Fandom, « progressif » selon tybayn."
   ]
 }

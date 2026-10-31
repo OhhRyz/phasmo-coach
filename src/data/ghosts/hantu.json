@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "1,4 à 2,7 m/s selon le froid · pas d'accélération en LdV",
+    "summary": "1,4 à 2,7 m/s selon le froid · n'accélère pas en LdV",
     "details": [
       "Pendant une chasse, sa vitesse dépend de la température de la pièce où il se trouve : plus la pièce est froide, plus il est rapide.",
       "Paliers : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, 2,1 m/s entre 9 et 12 °C, 2,3 m/s entre 6 et 9 °C, 2,4 m/s entre 3 et 6 °C, 2,5 m/s entre 0 et 3 °C et 2,7 m/s sous 0 °C.",
@@ -65,7 +65,8 @@
     { "with": "yurei", "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S ; il peut claquer une porte en faisant perdre 15 % de santé mentale et accélère en LdV." },
     { "with": "onryo", "why": "Mêmes orbes + glaciales, mais l'Onryo a la Spirit Box ; il chasse dès 60 %, souffle les flammes (qui agissent comme un crucifix) et accélère en LdV." },
     { "with": "kormos", "why": "Même UV + orbes, mais le Kormos a la Spirit Box ; quasi aveugle, il te repère surtout à tes pas et peut chasser plus tôt si un joueur sprinte près de lui." },
-    { "with": "thaye", "why": "Le Thayé n'accélère pas non plus en LdV, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes." }
+    { "with": "thaye", "why": "Le Thayé n'accélère pas non plus en LdV, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes." },
+    { "with": "mare", "why": "Le Cauchemar éteint lui aussi beaucoup de lumières, mais interrupteur par interrupteur, et ne peut jamais en rallumer ; son seuil dépend de la lumière de sa pièce (60 % éteinte, 40 % allumée). Une seule preuve en commun (orbes)." }
   ],
   "observations": [
     { "text": "Pendant une chasse, alors que le disjoncteur est coupé, tu vois une buée blanche s'échapper de l'entité à intervalles réguliers.", "kind": "hunt", "strength": "definitive" },
@@ -114,7 +115,7 @@
   "changes": [
     "Aucun changement de preuves, de vitesse ni de seuil de chasse trouvé dans les mises à jour 2025–2026.",
     "Chronicle v0.13 (24 juin 2025) : correction d'un bug où la buée du Hantu restait visible après la mort du joueur quand l'option « les morts prolongent la chasse » était activée (sans effet sur l'identification).",
-    "Le test « changements de vitesse aléatoires » n'est plus présenté comme définitif ici (voir « uncertain »)."
+    "Le test « changements de vitesse aléatoires » n'est plus définitif : l'Obambo (décembre 2025) peut lui aussi changer de vitesse en pleine chasse."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -128,8 +129,6 @@
     "https://insider-gaming.com/phasmophobia-chronicle-update-v0-13-patch-notes/"
   ],
   "uncertain": [
-    "Les paliers de vitesse (1,4 / 1,75 / 2,1 / 2,3 / 2,4 / 2,5 / 2,7 m/s) sont confirmés par le tableau « Hantu Speeds » du wiki tybayn actuel ; seules les bornes exactes (15 °C inclus ou non, etc.) restent non vérifiées.",
-    "Le test « vitesse qui change au hasard » est marqué définitif chez tybayn (2024) ; rétrogradé ici car l'Obambo (ajouté en décembre 2025) peut changer d'état, donc de vitesse, en pleine chasse.",
-    "Correctif v0.13 sur la buée : formulation reprise d'extraits des notes officielles relayés par la recherche web ; la page officielle n'a pas pu être ouverte directement."
+    "Bornes exactes des paliers de température (15 °C inclus ou non, etc.) : non vérifiées."
   ]
 }

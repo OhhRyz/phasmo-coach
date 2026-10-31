@@ -15,7 +15,7 @@
     "alt": 1.7,
     "isRange": false,
     "los": true,
-    "summary": "1,7 normal · 1,96 enragé · 1,36 m/s affaibli · LdV",
+    "summary": "1,7 m/s · 1,96 enragé · 1,36 affaibli · accélère en LdV",
     "details": [
       "État normal (état de départ) : 1,7 m/s pendant les chasses.",
       "État enragé : 1,96 m/s.",
@@ -111,7 +111,7 @@
     },
     {
       "with": "dayan",
-      "why": "EMF 5 + Spirit Box en commun. Le Dayan change de vitesse selon tes mouvements quand il est à moins de 10 m (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile), pas selon tes protections. 3e preuve : orbes vs UV."
+      "why": "EMF 5 + Spirit Box en commun. La Dayan change de vitesse selon tes mouvements quand elle est à moins de 10 m (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile), pas selon tes protections. 3e preuve : orbes vs UV."
     },
     {
       "with": "phantom",
@@ -147,7 +147,7 @@
     },
     {
       "with": "moroi",
-      "why": "Comme un Gallu affaibli, le Moroï est aveuglé plus longtemps que la normale par l'encens, et sa vitesse varie aussi, mais selon la santé moyenne de l'équipe. Une seule preuve en commun (Spirit Box)."
+      "why": "Comme un Gallu affaibli, le Moroi est aveuglé plus longtemps que la normale par l'encens, et sa vitesse varie aussi, mais selon la santé moyenne de l'équipe. Une seule preuve en commun (Spirit Box)."
     },
     {
       "with": "obambo",
@@ -229,7 +229,7 @@
         "EMF niveau 5, Ultraviolet, Spirit Box"
       ],
       "answer": 3,
-      "explain": "EMF 5 + UV + Spirit Box. Les leurres sont le Spectre, le Dayan et le Poltergeist, qui partagent chacun deux de ces preuves."
+      "explain": "EMF 5 + UV + Spirit Box. Les leurres sont le Spectre, la Dayan et le Poltergeist, qui partagent chacun deux de ces preuves."
     },
     {
       "q": "Comment évoluent tes protections contre un Gallu affaibli ?",
@@ -255,7 +255,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que le Dayan et l'Obambo : absente de la sauvegarde tybayn de décembre 2024."
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que la Dayan et l'Obambo : absente de la sauvegarde tybayn de décembre 2024."
   ],
   "sources": [
     "tybayn wiki: wiki_gallu_states_title",
@@ -278,13 +278,11 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Aucune preuve forcée (Cauchemar/Démence) n'est attribuée au Gallu par les sources trouvées : forcedEvidence laissé à null sans confirmation officielle.",
-    "L'accélération en LdV calculée depuis la vitesse du moment est une observation du wiki tybayn (« semble »), pas une donnée officielle ; la vitesse maximale en LdV par état n'est pas chiffrée.",
-    "L'effet exact d'un encensement ou d'un crucifix déclenché pendant une chasse sur la vitesse de cette même chasse n'est pas documenté en détail.",
-    "On ne sait pas si un Gallu enragé est ralenti par le sel de rang 3.",
-    "Délai avant nouvelle chasse après l'encens et délai entre deux chasses non documentés (supposés standard, non vérifiés).",
-    "Certains guides tiers décrivent un ralentissement « par épuisement » en cours de chasse : non retenu, car contraire au wiki tybayn (l'état enragé dure jusqu'à la fin de la chasse).",
-    "Une source tierce (résumé de guide) parle d'un passage en enragé « après un délai » quand l'encens est utilisé hors chasse ; le wiki tybayn dit « immédiatement ». Version tybayn retenue.",
-    "Le passage en affaibli à la fin de la chasse même où il s'est enragé découle du texte tybayn (« jusqu'à la fin d'une chasse ») et de guides tiers (« si une chasse se termine alors qu'il est enragé ») ; non testé en jeu."
+    "Aucune preuve garantie connue en Cauchemar et Démence, sans confirmation officielle.",
+    "Vitesse maximale en LdV dans chaque état : non chiffrée (l'accélération semble partir de sa vitesse du moment).",
+    "Effet d'un encens ou d'un crucifix utilisé pendant une chasse sur la vitesse de cette même chasse : non documenté.",
+    "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu.",
+    "Délai après l'encens et délai entre deux chasses : supposés standard, non vérifiés.",
+    "Passage en affaibli à la fin de la chasse même où il s'est enragé : déduit du texte tybayn, non testé en jeu."
   ]
 }

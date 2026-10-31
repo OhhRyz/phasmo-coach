@@ -26,7 +26,7 @@
     "normal": 60,
     "low": 40,
     "high": 60,
-    "summary": "60 % (lumière éteinte) / 40 % (lumière allumée)",
+    "summary": "60 % lumière éteinte · 40 % lumière allumée",
     "details": [
       "Ne chasse pas avant 40 % de santé mentale moyenne si l'interrupteur de la pièce où il se trouve est en position allumée (quel que soit l'état du disjoncteur).",
       "Chasse dès 60 % si cet interrupteur est en position éteinte, ou si les ampoules de la pièce sont cassées (quelle que soit la position de l'interrupteur).",
@@ -100,7 +100,7 @@
     },
     {
       "with": "moroi",
-      "why": "Spirit Box + écriture en commun. Le Moroï maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse. 3e preuve : températures glaciales vs orbes."
+      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse. 3e preuve : températures glaciales vs orbes."
     },
     {
       "with": "deogen",
@@ -116,7 +116,7 @@
     },
     {
       "with": "dayan",
-      "why": "Spirit Box + orbes en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile. 3e preuve : EMF 5 vs écriture."
+      "why": "Spirit Box + orbes en commun. À moins de 10 m d'un joueur, la Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile. 3e preuve : EMF 5 vs écriture."
     },
     {
       "with": "kormos",
@@ -246,7 +246,6 @@
     "https://www.screenhype.co.uk/how-to-identify-dayan-gallu-obambo-ghosts-phasmophobia/"
   ],
   "uncertain": [
-    "Aucun changement direct du Cauchemar n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
-    "Le bug « ne peut pas allumer téléviseurs et ordinateurs » pourrait être corrigé un jour : n'utilise pas une télé ou un ordinateur allumé pour éliminer le Cauchemar."
+    "Le bug « ne peut pas allumer téléviseurs et ordinateurs » pourrait être corrigé : ne l'élimine pas sur une télé ou un ordinateur allumé."
   ]
 }

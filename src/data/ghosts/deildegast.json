@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "3,0 → 0,4 m/s selon les objets utilisés · pas de LdV",
+    "summary": "3,0 → 0,4 m/s selon les objets · n'accélère pas en LdV",
     "details": [
       "Sa vitesse de chasse dépend du nombre d'objets différents utilisés ou ramassés par les joueurs depuis la dernière chasse (ou tentative de chasse).",
       "Départ à 3,0 m/s ; chaque action retire 0,1 m/s, jusqu'à 0,4 m/s au minimum (26 actions). Repères : 9 objets = 2,1 m/s · 13 = 1,7 m/s · 20 = 1,0 m/s.",
@@ -200,7 +200,7 @@
       "explain": "Chaque objet ne compte qu'une fois jusqu'à la prochaine chasse : il faut varier les objets pour le ralentir."
     },
     {
-      "q": "Lequel de ces gestes ne ralentit PAS le Deildegast ?",
+      "q": "Laquelle de ces situations ne ralentit PAS le Deildegast ?",
       "choices": [
         "Actionner un interrupteur",
         "Ouvrir un robinet",
@@ -249,11 +249,11 @@
     "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
   ],
   "uncertain": [
-    "Seuil de chasse de 50 % : donné par Phasmopedia et un autre guide, pas documenté par tybayn.",
-    "Version et date d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source agrégatrice les relie explicitement au Deildegast.",
-    "Fextralife précise que les portes, l'équipement et les objets maudits ne comptent pas ; tybayn exclut l'équipement mais ne mentionne ni les portes ni les objets maudits.",
-    "Pas de preuve garantie selon les wikis (n'importe laquelle des trois peut être retirée) ; un guide Steam isolé affirme le contraire pour une autre combinaison de preuves, donc écarté.",
-    "Les tests de confirmation sont déduits des mécanismes documentés par tybayn (aucun test officiel tybayn n'a pu être lu). Le second est noté définitif parce qu'un Thayé ne redevient jamais plus rapide ; un Hantu, dont la vitesse suit la température des pièces, pourrait en théorie brouiller une mesure faite à l'oreille.",
-    "Effet de l'encens et du crucifix : supposé standard, non documenté (Fextralife indique qu'un crucifix qui empêche une chasse réinitialise aussi le compteur, ce qui correspond à la « tentative de chasse » de tybayn)."
+    "Seuil de chasse de 50 % : donné par les guides, pas documenté par tybayn.",
+    "Version d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source la relie au Deildegast.",
+    "Portes, équipement et objets maudits ne compteraient pas (Fextralife) ; tybayn n'exclut que l'équipement.",
+    "Aucune preuve garantie selon les wikis ; un guide isolé affirme le contraire.",
+    "Tests de confirmation déduits des mécanismes décrits par tybayn, sans test officiel : un Hantu pourrait brouiller une mesure faite à l'oreille.",
+    "Effet de l'encens et du crucifix : supposé standard ; un crucifix qui empêche une chasse remettrait aussi le compteur à zéro (Fextralife)."
   ]
 }

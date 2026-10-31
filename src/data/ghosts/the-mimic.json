@@ -113,7 +113,7 @@
     },
     {
       "with": "the-twins",
-      "why": "Jumeaux : Spirit Box + Températures glaciales, mais aussi l'EMF niveau 5. Leurs vitesses de base différentes d'une chasse à l'autre (1,53 / 1,87 m/s) peuvent ressembler à un Mimic qui change d'entité. Le Djinn, le Raiju, le Gallu et l'Obambo peuvent aussi changer d'allure d'une chasse à l'autre : ne conclus au Mimic que si le comportement change vraiment de nature."
+      "why": "Jumeaux : Spirit Box + Températures glaciales, mais aussi l'EMF niveau 5. Leurs vitesses de base différentes d'une chasse à l'autre (environ 1,5 / 1,9 m/s) peuvent ressembler à un Mimic qui change d'entité. Le Djinn, le Raiju, le Gallu et l'Obambo peuvent aussi changer d'allure d'une chasse à l'autre : ne conclus au Mimic que si le comportement change vraiment de nature."
     },
     {
       "with": "jinn",
@@ -125,11 +125,6 @@
     }
   ],
   "observations": [
-    {
-      "text": "Partie à 0 preuve : à la caméra, tu vois quand même des orbes flotter dans la pièce favorite.",
-      "kind": "tell",
-      "strength": "definitive"
-    },
     {
       "text": "D'une chasse à l'autre, l'entité semble changer d'identité : une fois très rapide sans jamais accélérer, la fois suivante à vitesse normale avec accélération quand elle te voit.",
       "kind": "hunt",
@@ -231,9 +226,9 @@
     "https://mp1st.com/title-updates-and-patches/phasmophobia-hotfix-update-1-000-018-first-chronicle-fixes"
   ],
   "uncertain": [
-    "Bornes du seuil de chasse (12 % à 100 %) issues de la sauvegarde de déc. 2024 : si le Mimic peut imiter les entités ajoutées depuis (Obambo calme vers 10 %, Kormos jusqu'à 70 %, Gallu enragé à 60 %), ces bornes peuvent avoir changé.",
-    "Capacité du Mimic à imiter chacune des entités de 2025–2026 (Gallu, Obambo, Dayan, Aswang, Kormos, Deildegast) : Phasmopedia indique qu'il peut imiter le Kormos et le Deildegast, le reste n'est pas vérifié.",
-    "Un blog affirme qu'un Mimic au modèle masculin ne peut pas imiter la Banshee ni la Dayan (entités uniquement féminines) : non vérifié.",
-    "Selon Phasmopedia, il commence la partie comme une entité standard, tente son premier changement 1 min après l'ouverture de la porte et ne change pas pendant une chasse ou un événement : non confirmé par tybayn."
+    "Bornes du seuil (12 à 100 %) issues de 2024 : elles changent s'il imite les entités récentes (Obambo calme vers 10 %…).",
+    "Peut-il imiter chacune des entités de 2025–2026 ? Phasmopedia ne le confirme que pour le Kormos et le Deildegast.",
+    "Un Mimic au modèle masculin peut-il imiter la Banshee ou la Dayan (entités féminines) ? Non vérifié.",
+    "Commence-t-il comme une entité standard, avec un 1er changement 1 min après l'ouverture de la porte et aucun changement en chasse ? Phasmopedia seulement."
   ]
 }

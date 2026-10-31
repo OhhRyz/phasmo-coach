@@ -73,8 +73,8 @@
         },
         {
           "id": "chasses-12",
-          "text": "Une entité peut lancer une chasse depuis n'importe quel endroit où elle se trouve, y compris hors de sa pièce préférée lors d'un déplacement. Une chasse qui démarre depuis une autre pièce ne prouve donc pas un changement de pièce.",
-          "q": "Une chasse qui part d'une autre pièce prouve-t-elle que l'entité a changé de pièce préférée ?",
+          "text": "Une entité peut lancer une chasse depuis n'importe quel endroit où elle se trouve, y compris hors de sa pièce favorite lors d'un déplacement. Une chasse qui démarre depuis une autre pièce ne prouve donc pas un changement de pièce.",
+          "q": "Une chasse qui part d'une autre pièce prouve-t-elle que l'entité a changé de pièce favorite ?",
           "a": "Non, une entité peut chasser depuis n'importe où lors de ses déplacements."
         },
         {
@@ -91,7 +91,7 @@
         },
         {
           "id": "chasses-15",
-          "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à votre position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
+          "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à ta position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
           "q": "Utiliser la radio globale en chasse révèle-t-il la position des autres joueurs ?",
           "a": "Non, seulement la vôtre (c'est un appareil électronique tenu)."
         }
@@ -104,9 +104,9 @@
       "facts": [
         {
           "id": "vitesses-01",
-          "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue (LdV) continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65x sa vitesse de base.",
+          "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue (LdV) continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65 fois sa vitesse de base.",
           "q": "Combien de secondes de LdV continue faut-il à une entité standard pour atteindre sa vitesse maximale ?",
-          "a": "13 secondes, jusqu'à 1,65x sa vitesse de base."
+          "a": "13 secondes, jusqu'à 1,65 fois sa vitesse de base."
         },
         {
           "id": "vitesses-02",
@@ -116,13 +116,13 @@
         },
         {
           "id": "vitesses-03",
-          "text": "Selon le wiki, toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. Les Jumeaux ont un comportement de LdV particulier.",
+          "text": "Selon le wiki tybayn, toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. S'y ajoutent le Deildegast (vitesse verrouillée pendant la chasse) et le Kormos (LdV seulement si tu bouges à moins de 5 m) ; les Jumeaux ont une LdV particulière.",
           "q": "Quelles entités le wiki cite-t-il comme n'ayant pas d'accélération standard en LdV ?",
           "a": "Revenant, Hantu, Deogen et Thayé."
         },
         {
           "id": "vitesses-04",
-          "text": "L'Aswang a une vitesse de base de 1,53 m/s. Il accélère lui aussi jusqu'à 1,65x en LdV, mais en 8,667 s de LdV continue au lieu de 13 s.",
+          "text": "L'Aswang a une vitesse de base de 1,53 m/s. Il accélère lui aussi jusqu'à 1,65 fois en LdV, mais en 8,667 s de LdV continue au lieu de 13 s.",
           "q": "En combien de temps de LdV un Aswang atteint-il sa vitesse maximale ?",
           "a": "8,667 secondes (au lieu de 13)."
         },
@@ -146,13 +146,13 @@
         },
         {
           "id": "vitesses-08",
-          "text": "La vitesse du Moroï dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de LdV continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
-          "q": "Quelle vitesse maximale un Moroï peut-il atteindre ?",
+          "text": "La vitesse du Moroi dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de LdV continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+          "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
           "a": "3,71 m/s, la plus rapide de toutes les entités."
         },
         {
           "id": "vitesses-09",
-          "text": "Le Thayé n'accélère jamais en LdV. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroï sans LdV (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en LdV continue.",
+          "text": "Le Thayé n'accélère jamais en LdV. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroi sans LdV (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en LdV continue.",
           "q": "À quelle vitesse se déplace un Thayé au plus jeune âge ?",
           "a": "2,75 m/s, même avec une LdV."
         },
@@ -207,8 +207,8 @@
         },
         {
           "id": "encens-02",
-          "text": "Le Moroï a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base de 2,25 m/s. Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
-          "q": "Combien de temps un Moroï reste-t-il aveuglé par un encens de rang 1 ?",
+          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base de 2,25 m/s. Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
+          "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 ?",
           "a": "7 secondes (contre 5 s en standard)."
         },
         {
@@ -310,13 +310,13 @@
         },
         {
           "id": "equipement-04",
-          "text": "Sur la Spirit Box de rang 1, une LED blanche ou bleue près de l'icône micro en bas à droite indique que le jeu entend votre micro. La LED à droite de l'icône de fantôme s'allume en rouge si la question est reconnue sans réponse, en blanc si l'entité répond.",
+          "text": "Sur la Spirit Box de rang 1, une LED blanche ou bleue près de l'icône micro en bas à droite indique que le jeu entend ton micro. La LED à droite de l'icône de fantôme s'allume en rouge si la question est reconnue sans réponse, en blanc si l'entité répond.",
           "q": "Sur une Spirit Box de rang 1, que signifie la LED rouge à côté de l'icône de fantôme ?",
           "a": "Question reconnue, mais aucune réponse (le blanc indique une réponse)."
         },
         {
           "id": "equipement-05",
-          "text": "Sur la Spirit Box de rang 2, une icône micro en haut à gauche indique que votre micro est entendu. En bas à droite, l'icône X signale une question reconnue sans réponse, et l'icône de fantôme une réponse.",
+          "text": "Sur la Spirit Box de rang 2, une icône micro en haut à gauche indique que ton micro est entendu. En bas à droite, l'icône X signale une question reconnue sans réponse, et l'icône de fantôme une réponse.",
           "q": "Sur une Spirit Box de rang 2, quelle icône signale une question reconnue sans réponse ?",
           "a": "L'icône X en bas à droite."
         },
@@ -401,14 +401,14 @@
         },
         {
           "id": "preuves-05",
-          "text": "Les orbes du Mimic se comportent exactement comme ceux des autres entités : ils restent dans la pièce préférée et n'ont aucune différence visuelle.",
-          "q": "Les orbes du Mimic suivent-ils l'entité hors de sa pièce préférée ?",
-          "a": "Non, ils restent dans la pièce préférée comme des orbes normaux."
+          "text": "Les orbes du Mimic se comportent exactement comme ceux des autres entités : ils restent dans la pièce favorite et n'ont aucune différence visuelle.",
+          "q": "Les orbes du Mimic suivent-ils l'entité hors de sa pièce favorite ?",
+          "a": "Non, ils restent dans la pièce favorite comme des orbes normaux."
         },
         {
           "id": "preuves-06",
           "text": "La température baisse dans toute pièce où l'entité a passé du temps (déplacements fréquents, traque de la Banshee). La seule façon fiable de confirmer un changement de pièce est de voir des orbes dans une autre pièce ou que le miroir montre une nouvelle pièce.",
-          "q": "Comment confirmer de façon fiable qu'une entité a changé de pièce préférée ?",
+          "q": "Comment confirmer de façon fiable qu'une entité a changé de pièce favorite ?",
           "a": "Orbes dans une autre pièce, ou miroir hanté montrant une nouvelle pièce."
         },
         {
@@ -431,9 +431,9 @@
         },
         {
           "id": "preuves-10",
-          "text": "Le Fantôme ne disparaît d'une photo que si celle-ci est étiquetée comme photo d'entité (Ghost) dans le journal. Il peut donc apparaître sur d'autres photos.",
+          "text": "Le Fantôme ne disparaît d'une photo que si celle-ci est étiquetée « Fantôme » (photo de l'entité) dans le journal. Il peut donc apparaître sur d'autres photos.",
           "q": "À quelle condition le Fantôme disparaît-il d'une photo ?",
-          "a": "Quand la photo est étiquetée comme photo d'entité (Ghost) dans le journal."
+          "a": "Quand la photo est étiquetée « Fantôme » (photo de l'entité) dans le journal."
         },
         {
           "id": "preuves-11",
@@ -461,8 +461,8 @@
         },
         {
           "id": "preuves-15",
-          "text": "Trouver l'os dans la pièce préférée relève du hasard et ne désigne pas un Goryo : il peut s'y trouver avec n'importe quelle entité.",
-          "q": "L'os dans la pièce préférée indique-t-il un Goryo ?",
+          "text": "Trouver l'os dans la pièce favorite relève du hasard et ne désigne pas un Goryo : il peut s'y trouver avec n'importe quelle entité.",
+          "q": "L'os dans la pièce favorite indique-t-il un Goryo ?",
           "a": "Non, c'est le hasard."
         }
       ]
@@ -510,7 +510,7 @@
         },
         {
           "id": "portees-07",
-          "text": "Si vous restez complètement immobile sans faire de bruit au micro, le Kormos ne peut pas vous détecter, même si vous pouvez toujours mourir s'il passe par hasard sur vous.",
+          "text": "Si tu restes complètement immobile sans faire de bruit au micro, le Kormos ne peut pas te détecter, même si tu peux toujours mourir s'il passe par hasard sur toi.",
           "q": "Comment échapper à la détection d'un Kormos ?",
           "a": "Rester totalement immobile et silencieux au micro."
         },
@@ -534,7 +534,7 @@
         },
         {
           "id": "portees-11",
-          "text": "L'Ombre n'effectue aucune action donnant une lecture EMF et ne lance pas de chasse tant qu'elle est dans la même pièce qu'un joueur, pièce préférée ou non. Elle peut toutefois sortir et chasser depuis une pièce adjacente, ou atteindre des objets de la pièce depuis l'extérieur.",
+          "text": "L'Ombre n'effectue aucune action donnant une lecture EMF et ne lance pas de chasse tant qu'elle est dans la même pièce qu'un joueur, pièce favorite ou non. Elle peut toutefois sortir et chasser depuis une pièce adjacente, ou atteindre des objets de la pièce depuis l'extérieur.",
           "q": "Une Ombre peut-elle chasser quand elle est dans la même pièce qu'un joueur ?",
           "a": "Non, mais elle peut chasser depuis une pièce adjacente."
         }
@@ -547,9 +547,9 @@
       "facts": [
         {
           "id": "maudits-01",
-          "text": "Le miroir hanté, une fois activé, montre la pièce préférée de l'entité. Pendant son utilisation, une source de lumière apparaît dans cette pièce et les autres joueurs voient aussi la pièce dans le miroir.",
+          "text": "Le miroir hanté, une fois activé, montre la pièce favorite de l'entité. Pendant son utilisation, une source de lumière apparaît dans cette pièce et les autres joueurs voient aussi la pièce dans le miroir.",
           "q": "Quelle pièce montre le miroir hanté ?",
-          "a": "La pièce préférée de l'entité."
+          "a": "La pièce favorite de l'entité."
         },
         {
           "id": "maudits-02",
@@ -571,9 +571,9 @@
         },
         {
           "id": "maudits-05",
-          "text": "À la planche Ouija, « Où êtes-vous ? » donne la pièce actuelle de l'entité, pas sa pièce préférée, pour 50 % de santé mentale. Seul le miroir montre la pièce préférée.",
+          "text": "À la planche Ouija, « Où êtes-vous ? » donne la pièce actuelle de l'entité, pas sa pièce favorite, pour 50 % de santé mentale. Seul le miroir montre la pièce favorite.",
           "q": "Que donne la question « Où êtes-vous ? » à la planche Ouija ?",
-          "a": "La pièce actuelle de l'entité (pas la préférée), pour 50 % de santé mentale."
+          "a": "La pièce actuelle de l'entité (pas la favorite), pour 50 % de santé mentale."
         },
         {
           "id": "maudits-06",
@@ -631,7 +631,7 @@
         },
         {
           "id": "maudits-15",
-          "text": "Un paquet de tarot contient 10 cartes aléatoires. La Mort (Death, 10 %) déclenche une chasse maudite, Le Pendu (The Hanged Man, 1 %) tue le joueur, L'Ermite (The Hermit, 10 %) enferme l'entité 90 s dans sa pièce préférée sans effet sur les chasses, et Le Fou (The Fool, 17 %) n'a aucun effet et sort à 100 % pendant les chasses.",
+          "text": "Un paquet de tarot contient 10 cartes aléatoires. La Mort (Death, 10 %) déclenche une chasse maudite, Le Pendu (The Hanged Man, 1 %) tue le joueur, L'Ermite (The Hermit, 10 %) enferme l'entité 90 s dans sa pièce favorite sans effet sur les chasses, et Le Fou (The Fool, 17 %) n'a aucun effet et sort à 100 % pendant les chasses.",
           "q": "Quelle carte de tarot sort à coup sûr si on tire pendant une chasse ?",
           "a": "Le Fou (The Fool), qui n'a aucun effet."
         }
@@ -704,9 +704,9 @@
         },
         {
           "id": "sante-11",
-          "text": "Le vœu « Je souhaite être sain d'esprit » ramène la santé mentale de tous à la moyenne de 50 %. En contrepartie, la pièce préférée devient une pièce aléatoire et le drain de santé mentale augmente de 50 %.",
+          "text": "Le vœu « Je souhaite être sain d'esprit » ramène la santé mentale de tous à la moyenne de 50 %. En contrepartie, la pièce favorite devient une pièce aléatoire et le drain de santé mentale augmente de 50 %.",
           "q": "Quel est l'inconvénient du vœu « Je souhaite être sain d'esprit » ?",
-          "a": "Pièce préférée aléatoire et drain de santé mentale augmenté de 50 %."
+          "a": "Pièce favorite aléatoire et drain de santé mentale augmenté de 50 %."
         },
         {
           "id": "sante-12",
@@ -732,7 +732,7 @@
   "trueFalse": [
     {
       "id": "tf-01",
-      "claim": "Face à un Aswang, la chasse se termine dès qu'il vous voit entrer dans une cachette.",
+      "claim": "Face à un Aswang, la chasse se termine dès qu'il te voit entrer dans une cachette.",
       "answer": false,
       "explain": "L'Aswang doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête."
     },
@@ -750,7 +750,7 @@
     },
     {
       "id": "tf-04",
-      "claim": "Si l'entité chasse depuis une autre pièce ou qu'une autre pièce devient froide, c'est qu'elle a changé de pièce préférée.",
+      "claim": "Si l'entité chasse depuis une autre pièce ou qu'une autre pièce devient froide, c'est qu'elle a changé de pièce favorite.",
       "answer": false,
       "explain": "Une entité peut chasser depuis n'importe où lors de ses déplacements et refroidit chaque pièce où elle passe du temps. Seuls des orbes dans une autre pièce ou le miroir le confirment."
     },
@@ -780,9 +780,9 @@
     },
     {
       "id": "tf-09",
-      "claim": "Si l'os est dans la pièce préférée, l'entité est un Goryo.",
+      "claim": "Si l'os est dans la pièce favorite, l'entité est un Goryo.",
       "answer": false,
-      "explain": "C'est le hasard : l'os peut se trouver dans la pièce préférée de n'importe quelle entité."
+      "explain": "C'est le hasard : l'os peut se trouver dans la pièce favorite de n'importe quelle entité."
     },
     {
       "id": "tf-10",
@@ -824,13 +824,13 @@
       "id": "tf-16",
       "claim": "Le Fantôme n'apparaît sur aucune photo.",
       "answer": false,
-      "explain": "Il ne disparaît que des photos étiquetées comme photo d'entité (Ghost) dans le journal."
+      "explain": "Il ne disparaît que des photos étiquetées « Fantôme » (photos de l'entité) dans le journal."
     },
     {
       "id": "tf-17",
-      "claim": "Une Ombre ne fait aucune action EMF et ne chasse pas tant qu'elle est dans la même pièce qu'un joueur, pièce préférée ou non.",
+      "claim": "Une Ombre ne fait aucune action EMF et ne chasse pas tant qu'elle est dans la même pièce qu'un joueur, pièce favorite ou non.",
       "answer": true,
-      "explain": "Ce n'est pas limité à la pièce préférée. Elle peut quand même sortir et chasser depuis une pièce adjacente."
+      "explain": "Ce n'est pas limité à la pièce favorite. Elle peut quand même sortir et chasser depuis une pièce adjacente."
     },
     {
       "id": "tf-18",
@@ -840,7 +840,7 @@
     },
     {
       "id": "tf-19",
-      "claim": "Les orbes du Mimic restent dans la pièce préférée, comme les orbes des autres entités.",
+      "claim": "Les orbes du Mimic restent dans la pièce favorite, comme les orbes des autres entités.",
       "answer": true,
       "explain": "La rumeur d'orbes qui suivent l'entité vient d'un YouTubeur ; ils n'ont aucune différence de comportement ni d'aspect."
     },
@@ -900,15 +900,15 @@
     },
     {
       "id": "tf-29",
-      "claim": "La planche Ouija indique la pièce préférée de l'entité.",
+      "claim": "La planche Ouija indique la pièce favorite de l'entité.",
       "answer": false,
-      "explain": "Elle indique sa position actuelle. Seul le miroir hanté montre la pièce préférée."
+      "explain": "Elle indique sa position actuelle. Seul le miroir hanté montre la pièce favorite."
     },
     {
       "id": "tf-30",
       "claim": "Utiliser la radio globale pendant une chasse fait détecter les autres joueurs par l'entité.",
       "answer": false,
-      "explain": "Elle n'alerte l'entité qu'à votre propre position, car cela compte comme allumer un appareil électronique tenu."
+      "explain": "Elle n'alerte l'entité qu'à ta propre position, car cela compte comme allumer un appareil électronique tenu."
     },
     {
       "id": "tf-31",
@@ -926,11 +926,11 @@
       "id": "tf-33",
       "claim": "Le Thayé n'accélère jamais avec la ligne de vue.",
       "answer": true,
-      "explain": "Jeune, il va à 2,75 m/s même en LdV, puis ralentit en vieillissant. C'est la différence clé avec le Moroï."
+      "explain": "Jeune, il va à 2,75 m/s même en LdV, puis ralentit en vieillissant. C'est la différence clé avec le Moroi."
     },
     {
       "id": "tf-34",
-      "claim": "Le Moroï peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+      "claim": "Le Moroi peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
       "answer": true,
       "explain": "À 0 % de santé mentale moyenne, avec 13 s de LdV continue."
     },
@@ -944,7 +944,7 @@
       "id": "tf-36",
       "claim": "Un Kormos ne peut pas détecter un joueur parfaitement immobile et silencieux.",
       "answer": true,
-      "explain": "Il ne vous détecte pas, mais il peut quand même vous tuer s'il passe par hasard sur vous."
+      "explain": "Il ne te détecte pas, mais il peut quand même te tuer s'il passe par hasard sur toi."
     },
     {
       "id": "tf-37",

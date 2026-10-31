@@ -21,7 +21,7 @@
     "normal": 60,
     "low": 60,
     "high": 100,
-    "summary": "60 % · n'importe quel niveau via sa capacité",
+    "summary": "60 % · à toute santé mentale à chaque 3e flamme éteinte",
     "details": [
       "Chasse normalement à partir de 60 % de santé mentale moyenne.",
       "Sa capacité lui permet de tenter une chasse à n'importe quel niveau de santé mentale après chaque 3e flamme éteinte."
@@ -65,8 +65,8 @@
     { "with": "yokai", "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu des glaciales ; il peut chasser jusqu'à 80 % si tu parles dans sa pièce et, en chasse, ne t'entend qu'à 2,5 m." },
     { "with": "dayan", "why": "Même Spirit Box + orbes, mais la Dayan a l'EMF 5 au lieu des glaciales ; à moins de 10 m, sa vitesse et son seuil dépendent de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile). Elle est toujours de sexe féminin." },
     { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu des glaciales ; quasi aveugle, il te repère à tes pas et peut chasser plus tôt si un joueur sprinte près de lui." },
-    { "with": "the-twins", "why": "Même Spirit Box + glaciales, mais Les Jumeaux ont l'EMF 5 au lieu des orbes ; leur vitesse de chasse est de ~1,5 ou ~1,9 m/s selon la chasse et ils peuvent faire deux interactions en même temps." },
-    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroï a l'écriture au lieu des orbes ; il maudit ceux qui l'entendent à la Spirit Box ou au micro parabolique et devient plus rapide quand la santé mentale baisse." },
+    { "with": "the-twins", "why": "Même Spirit Box + glaciales, mais les Jumeaux ont l'EMF 5 au lieu des orbes ; leur vitesse de chasse est de ~1,5 ou ~1,9 m/s selon la chasse et ils peuvent faire deux interactions en même temps." },
+    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu des orbes ; il maudit ceux qui l'entendent à la Spirit Box ou au micro parabolique et devient plus rapide quand la santé mentale baisse." },
     { "with": "hantu", "why": "Mêmes orbes + glaciales, mais le Hantu a l'UV au lieu de la Spirit Box ; il souffle une buée glacée en chasse disjoncteur coupé et sa vitesse dépend de la température, sans accélération en LdV." },
     { "with": "revenant", "why": "Mêmes orbes + glaciales, mais le Revenant a l'écriture au lieu de la Spirit Box ; il rampe à 1,0 m/s tant qu'il ne te détecte pas, puis fonce à 3,0 m/s." },
     { "with": "yurei", "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S au lieu de la Spirit Box ; il peut claquer une porte en faisant perdre 15 % de santé mentale, et l'encens le piège dans sa pièce pendant 90 s." },
@@ -131,7 +131,6 @@
     "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/"
   ],
   "uncertain": [
-    "Aucune note de patch 2025–2026 ne mentionne l'Onryo ; un ajustement mineur non documenté n'est pas exclu.",
-    "La portée de 4 m (flamme qui empêche une chasse) vient de la sauvegarde 2024 ; le wiki actuel ne donne que la portée de 5 m du souffle normal des lumières à feu."
+    "Portée de 4 m d'une flamme qui empêche sa chasse : sauvegarde de 2024, pas reprise par le wiki actuel."
   ]
 }

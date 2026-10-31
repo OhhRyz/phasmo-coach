@@ -119,6 +119,10 @@
     {
       "with": "aswang",
       "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV."
+    },
+    {
+      "with": "obake",
+      "why": "L'Obake se reconnaît lui aussi à son clignotement en chasse : il change de modèle le temps d'un clignotement, alors que l'Oni reste simplement visible plus longtemps. Une seule preuve en commun (EMF 5)."
     }
   ],
   "observations": [
@@ -128,17 +132,17 @@
       "strength": "strong"
     },
     {
-      "text": "Juste après un événement fantôme, l'écran de santé mentale montre que tu as perdu 20 % d'un coup.",
+      "text": "Juste après un événement de l'entité, l'écran de santé mentale montre que tu as perdu 20 % d'un coup.",
       "kind": "event",
       "strength": "definitive"
     },
     {
-      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète que sous forme d'ombre.",
+      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète qu'en silhouette sombre.",
       "kind": "event",
       "strength": "hint"
     },
     {
-      "text": "L'activité (portes, objets, événements) augmente nettement quand vous êtes plusieurs près de sa pièce.",
+      "text": "L'activité (portes, objets, événements) augmente nettement quand plusieurs joueurs sont près de sa pièce.",
       "kind": "behavior",
       "strength": "hint"
     },
@@ -167,7 +171,7 @@
       "explain": "20 %, soit le double des 10 % standard. 15 % correspond au pouvoir du Yurei, 25 % à celui du Djinn."
     },
     {
-      "q": "Quel événement fantôme un Oni ne fait-il jamais ?",
+      "q": "Quel type d'événement un Oni ne fait-il jamais ?",
       "choices": [
         "L'apparition en marche",
         "Le brouillard fantomatique (bulle d'air)",
@@ -216,9 +220,8 @@
     "https://www.playnews.gg/en/guides/phasmophobia-0-19-0-0-the-door-sound-that-got-yurei-wrongly-accused-is-fixed-and-two-traps-await-on-restricted-maps"
   ],
   "uncertain": [
-    "Temps visible en chasse : environ 55–63 % du temps contre 31–33 % pour une entité normale selon Phasmopedia (≈ 64 % contre ≈ 31 % selon Fextralife) ; chiffres hors tybayn, résumés en « bien plus longtemps ».",
-    "Plusieurs sources précisent que le drain de 20 % s'applique quand l'entité entre en contact avec le joueur pendant l'événement ; tybayn dit simplement « lors des événements ».",
-    "Phasmopedia indique que l'Oni fait plus souvent l'événement de poursuite (40 % contre 20 %) ; non vérifié ailleurs.",
-    "Le correctif v0.19.0.0 sur l'événement de chant est connu par le texte de l'annonce Steam relayé dans les résultats de recherche ; la page n'a pas pu être ouverte directement (kineticgames.co.uk et steamcommunity.com inaccessibles depuis cette session)."
+    "Part du temps visible en chasse : environ 55–64 % contre 31–33 % pour une entité normale (sources hors tybayn).",
+    "Le drain de 20 % ne s'applique-t-il que si l'entité te touche pendant l'événement ? Plusieurs sources le disent, pas tybayn.",
+    "Fait-il plus souvent l'événement de poursuite (40 % contre 20 %) ? Phasmopedia seulement."
   ]
 }

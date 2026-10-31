@@ -21,7 +21,7 @@
     "normal": 35,
     "low": 35,
     "high": 35,
-    "summary": "35 % · jamais depuis la pièce où tu te trouves",
+    "summary": "35 % · jamais dans la même pièce qu'un joueur",
     "details": [
       "Ne chasse pas avant 35 % de santé mentale moyenne.",
       "Ne lance pas de chasse si elle se trouve dans la même pièce qu'un joueur, que ce soit sa pièce favorite ou non.",
@@ -131,7 +131,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. Le Moroï maudit le joueur entendu à la Spirit Box ou au micro parabolique et accélère quand la santé mentale baisse."
+      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit le joueur entendu à la Spirit Box ou au micro parabolique et accélère quand la santé mentale baisse."
     },
     {
       "with": "aswang",
@@ -210,7 +210,7 @@
       "explain": "Seule l'Ombre peut apparaître en ombre ou en modèle translucide au cercle d'invocation. Les autres propositions sont compatibles avec beaucoup d'entités."
     },
     {
-      "q": "La santé mentale moyenne est encore à 100 % et un événement fantôme se produit. Qu'en conclus-tu ?",
+      "q": "La santé mentale moyenne est encore à 100 % et un événement se produit. Qu'en conclus-tu ?",
       "choices": [
         "C'est sûrement une Ombre",
         "C'est forcément un Démon",
@@ -248,8 +248,7 @@
     "https://phasmopedia.com/en/ghosts/shade/"
   ],
   "uncertain": [
-    "Aucun changement de l'Ombre trouvé dans les notes de mise à jour 2025–2026 (v0.13 à v0.19).",
-    "Certains guides affirment que l'Ombre peut écrire dans le livre en présence d'un joueur ; on suit tybayn (pas d'écriture dans la même pièce que le joueur). Revue : ce point n'est plus utilisé comme leurre de quiz, pour qu'aucune réponse fausse ne repose sur lui.",
-    "Proportions de forme d'ombre (environ 2/3 lors des événements, environ 50 % au cercle selon Phasmopedia) non reprises faute de seconde source."
+    "Peut-elle écrire dans le livre en présence d'un joueur ? Certains guides disent oui, tybayn dit non.",
+    "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle selon Phasmopedia) : non confirmée."
   ]
 }

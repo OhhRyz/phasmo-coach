@@ -63,7 +63,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Place des capteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei (sans compter un événement fantôme, pendant lequel une entité peut se téléporter jusqu'à un joueur)."
+      "text": "Place des capteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei (sans compter un événement, pendant lequel une entité peut se téléporter jusqu'à un joueur)."
     }
   ],
   "confusions": [
@@ -179,7 +179,7 @@
         "Une porte de placard s'entrouvre légèrement"
       ],
       "answer": 1,
-      "explain": "Seul le Yurei peut toucher à une porte de sortie hors chasse et hors événement. Toutes les entités bougent les portes en chasse, et éteindre aussitôt une lumière allumée près de lui est le pouvoir du Cauchemar (Mare)."
+      "explain": "Seul le Yurei peut toucher à une porte de sortie hors chasse et hors événement. Toutes les entités bougent les portes en chasse, et éteindre aussitôt une lumière allumée près de lui est le pouvoir du Cauchemar."
     }
   ],
   "changes": [
@@ -198,9 +198,8 @@
     "https://mp1st.com/title-updates-and-patches/phasmophobia-version-0-19-00-adds-quality-of-life-features-update-1-000-046-august-25"
   ],
   "uncertain": [
-    "Rayon du drain de 15 % : environ 7,5 m autour du Yurei selon le wiki Fandom et un guide (allthings.how) ; tybayn dit seulement « joueurs proches ».",
-    "Plusieurs guides affirment que le Yurei ne déplace jamais une porte partiellement (le bug connu sur les casiers va dans ce sens) ; non intégré au contenu faute de confirmation tybayn.",
-    "Un blog mentionne une correction (juillet 2026) empêchant d'autres entités d'imiter la fermeture de porte du Yurei ; non retrouvée dans les notes officielles.",
-    "Dates des correctifs v0.17.1.0 et v0.19.0.0 tirées de sites relayant les notes (le site kineticgames.co.uk était inaccessible depuis cette session)."
+    "Rayon du drain de 15 % : environ 7,5 m selon le wiki Fandom et un guide ; tybayn dit « joueurs proches ».",
+    "Ne déplace-t-il jamais une porte à moitié ? Plusieurs guides le disent, pas tybayn.",
+    "Correction (juillet 2026) empêchant d'autres entités d'imiter sa fermeture de porte : vue sur un blog, absente des notes officielles."
   ]
 }

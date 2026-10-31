@@ -93,7 +93,7 @@
     },
     {
       "with": "moroi",
-      "why": "Spirit Box + écriture en commun. Le Moroï maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
+      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend à la Spirit Box ou au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
     },
     {
       "with": "deogen",
@@ -105,7 +105,7 @@
     },
     {
       "with": "dayan",
-      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; l'Esprit garde une vitesse standard. 3e preuve : orbes vs écriture."
+      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, la Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; l'Esprit garde une vitesse standard. 3e preuve : orbes vs écriture."
     },
     {
       "with": "deildegast",
@@ -232,8 +232,6 @@
     "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
   ],
   "uncertain": [
-    "Aucun changement de preuves, de vitesse, de seuil ou de capacité de l'Esprit n'a été trouvé dans les notes de patch 2025–2026 consultées (via recherche, pages de patch non lisibles en entier).",
-    "Les délais après encens des entités ajoutées en 2025–2026 (Gallu, Dayan, Obambo, Aswang, Kormos, Deildegast) ne sont pas documentés : le test du double encensement, jugé définitif par tybayn, n'a pas été revérifié face à elles.",
-    "Le test du double encensement suppose qu'aucun objet maudit ne force de chasse pendant la fenêtre de 60 s (une chasse maudite fausserait le test)."
+    "Délais après encens des entités ajoutées en 2025–2026 : non documentés ; le double encensement n'a pas été revérifié face à elles."
   ]
 }

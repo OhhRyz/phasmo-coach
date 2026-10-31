@@ -101,11 +101,11 @@
     },
     {
       "with": "dayan",
-      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, le Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; le Spectre garde une vitesse standard. 3e preuve : orbes vs D.O.T.S."
+      "why": "EMF 5 + Spirit Box en commun. À moins de 10 m d'un joueur, la Dayan passe à 2,25 m/s si tu marches et à 1,2 m/s si tu restes immobile ; le Spectre garde une vitesse standard. 3e preuve : orbes vs D.O.T.S."
     },
     {
       "with": "oni",
-      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il clignote plus), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brume ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
+      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il clignote plus), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
     },
     {
       "with": "goryo",
@@ -204,7 +204,7 @@
         "Le Gallu en état enragé",
         "L'Esprit",
         "Les Jumeaux",
-        "Le Dayan quand tu restes immobile"
+        "La Dayan quand tu restes immobile"
       ],
       "answer": 0,
       "explain": "Le Gallu, ajouté le 16 décembre 2025, ne perturbe pas le sel en état enragé (après encens, sel ou crucifix). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre."
@@ -250,10 +250,8 @@
     "tybayn wiki: wiki_known_bugs_gallu"
   ],
   "uncertain": [
-    "On ne sait pas si un Gallu enragé est ralenti par le sel de rang 3 : l'absence de ralentissement n'est pas confirmée comme propre au Spectre.",
-    "Le statut actuel (définitif ou non) des tests du sel dans les données structurées de tybayn n'est pas connu ; il a été abaissé ici à cause du Gallu.",
-    "Aucun changement direct du Spectre n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
-    "Le test « un Gallu n'est jamais enragé juste après la fin d'une chasse » est déduit du cycle d'états décrit par tybayn (normal > enragé > affaibli), pas vérifié en jeu.",
-    "Aucune source ne dit explicitement si le Mimic reproduit le sel intact du Spectre."
+    "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu : ce n'est peut-être pas propre au Spectre.",
+    "« Un Gallu n'est jamais enragé juste après la fin d'une chasse » : déduit du cycle tybayn, non vérifié en jeu.",
+    "Le Mimic reproduit-il le sel intact du Spectre ? Aucune source ne le dit."
   ]
 }

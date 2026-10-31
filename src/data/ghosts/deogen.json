@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "3,0 m/s de loin → 0,4 m/s tout près · pas de LdV",
+    "summary": "3,0 m/s de loin → 0,4 m/s tout près · n'accélère pas en LdV",
     "details": [
       "Pas d'accélération en LdV : il sait en permanence où se trouve sa cible.",
       "Il fonce à 3,0 m/s tant qu'il est loin du joueur ciblé, puis ralentit jusqu'à 0,4 m/s quand il arrive tout près de lui.",
@@ -101,7 +101,7 @@
     },
     {
       "with": "mare",
-      "why": "Cauchemar (Mare) : Spirit Box + Écriture, mais Orbes au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard."
+      "why": "Cauchemar : Spirit Box + Écriture, mais Orbes au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard."
     },
     {
       "with": "wraith",
@@ -126,11 +126,15 @@
     {
       "with": "oni",
       "why": "Autre entité plus visible que la normale pendant les chasses. L'Oni a toutefois une vitesse standard avec accélération en LdV, et ses preuves (EMF 5, Températures glaciales, D.O.T.S) ne partagent que les D.O.T.S avec le Deogen."
+    },
+    {
+      "with": "dayan",
+      "why": "La Dayan ralentit elle aussi près des joueurs (1,2 m/s), mais seulement si tu restes immobile : si tu bouges, elle passe à 2,25 m/s. Une seule preuve en commun (Spirit Box)."
     }
   ],
   "observations": [
     {
-      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse, puis elle avance presque au ralenti une fois tout près.",
+      "text": "Pendant la chasse, tu entends l'entité arriver sur toi à toute vitesse, puis, une fois tout près, elle avance presque au ralenti, que tu bouges ou non.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -236,7 +240,6 @@
     "https://phasmopedia.com/en/ghosts/deogen/"
   ],
   "uncertain": [
-    "Formule de vitesse selon Phasmopedia (dérivée du wiki Fandom) : 0,15 m/s × 2^(distance − 1), soit 3,0 m/s au-delà d'environ 5,3 m et 0,4 m/s sous environ 2,4 m ; non documentée par tybayn.",
-    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée."
+    "Vitesse selon la distance (3,0 m/s au-delà d'environ 5,3 m, 0,4 m/s sous environ 2,4 m) : Phasmopedia seulement, pas tybayn."
   ]
 }

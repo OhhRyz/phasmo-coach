@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "≈1,45 m/s (calme) / ≈1,96 m/s (agressif) · LdV",
+    "summary": "1,45 m/s calme · 1,96 m/s agressif · accélère en LdV",
     "details": [
       "État calme : environ 1,45 m/s en chasse (1,445 m/s selon les sources les plus précises), plus lent qu'une entité standard.",
       "État agressif : environ 1,96 m/s en chasse (1,955 m/s), plus rapide qu'une entité standard.",
@@ -24,7 +24,7 @@
     "normal": -1,
     "low": 10,
     "high": 65,
-    "summary": "10 % (calme) / 65 % (agressif)",
+    "summary": "10 % calme · 65 % agressif",
     "details": [
       "Pas de seuil unique : tout dépend de l'état de l'entité au moment où elle tente de chasser.",
       "État calme : ne chasse pas avant 10 % de santé mentale moyenne.",
@@ -143,7 +143,7 @@
       "strength": "hint"
     },
     {
-      "text": "Une chasse a lieu vers 60 % de santé mentale moyenne, puis l'entité ne chasse plus pendant près de deux minutes alors que vous êtes descendus sous 50 %.",
+      "text": "Une chasse a lieu vers 60 % de santé mentale moyenne, puis l'entité ne chasse plus pendant près de deux minutes alors que l'équipe est descendue sous 50 %.",
       "kind": "hunt",
       "strength": "hint"
     },
@@ -217,7 +217,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest (v0.15.1.0), en décembre 2025, en même temps que le Gallu et le Dayan : aucune donnée dans la sauvegarde tybayn de déc. 2024."
+    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest (v0.15.1.0), en décembre 2025, en même temps que le Gallu et la Dayan : aucune donnée dans la sauvegarde tybayn de déc. 2024."
   ],
   "sources": [
     "tybayn wiki: wiki_hunt_duration_p4",
@@ -234,12 +234,10 @@
     "https://kineticgames.co.uk/news/phasmophobia-winters-jest-v01510"
   ],
   "uncertain": [
-    "Vitesses : 1,445 / 1,955 m/s selon Fextralife et Phasmopedia, arrondies à 1,45 / 1,96 m/s ailleurs ; un tableau de Pro Game Guides indique 1,7–2,4 m/s, valeur jugée erronée.",
-    "Seuil « normal » mis à -1 : l'Obambo n'a pas de seuil unique (10 % ou 65 % selon l'état).",
-    "Activité hors chasse selon l'état : le wiki Fandom / Phasmopedia indiquent une activité interne fixe (90 en calme, 25 en agressif) alors que Game Rant affirme qu'il est plus actif en agressif ; non intégré au contenu.",
-    "Vitesse maximale exacte en LdV non publiée : le calcul « à partir de la vitesse actuelle » vient du wiki tybayn, sans chiffre mesuré.",
-    "Précision du minuteur (marge de quelques secondes autour des bascules) et comportement exact si plusieurs portes de sortie existent non vérifiés.",
-    "Revue : une chasse vers 60 % suivie d'environ 2 minutes sans chasse est passée de strong à hint (beaucoup d'entités peuvent chasser vers 60 %, et l'absence de chasse pendant 2 minutes est fréquente).",
-    "Aucun test confirmé pour l'Obambo dans les données structurées tybayn (entité absente de la sauvegarde) ; les tests proviennent du wiki Fandom, de Phasmopedia et de guides."
+    "Vitesses exactes : 1,445 / 1,955 m/s selon Fextralife et Phasmopedia, arrondies à 1,45 / 1,96 ailleurs.",
+    "Activité hors chasse : plus calme ou plus active en état agressif ? Les sources divergent.",
+    "Vitesse maximale en LdV : non publiée.",
+    "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes de sortie : non vérifiés.",
+    "Aucun test tybayn pour l'Obambo : les tests viennent du wiki Fandom, de Phasmopedia et de guides."
   ]
 }

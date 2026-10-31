@@ -21,7 +21,7 @@
     "normal": 70,
     "low": 70,
     "high": 100,
-    "summary": "70 % · peut chasser à toute santé mentale",
+    "summary": "70 % · à toute santé mentale via sa capacité",
     "details": [
       "Seuil de chasse normal : 70 % de santé mentale moyenne (au lieu des 50 % standard).",
       "Grâce à son pouvoir, il peut lancer une chasse à n'importe quel niveau de santé mentale, même à 100 %."
@@ -110,7 +110,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. Le Moroï maudit via la Spirit Box ou le micro parabolique, accélère quand la santé mentale baisse et reste aveuglé plus longtemps par l'encens en chasse (7 s au lieu de 5 s)."
+      "why": "Mêmes écriture et températures glaciales. Le Moroi maudit via la Spirit Box ou le micro parabolique, accélère quand la santé mentale baisse et reste aveuglé plus longtemps par l'encens en chasse (7 s au lieu de 5 s)."
     },
     {
       "with": "aswang",
@@ -123,6 +123,14 @@
     {
       "with": "banshee",
       "why": "Autre chasseur précoce : la Banshee chasse selon la santé mentale de sa cible (50 % ou moins), donc parfois jusqu'à 87 % de moyenne."
+    },
+    {
+      "with": "yokai",
+      "why": "Autre chasseur précoce : le Yokai peut chasser jusqu'à 80 % si quelqu'un parle dans sa pièce, mais jamais au-dessus. Aucune preuve en commun."
+    },
+    {
+      "with": "thaye",
+      "why": "Autre chasseur précoce : le Thayé jeune chasse dès 75 %, à 2,75 m/s sans accélération en LdV, puis chasse de plus en plus tard en vieillissant. Une seule preuve en commun (écriture)."
     }
   ],
   "observations": [
@@ -206,8 +214,8 @@
     "https://phasmophobia.wiki.fextralife.com/Demon"
   ],
   "uncertain": [
-    "Aucun changement du Démon trouvé dans les notes de mise à jour 2025–2026 (seuil 70 %, encens 60 s et crucifix +50 % confirmés par Phasmopedia et le wiki Fandom).",
-    "La fréquence de son pouvoir de chasse à toute santé mentale n'est pas chiffrée par tybayn.",
-    "Le test « chasse au-dessus de 80 % » date de 2024 : le seuil de l'Aswang (ajouté en mai 2026) n'a pas pu être vérifié. Le Mimic peut aussi copier les comportements du Démon (il montre toujours des orbes)."
+    "Fréquence de son pouvoir de chasse à toute santé mentale : non chiffrée par tybayn.",
+    "Délais d'encens et entre deux chasses des entités ajoutées en 2025–2026 : non documentés, les tests de 60 s et de 20 s n'ont pas été revérifiés face à elles.",
+    "Test « chasse au-dessus de 80 % » : pas revérifié face aux entités ajoutées depuis 2025 ; le Mimic peut aussi copier le Démon."
   ]
 }

@@ -22,7 +22,7 @@
     "normal": 50,
     "low": 50,
     "high": 80,
-    "summary": "50 % · jusqu'à 80 % si on parle dans sa pièce",
+    "summary": "50 % · jusqu'à 80 % si quelqu'un parle dans sa pièce",
     "details": [
       "Seuil de chasse normal : 50 % de santé mentale moyenne.",
       "Parler dans la même pièce que le Yokai peut le faire chasser jusqu'à 80 % de santé mentale moyenne."
@@ -70,7 +70,7 @@
     },
     {
       "with": "mare",
-      "why": "Mêmes Spirit Box et orbes. Le seuil du Cauchemar (Mare) dépend des lumières (60 % lumière éteinte, 40 % allumée) et il peut éteindre aussitôt une lumière que tu allumes près de lui."
+      "why": "Mêmes Spirit Box et orbes. Le seuil du Cauchemar dépend des lumières (60 % lumière éteinte, 40 % allumée) et il peut éteindre aussitôt une lumière que tu allumes près de lui."
     },
     {
       "with": "onryo",
@@ -78,7 +78,7 @@
     },
     {
       "with": "dayan",
-      "why": "Mêmes Spirit Box et orbes. Le Dayan va à 1,7 m/s loin des joueurs, puis, à moins de 10 m, à 2,25 m/s si un joueur marche et 1,2 m/s s'il reste immobile."
+      "why": "Mêmes Spirit Box et orbes. La Dayan va à 1,7 m/s loin des joueurs, puis, à moins de 10 m, à 2,25 m/s si un joueur marche et 1,2 m/s s'il reste immobile."
     },
     {
       "with": "the-mimic",
@@ -119,7 +119,7 @@
   ],
   "observations": [
     {
-      "text": "Une chasse démarre alors que vous discutiez dans sa pièce et que la santé mentale moyenne était encore autour de 70 %.",
+      "text": "Une chasse démarre alors que l'équipe discutait dans sa pièce et que la santé mentale moyenne était encore autour de 70 %.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -134,7 +134,7 @@
       "strength": "strong"
     },
     {
-      "text": "Les interactions (objets, portes, lumières) se multiplient dès que vous parlez près de sa pièce.",
+      "text": "Les interactions (objets, portes, lumières) se multiplient dès que quelqu'un parle près de sa pièce.",
       "kind": "behavior",
       "strength": "hint"
     }
@@ -149,7 +149,7 @@
         "Orbes fantomatiques, Températures glaciales, Projecteur D.O.T.S"
       ],
       "answer": 2,
-      "explain": "Yokai = Spirit Box, orbes, D.O.T.S. Spirit Box + orbes + écriture, c'est le Cauchemar (Mare) ; Spirit Box + UV + D.O.T.S, le Fantôme ; orbes + glaciales + D.O.T.S, le Yurei."
+      "explain": "Yokai = Spirit Box, orbes, D.O.T.S. Spirit Box + orbes + écriture, c'est le Cauchemar ; Spirit Box + UV + D.O.T.S, le Fantôme ; orbes + glaciales + D.O.T.S, le Yurei."
     },
     {
       "q": "Jusqu'à quel seuil de santé mentale moyenne un Yokai peut-il chasser si l'on parle dans sa pièce ?",
@@ -200,8 +200,6 @@
     "https://steamdb.info/patchnotes/23090020/"
   ],
   "uncertain": [
-    "Aucun changement du rayon de 2,5 m ni du seuil de 80 % trouvé pour 2025–2026 (valeurs confirmées par Phasmopedia, vérifié v0.19.0.2, et le wiki Fandom).",
-    "Distance d'écoute d'une entité normale (environ 9 m pour la voix selon Phasmopedia) non fournie par tybayn ; les tests utilisent donc « une distance où une entité normale t'entendrait ».",
-    "Revue : l'observation « tu parles à 4 m et elle ne réagit pas » est passée de definitive à strong : une seule non-réaction peut aussi venir d'une entité qui poursuit déjà un autre joueur ou d'une voix trop faible pour être captée. Le test répété reste définitif chez tybayn."
+    "Distance d'écoute d'une entité normale (environ 9 m pour la voix selon Phasmopedia) : non fournie par tybayn."
   ]
 }

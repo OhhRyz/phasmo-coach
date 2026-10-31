@@ -72,15 +72,11 @@
       "zeroEvidence": false
     },
     {
-      "text": "Ne peut pas changer de pièce favorite.",
-      "zeroEvidence": true
-    },
-    {
       "text": "Ciblage : un joueur est choisi au hasard en début de contrat et reste la cible jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La cible suivante est le premier joueur vivant dans l'ordre du lobby (en commençant par l'hôte) qui n'était pas la cible précédente. En solo, c'est toujours l'hôte.",
       "zeroEvidence": true
     },
     {
-      "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« I wish for life » : il ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), elle reste la cible même morte. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, elle ne chasserait jamais), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
+      "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« Je souhaite être en vie » : il ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), elle reste la cible même morte. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, elle ne chasserait jamais), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
       "zeroEvidence": true
     }
   ],
@@ -100,7 +96,7 @@
       "definitive": true
     },
     {
-      "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son : le wiki tybayn le liste comme média « Paranormal Scream » (libellé anglais). Pratique pour garder une trace du cri.",
+      "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son : le wiki tybayn le liste comme média « Cri paranormal ». Pratique pour garder une trace du cri.",
       "definitive": false
     },
     {
@@ -109,9 +105,6 @@
     }
   ],
   "eliminationTests": [
-    {
-      "text": "Si l'entité change de pièce favorite, ce n'est pas une Banshee."
-    },
     {
       "text": "Si le prénom de l'entité est masculin ou si son modèle est masculin, ce n'est pas une Banshee (uniquement féminine depuis la v0.15.1.0)."
     }
@@ -123,7 +116,7 @@
     },
     {
       "with": "goryo",
-      "why": "UV + D.O.T.S en commun, et le Goryo ne change jamais de pièce favorite non plus. Mais son D.O.T.S n'est visible qu'à la caméra vidéo, jamais avec un joueur dans la pièce. 3e preuve : EMF 5 vs orbes."
+      "why": "UV + D.O.T.S en commun. Le Goryo ne change jamais de pièce favorite (la Banshee le peut depuis juin 2025) et son D.O.T.S n'est visible qu'à la caméra vidéo, jamais avec un joueur dans la pièce. 3e preuve : EMF 5 vs orbes."
     },
     {
       "with": "yurei",
@@ -164,6 +157,10 @@
     {
       "with": "kormos",
       "why": "UV + orbes en commun. Le Kormos est presque aveugle : il te repère à ta voix, à l'électronique et à tes déplacements, et ne te voit que si tu bouges à moins de 5 m. 3e preuve : Spirit Box vs D.O.T.S."
+    },
+    {
+      "with": "dayan",
+      "why": "La Dayan est elle aussi toujours féminine : un prénom ou un modèle féminin ne confirme pas la Banshee. Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [
@@ -189,11 +186,6 @@
     },
     {
       "text": "Tes détecteurs de mouvement s'activent souvent sur le trajet vers le même joueur, sans relevé EMF associé.",
-      "kind": "behavior",
-      "strength": "hint"
-    },
-    {
-      "text": "De tout le contrat, la pièce favorite ne change jamais.",
       "kind": "behavior",
       "strength": "hint"
     },
@@ -273,9 +265,10 @@
   ],
   "changes": [
     "Winter's Jest v0.15.1.0 (16 décembre 2025) : la Banshee ne se présente plus que comme féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
-    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Paranormal Scream » (wiki tybayn).",
+    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Cri paranormal » (wiki tybayn).",
     "Le wiki tybayn actuel détaille le ciblage (choix de la cible, changement après la mort d'un joueur, cas de la patte de singe).",
-    "Nouvelles entités partageant deux preuves : Obambo (UV + D.O.T.S, décembre 2025) et Kormos (UV + orbes, mai 2026)."
+    "Nouvelles entités partageant deux preuves : Obambo (UV + D.O.T.S, décembre 2025) et Kormos (UV + orbes, mai 2026).",
+    "Chronicle v0.13.0 (24 juin 2025) : la Banshee peut désormais changer de pièce favorite (notes de patch) ; un changement de pièce ne l'élimine plus."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",
@@ -297,8 +290,8 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Le libellé français en jeu du média « Paranormal Scream » n'a pas été vérifié (le wiki tybayn FR donne « Cri Paranormal » / « Son de fantôme »).",
-    "La règle « uniquement féminine » vient des notes de patch v0.15.1.0 citées par plusieurs sites (Pro Game Guides, VGTimes, GameSpot) ; la page officielle n'a pas pu être lue directement.",
-    "Le wiki tybayn liste comme bug connu que la Banshee change de cible après la mort de n'importe quel joueur ; si ce bug était corrigé, la cible ne changerait qu'à la mort de la cible."
+    "Nom exact du média « Cri paranormal » dans la version française du jeu : non vérifié.",
+    "« Toujours féminine » depuis la v0.15.1.0 : connu par des résumés de patch, pas par les notes officielles.",
+    "Bug connu (tybayn) : elle change de cible à la mort de n'importe quel joueur ; corrigé, elle n'en changerait qu'à la mort de sa cible."
   ]
 }

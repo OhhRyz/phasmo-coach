@@ -93,7 +93,7 @@
     },
     {
       "with": "oni",
-      "why": "EMF 5 + températures glaciales en commun. L'Oni est plus visible en chasse, draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brume. 3e preuve : D.O.T.S vs UV."
+      "why": "EMF 5 + températures glaciales en commun. L'Oni est plus visible en chasse, draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique. 3e preuve : D.O.T.S vs UV."
     },
     {
       "with": "the-twins",
@@ -117,11 +117,15 @@
     },
     {
       "with": "dayan",
-      "why": "Le Dayan change aussi de vitesse selon la distance : à moins de 10 m d'un joueur, 2,25 m/s si tu marches, 1,2 m/s si tu restes immobile, sans lien avec le disjoncteur. Une seule preuve en commun (EMF 5)."
+      "why": "La Dayan change aussi de vitesse selon la distance : à moins de 10 m d'un joueur, 2,25 m/s si tu marches, 1,2 m/s si tu restes immobile, sans lien avec le disjoncteur. Une seule preuve en commun (EMF 5)."
     },
     {
       "with": "the-mimic",
       "why": "UV + températures glaciales en commun, et le Mimic peut imiter le Djinn. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; 3e vraie preuve : Spirit Box vs EMF 5."
+    },
+    {
+      "with": "revenant",
+      "why": "Le Revenant accélère lui aussi d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, sans lien avec le disjoncteur, et sans accélération standard en LdV. Une seule preuve en commun (températures glaciales)."
     }
   ],
   "observations": [
@@ -232,8 +236,7 @@
     "https://progameguides.com/phasmophobia/all-ghost-changes-in-the-phasmophobia-apocalypse-update/"
   ],
   "uncertain": [
-    "Aucun changement direct du Djinn n'a été trouvé dans les notes de patch 2025–2026 consultées (pages de patch lues seulement via des extraits de recherche).",
-    "La portée exacte de « joueur proche » pour la capacité n'est pas chiffrée par tybayn ; des guides tiers parlent de la même pièce ou de 3 m autour de l'entité.",
-    "Le wiki Fandom indique que le disjoncteur peut quand même sauter avec un Djinn : seule une coupure directe par l'entité l'élimine (non vérifié en jeu)."
+    "Portée exacte de « joueur proche » pour sa capacité : non chiffrée (même pièce ou 3 m selon les guides).",
+    "Le disjoncteur peut-il quand même sauter avec un Djinn ? Oui selon le wiki Fandom : seule une coupure directe par l'entité l'éliminerait."
   ]
 }

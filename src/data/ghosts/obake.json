@@ -193,7 +193,7 @@
         "Ses empreintes n'apparaissent que sur les interrupteurs"
       ],
       "answer": 2,
-      "explain": "L'Obake peut ne pas laisser d'UV (25 %), peut faire disparaître les empreintes deux fois plus vite et n'a qu'une chance de laisser une empreinte spéciale."
+      "explain": "L'Obake a 25 % de chances de ne pas laisser d'UV, fait disparaître ses empreintes plus vite (pas plus lentement) et ne laisse une empreinte spéciale que de temps en temps."
     },
     {
       "q": "Lors de la dernière chasse, la dernière transformation de l'Obake était la Grand-mère. En quoi se transformera-t-il en premier à la chasse suivante ?",
@@ -239,11 +239,9 @@
     "https://phasmopedia.com/en/ghosts/obake/"
   ],
   "uncertain": [
-    "Fréquence des empreintes spéciales : environ 1 sur 6 selon Phasmopedia (dérivé du wiki Fandom), non chiffrée par tybayn.",
-    "On ne sait pas si les clignotements prédéterminés sont un changement de jeu récent ou une simple documentation plus précise d'un comportement existant.",
-    "La mise à jour « Horror 2.0 » annoncée pour 2026 (chasses, événements, interactions) pourrait modifier ces comportements ; sa sortie n'a pas été confirmée.",
-    "Un aperçu des mises à jour « Quality of Life » de 2026 annonce que la transformation compte désormais pour l'objectif « vidéo de l'entité » : version exacte (v0.18.0.0 ou v0.19.0.0) non confirmée dans les notes finales.",
-    "Selon un résumé de patch (mai 2025), l'Obake peut aussi se transformer pendant les événements saisonniers qui remplacent son modèle : non vérifié dans les notes officielles.",
-    "Les valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) viennent de guides web concordants, pas de tybayn, qui ne donne que le nombre d'empreintes de l'Obake."
+    "Fréquence des empreintes spéciales : environ 1 sur 6 selon Phasmopedia, non chiffrée par tybayn.",
+    "La transformation compte-t-elle pour l'objectif « vidéo de l'entité » ? Annoncé pour 2026, version non confirmée.",
+    "Se transforme-t-il aussi pendant les événements saisonniers qui remplacent son modèle ? Non vérifié.",
+    "Valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) : guides web, pas tybayn."
   ]
 }

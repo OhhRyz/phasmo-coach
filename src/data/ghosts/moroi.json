@@ -11,7 +11,7 @@
     "alt": 3.71,
     "isRange": true,
     "los": true,
-    "summary": "1,5 → 2,25 m/s selon la santé · LdV jusqu'à 3,71",
+    "summary": "1,5 → 2,25 m/s selon la santé · accélère en LdV (3,71 max)",
     "details": [
       "Sa vitesse dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, puis environ +0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %.",
       "Repères (tableau tybayn) : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
@@ -107,7 +107,7 @@
     },
     {
       "with": "mare",
-      "why": "Cauchemar (Mare) : Spirit Box + Écriture, mais Orbes au lieu des Températures glaciales ; chasse à 60 % lumière éteinte dans sa pièce, 40 % lumière allumée, et éteint les lumières."
+      "why": "Cauchemar : Spirit Box + Écriture, mais Orbes au lieu des Températures glaciales ; chasse à 60 % lumière éteinte dans sa pièce, 40 % lumière allumée, et éteint les lumières."
     },
     {
       "with": "onryo",
@@ -115,7 +115,7 @@
     },
     {
       "with": "the-twins",
-      "why": "Jumeaux : Spirit Box + Températures glaciales, mais EMF 5 au lieu de l'Écriture ; vitesse de base de 1,53 ou 1,87 m/s selon le jumeau (avec accélération en LdV), qui ne dépend pas de la santé."
+      "why": "Jumeaux : Spirit Box + Températures glaciales, mais EMF 5 au lieu de l'Écriture ; vitesse de base d'environ 1,5 ou 1,9 m/s selon le jumeau (avec accélération en LdV), qui ne dépend pas de la santé."
     },
     {
       "with": "the-mimic",
@@ -161,7 +161,7 @@
     {
       "text": "L'équipe est sous 40 % et tu prends des pilules en pleine chasse : l'entité ralentit juste après.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Avec une équipe presque à 0 % de santé et une longue LdV, l'entité atteint une vitesse folle, bien plus rapide que toi.",
@@ -259,11 +259,9 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
   ],
   "uncertain": [
-    "Selon Phasmopedia, les pilules de santé mentale lèvent la malédiction et une tentative de capture au magnétophone pourrait aussi maudire : non confirmé par tybayn.",
-    "Le pas exact de +2,5 %/s pendant la parenthèse v0.17.0.0 vient d'un changelog communautaire ; l'annulation, elle, figure dans les notes officielles v0.17.1.4.",
-    "La mise à jour « Horror 2.0 » annoncée pour 2026 pourrait modifier les chasses ; sa sortie n'a pas été confirmée.",
-    "Test des pilules (définitif selon tybayn) : un Obambo qui repasse en état calme en pleine chasse ralentit aussi aussitôt (1,96 → 1,45 m/s). Une coïncidence de timing reste possible : refais le test si tu as un doute.",
-    "Durée d'aveuglement avec un encens de rang 2 ou 3 : tybayn ne documente les 7 s qu'avec un encens de rang 1.",
-    "Les tests « plus rapide d'une chasse à l'autre avec LdV » et « plus de 5 s pour revenir après l'encens » sont notés définitifs dans la sauvegarde tybayn de déc. 2024. Ils sont ici rétrogradés en non définitifs, car le Gallu (aveuglé 6 s en état affaibli, vitesses 1,36 / 1,7 / 1,96 m/s) et l'Obambo (1,45 / 1,96 m/s), ajoutés depuis, peuvent les reproduire. La version actuelle des tests tybayn n'a pas pu être lue (zero-network.net inaccessible)."
+    "Les pilules lèvent-elles la malédiction ? Le magnétophone peut-il aussi maudire ? Phasmopedia seulement.",
+    "Test des pilules : un Obambo qui repasse en calme en pleine chasse ralentit aussi ; refais le test en cas de doute.",
+    "Durée d'aveuglement avec un encens de rang 2 ou 3 : non documentée.",
+    "Version actuelle des tests tybayn non lue : « plus rapide d'une chasse à l'autre » et « plus de 5 s pour revenir après l'encens » peuvent venir du Gallu ou de l'Obambo."
   ]
 }

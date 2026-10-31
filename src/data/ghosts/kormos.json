@@ -11,7 +11,7 @@
     "alt": 3.65,
     "isRange": false,
     "los": false,
-    "summary": "1,7 m/s · 2,21 m/s vers un bruit · LdV à < 5 m",
+    "summary": "1,7 m/s · 2,21 m/s vers un bruit · accélère en LdV à < 5 m",
     "details": [
       "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
       "S'il te détecte à plus de 5 m (bruit de pas, voix, électronique), il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",
@@ -107,7 +107,7 @@
     },
     {
       "with": "mare",
-      "why": "Cauchemar (Mare) : Orbes + Spirit Box, mais Écriture au lieu de l'UV ; chasse à 60 % lumière éteinte dans sa pièce et te voit normalement."
+      "why": "Cauchemar : Orbes + Spirit Box, mais Écriture au lieu de l'UV ; chasse à 60 % lumière éteinte dans sa pièce et te voit normalement."
     },
     {
       "with": "onryo",
@@ -259,13 +259,13 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01800-patch-notes"
   ],
   "uncertain": [
-    "Version exacte d'ajout : les sources la rattachent à la mise à jour Alan Wake (v0.17.1.0, 12 mai 2026), mais les notes officielles n'ont pas pu être lues directement.",
-    "Portée de mise à mort : 0,5 m sans LdV selon les wikis Fandom et Fextralife (au lieu de 1,1 m pour les autres), contre 1,5 m à travers les obstacles dans d'anciens guides (comportement probablement corrigé).",
-    "Fextralife indique qu'il poursuit toujours en priorité un joueur qui sprinte : non confirmé par une deuxième source.",
-    "Effet de l'encens sur le Kormos (aveuglement standard de 5 s ?) : non documenté clairement.",
-    "Selon Fextralife, ses seuls événements seraient l'événement de lumières et l'apparition dans sa pièce : seule l'absence de l'événement « apparaît et marche vers un joueur » est confirmée par deux sources.",
-    "Le classement « sans LdV standard » (los: false) reprend la table LdV de tybayn ; il peut pourtant accélérer en LdV si tu bouges à moins de 5 m.",
-    "Condition exacte du seuil de 70 % : « un joueur sprinte dans la même pièce » selon Destructoid, « un joueur proche sprinte » selon GameSpot ; tybayn ne documente pas ce seuil.",
-    "Selon le wiki Fandom, il ne ferait pas non plus l'événement en forme de brume : une seule source, donc non retenu dans les tests."
+    "Version exacte d'ajout (v0.17.1.0, mai 2026) : non confirmée par les notes officielles.",
+    "Portée de mise à mort : 0,5 m sans LdV selon les wikis, 1,5 m à travers les obstacles selon d'anciens guides (sans doute corrigé).",
+    "Poursuit-il toujours en priorité un joueur qui sprinte ? Une seule source.",
+    "Effet de l'encens (aveuglement standard de 5 s ?) : non documenté.",
+    "Événements possibles : seule l'absence de l'apparition qui marche vers un joueur est confirmée par deux sources.",
+    "Classé sans accélération standard en LdV (tableau tybayn), alors qu'il accélère si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
+    "Condition exacte du seuil de 70 % : joueur qui sprinte dans sa pièce, ou simplement près de lui ? Les sources divergent.",
+    "Fait-il l'événement de brouillard fantomatique ? Une seule source dit non."
   ]
 }
