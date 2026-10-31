@@ -51,8 +51,8 @@ Node 22 recommandé (`.nvmrc`).
    données d’un site non installé après 7 jours sans visite.
 2. **Le coach** ouvre l’app sur son propre appareil en choisissant « Je suis le coach », écrit ses
    explications dans le *Carnet*, coche « Ajouter à la révision espacée », puis *Partager par lien*. Par
-   défaut, le lien ne contient que les notes nouvelles ou modifiées depuis le dernier envoi (pour rester
-   assez court pour Discord).
+   défaut, le lien ne contient que ses propres notes, nouvelles ou modifiées depuis le dernier envoi (pour
+   rester assez court pour Discord) ; « Tout mon carnet » envoie l’ensemble.
 3. **L’élève** reçoit le lien. Si l’app est installée sur l’écran d’accueil, elle copie le lien et le colle
    dans *Carnet → Coller un lien reçu* : sur iPhone, un lien touché dans Discord ou Messages s’ouvre dans
    Safari, qui n’a pas la même mémoire que l’app installée. Les notes reviendront d’elles-mêmes en révision.

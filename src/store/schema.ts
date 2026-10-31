@@ -80,6 +80,12 @@ function isObject(v: unknown): v is Record<string, unknown> {
 const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback)
 
 /** Nettoie des notes venues d'un lien, d'un fichier ou du stockage (les entrées invalides sont ignorées). */
+/** Titre d'une note sans titre : sa première ligne, coupée proprement. */
+function firstLine(body: string): string {
+  const line = body.trim().split(/\n/)[0].trim()
+  return line.length > 60 ? `${line.slice(0, 59).trimEnd()}…` : line
+}
+
 export function sanitizeNotes(raw: unknown): CoachNote[] {
   if (!Array.isArray(raw)) return []
   const out: CoachNote[] = []
@@ -96,7 +102,7 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
       createdAt,
       updatedAt: time(n.updatedAt) ?? createdAt,
       ghostId: typeof n.ghostId === 'string' ? n.ghostId : null,
-      title: title || body.slice(0, 60),
+      title: title || firstLine(body),
       body,
       asCard: n.asCard !== false,
       question: typeof n.question === 'string' && n.question.trim() ? n.question.slice(0, 500) : undefined,

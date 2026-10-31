@@ -31,6 +31,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // les textes de licence s'ouvrent tels quels, pas dans l'app
+        navigateFallbackDenylist: [/\/licences\//],
       },
     }),
   ],

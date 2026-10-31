@@ -18,7 +18,8 @@ const RAW_KEYS = new Set(['id', 'with', 'evidence', 'forcedEvidence', 'fakeEvide
 /** Applique la typographie française (apostrophes courbes, espaces fines) à tous les textes des données. */
 function typeset<T>(value: T, key = ''): T {
   if (RAW_KEYS.has(key)) return value
-  if (typeof value === 'string') return fr(value) as T
+  // « LdV » reste dans les résumés courts (tableaux, graphiques) ; ailleurs, en toutes lettres
+  if (typeof value === 'string') return fr(key === 'summary' ? value : value.replace(/\bLdV\b/g, 'ligne de vue')) as T
   if (Array.isArray(value)) return value.map((v) => typeset(v)) as T
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, typeset(v, k)])) as T
