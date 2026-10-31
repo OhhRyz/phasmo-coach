@@ -1,0 +1,23 @@
+# Vérifications à chaque push : types, tests et build.
+# La mise en ligne est faite par Vercel (projet relié à ce dépôt), à chaque push sur main.
+name: Vérifications
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

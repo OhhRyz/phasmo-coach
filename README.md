@@ -85,25 +85,14 @@ Une nouvelle entité doit aussi être ajoutée à `GHOST_ORDER` dans `src/data/i
 L’app est statique (`dist/`) et fonctionne sur n’importe quel hébergeur, y compris dans un sous-dossier
 (routage par `#`).
 
-- **GitHub Pages** : le workflow `phasmo-coach/.github/workflows/deploy.yml` construit, teste et publie à
-  chaque push sur `main`, **une fois le projet sorti dans son propre dépôt** (GitHub ne lit les workflows
-  qu’à la racine d’un dépôt). Activer ensuite *Settings → Pages → Source : GitHub Actions*. Sur un compte
-  gratuit, Pages demande un dépôt public.
-- **Vercel / Netlify** : commande `npm run build`, dossier `dist`.
+- **Vercel** (mise en ligne actuelle) : le projet Vercel est relié à ce dépôt. Chaque push sur `main` est
+  mis en ligne automatiquement ; chaque autre branche obtient son adresse d’aperçu. Réglages dans
+  `vercel.json` (build `npm run build`, dossier `dist`, pas de cache sur le service worker).
+- **Vérifications** : le workflow `.github/workflows/ci.yml` lance les tests et le build à chaque push.
+- **Ailleurs** (Netlify, GitHub Pages…) : commande `npm run build`, dossier `dist`.
 
-## Migrer vers un dépôt dédié
-
-Le projet est autonome dans le dossier `phasmo-coach/` de la branche `phasmo-coach`. Pour le sortir avec
-son historique :
-
-```bash
-git subtree split --prefix=phasmo-coach -b phasmo-coach-standalone
-git push git@github.com:<compte>/phasmo-coach.git phasmo-coach-standalone:main
-```
-
-Puis mettre à jour `SOURCE_REPO_URL` dans `src/config.ts` : c’est le lien vers le code source affiché
-dans *À propos*, requis par la licence AGPL dès que l’app est mise en ligne. Il doit pointer vers un dépôt
-public (le dépôt actuel est privé).
+`SOURCE_REPO_URL` dans `src/config.ts` est le lien vers le code source affiché dans *À propos*, requis par
+la licence AGPL : il doit toujours pointer vers ce dépôt public.
 
 Les icônes de l’app se régénèrent avec `node scripts/make-icons.cjs` (Playwright requis).
 
