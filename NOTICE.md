@@ -1,6 +1,7 @@
 # Notice
 
 Phasmo Coach — application d’entraînement hors-jeu pour Phasmophobia.
+Copyright (C) 2026 les auteurs de Phasmo Coach.
 Licence : GNU Affero General Public License v3.0 (fichier `LICENSE`).
 
 ## Œuvre dérivée
@@ -31,7 +32,8 @@ Games. Il s’agit d’un outil éducatif de fan.
 
 ## Polices
 
-Les polices sont embarquées dans `src/assets/fonts/`, avec leurs licences :
+Les polices sont embarquées dans `src/assets/fonts/`, avec leurs licences (aussi publiées avec le site,
+dans `licences/`) :
 
 - IM Fell English (Igino Marini) — SIL Open Font License 1.1 ;
 - Libre Caslon Text (Pablo Impallari, Rodrigo Fuenzalida) — SIL Open Font License 1.1 ;

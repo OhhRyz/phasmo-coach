@@ -11,17 +11,19 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
 
 - **Codex** des 30 entités, en français, avec le filtre d’élimination (preuves trouvées / exclues, nombre de
   preuves de la partie, vitesse, seuil de chasse, ligne de vue).
-- **Révision espacée** : chaque fiche est découpée en cartes qui reviennent juste avant d’être oubliées
-  (1 j, 3 j, 8 j, 20 j…). C’est la « mémoire » de l’app : on ne revoit que ce qui commence à s’effacer.
-- **Quiz** générés à partir des fiches (preuves, vitesses & LdV, seuils, comportements, tests 0 preuve,
-  questions expertes, vrai/faux sur les mécaniques), orientés vers les entités les moins maîtrisées.
-  Chaque erreur fait revenir la carte correspondante en révision.
-- **Mises en situation** : une enquête simulée en Professionnel, Cauchemar, Démence ou 0 preuve, avec
-  journal d’indices chronologique, carnet de preuves, élimination et désignation de l’entité.
+- **Révision espacée** : chaque fiche est découpée en cartes. Une nouvelle carte revient d’abord dans la
+  séance (1 puis 10 min), puis à 1 j, 3 j, 8 j, 20 j… et 10 min plus tard si elle a été oubliée. C’est la
+  « mémoire » de l’app : on ne revoit que ce qui commence à s’effacer.
+- **Quiz** générés à partir des fiches (preuves, vitesse et ligne de vue, seuils, comportements, tests
+  0 preuve, questions expertes, vrai/faux sur les mécaniques), orientés vers les entités les moins
+  maîtrisées. Une erreur ramène dans la révision du jour la carte correspondante, si elle était déjà apprise.
+- **Mises en situation** : un contrat raconté rapport par rapport en Professionnel, Cauchemar, Démence ou
+  0 preuve, avec carnet de preuves, élimination et désignation de l’entité.
 - **À l’oreille** : reconnaître la vitesse d’une entité au rythme de ses pas (sons synthétisés).
-- **Carnet du coach** : chaque explication du coach peut devenir une carte de révision ; le carnet se
-  partage par simple lien (aucun serveur).
-- **Bilan de progression** partageable par lien, export / import de sauvegarde.
+- **Carnet du coach** : chaque explication du coach peut devenir une carte de révision ; les notes se
+  partagent par simple lien (aucun serveur). Seules les notes du coach sont écrites au stylo rouge.
+- **Bilan de progression** partageable par lien (maîtrise de chaque entité, série, notes du coach
+  retenues ou à reprendre), export / import de sauvegarde.
 - **Jour ou nuit** : le disjoncteur « Lumière » en haut de l’écran bascule le thème (ou dans le profil :
   comme l’appareil, jour, nuit).
 - **Installable** sur téléphone (PWA) et utilisable hors ligne.
@@ -45,11 +47,17 @@ Node 22 recommandé (`.nvmrc`).
 1. **La personne qui s’entraîne** installe l’app sur son téléphone (iPhone : Safari → bouton
    *Partager* → *Sur l’écran d’accueil* ; Android : menu de Chrome → *Installer l’application*) et fait
    sa *Révision du jour* (≈ 10 min, réglable dans le profil). Une fois installée, l’app marche hors ligne.
-2. **Le coach** écrit ses explications dans le *Carnet du coach* (sur son propre appareil ou directement
-   sur celui de l’élève), coche « Ajouter à la révision espacée », puis *Partager par lien*. En ouvrant le
-   lien, l’élève importe les notes : elles reviendront d’elles-mêmes en révision.
-3. L’élève peut renvoyer un **bilan** (Profil → *Envoyer ma progression au coach*) : maîtrise de chaque
-   entité, série de jours, dernières séances.
+   L’app le rappelle elle-même tant qu’elle tourne dans un onglet : sur iPhone, Safari peut effacer les
+   données d’un site non installé après 7 jours sans visite.
+2. **Le coach** ouvre l’app sur son propre appareil en choisissant « Je suis le coach », écrit ses
+   explications dans le *Carnet*, coche « Ajouter à la révision espacée », puis *Partager par lien*. Par
+   défaut, le lien ne contient que les notes nouvelles ou modifiées depuis le dernier envoi (pour rester
+   assez court pour Discord).
+3. **L’élève** reçoit le lien. Si l’app est installée sur l’écran d’accueil, elle copie le lien et le colle
+   dans *Carnet → Coller un lien reçu* : sur iPhone, un lien touché dans Discord ou Messages s’ouvre dans
+   Safari, qui n’a pas la même mémoire que l’app installée. Les notes reviendront d’elles-mêmes en révision.
+4. L’élève renvoie un **bilan** (en-tête → son prénom → *Envoyer ma progression au coach*) : maîtrise de
+   chaque entité, série de jours, dernières séances et notes du coach retenues ou à reprendre.
 
 ## Organisation du code
 
@@ -77,8 +85,10 @@ Une nouvelle entité doit aussi être ajoutée à `GHOST_ORDER` dans `src/data/i
 L’app est statique (`dist/`) et fonctionne sur n’importe quel hébergeur, y compris dans un sous-dossier
 (routage par `#`).
 
-- **GitHub Pages** : le workflow `.github/workflows/deploy.yml` construit, teste et publie à chaque push
-  sur `main` (activer *Settings → Pages → Source : GitHub Actions*).
+- **GitHub Pages** : le workflow `phasmo-coach/.github/workflows/deploy.yml` construit, teste et publie à
+  chaque push sur `main`, **une fois le projet sorti dans son propre dépôt** (GitHub ne lit les workflows
+  qu’à la racine d’un dépôt). Activer ensuite *Settings → Pages → Source : GitHub Actions*. Sur un compte
+  gratuit, Pages demande un dépôt public.
 - **Vercel / Netlify** : commande `npm run build`, dossier `dist`.
 
 ## Migrer vers un dépôt dédié
@@ -91,8 +101,11 @@ git subtree split --prefix=phasmo-coach -b phasmo-coach-standalone
 git push git@github.com:<compte>/phasmo-coach.git phasmo-coach-standalone:main
 ```
 
-Puis mettre à jour `SOURCE_REPO_URL` dans `src/config.ts` (lien vers le code source affiché dans l’app,
-requis par la licence AGPL).
+Puis mettre à jour `SOURCE_REPO_URL` dans `src/config.ts` : c’est le lien vers le code source affiché
+dans *À propos*, requis par la licence AGPL dès que l’app est mise en ligne. Il doit pointer vers un dépôt
+public (le dépôt actuel est privé).
+
+Les icônes de l’app se régénèrent avec `node scripts/make-icons.cjs` (Playwright requis).
 
 ## Pistes pour la suite
 
