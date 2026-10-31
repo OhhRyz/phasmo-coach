@@ -227,6 +227,8 @@ export function TapeButton({
   disabled,
   arrow = true,
   rotate,
+  autoFocus,
+  className = '',
 }: {
   to?: string
   onClick?: () => void
@@ -235,17 +237,19 @@ export function TapeButton({
   disabled?: boolean
   arrow?: boolean
   rotate?: number
+  autoFocus?: boolean
+  className?: string
 }) {
   const style = rotate != null ? ({ '--r': `${rotate}deg` } as Style) : undefined
   return (
-    <span className={`btn-wrap${disabled ? ' is-disabled' : ''}`}>
+    <span className={`btn-wrap${disabled ? ' is-disabled' : ''}${className ? ` ${className}` : ''}`}>
       {to ? (
         <Link className="btn-tape" to={to} style={style}>
           {children}
           {arrow && <TapeArrow />}
         </Link>
       ) : (
-        <button className="btn-tape" type={type} onClick={onClick} disabled={disabled} style={style}>
+        <button className="btn-tape" type={type} onClick={onClick} disabled={disabled} style={style} autoFocus={autoFocus}>
           {children}
           {arrow && <TapeArrow />}
         </button>
@@ -488,6 +492,7 @@ export function PaperButton({
   pressed,
   type = 'button',
   rotate,
+  className = '',
 }: {
   onClick?: () => void
   children: ReactNode
@@ -495,11 +500,12 @@ export function PaperButton({
   pressed?: boolean
   type?: 'button' | 'submit'
   rotate?: number
+  className?: string
 }) {
   return (
     <button
       type={type}
-      className="paper-btn"
+      className={`paper-btn${className ? ` ${className}` : ''}`}
       onClick={onClick}
       disabled={disabled}
       aria-pressed={pressed}

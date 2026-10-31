@@ -71,7 +71,6 @@
    Préparer la copie
    ========================================================================== */
 .qz-setup { display: block; }
-.qz-setup .filehead a { display: inline-block; margin: -12px 0; padding: 12px 0; }
 .qz-entry { margin-bottom: 28px; }
 .qz-title { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 54px; line-height: .98; letter-spacing: -.012em; }
 .qz-title em { display: block; margin-bottom: 6px; font-size: 25px; letter-spacing: .01em; color: var(--ink-2); }

@@ -56,7 +56,6 @@
 
 .ear .ear-step { margin-top: 0; }
 .ear .ear-go + .ear-step { margin-top: 58px; }
-.ear .filehead a { display: inline-block; margin: -12px 0; padding: 12px 0; }
 .ear-step-h { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
 .ear-step-n {
   display: inline-grid; place-items: center; width: 22px; height: 22px;

@@ -265,20 +265,6 @@ function SpeedRuler({ max, dots, cands, picked, zones, truth, label }: RulerProp
 
 /* ------------------------------------------------------------------ boutons */
 
-/** Bande Dymo qui prend le focus à son apparition (la TapeButton partagée n'a pas d'autoFocus). */
-function FocusTape({ onClick, children }: { onClick: () => void; children: ReactNode }) {
-  return (
-    <span className="btn-wrap ear-next">
-      <button className="btn-tape" type="button" onClick={onClick} autoFocus>
-        {children}
-        <svg className="arrow" viewBox="0 0 26 12" aria-hidden>
-          <path d="M1 6.5 C8 5.5 15 6.8 24 6 M18 1.5 L24.5 6 L18.5 10.5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-    </span>
-  )
-}
-
 export function Ear() {
   const { dispatch } = useStore()
   const [mode, setMode] = useState<Mode>('class')
@@ -611,7 +597,9 @@ export function Ear() {
                   <span className="ear-names">{names.join(', ') || 'vitesse de référence'}</span>
                 </p>
                 <div className="ear-next-row">
-                  <FocusTape onClick={next}>{i + 1 >= rounds.length ? 'Voir le résultat' : 'Suivante'}</FocusTape>
+                  <TapeButton className="ear-next" onClick={next} autoFocus>
+                    {i + 1 >= rounds.length ? 'Voir le résultat' : 'Suivante'}
+                  </TapeButton>
                 </div>
               </>
             )}

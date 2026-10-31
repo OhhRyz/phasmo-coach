@@ -27,6 +27,12 @@ function ScrollToTop() {
   return null
 }
 
+/** Un lien vers le quiz depuis le quiz (?ghost=, ?topic=) repart d'une copie neuve. */
+function QuizRoute() {
+  const { search } = useLocation()
+  return <Quiz key={search} />
+}
+
 export function App() {
   return (
     <StoreProvider>
@@ -40,7 +46,7 @@ export function App() {
               <Route path="/codex/:id" element={<GhostPage />} />
               <Route path="/revision" element={<Review />} />
               <Route path="/entrainement" element={<Train />} />
-              <Route path="/quiz" element={<Quiz />} />
+              <Route path="/quiz" element={<QuizRoute />} />
               <Route path="/enquete" element={<Scenario />} />
               <Route path="/oreille" element={<Ear />} />
               <Route path="/mecaniques" element={<MechanicsPage />} />

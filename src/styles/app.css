@@ -177,7 +177,7 @@ button.btn-tape { border: 0; cursor: pointer; }
   display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: center;
   width: 100%; min-height: 44px; padding: 6px 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit;
 }
-.tracker .ev-btn:hover .ev-name { color: var(--red-pen); }
+@media (hover: hover) { .tracker .ev-btn:hover .ev-name { color: var(--red-pen); } }
 .tracker .ev .side { font-size: 19px; }
 .tracker .ev.impossible .ev-name { color: var(--ink-3); }
 .tracker .ev.impossible .box { opacity: .45; }

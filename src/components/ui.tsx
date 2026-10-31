@@ -1,4 +1,5 @@
-import { useEffect, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost } from '../data/types'
 import { masteryLevel } from '../engine/progress'
@@ -90,26 +91,52 @@ export function Modal({
   children: ReactNode
   actions?: ReactNode
 }) {
+  const box = useRef<HTMLDivElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const back = document.activeElement as HTMLElement | null
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close.current()
+      if (e.key !== 'Tab' || !box.current) return
+      // le focus reste sur la fiche tant qu'elle est posée
+      const items = box.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     window.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    if (!box.current?.contains(document.activeElement)) {
+      const auto = box.current?.querySelector<HTMLElement>('[autofocus], input, textarea, select')
+      ;(auto ?? box.current)?.focus()
+    }
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
+      back?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
   if (!open) return null
-  return (
+  // rendue hors du carnet : sinon la fiche passerait sous la barre d'onglets
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title} ref={box} tabIndex={-1}>
         <h2>{title}</h2>
         {children}
         {actions && <div className="modal-actions">{actions}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -119,17 +146,5 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
       <H>{title}</H>
       {children}
     </div>
-  )
-}
-
-/** Ancien en-tête de page : conservé le temps de migrer toutes les pages vers le carnet. */
-export function PageHead({ title, children, actions, crumb }: { title: ReactNode; children?: ReactNode; actions?: ReactNode; crumb?: ReactNode }) {
-  return (
-    <header className="legacy-head">
-      {crumb}
-      <H as="h1">{title}</H>
-      {children && <p className="prose">{children}</p>}
-      {actions && <div className="row">{actions}</div>}
-    </header>
   )
 }

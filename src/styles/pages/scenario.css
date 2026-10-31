@@ -153,12 +153,6 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 .sc-cand.is-wrong { cursor: default; }
 .sc-cand.is-wrong::after { background: var(--red-pen); height: 2.5px; transform: rotate(-6deg) scaleX(1); }
 
-/* au doigt, le survol reste « collé » après un toucher : pas de rouge fantôme dans le carnet */
-@media (hover: none) {
-  .sc-board .tracker .ev-btn:hover .ev-name { color: inherit; }
-  .sc-board .tracker .ev.impossible .ev-btn:hover .ev-name { color: var(--ink-3); }
-}
-
 /* ==========================================================================
    Désigner l'entité (fiche posée)
    ========================================================================== */
