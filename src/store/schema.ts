@@ -28,7 +28,6 @@ export interface AnswerStats {
 
 export interface Settings {
   newPerDay: number
-  sound: boolean
   /** entités à travailler en priorité (null = toutes) */
   focus: string[] | null
   includeMechanics: boolean
@@ -62,7 +61,7 @@ export function initialState(now = Date.now()): PersistedState {
     version: 1,
     onboarded: false,
     profile: { name: '', coachName: '', role: 'student', createdAt: now },
-    settings: { newPerDay: 12, sound: true, focus: null, includeMechanics: true },
+    settings: { newPerDay: 12, focus: null, includeMechanics: true },
     cards: {},
     log: [],
     answers: {},
