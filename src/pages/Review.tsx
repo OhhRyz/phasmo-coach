@@ -5,6 +5,7 @@ import { getGhost, MECHANICS } from '../data'
 import type { Card } from '../engine/cards'
 import { buildReviewQueue, unseenCards } from '../engine/progress'
 import { previewInterval, schedule, type Grade } from '../engine/srs'
+import { ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
 
 const GRADES: { g: Grade; label: string; cls: string }[] = [
@@ -62,8 +63,9 @@ export function Review() {
       setRevealed(false)
       const rest = queue.slice(1)
       if (next.due - at < REQUEUE_WITHIN) {
-        // la carte revient un peu plus loin dans la séance
-        rest.splice(Math.min(rest.length, 3), 0, card)
+        // la carte revient plus loin dans la séance, d'autant plus loin que son échéance est lointaine
+        const gap = Math.max(3, Math.round((next.due - at) / 60_000))
+        rest.splice(Math.min(rest.length, gap), 0, card)
       }
       setQueue(rest)
       if (rest.length === 0) finish(reviewed, correct)
@@ -73,7 +75,8 @@ export function Review() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      // les boutons de note restent utilisables au clavier (1 à 4) même s'ils ont le focus
+      if (ignoreKey(e, (el) => !!el.closest('.grades, .flash-reveal'))) return
       if (!card) return
       if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault()

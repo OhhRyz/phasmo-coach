@@ -6,6 +6,7 @@ import { formatDate } from '../engine/format'
 import { buildReviewQueue, learnedCount, masteryLevel, streak } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
+import { WEAK_COUNT } from './Quiz'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -91,7 +92,7 @@ export function Home() {
       .flatMap(([, v]) => v.recent)
     return recent.length >= 3 ? recent.reduce((a, b) => a + b, 0) / recent.length : null
   }, [state.answers])
-  const weak = useMemo(() => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, 5), [mastery])
+  const weak = useMemo(() => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, WEAK_COUNT), [mastery])
   const notes = state.notes.slice(0, 3)
   const recent = [...state.activity].reverse().slice(0, 5)
   const dueCount = queue.filter((c) => state.cards[c.id]).length
@@ -188,7 +189,7 @@ export function Home() {
                 </li>
               ))}
             </ol>
-            <Link to="/quiz" className="btn btn-block" style={{ marginTop: 14 }}>
+            <Link to="/quiz?pool=weak" className="btn btn-block" style={{ marginTop: 14 }}>
               Quiz sur ces points faibles
             </Link>
           </section>

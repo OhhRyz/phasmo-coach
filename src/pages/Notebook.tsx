@@ -7,6 +7,7 @@ import { GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { formatDate, relativeDays } from '../engine/format'
 import { appUrl, copyText, downloadJson, encodePayload } from '../engine/share'
+import { sanitizeNotes } from '../store/schema'
 import { useStore } from '../store/store'
 
 export interface NotesPayload {
@@ -48,9 +49,10 @@ export function Notebook() {
   const importFile = async (file: File) => {
     try {
       const json = JSON.parse(await file.text()) as Partial<NotesPayload>
-      if (json.kind !== 'phasmo-coach/notes' || !Array.isArray(json.notes)) throw new Error('format')
-      dispatch({ type: 'notes:import', notes: json.notes })
-      toast(`${json.notes.length} note${json.notes.length > 1 ? 's' : ''} importée${json.notes.length > 1 ? 's' : ''}`)
+      const notes = json.kind === 'phasmo-coach/notes' ? sanitizeNotes(json.notes) : []
+      if (!notes.length) throw new Error('format')
+      dispatch({ type: 'notes:import', notes })
+      toast(`${notes.length} note${notes.length > 1 ? 's' : ''} importée${notes.length > 1 ? 's' : ''}`)
     } catch {
       toast('Fichier non reconnu')
     }

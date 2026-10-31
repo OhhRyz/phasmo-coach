@@ -75,6 +75,35 @@ function isObject(v: unknown): v is Record<string, unknown> {
 }
 
 /** Fusionne un état chargé (localStorage ou import) avec les valeurs par défaut. */
+const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback)
+
+/** Nettoie des notes venues d'un lien, d'un fichier ou du stockage (les entrées invalides sont ignorées). */
+export function sanitizeNotes(raw: unknown): CoachNote[] {
+  if (!Array.isArray(raw)) return []
+  const out: CoachNote[] = []
+  for (const n of raw) {
+    if (!isObject(n) || typeof n.id !== 'string' || !n.id) continue
+    const title = str(n.title).slice(0, 200)
+    const body = str(n.body).slice(0, 8000)
+    if (!title && !body) continue
+    const createdAt = typeof n.createdAt === 'number' ? n.createdAt : Date.now()
+    out.push({
+      id: n.id.slice(0, 64),
+      createdAt,
+      updatedAt: typeof n.updatedAt === 'number' ? n.updatedAt : createdAt,
+      ghostId: typeof n.ghostId === 'string' ? n.ghostId : null,
+      title: title || body.slice(0, 60),
+      body,
+      asCard: n.asCard !== false,
+      question: typeof n.question === 'string' && n.question.trim() ? n.question.slice(0, 500) : undefined,
+      answer: typeof n.answer === 'string' && n.answer.trim() ? n.answer.slice(0, 2000) : undefined,
+      author: str(n.author).slice(0, 80),
+      pinned: n.pinned === true,
+    })
+  }
+  return out
+}
+
 export function hydrate(raw: unknown): PersistedState {
   const base = initialState()
   if (!isObject(raw) || raw.version !== 1) return base
@@ -88,17 +117,37 @@ export function hydrate(raw: unknown): PersistedState {
     log: Array.isArray(r.log) ? r.log.slice(-MAX_LOG) : [],
     answers: isObject(r.answers) ? (r.answers as PersistedState['answers']) : {},
     activity: Array.isArray(r.activity) ? r.activity.slice(-MAX_ACTIVITY) : [],
-    notes: Array.isArray(r.notes) ? r.notes : [],
+    notes: sanitizeNotes(r.notes),
   }
 }
 
-export function load(): PersistedState {
+export interface Loaded {
+  state: PersistedState
+  /** false si des données existaient mais n'ont pas pu être lues (elles ne doivent pas être écrasées) */
+  ok: boolean
+}
+
+export function load(): Loaded {
+  let raw: string | null = null
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? hydrate(JSON.parse(raw)) : initialState()
+    raw = localStorage.getItem(STORAGE_KEY)
   } catch {
-    return initialState()
+    return { state: initialState(), ok: true }
   }
+  if (!raw) return { state: initialState(), ok: true }
+  try {
+    const parsed = JSON.parse(raw)
+    if (isObject(parsed) && parsed.version === 1) return { state: hydrate(parsed), ok: true }
+  } catch {
+    /* illisible */
+  }
+  // données inconnues (corrompues ou d'une version plus récente) : on les met de côté avant toute écriture
+  try {
+    localStorage.setItem(`${STORAGE_KEY}-sauvegarde-${Date.now()}`, raw)
+  } catch {
+    /* tant pis */
+  }
+  return { state: initialState(), ok: false }
 }
 
 export function save(state: PersistedState): boolean {

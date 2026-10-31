@@ -5,6 +5,7 @@ import { Empty, PageHead } from '../components/ui'
 import { getGhost } from '../data'
 import { formatDate } from '../engine/format'
 import { decodePayload } from '../engine/share'
+import { sanitizeNotes } from '../store/schema'
 import { useStore } from '../store/store'
 import type { NotesPayload } from './Notebook'
 
@@ -17,14 +18,25 @@ export function ImportNotes() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    let current = true
+    setError(false)
+    setData(null)
     const d = params.get('d')
     if (!d) {
       setError(true)
       return
     }
     decodePayload<NotesPayload>(d)
-      .then((p) => (p.kind === 'phasmo-coach/notes' && Array.isArray(p.notes) ? setData(p) : setError(true)))
-      .catch(() => setError(true))
+      .then((p) => {
+        if (!current) return
+        const notes = p.kind === 'phasmo-coach/notes' ? sanitizeNotes(p.notes) : []
+        if (notes.length) setData({ ...p, notes, from: typeof p.from === 'string' ? p.from : '' })
+        else setError(true)
+      })
+      .catch(() => current && setError(true))
+    return () => {
+      current = false
+    }
   }, [params])
 
   if (error) {

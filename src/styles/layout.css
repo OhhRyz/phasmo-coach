@@ -257,3 +257,12 @@
     margin-bottom: 24px;
   }
 }
+
+.save-warning {
+  margin: 0;
+  padding: 10px 16px;
+  background: var(--bad-soft);
+  color: var(--bad);
+  font-size: 0.9rem;
+  text-align: center;
+}

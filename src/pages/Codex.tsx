@@ -4,7 +4,7 @@ import { GhostRow } from '../components/GhostRow'
 import { Empty, PageHead, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { EMPTY_FILTER, filterGhosts, possibleEvidence, type FilterState } from '../engine/filter'
-import type { SanityClass, SpeedClass } from '../engine/format'
+import type { SpeedClass } from '../engine/format'
 import { useMastery } from '../store/hooks'
 
 const SPEEDS: { value: SpeedClass; label: string }[] = [
@@ -12,10 +12,11 @@ const SPEEDS: { value: SpeedClass; label: string }[] = [
   { value: 'normal', label: 'Normale' },
   { value: 'fast', label: 'Rapide' },
 ]
-const SANITY: { value: SanityClass; label: string }[] = [
-  { value: 'early', label: 'Au-dessus de 50 %' },
-  { value: 'normal', label: 'À 50 %' },
-  { value: 'late', label: 'Sous 50 %' },
+const HUNT_ABOVE: { value: number | null; label: string }[] = [
+  { value: null, label: 'Pas d’info' },
+  { value: 50, label: 'Au-dessus de 50 %' },
+  { value: 60, label: 'Au-dessus de 60 %' },
+  { value: 70, label: 'Au-dessus de 70 %' },
 ]
 
 const SESSION_KEY = 'phasmo-coach/codex-filter'
@@ -25,7 +26,7 @@ function loadSession(): { filter: FilterState; query: string } {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (raw) {
       const v = JSON.parse(raw)
-      return { filter: { ...EMPTY_FILTER, ...v.filter }, query: typeof v.query === 'string' ? v.query : '' }
+      return { filter: { ...EMPTY_FILTER, ...v.filter, huntAbove: typeof v.filter?.huntAbove === 'number' ? v.filter.huntAbove : null }, query: typeof v.query === 'string' ? v.query : '' }
     }
   } catch {
     /* stockage indisponible */
@@ -61,7 +62,7 @@ export function Codex() {
   const [query, setQuery] = useState(initial.query)
   const [showOut, setShowOut] = useState(false)
   const [showMore, setShowMore] = useState(
-    initial.filter.speed.length > 0 || initial.filter.sanity.length > 0 || initial.filter.los !== null,
+    initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null,
   )
 
   // les filtres survivent à l'ouverture d'une fiche puis au retour
@@ -76,7 +77,7 @@ export function Codex() {
   const active =
     Object.values(filter.evidence).some((m) => m && m !== 'unknown') ||
     filter.speed.length > 0 ||
-    filter.sanity.length > 0 ||
+    filter.huntAbove != null ||
     filter.los !== null ||
     filter.evidenceCount !== 3
 
@@ -89,7 +90,7 @@ export function Codex() {
     return { matching: m, out: byQuery.filter((g) => !m.includes(g)) }
   }, [filter, query])
 
-  const possible = useMemo(() => possibleEvidence(matching), [matching])
+  const possible = useMemo(() => possibleEvidence(filterGhosts(GHOSTS, filter), filter), [filter])
 
   return (
     <div className="page">
@@ -147,8 +148,13 @@ export function Codex() {
               <Toggle label="Vitesse" items={SPEEDS} value={filter.speed} onChange={(speed) => setFilter({ ...filter, speed })} />
             </div>
             <div className="field">
-              <span>Première chasse</span>
-              <Toggle label="Première chasse" items={SANITY} value={filter.sanity} onChange={(sanity) => setFilter({ ...filter, sanity })} />
+              <span>Une chasse a démarré avec une santé moyenne…</span>
+              <Seg
+                label="Chasse observée"
+                value={filter.huntAbove ?? -1}
+                onChange={(v) => setFilter({ ...filter, huntAbove: v < 0 ? null : v })}
+                options={HUNT_ABOVE.map((h) => ({ value: h.value ?? -1, label: h.label }))}
+              />
             </div>
             <div className="field">
               <span>Accélère en ligne de vue</span>

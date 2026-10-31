@@ -8,11 +8,20 @@ import type { Ghost } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import { EMPTY_FILTER, filterGhosts, possibleEvidence, type FilterState } from '../engine/filter'
 import { createRng, weightedPick } from '../engine/random'
-import { DIFFICULTIES, generateScenario, scoreScenario, type Clue, type Difficulty, type Scenario as S } from '../engine/scenario'
+import {
+  candidatesAfterEachClue,
+  DIFFICULTIES,
+  generateScenario,
+  scoreScenario,
+  WRONG_GUESS_PENALTY,
+  type Clue,
+  type Difficulty,
+  type Scenario as S,
+} from '../engine/scenario'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 
-const MAX_WRONG = 2
+const MAX_WRONG = 1
 
 const STRENGTH_LABEL = { hint: 'indice', strong: 'indice fort', definitive: 'indice décisif' } as const
 
@@ -48,10 +57,14 @@ export function Scenario() {
     const rng = createRng((Date.now() ^ 0x5bd1e995) >>> 0)
     const sorted = [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0))
     const candidates = pool === 'weak' ? sorted.slice(0, 8) : GHOSTS
-    // en 0 preuve, il faut assez d'observations pour que l'enquête soit jouable
-    const playable = difficulty === 'apocalypse' ? candidates.filter((g) => g.observations.length >= 3) : candidates
+    // en 0 preuve, il faut au moins deux indices forts utilisables sans preuve pour que l'enquête soit jouable
+    const playable =
+      difficulty === 'apocalypse'
+        ? candidates.filter((g) => g.observations.filter((o) => !o.requires && o.strength !== 'hint').length >= 2)
+        : candidates
     const g = weightedPick(rng, playable.length ? playable : candidates, (x) => 1.25 - (mastery[x.id] ?? 0))
-    const s = generateScenario(g, difficulty, rng)
+    const s = generateScenario(g, difficulty, rng, GHOSTS)
+    steps.current?.stop()
     setScenario(s)
     setRevealed(2)
     setFilter({ ...EMPTY_FILTER, evidenceCount: s.evidenceCount })
@@ -156,6 +169,7 @@ export function Scenario() {
 
   /* ---------- résultat ---------- */
   if (outcome) {
+    const debrief = candidatesAfterEachClue(scenario, GHOSTS)
     const finalScore = scoreScenario(revealed, scenario.clues.length, wrong.length, outcome === 'solved')
     return (
       <div className="page narrow">
@@ -164,7 +178,7 @@ export function Scenario() {
             ? `Trouvé avec ${revealed} indice${revealed > 1 ? 's' : ''} sur ${scenario.clues.length}${
                 wrong.length ? ` et ${wrong.length} erreur${wrong.length > 1 ? 's' : ''}` : ', sans erreur'
               }. ${finalScore} points.`
-            : 'Trois erreurs : le contrat échoue. Relis les indices ci-dessous, la leçon est souvent dedans.'}
+            : 'Deux erreurs : le contrat échoue. Relis les indices ci-dessous, la leçon est souvent dedans.'}
         </PageHead>
         <dl className="facts">
           <div>
@@ -194,9 +208,13 @@ export function Scenario() {
         </dl>
         <section className="section">
           <h2>Le contrat en entier</h2>
+          <p className="muted small" style={{ marginBottom: 12 }}>
+            À droite, le nombre d’entités encore possibles d’après les seules preuves à ce moment-là. Le reste du chemin se fait
+            avec les comportements.
+          </p>
           <ol className="log">
             {scenario.clues.map((c, i) => (
-              <ClueItem key={c.id} clue={c} dim={i >= revealed} showStrength />
+              <ClueItem key={c.id} clue={c} dim={i >= revealed} showStrength remaining={debrief[i]} />
             ))}
           </ol>
         </section>
@@ -222,7 +240,14 @@ export function Scenario() {
         <h1>Contrat en cours</h1>
         <p className="faint small">
           {score} points si tu trouves maintenant · {lives} essai{lives > 1 ? 's' : ''} restant{lives > 1 ? 's' : ''} ·{' '}
-          <button type="button" className="link-btn muted-link" onClick={() => setScenario(null)}>
+          <button
+            type="button"
+            className="link-btn muted-link"
+            onClick={() => {
+              steps.current?.stop()
+              setScenario(null)
+            }}
+          >
             abandonner
           </button>
         </p>
@@ -311,7 +336,7 @@ export function Scenario() {
         <p className="muted small" style={{ marginBottom: 14 }}>
           {wrong.length > 0
             ? `Attention, encore ${lives} essai${lives > 1 ? 's' : ''}.`
-            : 'Une erreur coûte des points. Trois erreurs, et le contrat échoue.'}
+            : `Une erreur coûte ${WRONG_GUESS_PENALTY} points. Deux erreurs, et le contrat échoue.`}
           {candidates.length > 0 && candidates.length < GHOSTS.length && ' Seules les entités encore possibles d’après ton carnet sont proposées.'}
         </p>
         <div className="guess-grid">
@@ -332,12 +357,14 @@ function ClueItem({
   onPlay,
   playing,
   showStrength,
+  remaining,
 }: {
   clue: Clue
   dim?: boolean
   onPlay?: () => void
   playing?: boolean
   showStrength?: boolean
+  remaining?: number
 }) {
   const ev = clue.evidence ? EVIDENCE[clue.evidence] : undefined
   return (
@@ -345,7 +372,7 @@ function ClueItem({
       <span className="clue-time">{clue.time}</span>
       <div className="clue-body">
         <p>{clue.text}</p>
-        {(ev || (clue.strength && showStrength) || onPlay) && (
+        {(ev || (clue.strength && showStrength) || onPlay || remaining != null) && (
           <p className="clue-meta">
             {ev && (
               <span className="evi" style={{ '--c': ev.color } as CSSProperties}>
@@ -353,6 +380,11 @@ function ClueItem({
               </span>
             )}
             {clue.strength && showStrength && <span className={`tag${clue.strength === 'definitive' ? ' accent' : ''}`}>{STRENGTH_LABEL[clue.strength]}</span>}
+            {remaining != null && (
+              <span className="faint">
+                {remaining} possible{remaining > 1 ? 's' : ''}
+              </span>
+            )}
             {onPlay && (
               <button type="button" className="link-btn" onClick={onPlay}>
                 {playing ? 'arrêter le son' : 'écouter les pas'}

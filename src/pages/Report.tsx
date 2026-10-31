@@ -13,14 +13,20 @@ export function Report() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    let current = true
+    setError(false)
+    setData(null)
     const d = params.get('d')
     if (!d) {
       setError(true)
       return
     }
     decodePayload<ReportPayload>(d)
-      .then((p) => (p.kind === 'phasmo-coach/report' ? setData(p) : setError(true)))
-      .catch(() => setError(true))
+      .then((p) => current && (p.kind === 'phasmo-coach/report' ? setData(p) : setError(true)))
+      .catch(() => current && setError(true))
+    return () => {
+      current = false
+    }
   }, [params])
 
   if (error) {

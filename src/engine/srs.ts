@@ -65,8 +65,11 @@ export function schedule(prev: CardState | undefined, grade: Grade, now: number)
     }
   }
 
-  // phase review
+  // phase review : « Difficile » < « Bien » < « Facile », toujours strictement
   const ivl = Math.max(1, s.interval)
+  const hardI = Math.min(MAX_INTERVAL, Math.max(ivl + 1, Math.round(ivl * 1.2)))
+  const goodI = Math.min(MAX_INTERVAL, Math.max(hardI + 1, Math.round(ivl * s.ease)))
+  const easyI = Math.min(MAX_INTERVAL, Math.max(goodI + 1, Math.round(ivl * s.ease * 1.3)))
   switch (grade) {
     case 1:
       return {
@@ -78,18 +81,12 @@ export function schedule(prev: CardState | undefined, grade: Grade, now: number)
         interval: Math.max(1, Math.round(ivl * 0.3)),
         due: now + RELEARNING_STEPS[0],
       }
-    case 2: {
-      const interval = Math.min(MAX_INTERVAL, Math.max(ivl + 1, Math.round(ivl * 1.2)))
-      return { ...s, ease: Math.max(MIN_EASE, s.ease - 0.15), interval, due: now + interval * DAY }
-    }
-    case 3: {
-      const interval = Math.min(MAX_INTERVAL, Math.max(ivl + 1, Math.round(ivl * s.ease)))
-      return { ...s, interval, due: now + interval * DAY }
-    }
-    case 4: {
-      const interval = Math.min(MAX_INTERVAL, Math.max(ivl + 2, Math.round(ivl * s.ease * 1.3)))
-      return { ...s, ease: s.ease + 0.15, interval, due: now + interval * DAY }
-    }
+    case 2:
+      return { ...s, ease: Math.max(MIN_EASE, s.ease - 0.15), interval: hardI, due: now + hardI * DAY }
+    case 3:
+      return { ...s, interval: goodI, due: now + goodI * DAY }
+    case 4:
+      return { ...s, ease: s.ease + 0.15, interval: easyI, due: now + easyI * DAY }
   }
 }
 

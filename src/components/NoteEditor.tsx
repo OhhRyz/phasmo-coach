@@ -43,7 +43,7 @@ export function NoteEditor({
       createdAt: note?.createdAt ?? now,
       updatedAt: now,
       ghostId: ghost,
-      title: title.trim() || body.trim().slice(0, 60),
+      title: title.trim() || (ghost ? `Conseil sur ${GHOSTS.find((g) => g.id === ghost)?.name ?? 'une entité'}` : 'Conseil du coach'),
       body: body.trim(),
       asCard,
       question: question.trim() || undefined,

@@ -86,11 +86,12 @@ export function streak(state: PersistedState, now: number): number {
   state.log.forEach((l) => days.add(dayKey(l.t)))
   state.activity.forEach((a) => days.add(dayKey(a.t)))
   let count = 0
-  let cursor = startOfDay(now)
-  if (!days.has(dayKey(cursor))) cursor -= 86_400_000
-  while (days.has(dayKey(cursor))) {
+  // on recule jour par jour avec le calendrier (et non par tranches de 24 h, faussées au changement d'heure)
+  const cursor = new Date(startOfDay(now))
+  if (!days.has(dayKey(cursor.getTime()))) cursor.setDate(cursor.getDate() - 1)
+  while (days.has(dayKey(cursor.getTime()))) {
     count++
-    cursor -= 86_400_000
+    cursor.setDate(cursor.getDate() - 1)
   }
   return count
 }

@@ -84,14 +84,17 @@ export function formatDate(ts: number): string {
 
 /** Remplace le nom de l'entité dans un texte pour ne pas souffler la réponse. */
 export function redactGhostName(text: string, g: Ghost): string {
-  const names = [g.name, g.nameEn, g.nameEn.replace(/^The /, ''), g.name.replace(/^(Le |Les |La |L')/, '')]
+  // Le nom français est cherché avec sa majuscule seulement : « Ombre », « Esprit » ou « Fantôme » sont
+  // aussi des mots courants (« une ombre », « l'esprit »…) qu'il ne faut pas toucher.
+  const bare = (n: string) => n.replace(/^(The |Le |Les |La |L['’])/, '')
+  const names = [...new Set([g.name, bare(g.name), g.nameEn, bare(g.nameEn)])]
     .filter((n) => n.length > 2)
     .sort((a, b) => b.length - a.length)
-  const lead: Record<string, string> = { 'du ': 'de ', 'des ': 'de ', 'au ': 'à ', 'aux ': 'à ' }
+  const lead: Record<string, string> = { 'du ': 'de ', 'des ': 'de ', 'au ': 'à ', 'aux ': 'à ', "d'": 'de ', 'd’': 'de ' }
   let out = text
   for (const n of names) {
     const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const re = new RegExp(`(l['’]|le |la |les |du |des |au |aux |un |une )?${escaped}s?(?![\\p{L}])`, 'giu')
+    const re = new RegExp(`(?<![\\p{L}])([Ll]['’]|[Ll]es? |[Ll]a |[Dd]u |[Dd]es |[Aa]ux? |[Uu]ne? |[Dd]['’])?${escaped}s?(?![\\p{L}])`, 'gu')
     out = out.replace(re, (_m, article?: string) => `${lead[article?.toLowerCase() ?? ''] ?? ''}cette entité`)
   }
   return out

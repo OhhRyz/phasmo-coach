@@ -198,7 +198,7 @@ export function Profile() {
           </button>
         </div>
         <p className="faint small">
-          Profil créé le {new Date(state.profile.createdAt).toLocaleDateString('fr-FR')} · {Object.keys(state.cards).length} cartes vues · {state.log.length} révisions · {Math.round((now - state.profile.createdAt) / 86_400_000)} jours
+          Profil créé le {new Date(state.profile.createdAt).toLocaleDateString('fr-FR')} · {deck.filter((c) => state.cards[c.id]).length} cartes vues · {state.log.length} révisions · {Math.round((now - state.profile.createdAt) / 86_400_000)} jours
         </p>
       </section>
 

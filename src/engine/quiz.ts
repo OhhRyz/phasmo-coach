@@ -3,7 +3,7 @@ import type { EvidenceId, Ghost, Mechanics } from '../data/types'
 import { de, le } from './cards'
 import { filterGhosts, EMPTY_FILTER } from './filter'
 import { redactGhostName } from './format'
-import { hashString, pick, sample, shuffle, weightedPick, type Rng } from './random'
+import { pick, sample, shuffle, weightedPick, type Rng } from './random'
 
 export type QuizTopic = 'evidence' | 'speed' | 'sanity' | 'behavior' | 'zero' | 'expert' | 'mechanics'
 
@@ -59,8 +59,9 @@ function ghostChoice(g: Ghost): Choice {
 }
 
 /** Distracteurs proches : partagent des preuves avec l'entité cible. */
-function similarGhosts(g: Ghost, pool: Ghost[], n: number, rng: Rng): Ghost[] {
-  const others = pool.filter((o) => o.id !== g.id)
+function similarGhosts(g: Ghost, pool: Ghost[], n: number, rng: Rng, behaviour = false): Ghost[] {
+  // le Mimic copie les comportements : il ne peut pas servir de mauvaise réponse à une question de comportement
+  const others = pool.filter((o) => o.id !== g.id && !(behaviour && o.id === 'the-mimic'))
   const shared = (o: Ghost) => o.evidence.filter((e) => g.evidence.includes(e)).length
   const ranked = shuffle(rng, others).sort((a, b) => shared(b) - shared(a))
   const close = ranked.slice(0, Math.min(others.length, n + 3))
@@ -232,12 +233,15 @@ const losOfGhost: Gen = (g) => {
 }
 
 const whichGhostTell: Gen = (g, ctx) => {
-  const tells = [...g.keyTells, ...g.tells.filter((t) => t.zeroEvidence).map((t) => t.text)]
+  // les signes clés résument parfois des propriétés partagées (« vitesse standard ») : on n'utilise ici
+  // que les signes « 0 preuve » de tybayn, propres à l'entité
+  const tells = g.tells.filter((t) => t.zeroEvidence).map((t) => t.text)
   if (!tells.length) return null
-  const tell = pick(ctx.rng, tells)
-  const others = similarGhosts(g, ctx.allGhosts, 3, ctx.rng)
+  const k = Math.floor(ctx.rng() * tells.length)
+  const tell = tells[k]
+  const others = similarGhosts(g, ctx.allGhosts, 3, ctx.rng, true)
   return {
-    id: `q:tell:${g.id}:${hashString(tell)}`,
+    id: `q:tell:${g.id}:${k}`,
     topic: 'behavior',
     ghostId: g.id,
     prompt: 'Quelle entité correspond à ce signe ?',
@@ -245,29 +249,27 @@ const whichGhostTell: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `${g.name} — ${g.summary}`,
-    cardId: g.keyTells.includes(tell) ? `g:${g.id}:rev:${hashString(tell)}` : `g:${g.id}:tells`,
+    explain: `${g.name} : ${g.summary}`,
+    cardId: k < 2 ? `g:${g.id}:rev:${k}` : `g:${g.id}:tells`,
   }
 }
 
 const observationQuestion: Gen = (g, ctx) => {
-  const obs = g.observations.filter((o) => o.strength !== 'hint')
+  // seules les observations décisives garantissent une réponse unique
+  const obs = g.observations.filter((o) => o.strength === 'definitive')
   if (!obs.length) return null
-  const o = pick(ctx.rng, obs)
-  const others = similarGhosts(g, ctx.allGhosts, 3, ctx.rng)
+  const k = Math.floor(ctx.rng() * obs.length)
+  const others = similarGhosts(g, ctx.allGhosts, 3, ctx.rng, true)
   return {
-    id: `q:obs:${g.id}:${hashString(o.text)}`,
+    id: `q:obs:${g.id}:${k}`,
     topic: 'behavior',
     ghostId: g.id,
-    prompt:
-      o.strength === 'definitive'
-        ? 'Sur le terrain, tu observes ceci. Quelle entité est-ce forcément ?'
-        : 'Sur le terrain, tu observes ceci. Quelle entité est la plus probable parmi ces choix ?',
-    quote: redactGhostName(o.text, g),
+    prompt: 'Sur le terrain, tu observes ceci. De quelle entité s’agit-il ?',
+    quote: redactGhostName(obs[k].text, g),
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `${g.name} — ${g.summary}`,
+    explain: `${g.name} : ${g.summary}`,
     cardId: `g:${g.id}:tells`,
   }
 }
@@ -275,14 +277,15 @@ const observationQuestion: Gen = (g, ctx) => {
 const zeroTest: Gen = (g, ctx) => {
   const tests = g.confirmationTests.filter((t) => t.definitive)
   if (!tests.length) return null
-  const t = pick(ctx.rng, tests)
+  const k = Math.floor(ctx.rng() * tests.length)
+  const t = tests[k]
   const others = shuffle(
     ctx.rng,
-    ctx.allGhosts.filter((o) => o.id !== g.id && o.confirmationTests.some((x) => x.definitive)),
+    ctx.allGhosts.filter((o) => o.id !== g.id && o.id !== 'the-mimic' && o.confirmationTests.some((x) => x.definitive)),
   ).slice(0, 3)
   if (others.length < 3) return null
   return {
-    id: `q:zero:${g.id}:${hashString(t.text)}`,
+    id: `q:zero:${g.id}:${k}`,
     topic: 'zero',
     ghostId: g.id,
     prompt: 'Ce test, s’il réussit, confirme quelle entité ?',
@@ -291,7 +294,7 @@ const zeroTest: Gen = (g, ctx) => {
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
     explain: `Test de confirmation ${de(g.name)}.`,
-    cardId: `g:${g.id}:test:${hashString(t.text)}`,
+    cardId: k < 2 ? `g:${g.id}:test:${k}` : `g:${g.id}:tells`,
   }
 }
 
@@ -301,7 +304,7 @@ const authored = (g: Ghost, ctx: QuizOptions): Question | null => {
   const q = pick(ctx.rng, valid)
   const choices = q.choices.map((label, i) => ({ id: String(i), label }))
   return {
-    id: `q:auth:${g.id}:${hashString(q.q)}`,
+    id: `q:auth:${g.id}:${g.quiz.indexOf(q)}`,
     topic: 'expert',
     ghostId: g.id,
     prompt: q.q,

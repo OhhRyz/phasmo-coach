@@ -17,6 +17,8 @@ export interface Observation {
   text: string
   kind: ObservationKind
   strength: ObservationStrength
+  /** observation visible seulement si cette preuve est présente dans la partie (ex. Goryo et D.O.T.S) */
+  requires?: EvidenceId
 }
 
 export interface AuthoredQuestion {
@@ -34,6 +36,8 @@ export interface GhostSpeed {
   isRange: boolean
   /** accélération standard en ligne de vue */
   los: boolean
+  /** l'accélération en ligne de vue dépend des conditions (ex. Kormos) : le filtre ne l'élimine jamais */
+  losVaries?: boolean
   summary: string
   details: string[]
 }

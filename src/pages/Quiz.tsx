@@ -5,11 +5,13 @@ import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
 import { buildQuiz, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
 import { useMastery } from '../store/hooks'
+import { ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
 
 type Pool = 'all' | 'weak' | 'one'
 
 const LETTERS = 'ABCDEFGHIJ'
+export const WEAK_COUNT = 6
 
 interface Answer {
   q: Question
@@ -26,7 +28,8 @@ export function Quiz() {
   const topicParam = QUIZ_TOPICS.find((t) => t.id === params.get('topic'))?.id
   const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : ['evidence', 'speed', 'sanity', 'behavior'])
   const [count, setCount] = useState(10)
-  const [pool, setPool] = useState<Pool>(focusGhost && getGhost(focusGhost) ? 'one' : 'all')
+  const [pool, setPool] = useState<Pool>(focusGhost && getGhost(focusGhost) ? 'one' : params.get('pool') === 'weak' ? 'weak' : 'all')
+  const [empty, setEmpty] = useState(false)
   const [questions, setQuestions] = useState<Question[] | null>(null)
   const [index, setIndex] = useState(0)
   const [selected, setSelected] = useState<string[]>([])
@@ -34,7 +37,7 @@ export function Quiz() {
   const [checked, setChecked] = useState(false)
 
   const weak = useMemo(
-    () => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, 8),
+    () => [...GHOSTS].sort((a, b) => (mastery[a.id] ?? 0) - (mastery[b.id] ?? 0)).slice(0, WEAK_COUNT),
     [mastery],
   )
   const one = focusGhost ? getGhost(focusGhost) : undefined
@@ -50,6 +53,13 @@ export function Quiz() {
       rng: createRng(Date.now() & 0xffffffff),
       mastery,
     })
+    // aucun contenu pour ces thèmes (ex. pas de test 0 preuve définitif pour cette entité)
+    if (!qs.length) {
+      setEmpty(true)
+      setQuestions(null)
+      return
+    }
+    setEmpty(false)
     setQuestions(qs)
     setIndex(0)
     setAnswers([])
@@ -91,6 +101,8 @@ export function Quiz() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Entrée sur un bouton qui a le focus garde son comportement normal, sauf « Question suivante »
+      if (ignoreKey(e, (el) => !!el.closest('.choice') && e.key !== 'Enter')) return
       if (!q) return
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -164,6 +176,12 @@ export function Quiz() {
             </div>
           </div>
           {pool === 'weak' && <p className="faint small">Points faibles : {weak.map((g) => g.name).join(', ')}.</p>}
+          {empty && (
+            <p className="note accent">
+              Pas de question disponible avec ces réglages (par exemple, cette entité n’a pas de test sans preuve définitif). Ajoute
+              un autre thème.
+            </p>
+          )}
           <div>
             <button type="submit" className="btn btn-primary btn-lg" disabled={!topics.length}>
               Lancer le quiz

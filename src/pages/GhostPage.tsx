@@ -260,7 +260,7 @@ export function GhostPage() {
             ))}
           </ul>
         )}
-        <NoteEditor ghostId={ghost.id} compact />
+        <NoteEditor key={ghost.id} ghostId={ghost.id} compact />
       </section>
 
       {(ghost.changes.length > 0 || ghost.uncertain.length > 0) && (

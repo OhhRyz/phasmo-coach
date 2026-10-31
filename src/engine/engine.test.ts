@@ -6,7 +6,7 @@ import { EMPTY_FILTER, filterGhosts, matchesEvidence, type FilterState } from '.
 import { redactGhostName, speedClasses } from './format'
 import { buildQuiz, isCorrect, QUIZ_TOPICS } from './quiz'
 import { createRng } from './random'
-import { DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
+import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
 import { decodePayload, encodePayload } from './share'
 import { cardMastery, isDue, schedule } from './srs'
 import { speedToBpm, bpmToSpeed } from './audio'
@@ -46,6 +46,16 @@ describe('répétition espacée', () => {
     expect(lapse.lapses).toBe(1)
     expect(lapse.ease).toBeLessThan(s.ease)
     expect(cardMastery(lapse)).toBeLessThan(cardMastery(s))
+  })
+
+  it('les quatre boutons donnent des intervalles strictement croissants', () => {
+    let s = schedule(undefined, 3, T0)
+    s = schedule(s, 3, T0 + 600_000) // graduée à 1 jour
+    for (const state of [s, { ...s, ease: 1.3 }, { ...s, interval: 7 }]) {
+      const ivl = ([2, 3, 4] as const).map((g) => schedule(state, g, state.due).interval)
+      expect(ivl[0]).toBeLessThan(ivl[1])
+      expect(ivl[1]).toBeLessThan(ivl[2])
+    }
   })
 
   it('une carte en révision est due dès le jour prévu', () => {
@@ -115,8 +125,9 @@ describe('quiz', () => {
     for (const q of qs) {
       const g = getGhost(q.ghostId!)!
       if (!q.quote) continue
-      for (const n of [g.name, g.nameEn]) {
-        if (n.length > 3) expect(q.quote.toLowerCase(), q.id).not.toContain(n.toLowerCase())
+      // le nom propre (avec sa majuscule) ne doit jamais apparaître ; un nom commun comme « ombre » est permis
+      for (const n of [g.name, g.nameEn, g.name.replace(/^(Le|Les|La) /, ''), g.nameEn.replace(/^The /, '')]) {
+        if (n.length > 3) expect(new RegExp(`(?<![\\p{L}])${n}(?![\\p{L}])`, 'u').test(q.quote), `${q.id}: ${q.quote}`).toBe(false)
       }
     }
   })
@@ -127,7 +138,7 @@ describe('mise en situation', () => {
     const rng = createRng(42)
     for (const g of GHOSTS) {
       for (const d of DIFFICULTIES) {
-        const s = generateScenario(g, d.id, rng)
+        const s = generateScenario(g, d.id, rng, GHOSTS)
         expect(s.visibleEvidence.length).toBe(d.count)
         expect(s.visibleEvidence.every((e) => g.evidence.includes(e))).toBe(true)
         if (g.forcedEvidence && d.count > 0) expect(s.visibleEvidence).toContain(g.forcedEvidence)
@@ -148,15 +159,66 @@ describe('mise en situation', () => {
     }
   })
 
+  it('raconte une chronologie cohérente', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const g of GHOSTS) {
+        for (const d of DIFFICULTIES) {
+          const s = generateScenario(g, d.id, createRng(seed * 31 + d.count), GHOSTS)
+          const label = `${g.id} ${d.id} graine ${seed}`
+          // horodatage croissant, au format mm:ss valide
+          const secs = s.clues.map((c) => {
+            expect(c.time, label).toMatch(/^\d{2}:[0-5]\d$/)
+            const [m, sec] = c.time.split(':').map(Number)
+            return m * 60 + sec
+          })
+          for (let i = 1; i < secs.length; i++) expect(secs[i], label).toBeGreaterThanOrEqual(secs[i - 1])
+          // une seule « première chasse », et aucun indice de chasse avant elle
+          const firsts = s.clues.filter((c) => c.kind === 'hunt-sanity')
+          expect(firsts.length, label).toBeLessThanOrEqual(1)
+          const firstIdx = s.clues.findIndex((c) => c.kind === 'hunt-sanity')
+          if (firstIdx >= 0) {
+            const huntIdx = s.clues.findIndex((c) => c.kind === 'hunt-speed')
+            if (huntIdx >= 0) expect(huntIdx, label).toBeGreaterThan(firstIdx)
+          }
+          // pas d'observation qui exige une preuve absente de la partie
+          const texts = new Set(s.clues.map((c) => c.text))
+          for (const o of g.observations) {
+            if (o.requires && !s.visibleEvidence.includes(o.requires)) {
+              expect([...texts].some((t) => t.length > 20 && o.text.includes(t.slice(0, 20))), label).toBe(false)
+            }
+          }
+          // peu de preuves : au moins un indice fort ou décisif quand l'entité en a
+          const hasStrong = g.observations.some((o) => !o.requires && o.strength !== 'hint')
+          if (d.count <= 1 && hasStrong) {
+            expect(s.clues.some((c) => c.kind === 'observation' && c.strength !== 'hint'), label).toBe(true)
+          }
+          // en 0 preuve, une entité autre que le Mimic n'a jamais d'orbes, et on le dit
+          if (d.count === 0 && g.id !== 'the-mimic') {
+            expect(s.clues.some((c) => c.kind === 'no-evidence' && c.evidence === 'orbs'), label).toBe(true)
+          }
+        }
+      }
+    }
+  })
+
+  it('formate les minutes sans « :60 »', () => {
+    expect(clock(2.9999)).toBe('03:00')
+    expect(clock(1.5)).toBe('01:30')
+  })
+
   it('pickVisibleEvidence garde la preuve forcée', () => {
     const g: Ghost = { ...GHOSTS[0], evidence: ['emf', 'uv', 'freezing'], forcedEvidence: 'freezing' }
     for (let i = 0; i < 20; i++) expect(pickVisibleEvidence(g, 1, createRng(i))).toEqual(['freezing'])
   })
 
-  it('le score récompense les enquêtes courtes', () => {
+  it('le score récompense les enquêtes courtes, sans rendre le pari rentable', () => {
     expect(scoreScenario(2, 10, 0, true)).toBeGreaterThan(scoreScenario(9, 10, 0, true))
     expect(scoreScenario(2, 10, 1, true)).toBeLessThan(scoreScenario(2, 10, 0, true))
     expect(scoreScenario(2, 10, 0, false)).toBe(0)
+    // parier entre 3 entités à mi-parcours (2 essais) rapporte moins, en moyenne, que trouver à coup sûr un peu plus tard
+    const mid = scoreScenario(5, 10, 0, true)
+    const bet = (mid + scoreScenario(5, 10, 1, true) + 0) / 3
+    expect(bet).toBeLessThan(scoreScenario(8, 10, 0, true))
   })
 })
 
@@ -167,6 +229,10 @@ describe('outils', () => {
     expect(redactGhostName('Le Demon peut chasser', demon)).toBe('cette entité peut chasser')
     const onryo = { ...GHOSTS[0], name: 'Onryo', nameEn: 'Onryo' }
     expect(redactGhostName("l'Onryo souffle une flamme", onryo)).toBe('cette entité souffle une flamme')
+    const shade = { ...GHOSTS[0], name: 'Ombre', nameEn: 'Shade' }
+    expect(redactGhostName('Seule à apparaître en ombre au cercle', shade)).toBe('Seule à apparaître en ombre au cercle')
+    expect(redactGhostName("Si c'est une Ombre, elle évite la pièce", shade)).toBe("Si c'est cette entité, elle évite la pièce")
+    expect(redactGhostName("un indice d'Obambo", { ...GHOSTS[0], name: 'Obambo', nameEn: 'Obambo' })).toBe('un indice de cette entité')
   })
 
   it('classe les vitesses', () => {

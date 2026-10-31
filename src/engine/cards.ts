@@ -1,6 +1,5 @@
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost, Mechanics } from '../data/types'
-import { hashString } from './random'
 import { redactGhostName as redact } from './format'
 
 export type Deck = 'ghost' | 'mechanics' | 'coach'
@@ -92,7 +91,7 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
     })
   }
 
-  if (g.huntSanity.normal >= 0) {
+  if ([g.huntSanity.low, g.huntSanity.normal, g.huntSanity.high].some((v) => v >= 0)) {
     cards.push({
       id: `g:${g.id}:san`,
       deck: 'ghost',
@@ -134,9 +133,9 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
   g.confirmationTests
     .filter((t) => t.definitive)
     .slice(0, 2)
-    .forEach((t) => {
+    .forEach((t, k) => {
       cards.push({
-        id: `g:${g.id}:test:${hashString(t.text)}`,
+        id: `g:${g.id}:test:${k}`,
         deck: 'ghost',
         kind: 'test',
         ghostId: g.id,
@@ -146,10 +145,14 @@ export function ghostCards(g: Ghost, ghostIndex: number): Card[] {
       })
     })
 
-  g.keyTells.slice(0, 2).forEach((tell) => {
-    const quote = redact(tell, g)
+  // cartes inversées : à partir des signes « 0 preuve », propres à l'entité
+  g.tells
+    .filter((t) => t.zeroEvidence)
+    .slice(0, 2)
+    .forEach((t, k) => {
+    const quote = redact(t.text, g)
     cards.push({
-      id: `g:${g.id}:rev:${hashString(tell)}`,
+      id: `g:${g.id}:rev:${k}`,
       deck: 'ghost',
       kind: 'reverse',
       ghostId: g.id,
@@ -184,18 +187,28 @@ export function mechanicsCards(m: Mechanics): Card[] {
 }
 
 export function noteCards(notes: CoachNote[]): Card[] {
-  return notes
-    .filter((n) => n.asCard)
-    .map((n, i) => ({
+  const out: Card[] = []
+  notes.forEach((n, i) => {
+    if (!n.asCard) return
+    const question = n.question?.trim()
+    const answer = n.answer?.trim()
+    const body = n.body?.trim() ?? ''
+    // sans question explicite, on demande de se souvenir du contenu de la note
+    const front = question || `Que retenir de « ${n.title} » ?`
+    const back = answer || body
+    if (!back) return
+    out.push({
       id: `n:${n.id}`,
-      deck: 'coach' as const,
-      kind: 'note' as const,
+      deck: 'coach',
+      kind: 'note',
       ghostId: n.ghostId ?? undefined,
-      front: n.question?.trim() || n.title,
-      back: n.answer?.trim() || n.body,
-      backList: n.question?.trim() && n.body && n.body !== n.answer ? [n.body] : [],
+      front,
+      back,
+      backList: answer && body && body !== answer ? [body] : [],
       order: i,
-    }))
+    })
+  })
+  return out
 }
 
 export function buildDeck(ghosts: Ghost[], mechanics: Mechanics, notes: CoachNote[]): Card[] {

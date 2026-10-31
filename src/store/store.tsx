@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { GHOSTS, MECHANICS } from '../data'
 import { buildDeck, type Card, type CoachNote } from '../engine/cards'
 import { recordAnswer } from '../engine/progress'
@@ -7,6 +7,7 @@ import {
   hydrate,
   initialState,
   load,
+  sanitizeNotes,
   MAX_ACTIVITY,
   MAX_LOG,
   save,
@@ -75,7 +76,7 @@ function reducer(state: PersistedState, action: Action): PersistedState {
     }
     case 'notes:import': {
       const byId = new Map(state.notes.map((n) => [n.id, n]))
-      for (const n of action.notes) {
+      for (const n of sanitizeNotes(action.notes)) {
         const cur = byId.get(n.id)
         if (!cur || cur.updatedAt < n.updatedAt) byId.set(n.id, n)
       }
@@ -95,28 +96,59 @@ interface StoreValue {
   deck: Card[]
   dispatch: (a: Action) => void
   review: (cardId: string, grade: Grade) => void
+  /** dernier enregistrement impossible (stockage plein ou bloqué) */
   saveFailed: boolean
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, load)
-  const saveFailed = useRef(false)
+  const [initial] = useState(load)
+  const [state, dispatch] = useReducer(reducer, initial.state)
+  const [saveFailed, setSaveFailed] = useState(false)
+  const latest = useRef(state)
+  const dirty = useRef(false)
+  const first = useRef(true)
 
+  const flush = useCallback(() => {
+    if (!dirty.current) return
+    dirty.current = false
+    setSaveFailed(!save(latest.current))
+  }, [])
+
+  // On n'écrit qu'après un vrai changement : un état chargé (ou des données illisibles) n'est jamais réécrit tel quel.
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      saveFailed.current = !save(state)
-    }, 150)
+    latest.current = state
+    if (first.current) {
+      first.current = false
+      return
+    }
+    dirty.current = true
+    const t = window.setTimeout(flush, 150)
     return () => window.clearTimeout(t)
-  }, [state])
+  }, [state, flush])
 
-  // synchronisation entre onglets
+  // fermeture de l'onglet ou mise en arrière-plan de l'app : on enregistre tout de suite
+  useEffect(() => {
+    const onHide = () => flush()
+    const onVisibility = () => document.visibilityState === 'hidden' && flush()
+    window.addEventListener('pagehide', onHide)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', onHide)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [flush])
+
+  // synchronisation entre onglets (seulement des données que l'on sait lire)
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY || !e.newValue) return
       try {
-        dispatch({ type: 'replace', state: hydrate(JSON.parse(e.newValue)) })
+        const parsed = JSON.parse(e.newValue)
+        if (parsed?.version !== 1) return
+        first.current = true // l'état reçu est déjà enregistré : ne pas le réécrire
+        dispatch({ type: 'replace', state: hydrate(parsed) })
       } catch {
         /* ignore */
       }
@@ -128,10 +160,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deck = useMemo(() => buildDeck(GHOSTS, MECHANICS, state.notes), [state.notes])
   const review = useCallback((cardId: string, grade: Grade) => dispatch({ type: 'review', cardId, grade, now: Date.now() }), [])
 
-  const value = useMemo(
-    () => ({ state, deck, dispatch, review, saveFailed: saveFailed.current }),
-    [state, deck, review],
-  )
+  const value = useMemo(() => ({ state, deck, dispatch, review, saveFailed }), [state, deck, review, saveFailed])
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
 

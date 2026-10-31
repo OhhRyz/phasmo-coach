@@ -82,6 +82,7 @@ export function Ear() {
   }
 
   const start = () => {
+    steps.current?.stop()
     setRounds(makeRounds(mode, createRng(Date.now() >>> 0)))
     setI(0)
     setScore(0)
@@ -174,7 +175,14 @@ export function Ear() {
   return (
     <div className="page narrow">
       <div className="session-bar">
-        <button type="button" className="link-btn muted-link small" onClick={() => setRounds(null)}>
+        <button
+          type="button"
+          className="link-btn muted-link small"
+          onClick={() => {
+            steps.current?.stop()
+            setRounds(null)
+          }}
+        >
           Quitter
         </button>
         <ProgressBar value={i / rounds.length} label="Progression" />

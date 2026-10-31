@@ -10,7 +10,7 @@ const THEME_LABEL: Record<ThemeChoice, string> = { system: 'Thème auto', light:
 const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: 'light', light: 'dark', dark: 'system' }
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { state, deck } = useStore()
+  const { state, deck, saveFailed } = useStore()
   const { pathname } = useLocation()
   const [theme, setTheme] = useTheme()
   const due = useMemo(() => buildReviewQueue(state, deck, Date.now()).length, [state, deck])
@@ -56,6 +56,12 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
+      {saveFailed && (
+        <p className="save-warning" role="alert">
+          Ta progression n’a pas pu être enregistrée sur cet appareil (stockage plein ou bloqué). Exporte une sauvegarde depuis le
+          profil pour ne rien perdre.
+        </p>
+      )}
       <main className="main" id="contenu">
         {children}
       </main>

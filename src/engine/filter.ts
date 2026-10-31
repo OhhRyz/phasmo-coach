@@ -1,5 +1,5 @@
 import type { EvidenceId, Ghost } from '../data/types'
-import { sanityClasses, speedClasses, type SanityClass, type SpeedClass } from './format'
+import { speedClasses, type SpeedClass } from './format'
 
 export type EvidenceMark = 'unknown' | 'found' | 'excluded'
 
@@ -8,7 +8,8 @@ export interface FilterState {
   evidenceCount: 0 | 1 | 2 | 3
   evidence: Partial<Record<EvidenceId, EvidenceMark>>
   speed: SpeedClass[]
-  sanity: SanityClass[]
+  /** chasse observée au-dessus de ce pourcentage de santé moyenne (null = pas d'information) */
+  huntAbove: number | null
   /** null = indifférent */
   los: boolean | null
 }
@@ -17,7 +18,7 @@ export const EMPTY_FILTER: FilterState = {
   evidenceCount: 3,
   evidence: {},
   speed: [],
-  sanity: [],
+  huntAbove: null,
   los: null,
 }
 
@@ -61,12 +62,16 @@ export function matchesBehavior(g: Ghost, state: FilterState): boolean {
     const cls = speedClasses(g)
     if (!state.speed.some((c) => cls.has(c))) return false
   }
-  if (state.sanity.length) {
-    const cls = sanityClasses(g)
-    if (!state.sanity.some((c) => cls.has(c))) return false
-  }
-  if (state.los !== null && g.speed.min >= 0 && g.speed.los !== state.los) return false
+  if (state.huntAbove != null && maxHuntSanity(g) <= state.huntAbove) return false
+  if (state.los !== null && g.speed.min >= 0 && !g.speed.losVaries && g.speed.los !== state.los) return false
   return true
+}
+
+/** Seuil le plus haut auquel l'entité peut lancer une chasse naturelle. */
+export function maxHuntSanity(g: Ghost): number {
+  const h = g.huntSanity
+  const v = Math.max(h.low, h.normal, h.high)
+  return v < 0 ? 100 : v
 }
 
 export function filterGhosts(ghosts: Ghost[], state: FilterState): Ghost[] {
@@ -76,12 +81,16 @@ export function filterGhosts(ghosts: Ghost[], state: FilterState): Ghost[] {
 /**
  * Preuves encore possibles parmi les entités restantes (pour griser celles qui ne peuvent plus apparaître).
  */
-export function possibleEvidence(candidates: Ghost[]): Set<EvidenceId> {
+export function possibleEvidence(candidates: Ghost[], state?: FilterState): Set<EvidenceId> {
   const out = new Set<EvidenceId>()
+  const found = state ? marked(state, 'found') : []
   for (const g of candidates) {
-    g.evidence.forEach((e) => out.add(e))
+    const real = found.filter((e) => e !== g.fakeEvidence)
+    // toutes les preuves de la partie sont déjà trouvées : plus rien d'autre ne peut apparaître
+    if (!state || real.length < state.evidenceCount) g.evidence.forEach((e) => out.add(e))
     if (g.fakeEvidence) out.add(g.fakeEvidence)
   }
+  found.forEach((e) => out.add(e))
   return out
 }
 
