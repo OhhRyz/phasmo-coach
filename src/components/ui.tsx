@@ -37,9 +37,9 @@ export function GhostEvidence({ ghost, short }: { ghost: Ghost; short?: boolean 
 export function Mastery({ value, showLabel }: { value: number; showLabel?: boolean }) {
   const pct = Math.round(value * 100)
   return (
-    <span className="mastery" title={`Maîtrise : ${pct} % (${masteryLevel(value).label})`}>
+    <span className="mastery" title={`Maîtrise\u202f: ${pct}\u00a0% (${masteryLevel(value).label})`}>
       <span className="mastery-hl" style={{ '--m': value } as Style} aria-hidden />
-      <span className="pct">{pct} %</span>
+      <span className="pct">{`${pct}\u00a0%`}</span>
       {showLabel && <span className="hand mastery-word">{masteryLevel(value).label.toLowerCase()}</span>}
     </span>
   )

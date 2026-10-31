@@ -1,3 +1,4 @@
+import { fr } from '../engine/format'
 import type { EvidenceId } from './types'
 
 export interface EvidenceInfo {
@@ -15,7 +16,7 @@ export interface EvidenceInfo {
   side: string
 }
 
-export const EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
+const RAW_EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
   emf: {
     id: 'emf',
     label: 'EMF niveau 5',
@@ -87,6 +88,14 @@ export const EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
     side: 'une voix répond, lumières éteintes',
   },
 }
+
+/** Textes des preuves avec la typographie française (comme les fiches). */
+export const EVIDENCE: Record<EvidenceId, EvidenceInfo> = Object.fromEntries(
+  Object.entries(RAW_EVIDENCE).map(([id, e]) => [
+    id,
+    { ...e, label: fr(e.label), howTo: fr(e.howTo), found: fr(e.found), notFound: fr(e.notFound), side: fr(e.side) },
+  ]),
+) as Record<EvidenceId, EvidenceInfo>
 
 export const EVIDENCE_IDS: EvidenceId[] = ['emf', 'dots', 'uv', 'freezing', 'orbs', 'writing', 'spiritbox']
 
