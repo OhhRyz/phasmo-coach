@@ -449,17 +449,81 @@ export function mechanicsCards(m: Mechanics): Card[] {
   return out
 }
 
-export function noteCards(notes: CoachNote[]): Card[] {
+/** Le titre d'une note enregistrée sans titre : sa première ligne, coupée proprement (60 caractères au plus). */
+export function firstLineTitle(body: string): string {
+  const line = body.trim().split('\n')[0].trim()
+  return line.length > 60 ? `${line.slice(0, 59).trimEnd()}…` : line
+}
+
+/** Le titre écrit d'une note, ou '' quand ce n'est que sa première ligne (note enregistrée sans titre). */
+export function writtenTitle(n: Pick<CoachNote, 'title' | 'body'>): string {
+  const t = n.title.trim()
+  return t && t !== firstLineTitle(n.body) ? t : ''
+}
+
+const NOTE_DAY = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
+
+/** « 1er novembre », « 12 mars » */
+function noteDay(t: number): string {
+  const d = new Date(t)
+  if (!Number.isFinite(t) || Number.isNaN(d.getTime())) return ''
+  return d.getDate() === 1 ? `1er ${NOTE_DAY.format(d).replace(/^1\s+/u, '')}` : NOTE_DAY.format(d)
+}
+
+/** « Que retenir de « Encens » ? » (avec les espaces fines de la typographie française) */
+const recall = (what: string) => (/[?!…]$/.test(what) ? `Que retenir de «\u202f${what}\u202f»` : `Que retenir de «\u202f${what}\u202f»\u202f?`)
+
+/**
+ * Une première ligne qui se lit comme un titre (« Encens et Démon. ») : courte, sans chiffre, sans tiret ni
+ * numéro de liste, sans ponctuation au milieu. « Plus rapide dans le froid, jusqu'à 2,7 m/s. » ou « - souffle
+ * froid visible » sont déjà le contenu de la note : posés en question, ils en souffleraient la moitié.
+ */
+const NOTE_TITLE_MAX = 40
+function titleLike(line: string): boolean {
+  const t = line.replace(/[\s.:;,]+$/u, '')
+  return t.length > 0 && t.length <= NOTE_TITLE_MAX && !/\d/u.test(t) && !/^\s*(?:[-*•–—]|\d+[.)])/u.test(line) && !/[.,;:!?…()]/u.test(t)
+}
+
+/**
+ * Ce que demande la carte d'une note, et ce qu'elle montre au dos. La question écrite d'abord ; sinon le titre
+ * écrit (« Que retenir de « Encens » ? »). Une note enregistrée sans titre n'est jamais demandée par sa
+ * première ligne coupée (qui soufflerait la réponse, à moitié) : sa première ligne quand c'est une question,
+ * ou quand elle se lit comme un titre (voir titleLike), suivie du reste ; sinon l'entité de la note (« Que
+ * retenir de la note sur le Hantu ? »), ou son jour pour une note générale. Ces deux dernières ne disent pas
+ * ce qu'on demande (`vague`) : l'éditeur demande alors un titre. Au dos, toute la note (sauf sous une question).
+ */
+export function noteQuestion(
+  n: Pick<CoachNote, 'title' | 'body' | 'question' | 'answer' | 'ghostId' | 'createdAt'>,
+  ghosts: readonly Pick<Ghost, 'id' | 'name'>[] = [],
+): { front: string; back: string; vague?: true } {
+  const question = n.question?.trim()
+  const answer = n.answer?.trim() ?? ''
+  const body = n.body?.trim() ?? ''
+  if (question) return { front: question, back: answer || body }
+  const title = writtenTitle(n)
+  if (title) return { front: recall(title), back: answer || body }
+  const [first, ...more] = body.split('\n')
+  const lead = first.trim()
+  const rest = more.join('\n').trim()
+  // « Combien de temps l'encens bloque-t-il un Démon ? » puis la réponse dessous
+  // (tel qu'il a été écrit : le texte d'une note ne se retouche pas)
+  if (rest && /\?$/.test(lead)) return { front: lead, back: answer || rest }
+  // une première ligne qui se lit comme un titre, suivie du reste : elle sert de titre ; au dos, la note entière
+  if (rest && titleLike(lead)) return { front: recall(lead.replace(/[\s.:;,]+$/u, '')), back: answer || body }
+  const ghost = n.ghostId ? ghosts.find((g) => g.id === n.ghostId) : undefined
+  if (ghost) return { front: `Que retenir de la note sur ${le(ghost.name)}\u202f?`, back: answer || body, vague: true }
+  const day = noteDay(n.createdAt)
+  return { front: day ? `Que retenir de la note du ${day}\u202f?` : 'Que retenir de cette note\u202f?', back: answer || body, vague: true }
+}
+
+export function noteCards(notes: CoachNote[], ghosts: readonly Pick<Ghost, 'id' | 'name'>[] = []): Card[] {
   const out: Card[] = []
   notes.forEach((n, i) => {
     if (!n.asCard) return
-    const question = n.question?.trim()
     const answer = n.answer?.trim()
     const body = n.body?.trim() ?? ''
     // sans question explicite, on demande de se souvenir du contenu de la note
-    const title = n.title.trim()
-    const front = question || (/[?!…]$/.test(title) ? `Que retenir de « ${title} »` : `Que retenir de « ${title} » ?`)
-    const back = answer || body
+    const { front, back } = noteQuestion(n, ghosts)
     if (!back) return
     out.push({
       id: `n:${n.id}`,
@@ -477,7 +541,7 @@ export function noteCards(notes: CoachNote[]): Card[] {
 }
 
 export function buildDeck(ghosts: Ghost[], mechanics: Mechanics, notes: CoachNote[]): Card[] {
-  return [...noteCards(notes), ...ghosts.flatMap((g, i) => ghostCards(g, i, ghosts)), ...mechanicsCards(mechanics)]
+  return [...noteCards(notes, ghosts), ...ghosts.flatMap((g, i) => ghostCards(g, i, ghosts)), ...mechanicsCards(mechanics)]
 }
 
 /* ---- petites aides de français ---- */

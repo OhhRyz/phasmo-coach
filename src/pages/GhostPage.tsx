@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { cameFromCodex } from './codexReturn'
 import { HatchDefs, SanityChart, SpeedChart, UvPrint } from '../components/journal/Charts'
 import {
   CircledNumber,
@@ -20,16 +21,17 @@ import {
 import { roughLine, roughRng, tickPath } from '../components/journal/rough'
 import { NoteActionLinks, useNoteActions } from '../components/NoteActions'
 import { NoteEditor } from '../components/NoteEditor'
+import { ReportDialog } from '../components/ReportDialog'
 import { NoteText } from './Notebook'
 import { Empty, useMedia } from '../components/ui'
-import { SOURCE_REPO_URL } from '../config'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import type { CoachNote } from '../engine/cards'
 import { fr, NBSP, NNBSP, num, safeDate, spellLdV, validTime } from '../engine/format'
-import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
+import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
+import { entityMentions } from '../engine/mentions'
 import { masteryLevel } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -77,10 +79,6 @@ function jumpTo(id: string) {
   el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
   el.focus({ preventScroll: true })
 }
-/** Une nouvelle demande de correction sur le dépôt du projet, titrée au nom de la fiche. */
-function reportUrl(name: string): string {
-  return `${SOURCE_REPO_URL}/issues/new?title=${encodeURIComponent(`Fiche ${name}`)}`
-}
 
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
@@ -107,17 +105,37 @@ function splitChange(text: string): { when: string | null; text: string } {
   return { when: m[1], text: rest.charAt(0).toLocaleUpperCase('fr') + rest.slice(1) }
 }
 
-/** En-tête tapé d'un post-it : date et, si la note revient en révision, « en révision ». */
-function noteMeta(n: CoachNote): string {
-  return `${safeDate(SHORT, n.createdAt)}${makesCard(n) ? ' · en révision' : ''}`
+/**
+ * En-tête tapé d'un post-it : date et, si la note revient en révision, « en révision » (côté coach, une note
+ * qui part en carte chez l'élève sans revenir dans sa révision à lui : « carte pour l'élève »).
+ */
+function noteMeta(n: CoachNote, forStudent = false): string {
+  return `${safeDate(SHORT, n.createdAt)}${makesCard(n) ? (forStudent ? ' · carte pour l’élève' : ' · en révision') : ''}`
 }
 
-function Lines({ items }: { items: TextItem[] }) {
+/** Un texte de la fiche où les autres entités citées (« l'Obambo », « un Gallu ») mènent à leur fiche. */
+function Linked({ text, skip }: { text: string; skip: readonly string[] }) {
+  return (
+    <>
+      {entityMentions(text, GHOSTS, skip).map((m, k) =>
+        typeof m === 'string' ? (
+          <Fragment key={k}>{m}</Fragment>
+        ) : (
+          <Link key={k} className="gh-mention" to={`/codex/${m.id}`}>
+            {m.text}
+          </Link>
+        ),
+      )}
+    </>
+  )
+}
+
+function Lines({ items, self }: { items: TextItem[]; self: string }) {
   return (
     <ul className="lines">
       {items.map((i, k) => (
         <li key={k}>
-          {i.text}
+          <Linked text={i.text} skip={[self]} />
           {i.zeroEvidence && <span className="pencil-note zero-mark"> marche sans preuve</span>}
         </li>
       ))}
@@ -127,11 +145,16 @@ function Lines({ items }: { items: TextItem[] }) {
 
 export function GhostPage() {
   const { id = '' } = useParams()
+  // ouverte depuis le registre ou la recherche du Codex : « ‹ Codex » y revient en arrière, la recherche avec
+  const location = useLocation()
+  const navigate = useNavigate()
+  const backToCodex = cameFromCodex(location.state, typeof window === 'undefined' ? null : window.history.state?.idx)
   const ghost = getGhost(id)
   const mastery = useMastery()
   const { state, deck } = useStore()
   const [playing, setPlaying] = useState<number | null>(null)
   const [moreConf, setMoreConf] = useState(false)
+  const [reporting, setReporting] = useState(false)
   const steps = useRef<Footsteps | null>(null)
   const stacked = useMedia(STACKED)
   const nameRef = useRef<HTMLHeadingElement>(null)
@@ -165,6 +188,7 @@ export function GhostPage() {
   useEffect(() => {
     steps.current?.stop()
     setMoreConf(false)
+    setReporting(false)
   }, [id])
 
   // stylo rouge : les vraies notes du coach ; « Mes notes » : celles de la personne qui tient le carnet
@@ -213,9 +237,25 @@ export function GhostPage() {
   const isCoach = state.profile.role === 'coach'
   const level = masteryLevel(m)
   const now = Date.now()
+  // l'entité de la fiche ne se lie pas à elle-même
+  const self = [ghost.id]
 
   const hasSigns = ghost.tells.length + ghost.behaviors.length + ghost.abilities.length > 0
   const notesId = isCoach ? 'h-coach' : 'h-mine'
+  // les parties de la fiche, dans l'ordre de lecture : au choix dans « Signaler une erreur »
+  const parts = [
+    'Résumé',
+    'Preuves',
+    'Seuil de chasse',
+    'Vitesse en chasse',
+    ghost.keyTells.length > 0 && 'À retenir',
+    'Sans preuve',
+    'Ne pas confondre',
+    hasSigns && 'Signes et comportements',
+    ghost.observations.length > 0 && 'Ce que tu verras',
+    ghost.changes.length > 0 && 'Changements récents',
+    ghost.uncertain.length > 0 && 'À vérifier en partie',
+  ].filter((p): p is string => !!p)
   // le sommaire de la fiche : les parties les plus utiles, dans l'ordre de lecture
   const contents = [
     ghost.keyTells.length > 0 && { id: 'h-tells', label: 'À retenir' },
@@ -234,7 +274,9 @@ export function GhostPage() {
           {ghost.keyTells.map((t, k) => (
             <li key={k}>
               <CircledNumber n={k + 1} delay={0.5 + k * 0.15} />
-              <p>{t}</p>
+              <p>
+                <Linked text={t} skip={self} />
+              </p>
             </li>
           ))}
         </ol>
@@ -257,7 +299,16 @@ export function GhostPage() {
       <Notebook>
         <Page side="left" section="3" label={`Fiche${NNBSP}: ${ghost.name}`}>
           <FileHead>
-            <Link to="/codex">‹ Codex</Link>
+            <Link
+              to="/codex"
+              onClick={(e) => {
+                if (!backToCodex || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                e.preventDefault()
+                navigate(-1)
+              }}
+            >
+              ‹ Codex
+            </Link>
             <span>
               Fiche <b>{idx + 1}</b> / {GHOSTS.length}
             </span>
@@ -363,7 +414,9 @@ export function GhostPage() {
               </div>
               <SanityChart ghost={ghost} />
               {ghost.huntSanity.details.map((d, k) => (
-                <p key={k}>{d}</p>
+                <p key={k}>
+                  <Linked text={d} skip={self} />
+                </p>
               ))}
             </div>
             <div className="measure">
@@ -373,7 +426,9 @@ export function GhostPage() {
               </div>
               <SpeedChart ghost={ghost} />
               {ghost.speed.details.map((d, k) => (
-                <p key={k}>{d}</p>
+                <p key={k}>
+                  <Linked text={d} skip={self} />
+                </p>
               ))}
               {speeds.length > 0 && (
                 <p className="listen">
@@ -438,13 +493,17 @@ export function GhostPage() {
                     </Stamp>
                   )}
                 </div>
-                <p>{t.text}</p>
+                <p>
+                  <Linked text={t.text} skip={self} />
+                </p>
               </article>
             ))}
             {ghost.eliminationTests.map((t, k) => (
               <p className="elim" key={k}>
                 <b>Élimine</b>
-                <span>{t.text}</span>
+                <span>
+                  <Linked text={t.text} skip={self} />
+                </span>
               </p>
             ))}
             {ghost.id !== 'the-mimic' && (
@@ -494,7 +553,9 @@ export function GhostPage() {
                           </span>
                         ))}
                       </span>
-                      <p>{c.why}</p>
+                      <p>
+                        <Linked text={c.why} skip={[ghost.id, c.with]} />
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -514,7 +575,9 @@ export function GhostPage() {
                       <b>
                         <Link to={`/codex/${c.with}`}>{c.other!.name}</Link>
                       </b>
-                      <p>{c.why}</p>
+                      <p>
+                        <Linked text={c.why} skip={[ghost.id, c.with]} />
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -528,19 +591,19 @@ export function GhostPage() {
               {ghost.tells.length > 0 && (
                 <div className="conf-group">
                   <h3>Signes distinctifs</h3>
-                  <Lines items={ghost.tells} />
+                  <Lines items={ghost.tells} self={ghost.id} />
                 </div>
               )}
               {ghost.behaviors.length > 0 && (
                 <div className="conf-group">
                   <h3>Comportements</h3>
-                  <Lines items={ghost.behaviors} />
+                  <Lines items={ghost.behaviors} self={ghost.id} />
                 </div>
               )}
               {ghost.abilities.length > 0 && (
                 <div className="conf-group">
                   <h3>Capacités</h3>
-                  <Lines items={ghost.abilities} />
+                  <Lines items={ghost.abilities} self={ghost.id} />
                 </div>
               )}
             </section>
@@ -563,7 +626,9 @@ export function GhostPage() {
                 {ghost.observations.map((o, k) => (
                   <li key={k}>
                     <span className="kind">{KIND[o.kind]}</span>
-                    <p>{o.text}</p>
+                    <p>
+                      <Linked text={o.text} skip={self} />
+                    </p>
                     {o.strength === 'definitive' ? (
                       <Stamp small rotate={k % 2 ? 3 : -4}>
                         Définitif
@@ -591,7 +656,12 @@ export function GhostPage() {
               <div className="ghost-notes">
                 {fromCoach.map((n, k) => (
                   <div key={n.id} className="gh-note">
-                    <Sticky hand="coach" rotate={k % 2 ? 1.6 : -1.8} meta={noteMeta(n)} sign={n.author ? `— ${n.author}` : undefined}>
+                    <Sticky
+                      hand="coach"
+                      rotate={k % 2 ? 1.6 : -1.8}
+                      meta={noteMeta(n, skipsOwnReview(n, state.profile, state.settings))}
+                      sign={n.author ? `— ${n.author}` : undefined}
+                    >
                       <NoteText note={n} />
                     </Sticky>
                     <NoteActionLinks note={n} actions={noteActions} className="gh-note-acts" />
@@ -613,7 +683,7 @@ export function GhostPage() {
                     <Sticky
                       hand="mine"
                       rotate={k % 2 ? -1.2 : 1.4}
-                      meta={noteMeta(n)}
+                      meta={noteMeta(n, skipsOwnReview(n, state.profile, state.settings))}
                       // une note d'une autre personne garde sa signature
                       sign={n.author && !isOwnNote(n, state.profile) ? `— ${n.author}` : undefined}
                     >
@@ -628,9 +698,10 @@ export function GhostPage() {
           )}
 
           <div className="ghost-side">
-            <div className="libcard settle" style={{ '--r': '1.6deg', '--d': '.6s' } as Style}>
+            <div className="libcard libcard--what settle" style={{ '--r': '1.6deg', '--d': '.6s' } as Style}>
               <Tape />
               <h3>Fiche de suivi</h3>
+              <p className="libcard-what">Tes dernières révisions de cette entité, et quand elle revient.</p>
               <div className="cols">
                 <span>Révisé le</span>
                 <span>Résultat</span>
@@ -668,7 +739,9 @@ export function GhostPage() {
                       return (
                         <li key={k}>
                           {when && <span className="gh-change-when">{when}</span>}
-                          <p>{text}</p>
+                          <p>
+                            <Linked text={text} skip={self} />
+                          </p>
                         </li>
                       )
                     })}
@@ -688,7 +761,9 @@ export function GhostPage() {
                   )}
                   <ul className="pencil-note">
                     {ghost.uncertain.map((u, k) => (
-                      <li key={k}>{u}</li>
+                      <li key={k}>
+                        <Linked text={u} skip={self} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -701,11 +776,9 @@ export function GhostPage() {
               ? 'Aucune source listée'
               : `${ghost.sources.length} source${ghost.sources.length > 1 ? 's' : ''} consultée${ghost.sources.length > 1 ? 's' : ''}`}
           </p>
-          {/* une erreur repérée : le dépôt du projet (jamais celui d'origine des données) */}
+          {/* une erreur repérée : une fenêtre de l'app (texte à copier pour Discord, GitHub en second choix) */}
           <p className="gh-report">
-            <a className="link" href={reportUrl(ghost.name)} target="_blank" rel="noreferrer">
-              Signaler une erreur sur cette fiche
-            </a>
+            <TypedLink onClick={() => setReporting(true)}>Signaler une erreur sur cette fiche</TypedLink>
           </p>
           <nav className="pager" aria-label="Fiches voisines">
             <TypedLink to={`/codex/${prev.id}`}>‹ {prev.name}</TypedLink>
@@ -715,6 +788,7 @@ export function GhostPage() {
         </Page>
       </Notebook>
       {noteActions.modals}
+      <ReportDialog key={ghost.id} open={reporting} onClose={() => setReporting(false)} fiche={ghost.name} parts={parts} />
     </div>
   )
 }

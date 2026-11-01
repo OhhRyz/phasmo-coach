@@ -10,7 +10,8 @@
 
 .installer .install-back { margin: 18px 0 0; }
 
-/* la marche à suivre : trois étapes entourées au crayon, une par ligne */
+/* la marche à suivre : trois étapes entourées au crayon, une par ligne ; montrée à nouveau par le bouton, son
+   titre est surligné (le même coup de surligneur que l'arrivée sur « Sauvegarde complète » du profil) */
 .install-guide { margin: 40px 0 0; max-width: 40em; scroll-margin-top: 24px; outline: none; }
 .install-guide:focus-visible .index-card { box-shadow: var(--shadow-md), 0 0 0 2px var(--ink-3); }
 .install-guide .index-card { padding-bottom: 22px; }
@@ -35,6 +36,27 @@
 .page .install-keep p { margin: 0; font-size: 16px; line-height: 28px; }
 .install-keep .link { display: inline-flex; align-items: center; min-height: 40px; }
 
+/* sur ordinateur : le code QR de la page, à scanner avec le téléphone, et le message pour Discord. Le code reste
+   imprimé à l'encre sur papier clair, même la nuit (un lecteur de code QR lit mal un code inversé) */
+.install-phone { margin: 52px 0 0; max-width: 40em; }
+.install-guide + .install-phone { margin-top: 56px; }
+.install-phone-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px 30px; align-items: start; }
+.install-qr {
+  --qr-ink: var(--ink); --qr-paper: var(--card);
+  position: relative; width: 176px; padding: 10px; color: var(--qr-ink); background: var(--qr-paper);
+  box-shadow: var(--shadow-md); transform: rotate(var(--r, -1deg));
+}
+:root[data-theme="dark"] .install-qr { --qr-ink: #221d17; --qr-paper: #fdfaf2; }
+.install-qr .tape { left: 50%; top: -12px; margin-left: -40px; width: 80px; transform: rotate(4deg); }
+.install-qr .qr { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+.install-qr .qr-paper { fill: var(--qr-paper); }
+.page .install-phone-text p { margin: 0; font-size: 16.5px; line-height: 28px; }
+.page .install-phone-text p + p { margin-top: 12px; }
+.install-phone-text .install-copy { margin-top: 10px; }
+.install-message { height: 112px; word-break: normal; overflow-wrap: anywhere; }
+.page .install-phone .install-message-what { margin: 10px 0 0; font-size: 20px; line-height: 1.1; color: var(--pencil); }
+.install-choose--open { margin-top: 30px; }
+
 /* « Ce n'est pas ton appareil ? » : discret, en bas de page, replié par défaut */
 .install-other { margin: 48px 0 0; }
 .install-other .link-btn { display: inline-flex; align-items: center; min-height: 40px; font-size: 14px; color: var(--ink-2); }
@@ -52,4 +74,9 @@
   .install-guide .guide-steps li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
   .page .install-guide .install-steps p { font-size: 16px; }
   .install-other { margin-top: 40px; }
+}
+/* fenêtre étroite d'ordinateur : le code au-dessus du texte */
+@media (max-width: 560px) {
+  .install-phone-body { grid-template-columns: minmax(0, 1fr); }
+  .install-qr { justify-self: start; }
 }

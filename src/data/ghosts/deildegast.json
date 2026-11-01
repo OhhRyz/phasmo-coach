@@ -206,7 +206,7 @@
       "explain": "Il part de 3,0 m/s et perd 0,1 m/s par action, jusqu'à 0,4 m/s après 26 actions. 2,75 → 1,0 m/s, c'est le Thayé."
     },
     {
-      "q": "Entre deux chasses, tu ramasses et lâches la même chaussure 5 fois. Combien d'actions cela compte-t-il ?",
+      "q": "Face à un Deildegast, tu ramasses et lâches la même chaussure 5 fois entre deux chasses. Combien d'actions cela compte-t-il pour le ralentir ?",
       "choices": [
         "1",
         "5",

@@ -8,7 +8,29 @@ import { useIsDark, useTheme } from '../theme'
 import { InkFilter } from './journal/Journal'
 import { roughEllipse, roughRng } from './journal/rough'
 
-const TRAIN_PATHS = ['/entrainement', '/quiz', '/enquete', '/oreille']
+export type TabKey = 'home' | 'review' | 'codex' | 'train' | 'mechanics' | 'notes'
+
+/** Le premier segment de l'adresse → l'onglet allumé. Les exercices (quiz, contrat, à l'oreille) restent sous « Exercices ». */
+const TAB_OF: Record<string, TabKey> = {
+  revision: 'review',
+  codex: 'codex',
+  entrainement: 'train',
+  quiz: 'train',
+  enquete: 'train',
+  oreille: 'train',
+  mecaniques: 'mechanics',
+  carnet: 'notes',
+}
+
+/**
+ * L'onglet de la page affichée : un seul à la fois, aucun pour les pages sans onglet (profil, coaching, ma
+ * progression…). Pure : l'onglet suit l'adresse, y compris après un retour en arrière du navigateur.
+ */
+export function currentTab(pathname: string): TabKey | null {
+  const first = pathname.split('/').filter(Boolean)[0]
+  if (first == null) return 'home'
+  return TAB_OF[first] ?? null
+}
 
 const APP = 'Phasmo Coach'
 const PAGE_TITLES: Record<string, string> = {
@@ -22,6 +44,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/carnet': 'Mes notes',
   '/coaching': 'Coaching',
   '/profil': 'Profil et réglages',
+  '/progression': 'Ma progression',
   '/rapport': 'Bilan reçu',
   '/importer': 'Notes reçues',
   '/installer': 'Installer l’app',
@@ -144,6 +167,13 @@ function Ambient() {
   )
 }
 
+/** Le nom de l'interrupteur de l'en-tête, pour les lecteurs d'écran : son état (allumée ou non) est dit à part. */
+export const LIGHT_LABEL = 'Lumière du bureau (jour ou nuit)'
+/** Ce qui s'affiche sous « Lumière » : allumée le jour, éteinte la nuit. */
+export function lightState(dark: boolean): string {
+  return dark ? 'éteinte' : 'allumée'
+}
+
 /** Le disjoncteur du jeu : bascule entre jour et nuit, avec une brève coupure de courant. */
 function Breaker() {
   const [, setTheme] = useTheme()
@@ -157,14 +187,15 @@ function Breaker() {
     blackout.classList.add('on')
     window.setTimeout(() => setTheme(next), 120)
   }
+  // un interrupteur : « Lumière » allumée le jour, éteinte la nuit (le nom accessible commence par le mot affiché)
   return (
-    <button className="breaker" type="button" aria-pressed={dark} aria-label={'Disjoncteur\u202f: passer en thème clair ou sombre'} onClick={flip}>
+    <button className="breaker" type="button" role="switch" aria-checked={!dark} aria-label={LIGHT_LABEL} onClick={flip}>
       <span className="breaker-box">
         <span className="breaker-lever" />
       </span>
-      <span className="breaker-txt">
+      <span className="breaker-txt" aria-hidden>
         <span>Lumière</span>
-        <span>{dark ? 'OFF' : 'ON'}</span>
+        <span>{lightState(dark)}</span>
       </span>
     </button>
   )
@@ -192,10 +223,15 @@ export function Layout({ children }: { children: ReactNode }) {
   // un titre d'onglet par page (le bilan le précise ensuite avec le prénom de l'élève)
   useEffect(() => {
     document.title = pageTitle(pathname)
+    // retour arrière après un clic sur un onglet : le focus resterait sur cet onglet, qui n'est plus l'onglet
+    // courant ; à la première touche, son contour de focus le soulèverait comme l'onglet courant (deux onglets
+    // ouverts). La page qui place le focus elle-même (révision, quiz) l'a déjà fait : on n'y touche pas
+    const el = document.activeElement
+    if (el instanceof HTMLElement && el.classList.contains('tab') && el.getAttribute('aria-current') !== 'page') el.blur()
   }, [pathname])
   // avant l'ouverture du carnet, aucun compteur : rien n'invite à partir ailleurs que sur l'accueil
   const due = useMemo(() => (state.onboarded ? buildReviewQueue(state, deck, Date.now()).length : 0), [state, deck])
-  const trainActive = TRAIN_PATHS.some((p) => pathname.startsWith(p))
+  const tab = currentTab(pathname)
   const current = (active: boolean) => (active ? ('page' as const) : undefined)
   // coach ou coaché·e : la page Coaching (partager, recevoir) a sa place dans l'en-tête, pas un sixième onglet
   const role = state.profile.role
@@ -229,29 +265,29 @@ export function Layout({ children }: { children: ReactNode }) {
 
       <nav className="tabs" aria-label="Navigation principale">
         {/* un seul mot par endroit, le même sur ordinateur et sur téléphone (« Mes notes » s'abrège en « Notes ») */}
-        <Link className="tab" to="/" aria-current={current(pathname === '/')}>
+        <Link className="tab" to="/" aria-current={current(tab === 'home')}>
           <span className="long">Accueil</span>
           <span className="short">Accueil</span>
         </Link>
-        <Link className="tab" to="/revision" aria-current={current(pathname.startsWith('/revision'))}>
+        <Link className="tab" to="/revision" aria-current={current(tab === 'review')}>
           <span className="long">Réviser</span>
           <span className="short">Réviser</span>
           {due > 0 && <CountCircle n={due} />}
         </Link>
-        <Link className="tab" to="/codex" aria-current={current(pathname.startsWith('/codex'))}>
+        <Link className="tab" to="/codex" aria-current={current(tab === 'codex')}>
           <span className="long">Codex</span>
           <span className="short">Codex</span>
         </Link>
         {/* sur téléphone l'onglet Mécaniques est masqué : l'onglet Exercices s'allume à sa place */}
-        <Link className={`tab${pathname.startsWith('/mecaniques') ? ' also-current' : ''}`} to="/entrainement" aria-current={current(trainActive)}>
+        <Link className={`tab${tab === 'mechanics' ? ' also-current' : ''}`} to="/entrainement" aria-current={current(tab === 'train')}>
           <span className="long">Exercices</span>
           <span className="short">Exercices</span>
         </Link>
-        <Link className="tab" to="/mecaniques" aria-current={current(pathname.startsWith('/mecaniques'))}>
+        <Link className="tab" to="/mecaniques" aria-current={current(tab === 'mechanics')}>
           <span className="long">Mécaniques</span>
           <span className="short">Méca</span>
         </Link>
-        <Link className="tab" to="/carnet" aria-current={current(pathname.startsWith('/carnet'))}>
+        <Link className="tab" to="/carnet" aria-current={current(tab === 'notes')}>
           <span className="long">Mes notes</span>
           <span className="short">Notes</span>
         </Link>

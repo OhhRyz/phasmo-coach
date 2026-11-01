@@ -1,7 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { GhostRow } from '../components/GhostRow'
+import { FROM_CODEX } from './codexReturn'
+import { useToast } from '../components/Toast'
 import { UvPrint } from '../components/journal/Charts'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty, Seg, useMedia } from '../components/ui'
@@ -27,17 +29,49 @@ const HUNT_ABOVE: { value: number | null; label: string }[] = [
 
 const SESSION_KEY = 'phasmo-coach/codex-filter'
 
-function loadSession(): { filter: FilterState; query: string } {
+/** Le carnet gardé pour l'onglet : preuves et critères, la recherche, et l'entrée d'historique où elle a été tapée. */
+interface SavedCodex {
+  filter: FilterState
+  query: string
+  key?: string
+}
+
+function loadSession(): SavedCodex {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (raw) {
       const v = JSON.parse(raw)
-      return { filter: { ...EMPTY_FILTER, ...v.filter, huntAbove: typeof v.filter?.huntAbove === 'number' ? v.filter.huntAbove : null }, query: typeof v.query === 'string' ? v.query : '' }
+      return {
+        filter: { ...EMPTY_FILTER, ...v.filter, huntAbove: typeof v.filter?.huntAbove === 'number' ? v.filter.huntAbove : null },
+        query: typeof v.query === 'string' ? v.query : '',
+        key: typeof v.key === 'string' ? v.key : undefined,
+      }
     }
   } catch {
     /* stockage indisponible */
   }
   return { filter: EMPTY_FILTER, query: '' }
+}
+
+/**
+ * La recherche tapée revient-elle ? Seulement par le bouton « Précédent » (ou un rechargement) sur la page du
+ * codex où elle a été tapée : on revient d'une fiche ouverte depuis elle. Entré à neuf dans le codex (onglet,
+ * lien, accueil), on repart sans recherche : un vieux « Obambo » ne trie plus en silence la partie suivante.
+ * Les preuves cochées, elles, restent : la partie en cours continue.
+ */
+export function keepsSearch(saved: Pick<SavedCodex, 'query' | 'key'>, navigationType: string, key: string): boolean {
+  return saved.query !== '' && navigationType === 'POP' && saved.key === key
+}
+
+const SPEED_WORD: Record<SpeedClass, string> = { slow: 'lente', normal: 'normale', fast: 'rapide' }
+
+/** Les critères en cours, en toutes lettres : « vitesse lente ou rapide · chasse au-dessus de 60 % de santé ». */
+export function criteriaText(filter: FilterState): string {
+  const parts: string[] = []
+  if (filter.speed.length) parts.push(`vitesse ${SPEEDS.filter((v) => filter.speed.includes(v.value)).map((v) => SPEED_WORD[v.value]).join(' ou ')}`)
+  if (filter.huntAbove != null) parts.push(`chasse au-dessus de ${filter.huntAbove} % de santé`)
+  if (filter.los !== null) parts.push(filter.los ? 'accélère en ligne de vue' : 'n’accélère pas en ligne de vue')
+  return fr(parts.join(' · '))
 }
 
 function normalizeText(s: string) {
@@ -143,9 +177,15 @@ const PHONE = '(max-width: 759px)'
 export function Codex() {
   const mastery = useMastery()
   const navigate = useNavigate()
+  const location = useLocation()
+  const navigationType = useNavigationType()
+  const toast = useToast()
   const searchId = useId()
   const searchRef = useRef<HTMLInputElement>(null)
-  const [initial] = useState(loadSession)
+  const [initial] = useState(() => {
+    const saved = loadSession()
+    return { filter: saved.filter, query: keepsSearch(saved, navigationType, location.key) ? saved.query : '' }
+  })
   const [filter, setFilter] = useState<FilterState>(initial.filter)
   const [query, setQuery] = useState(initial.query)
   // sur ordinateur, les éliminées restent dans le registre, barrées au crayon (on peut les masquer) ; tant
@@ -159,14 +199,14 @@ export function Codex() {
     initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null || initial.filter.evidenceCount === 0,
   )
 
-  // les filtres survivent à l'ouverture d'une fiche puis au retour
+  // les filtres survivent à l'ouverture d'une fiche puis au retour (la recherche, au seul retour arrière : keepsSearch)
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ filter, query }))
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ filter, query, key: location.key }))
     } catch {
       /* stockage indisponible */
     }
-  }, [filter, query])
+  }, [filter, query, location.key])
 
   const active =
     Object.values(filter.evidence).some((m) => m && m !== 'unknown') ||
@@ -207,11 +247,33 @@ export function Codex() {
     }
   }, [])
 
-  // « Tout effacer » : le carnet de preuves, les critères et la recherche
-  const clearAll = () => {
+  // « Tout effacer » efface une partie en cours : le message propose d'annuler quelques secondes (et part avec la page)
+  const undoToast = useRef<(() => void) | null>(null)
+  useEffect(() => () => undoToast.current?.(), [])
+  // `keyboard` : « Tout effacer » touché au clavier ; le lien disparaît avec ce qu'il efface, le focus va donc
+  // sur « Annuler » du message, puis revient au champ de recherche
+  const clearWithUndo = (keepQuery: boolean, keyboard = false) => {
+    const before = { filter, query }
+    const search = !keepQuery && query.trim() !== ''
     setFilter(EMPTY_FILTER)
-    setQuery('')
+    if (!keepQuery) setQuery('')
+    undoToast.current?.()
+    undoToast.current = toast(
+      active && search ? 'Carnet de preuves et recherche effacés' : active ? 'Carnet de preuves effacé' : 'Recherche effacée',
+      {
+        label: 'Annuler',
+        onClick: () => {
+          undoToast.current = null
+          setFilter(before.filter)
+          setQuery(before.query)
+          if (before.filter.speed.length || before.filter.huntAbove != null || before.filter.los !== null) setShowMore(true)
+        },
+        ...(keyboard ? { focus: true, restore: () => requestAnimationFrame(() => searchRef.current?.focus()) } : {}),
+      },
+    )
   }
+  // « Tout effacer » : le carnet de preuves, les critères et la recherche
+  const clearAll = (e?: { detail: number }) => clearWithUndo(false, e?.detail === 0)
   const searched = query.trim()
   // Entrée dans la recherche : une seule entité correspond, sa fiche s'ouvre
   const target = searched ? searchTarget(matching, out) : null
@@ -225,9 +287,12 @@ export function Codex() {
   const moreCount = filter.speed.length + (filter.huntAbove != null ? 1 : 0) + (filter.los !== null ? 1 : 0)
   // la réponse du carnet, lisible juste sous le titre (sur téléphone le registre est loin en dessous)
   const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'absente')].filter(Boolean)
-  const headCount = marks.length
-    ? `${marks.join(' · ')} · ${pool.length === 0 ? 'aucune possible' : s(pool.length, 'possible')}`
-    : 'rien de coché'
+  const headCount =
+    marks.length || moreCount > 0
+      ? `${marks.length ? marks.join(' · ') : 'aucune preuve cochée'} · ${pool.length === 0 ? 'aucune possible' : s(pool.length, 'possible')}`
+      : searched
+        ? 'aucune preuve cochée'
+        : 'rien de coché'
   const ticked = found + excluded > 0
   // une preuve encore non testée mais impossible avec les entités qui restent : grisée dans le carnet
   const greyed = ticked && EVIDENCE_IDS.some((id) => (filter.evidence[id] ?? 'unknown') === 'unknown' && !possible.has(id))
@@ -258,6 +323,44 @@ export function Codex() {
           <H as="h1" count={headCount}>
             Mon carnet de preuves
           </H>
+          {/* ce qui trie le registre en plus des preuves, toujours sous les yeux (sur téléphone, le champ est loin dessous) */}
+          {(searched !== '' || moreCount > 0) && (
+            <div className="cx-status">
+              {searched !== '' && (
+                <p className="cx-status-line">
+                  <span className="typed-label">Recherche</span>
+                  <span className="cx-status-q">
+                    «{NNBSP}
+                    {searched}
+                    {NNBSP}»
+                  </span>
+                  {/* le « · » et « Effacer » vont ensemble : à la ligne, le séparateur n'ouvre jamais seul la ligne */}
+                  <span className="cx-status-act">
+                    <span className="cx-status-sep" aria-hidden>
+                      ·
+                    </span>
+                    <TypedLink onClick={() => setQuery('')}>
+                      Effacer<span className="sr-only"> la recherche</span>
+                    </TypedLink>
+                  </span>
+                </p>
+              )}
+              {moreCount > 0 && (
+                <p className="cx-status-line">
+                  <span className="typed-label">Critères</span>
+                  <span className="cx-status-q">{criteriaText(filter)}</span>
+                  <span className="cx-status-act">
+                    <span className="cx-status-sep" aria-hidden>
+                      ·
+                    </span>
+                    <TypedLink onClick={() => setFilter({ ...filter, speed: [], huntAbove: null, los: null })}>
+                      Effacer<span className="sr-only"> les critères</span>
+                    </TypedLink>
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
           <p className="cx-intro">
             Pendant une partie, coche ici les preuves que tu trouves{NNBSP}: le registre barre les entités qui ne collent plus.{' '}
             <span className="on-mouse">Clique sur un nom</span>
@@ -318,7 +421,9 @@ export function Codex() {
                   <span className="cx-verdict-name">{only.name}</span>
                 )}
               </p>
-              <TapeButton to={`/codex/${only.id}`}>Ouvrir sa fiche</TapeButton>
+              <TapeButton to={`/codex/${only.id}`} state={FROM_CODEX}>
+                Ouvrir sa fiche
+              </TapeButton>
             </div>
           )}
 
@@ -328,7 +433,7 @@ export function Codex() {
             role="search"
             onSubmit={(e) => {
               e.preventDefault()
-              if (target) navigate(`/codex/${target.id}`)
+              if (target) navigate(`/codex/${target.id}`, { state: FROM_CODEX })
             }}
           >
             <label className="field-label" htmlFor={searchId}>
@@ -477,7 +582,7 @@ export function Codex() {
               </p>
               {/* la recherche reste : effacer le carnet fait réapparaître ce qu'elle a trouvé */}
               <p className="cx-empty-act">
-                <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Effacer preuves et critères</TypedLink>
+                <TypedLink onClick={(e) => clearWithUndo(true, e.detail === 0)}>Effacer preuves et critères</TypedLink>
               </p>
             </Empty>
           ) : (

@@ -4,6 +4,24 @@
    Page de gauche : le carnet de preuves
    ========================================================================== */
 .cx-book .cx-intro { margin: -4px 0 24px; max-width: 30em; font-size: 17px; line-height: 1.5; color: var(--ink-2); }
+/* sous le titre : la recherche et les critères qui trient aussi le registre (jamais invisibles) */
+.cx-status { margin: -10px 0 14px; }
+/* trois colonnes : le mot, la recherche (qui passe à la ligne dans sa colonne), « · Effacer » juste après elle ;
+   le séparateur n'ouvre jamais une ligne. Sur téléphone, deux rangs : le mot et « Effacer », puis la recherche
+   sur toute la largeur (sans séparateur) */
+.cx-book .cx-status-line { display: grid; grid-template-columns: auto minmax(0, max-content) auto; justify-content: start; align-items: baseline; gap: 0 10px; margin: 0; }
+@media (max-width: 759px) {
+  .cx-book .cx-status-line { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "k act" "q q"; }
+  .cx-status-line > .typed-label { grid-area: k; }
+  .cx-status-line > .cx-status-q { grid-area: q; }
+  .cx-status-line > .cx-status-act { grid-area: act; }
+  .cx-status-line .cx-status-sep { display: none; }
+}
+.cx-status-q { font-family: "Courier Prime", monospace; font-size: 16px; color: var(--ink); overflow-wrap: anywhere; }
+.cx-status-sep { color: var(--ink-3); }
+/* « · Effacer » d'un seul tenant */
+.cx-status-act { display: inline-flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+.cx-status-line .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* options entourées : de vraies cibles tactiles */
 .cx-book .opt { min-height: 40px; padding: 7px 12px 6px; }

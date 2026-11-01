@@ -63,9 +63,26 @@
 .ghost-file .gh-unsure ul { list-style: none; margin: 0; padding: 0; font-size: 21px; line-height: 1.12; }
 .ghost-file .gh-unsure li { position: relative; padding: 5px 0 5px 22px; }
 .ghost-file .gh-unsure li::before { content: "?"; position: absolute; left: 2px; top: 5px; font-weight: 700; }
+/* une autre entité citée dans le texte : son nom mène à sa fiche, souligné au stylo comme les liens tapés */
+.ghost-file .gh-mention { color: inherit; text-decoration: underline; text-decoration-color: var(--red-pen); text-decoration-thickness: 1.2px; text-underline-offset: 3px; }
+@media (hover: hover) { .ghost-file .gh-mention:hover { color: var(--red-pen); } }
+.ghost-file .gh-mention:focus-visible { outline: 2px dashed var(--red-pen); outline-offset: 2px; }
 .ghost-file .sources { margin-top: 30px; font-size: 13px; }
 .ghost-file .gh-report { margin: 4px 0 0; }
 .ghost-file .gh-report .link { display: inline-flex; align-items: center; min-height: 40px; font-size: 14.5px; }
+
+/* « Signaler une erreur » : la fenêtre (rendue hors de la fiche) */
+.report { display: grid; gap: 16px; }
+.report .report-intro { margin: 0; }
+.report-fiche { margin: 0; display: flex; align-items: baseline; gap: 0 12px; font-size: 18px; }
+.report .select { min-height: 44px; }
+.report .textarea { min-height: 128px; }
+.report .report-actions { margin-top: 2px; }
+.report .report-done { margin: -8px 0 0; min-height: 0; font-size: 20px; text-align: right; }
+.report .report-done:empty { margin-top: -16px; }
+.report .report-code { min-height: 160px; font-family: "Courier Prime", monospace; font-size: 14px; }
+.report-alt { margin: 0; text-align: right; }
+.report-alt .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* formulaire de note du coach (partagé avec le carnet) */
 .note-form {
@@ -74,9 +91,9 @@
   transform: rotate(var(--r, -.4deg));
 }
 .note-form::before { content: ""; position: absolute; left: 50%; top: -12px; width: 92px; height: 24px; margin-left: -46px; background: var(--tape); transform: rotate(-2deg); }
-.note-qa-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-/* une question de coach tient sur toute la largeur ; la réponse attendue vient dessous */
-.note-qa-fields > .field:first-child { grid-column: 1 / -1; }
+/* la question tient sur toute la largeur, la bonne réponse dessous, sur toute la largeur aussi (son exemple
+   et sa précision se lisent en entier) */
+.note-qa-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .note-actions { margin-top: 4px; }
 .note-add { margin: 6px 0; }
 /* pages empilées : « À retenir » remonte sous la description, avant les preuves et les mesures */
@@ -103,3 +120,10 @@
   .note-qa-fields { grid-template-columns: 1fr; }
   .note-form { padding: 18px 14px 20px; }
 }
+
+/* fiche de suivi : une ligne sous le titre dit ce qu'elle garde ; les lignes de la carte partent de la liste,
+   quelle que soit la hauteur de cette phrase */
+.ghost-file .libcard-what { margin: 4px 0 0; font-family: "Courier Prime", monospace; font-size: 12.5px; line-height: 1.35; text-align: center; color: var(--ink-2); text-wrap: balance; }
+.ghost-file .libcard.libcard--what, :root[data-theme="dark"] .ghost-file .libcard.libcard--what { background: var(--card); }
+.ghost-file .libcard--what ol { background: repeating-linear-gradient(to bottom, transparent 0 33px, rgba(70, 90, 140, .22) 33px 34px); }
+:root[data-theme="dark"] .ghost-file .libcard--what ol { background: repeating-linear-gradient(to bottom, transparent 0 33px, rgba(150, 180, 230, .10) 33px 34px); }

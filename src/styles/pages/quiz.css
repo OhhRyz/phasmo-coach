@@ -72,6 +72,9 @@
 .qz-title { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 54px; line-height: .98; letter-spacing: -.012em; }
 .qz-title em { display: block; margin-bottom: 6px; font-size: 25px; letter-spacing: .01em; color: var(--ink-2); }
 .qz-lead { margin: 14px 0 0 !important; max-width: 31em; font-style: italic; font-size: 18px; line-height: 1.5; }
+/* sur quelles entités porte la copie, et l'autre choix à un geste */
+.qz-scope { margin: 10px 0 0 !important; max-width: 31em; font-size: 17px; line-height: 1.5; }
+.qz-scope .link { white-space: nowrap; }
 /* commencer tout de suite, avec les réglages par défaut : le bouton juste sous l'intro */
 .qz-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 22px; }
 /* une copie laissée en route : on la reprend, ou on en commence une autre */
@@ -154,6 +157,7 @@
   margin: 0; font-family: "Elite", monospace; font-weight: 400; font-size: 23px; line-height: 1.38; letter-spacing: .01em;
   text-wrap: pretty;
 }
+.qz-prompt:focus { outline: none; } /* reçoit le focus à chaque question, pour la lecture et le clavier */
 .qz-num { min-width: 1.4em; }
 /* la consigne de la question, tapée à l'encre ordinaire (la voix de l'app, pas celle du sujet ronéotypé) */
 .qz-consigne { margin: 0 0 12px !important; text-shadow: none; }

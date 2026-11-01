@@ -3,7 +3,8 @@ import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { buildDeck, namesGhost, type Card } from '../engine/cards'
 import { dayKey, spellLdV } from '../engine/format'
 import { askKey, buildReviewQueue, SAME_ASK_GAP, SAME_GHOST_GAP, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
-import { buildQuiz, questionForCard, QUIZ_TOPICS, type Question } from '../engine/quiz'
+import { buildQuiz, questionForCard, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
+import { entityMentions } from '../engine/mentions'
 import { createRng, hashString } from '../engine/random'
 import { schedule, type Grade } from '../engine/srs'
 import { initialState, type PersistedState } from '../store/schema'
@@ -25,20 +26,27 @@ import {
   placeCorrection,
   requeue,
   REQUEUE_GAP,
+  REQUEUE_MIN_OTHERS,
   REQUEUE_WITHIN,
   requeueGap,
   restoreSaved,
   resumeSession,
   START_PARAM,
   START_REVIEW,
+  stillFresh,
   stillToAsk,
   type SavedSession,
 } from './reviewSession'
 import { reviseLabel } from './exhibits'
 import { pageTitle } from '../components/Layout'
-import { exactName, searchCodex, searchTarget } from './Codex'
+import { criteriaText, exactName, keepsSearch, searchCodex, searchTarget } from './Codex'
+import { draftChanged, type NoteDraft } from '../components/NoteEditor'
 import { CONTRACT_KEY, readContract, validContract, type SavedContract } from './contractRun'
 import { saveRun } from './savedRun'
+import { copyMeta, defaultPool, quickQuizLabel, readCopy, RESUME_QUIZ, scopeLine, STUDIED_MIN, validCopy, COPY_KEY, type SavedCopy } from './quizRun'
+import { cameFromCodex, FROM_CODEX } from './codexReturn'
+import { bareSpace, ignoreKey } from '../engine/keys'
+import { fr, NBSP as NBSP_, NNBSP } from '../engine/format'
 import { generateScenario } from '../engine/scenario'
 import { EMPTY_FILTER } from '../engine/filter'
 
@@ -330,7 +338,8 @@ describe('révision : une carte ratée deux fois est comptée par le bouton de f
       const next = schedule(prev, 1, clock)
       state = { ...state, cards: { ...state.cards, [card.id]: next }, log: [...state.log, { id: card.id, t: clock, g: 1, isNew: !prev }] }
       let rest = queue.slice(1)
-      if (comesBackInSession(next, clock, passes[card.id] ?? 0)) {
+      // comme la page : les autres cartes qui restent dans la séance comptent (voir REQUEUE_MIN_OTHERS)
+      if (comesBackInSession(next, clock, passes[card.id] ?? 0, rest.length)) {
         rest = requeue(rest, card, requeueGap(next, clock))
         passes[card.id] = (passes[card.id] ?? 0) + 1
       } else twice.add(card.id)
@@ -365,6 +374,16 @@ describe('révision : une carte ratée repasse plus loin, une fois', () => {
     expect(comesBackInSession(lapse, at)).toBe(true)
     expect(requeueGap(learn(1), at)).toBe(REQUEUE_GAP)
     expect(requeueGap(lapse, at)).toBe(10)
+  })
+
+  it('en fin de séance (moins de trois autres cartes), une carte ratée attend la séance suivante', () => {
+    expect(REQUEUE_MIN_OTHERS).toBe(3)
+    expect(comesBackInSession(learn(1), at, 0, REQUEUE_MIN_OTHERS)).toBe(true)
+    for (const others of [0, 1, 2]) expect(comesBackInSession(learn(1), at, 0, others), `${others} autres cartes`).toBe(false)
+    // une carte apprise puis ratée aussi ; juste, elle ne repasse de toute façon pas
+    const lapse = schedule({ ...learn(3), due: at }, 1, at)
+    expect(comesBackInSession(lapse, at, 0, 2)).toBe(false)
+    expect(comesBackInSession(learn(3), at, 0, 10)).toBe(false)
   })
 
   it('au moins cinq cartes plus loin, ou en dernier s’il en reste moins', () => {
@@ -497,7 +516,7 @@ function play(day: string, pRight: number, seconds = 240, perCard = 7, from?: Pe
     state = { ...state, cards: { ...state.cards, [card.id]: next }, log: [...state.log, { id: card.id, t: at, g: ok ? 3 : 1, isNew: !prev }] }
     let rest = queue.slice(1)
     shown.push({ session, card, pass, q, ok, left: rest.length, day: dayKey(since), seen: before[card.id] ?? 0, peers, known })
-    if (comesBackInSession(next, at, passes[card.id] ?? 0)) {
+    if (comesBackInSession(next, at, passes[card.id] ?? 0, rest.length)) {
       rest = requeue(rest, card, requeueGap(next, at))
       passes = { ...passes, [card.id]: (passes[card.id] ?? 0) + 1 }
     }
@@ -525,6 +544,34 @@ describe('révision : une séance de quelques minutes ne tourne pas sur les mêm
       // sont ratées encore (le bouton de fin de séance les compte)
       expect(new Set(shown.map((x) => x.card.id)).size / shown.length, day).toBeGreaterThanOrEqual(0.8)
     }
+  })
+
+  it('fin de séance : une carte ratée ne revient pas une ou deux cartes plus loin, la séance suivante la compte', () => {
+    const deck = buildDeck(GHOSTS, MECHANICS, [])
+    let late = 0
+    for (const day of DAYS) {
+      // une seule séance, débutant : il en rate assez pour qu'une carte le soit tout près de la fin
+      const { shown, state } = play(day, 0.45, 600, 7, undefined, 1)
+      const left: string[] = []
+      for (let i = 0; i < shown.length; i++) {
+        const x = shown[i]
+        const j = shown.findIndex((y, k) => k > i && y.card.id === x.card.id && y.session === x.session)
+        // quand elle repasse, au moins REQUEUE_MIN_OTHERS autres cartes l'en séparent
+        if (j >= 0) expect(j - i - 1, `${day} : ${x.card.id} à ${i + 1} puis ${j + 1}`).toBeGreaterThanOrEqual(REQUEUE_MIN_OTHERS)
+        if (!x.ok && x.left < REQUEUE_MIN_OTHERS) {
+          expect(j, `${day} : ${x.card.id} ratée avec ${x.left} cartes après elle`).toBe(-1)
+          left.push(x.card.id)
+        }
+      }
+      late += left.length
+      // l'écran de fin, puis le clic : « Continuer avec N cartes » les compte, et la séance lancée les pose
+      const end = state.log.at(-1)!.t + 5_000
+      const pending = buildReviewQueue(state, deck, end)
+      const next = nextSession(pending.length, 0, false)
+      expect(next?.label, day).toBe(`Continuer avec ${pending.length} ${pending.length > 1 ? 'cartes' : 'carte'}`)
+      for (const id of left) expect(pending.map((c) => c.id), `${day} : ${id}`).toContain(id)
+    }
+    expect(late).toBeGreaterThan(0)
   })
 
   it('débutant : une carte ratée repasse au moins cinq cartes plus loin, une seule fois, et pas sur le même écran', () => {
@@ -721,6 +768,24 @@ describe('Révision : le bilan d’une séance close revient le jour même', () 
     expect(START_REVIEW).toBe(`/revision?${START_PARAM}=nouvelle`)
   })
 
+  it('« Reprendre la séance » ne repose pas une carte répondue depuis dans un autre onglet, ni une carte qui n’est plus due', () => {
+    const queue = deck.slice(3, 8)
+    const [a, b, c, d, e] = queue.map((x) => x.id)
+    const later = [...log, { id: a, t: ended + 2 * 60_000, g: 3 as Grade, isNew: true }]
+    const cards = {
+      // répondue ailleurs après la clôture : elle s'est espacée
+      [a]: schedule(undefined, 3, ended + 2 * 60_000),
+      // ratée dans cette séance, avant la clôture : elle revient vite, toujours due
+      [b]: schedule(undefined, 1, since + 2 * 60_000),
+      // apprise un autre jour, prévue dans trois jours : plus due
+      [c]: { ...schedule(undefined, 3, now - 5 * 86_400_000), phase: 'review' as const, due: now + 3 * 86_400_000 },
+    }
+    const kept = stillFresh(queue, later, cards, ended, now).map((x) => x.id)
+    expect(kept).toEqual([b, d, e])
+    // rien de neuf depuis la clôture : la file reste telle quelle
+    expect(stillFresh(queue, log, {}, ended, now)).toEqual(queue)
+  })
+
   it('une séance en cours reprend, même depuis un lien qui demande une séance', () => {
     const running = resumeSession({ ...closed, finished: false, ended: null, queue: deck.slice(3, 6).map((c) => c.id), total: 6 }, deck, log, now)
     expect(running?.finished).toBe(false)
@@ -793,6 +858,54 @@ describe('Codex : Entrée dans la recherche ouvre la fiche quand une seule entit
   })
 })
 
+describe('Codex : « ‹ Codex » sur une fiche ouverte depuis la recherche y revient en arrière (app installée, sans bouton retour)', () => {
+  it('seulement pour une fiche ouverte depuis le Codex, avec une entrée avant elle dans l’historique', () => {
+    expect(cameFromCodex(FROM_CODEX, 3)).toBe(true)
+    // premier écran de l'onglet (lien partagé, app rouverte sur la fiche) : rien derrière, le lien ouvre le Codex
+    expect(cameFromCodex(FROM_CODEX, 0)).toBe(false)
+    expect(cameFromCodex(FROM_CODEX, undefined)).toBe(false)
+    // fiche ouverte d'ailleurs (accueil, fiche voisine, mention) : le lien ouvre le Codex
+    for (const st of [null, undefined, {}, { fromCodex: 'oui' }, 'fromCodex']) expect(cameFromCodex(st, 3)).toBe(false)
+  })
+})
+
+describe('Codex : une vieille recherche ne trie pas la partie suivante en silence', () => {
+  const saved = { query: 'Obambo', key: 'k1' }
+  it('revenir d’une fiche par « Précédent » (ou recharger la page) garde la recherche tapée', () => {
+    expect(keepsSearch(saved, 'POP', 'k1')).toBe(true)
+  })
+  it('entrer à neuf dans le codex (onglet, lien, accueil) repart sans recherche', () => {
+    // un lien ou un onglet crée une nouvelle entrée d’historique
+    expect(keepsSearch(saved, 'PUSH', 'k2')).toBe(false)
+    expect(keepsSearch(saved, 'REPLACE', 'k2')).toBe(false)
+    // « Précédent » vers une autre page du codex que celle où la recherche a été tapée
+    expect(keepsSearch(saved, 'POP', 'k2')).toBe(false)
+    // une recherche gardée par une version d’avant (sans entrée d’historique) ne revient pas
+    expect(keepsSearch({ query: 'Obambo' }, 'POP', 'default')).toBe(false)
+    expect(keepsSearch({ query: '', key: 'k1' }, 'POP', 'k1')).toBe(false)
+  })
+  it('les critères en cours se lisent en toutes lettres, sous le titre', () => {
+    expect(criteriaText(EMPTY_FILTER)).toBe('')
+    expect(criteriaText({ ...EMPTY_FILTER, speed: ['fast', 'slow'] })).toBe('vitesse lente ou rapide')
+    expect(criteriaText({ ...EMPTY_FILTER, huntAbove: 60, los: false })).toBe(`chasse au-dessus de 60${NBSP_}% de santé · n’accélère pas en ligne de vue`)
+    expect(criteriaText({ ...EMPTY_FILTER, speed: ['normal'], los: true })).toBe('vitesse normale · accélère en ligne de vue')
+  })
+})
+
+describe('Notes : Échap ne perd jamais un texte sans demander', () => {
+  const empty: NoteDraft = { title: '', body: '', ghost: 'hantu', asCard: true, question: '', answer: '', wrong: ['', '', ''] }
+  it('rien d’écrit : le formulaire se ferme tout de suite', () => {
+    expect(draftChanged(empty, { ...empty, wrong: ['', '', ''] })).toBe(false)
+  })
+  it('un mot écrit ou un choix changé : on demande d’abord', () => {
+    expect(draftChanged(empty, { ...empty, body: 'Encens' })).toBe(true)
+    expect(draftChanged(empty, { ...empty, title: 'x' })).toBe(true)
+    expect(draftChanged(empty, { ...empty, wrong: ['', '90 s', ''] })).toBe(true)
+    expect(draftChanged(empty, { ...empty, ghost: null })).toBe(true)
+    expect(draftChanged(empty, { ...empty, asCard: false })).toBe(true)
+  })
+})
+
 describe('Mise en situation : le contrat en cours survit à un détour', () => {
   const now = Date.parse('2026-11-01T15:00:00')
   const scenario = generateScenario(getGhost('hantu')!, 'pro', createRng(42), GHOSTS)
@@ -859,3 +972,229 @@ describe('« LdV » en toutes lettres là où on le lit', () => {
     for (const c of backs) expect(spellLdV(c.back)).not.toMatch(/\bLdV\b/)
   })
 })
+
+describe('Clavier : les touches de réponse marchent même si le focus est resté sur l’onglet', () => {
+  const press = (key: string, el: HTMLElement | null, extra: KeyboardEventInit = {}) => {
+    const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...extra })
+    Object.defineProperty(e, 'target', { value: el ?? document.body })
+    return e
+  }
+  const make = (html: string) => {
+    document.body.innerHTML = html
+    return (sel: string) => document.querySelector<HTMLElement>(sel)!
+  }
+
+  it('chiffres et lettres répondent sur un lien, un bouton ou la question ; jamais dans un champ de saisie', () => {
+    const $ = make(`<nav class="tabs"><a class="tab" href="#/revision">Réviser</a></nav><h2 tabindex="-1">Question</h2>
+      <button class="link-btn">Je ne sais pas</button><input type="text" /><textarea></textarea><input type="checkbox" /><div contenteditable="true"></div>`)
+    for (const k of ['1', '4', 'a', 'D', 'o', 'n']) {
+      expect(ignoreKey(press(k, $('.tab'))), `${k} sur l’onglet`).toBe(false)
+      expect(ignoreKey(press(k, $('h2'))), `${k} sur la question`).toBe(false)
+      expect(ignoreKey(press(k, $('button'))), `${k} sur un bouton`).toBe(false)
+      expect(ignoreKey(press(k, $('input[type=checkbox]'))), `${k} sur une case`).toBe(false)
+      expect(ignoreKey(press(k, null)), `${k} sans focus`).toBe(false)
+      expect(ignoreKey(press(k, $('input[type=text]'))), `${k} dans un champ`).toBe(true)
+      expect(ignoreKey(press(k, $('textarea'))), `${k} dans une zone de texte`).toBe(true)
+      expect(ignoreKey(press(k, $('[contenteditable]'))), `${k} dans un texte éditable`).toBe(true)
+    }
+    // Espace sur la question (ou sans focus) n'actionne rien : l'exercice l'avale, la page ne défile pas ;
+    // sur un lien, un bouton ou dans un champ, il garde son rôle
+    expect(bareSpace(press(' ', $('h2'))), 'Espace sur la question').toBe(true)
+    expect(bareSpace(press(' ', $('h2'), { shiftKey: true })), 'Maj+Espace sur la question').toBe(true)
+    expect(bareSpace(press(' ', null)), 'Espace sans focus').toBe(true)
+    for (const sel of ['.tab', 'button', 'input[type=text]', 'textarea', 'input[type=checkbox]', '[contenteditable]'])
+      expect(bareSpace(press(' ', $(sel))), `Espace sur ${sel}`).toBe(false)
+    expect(bareSpace(press(' ', $('h2'), { ctrlKey: true }))).toBe(false)
+    expect(bareSpace(press('a', $('h2')))).toBe(false)
+    // Ctrl, Cmd, Alt et la touche tenue enfoncée restent au navigateur
+    expect(ignoreKey(press('1', $('h2'), { ctrlKey: true }))).toBe(true)
+    expect(ignoreKey(press('1', $('h2'), { metaKey: true }))).toBe(true)
+    expect(ignoreKey(press('1', $('h2'), { altKey: true }))).toBe(true)
+    expect(ignoreKey(press('1', $('h2'), { repeat: true }))).toBe(true)
+  })
+
+  it('Entrée et Espace gardent leur rôle sur un lien ou un bouton (l’onglet ne se rouvre pas par l’exercice), pas sur la question', () => {
+    const $ = make(`<a class="tab" href="#/revision">Réviser</a><h2 tabindex="-1">Question</h2><button class="choice">A</button>`)
+    for (const k of ['Enter', ' ']) {
+      expect(ignoreKey(press(k, $('.tab'))), `${k} sur l’onglet`).toBe(true)
+      expect(ignoreKey(press(k, $('.choice'))), `${k} sur un choix`).toBe(true)
+      expect(ignoreKey(press(k, $('h2'))), `${k} sur la question`).toBe(false)
+      expect(ignoreKey(press(k, null)), `${k} sans focus`).toBe(false)
+    }
+    // là où l'exercice la reprend (Entrée valide une question à plusieurs cases cochées)
+    expect(ignoreKey(press('Enter', $('.choice')), (el) => !!el.closest('.choice'))).toBe(false)
+  })
+})
+
+describe('Quiz : la copie en cours se reprend, d’ailleurs aussi', () => {
+  const now = Date.parse('2026-11-01T15:00:00')
+  const qs = buildQuiz({ topics: ['behavior', 'speed'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 5, rng: createRng(3) })
+  const copy: SavedCopy = {
+    questions: qs,
+    index: 1,
+    answers: [{ q: qs[0], selected: [qs[0].choices[0].id], correct: false, requeued: false }],
+    selected: [],
+    checked: false,
+    entry: 'abc123',
+  }
+  const roundTrip = (r: unknown) => JSON.parse(JSON.stringify(r)) as SavedCopy
+
+  it('se garde pour l’onglet et la journée, et se relit telle quelle ; le lien de reprise ne distribue pas de copie neuve', () => {
+    sessionStorage.clear()
+    saveRun(COPY_KEY, copy, now)
+    expect(readCopy(now)).toEqual(roundTrip(copy))
+    expect(readCopy(now + 86_400_000)).toBeNull()
+    sessionStorage.clear()
+    expect(readCopy(now)).toBeNull()
+    // une copie gardée avant cette version (sans entrée d'historique) se reprend aussi
+    const { entry: _entry, ...old } = copy
+    expect(validCopy(roundTrip(old))).toBe(true)
+    expect(new URLSearchParams(RESUME_QUIZ.split('?')[1]).get('copie')).toBe('reprendre')
+  })
+
+  it('une copie abîmée, sans réponse ou finie ne se reprend pas', () => {
+    expect(validCopy(roundTrip(copy))).toBe(true)
+    const bad: unknown[] = [
+      { ...copy, answers: [] },
+      { ...copy, index: qs.length },
+      { ...copy, index: -1 },
+      { ...copy, index: 0.5 },
+      { ...copy, index: 0, answers: [...copy.answers, ...copy.answers] },
+      { ...copy, questions: [{ id: 'x', prompt: 'p' }] },
+      { ...copy, questions: 'rien' },
+      { ...copy, selected: 'a' },
+      { ...copy, checked: 'oui' },
+      { ...copy, entry: 4 },
+      { ...copy, answers: [{ q: null, selected: [], correct: true }] },
+      { index: 1 },
+    ]
+    for (const b of bad) expect(validCopy(roundTrip(b)), JSON.stringify(b).slice(0, 80)).toBe(false)
+  })
+})
+
+describe('Quiz : par défaut, la copie porte sur les entités déjà étudiées', () => {
+  it('à partir de quatre entités étudiées en révision ; en dessous, sur toutes, et la page le dit', () => {
+    expect(STUDIED_MIN).toBe(4)
+    for (const n of [0, 1, 2, 3]) expect(defaultPool(n), `${n}`).toBe('all')
+    for (const n of [4, 9, 30]) expect(defaultPool(n), `${n}`).toBe('studied')
+  })
+
+  it('la phrase de la page dit sur quoi porte la copie et pourquoi, à la française', () => {
+    expect(scopeLine('studied', 9, 30)).toBe(
+      `La copie porte sur les 9 entités que tu as déjà étudiées en révision${NNBSP}: pas de question sur une entité que tu n’as jamais vue. S’il en manque sur elles pour les thèmes cochés, la fin de la copie le dit et passe aux autres entités.`,
+    )
+    expect(scopeLine('all', 9, 30)).toBe('La copie porte sur les 30 entités, même celles que tu n’as pas encore étudiées en révision.')
+    expect(scopeLine('all', 0, 30)).toContain(`Tu n’as encore étudié aucune entité en révision${NNBSP}: la copie porte sur les 30 entités`)
+    expect(scopeLine('all', 1, 30)).toBe(`Tu n’as étudié qu’une entité en révision (il en faut 4 pour une copie sur elle seule)${NNBSP}: la copie porte sur les 30 entités.`)
+    expect(scopeLine('all', 3, 30)).toBe(`Tu n’as étudié que 3 entités en révision (il en faut 4 pour une copie sur elles seules)${NNBSP}: la copie porte sur les 30 entités.`)
+    for (const t of [scopeLine('studied', 4, 30), scopeLine('all', 2, 30), scopeLine('all', 12, 30)]) expect(fr(t)).toBe(t)
+  })
+
+  it('l’enveloppe d’une copie en cours dit où elle en est, au lieu de « 10 questions · ≈ 3 min »', () => {
+    const q = (n: number) => Array.from({ length: n }, () => ({}) as Question)
+    expect(copyMeta({ questions: q(5), answers: q(3) as never })).toBe('3 réponses sur 5')
+    expect(copyMeta({ questions: q(10), answers: q(1) as never })).toBe('1 réponse sur 10')
+  })
+
+  it('le quiz rapide de l’accueil le dit aussi', () => {
+    expect(quickQuizLabel(9, 5)).toBe(`ou un quiz rapide sur tes 9 entités étudiées (5${NBSP_}questions)`)
+    expect(quickQuizLabel(3, 5)).toBe(`ou un quiz rapide sur toutes les entités (5${NBSP_}questions)`)
+  })
+
+  it('une copie sur quatre entités étudiées a ses dix questions, sur elles seules tant qu’il y en a, et ses mauvaises réponses viennent d’abord d’elles', () => {
+    let fromStudied = 0
+    let wrongNames = 0
+    let beyond = 0
+    for (let seed = 1; seed <= 40; seed++) {
+      const rng = createRng(seed)
+      const studied = shuffleIds(rng).slice(0, 4).map((id) => getGhost(id)!)
+      const ids = new Set(studied.map((g) => g.id))
+      // comme la page : la série ne sort pas de sa liste, et se complète à la fin s'il le faut
+      const qs = buildQuiz({ topics: ['behavior', 'speed', 'sanity', 'zero'], ghosts: studied, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng, onlyListed: true, fillUp: true })
+      expect(qs.length, `graine ${seed}`).toBe(10)
+      const first = qs.findIndex((q) => q.beyond)
+      if (first >= 0) {
+        expect(qs.slice(first).every((q) => q.beyond), `graine ${seed} : les questions qui complètent la copie viennent à la fin`).toBe(true)
+        beyond += qs.length - first
+      }
+      for (const q of qs.filter((x) => !x.beyond)) {
+        expect(q.ghostId && ids.has(q.ghostId), `${q.id} hors des entités étudiées`).toBe(true)
+        for (const c of q.choices) {
+          if (q.correct.includes(c.id) || !getGhost(c.id)) continue
+          wrongNames++
+          if (ids.has(c.id)) fromStudied++
+        }
+      }
+    }
+    expect(fromStudied / wrongNames, `${fromStudied}/${wrongNames}`).toBeGreaterThan(0.3)
+    // compléter reste l'exception (le Mimic parmi les quatre : il n'est jamais une mauvaise réponse)
+    expect(beyond, `${beyond} questions sur 400`).toBeLessThan(20)
+  })
+
+  /** Les noms d'entités hors de la liste qu'une question montre : énoncé, citation, précision ou réponses. */
+  const straysOf = (q: Question, outside: readonly (typeof GHOSTS)[number][]) => {
+    const names = new Set(outside.map((g) => g.name))
+    const texts = [q.prompt, q.quote ?? '', q.note ?? '', ...q.choices.map((c) => c.label)]
+    return [
+      ...q.choices.filter((c) => names.has(c.label)).map((c) => c.label),
+      ...texts.flatMap((t) => entityMentions(t, outside).flatMap((m) => (typeof m === 'string' ? [] : [m.text]))),
+    ]
+  }
+
+  it('une copie sur les entités étudiées ne nomme aucune autre entité : ni « … plutôt que le Gallu ? », ni dans une citation, ni parmi les réponses', () => {
+    const topicSets: QuizTopic[][] = [['behavior', 'speed', 'sanity', 'zero'], ['zero'], ['behavior'], ['speed'], ['sanity'], ['mechanics', 'expert', 'zero']]
+    const bad: string[] = []
+    let dist = 0
+    for (const n of [4, 6]) {
+      for (let seed = 1; seed <= 100; seed++) {
+        const rng = createRng(seed * 7 + n)
+        const studied = shuffleIds(rng).slice(0, n).map((id) => getGhost(id)!)
+        const ids = new Set(studied.map((g) => g.id))
+        const outside = GHOSTS.filter((g) => !ids.has(g.id))
+        const topics = topicSets[seed % topicSets.length]
+        for (const q of buildQuiz({ topics, ghosts: studied, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng, onlyListed: true })) {
+          if (q.id.startsWith('q:dist:')) dist++
+          const m = /^q:dist:([^:]+):/.exec(q.id)
+          if (m && !ids.has(m[1])) bad.push(q.prompt)
+          const s = straysOf(q, outside)
+          if (s.length) bad.push(`${q.prompt} ${q.quote ?? ''} → ${s.join(', ')}`)
+        }
+      }
+    }
+    expect(bad.slice(0, 5), `${bad.length} questions`).toEqual([])
+    // les départages entre deux entités étudiées se posent toujours
+    expect(dist).toBeGreaterThan(50)
+  })
+
+  it('un seul thème (vitesses, seuils, tests) sur quatre à six entités étudiées : la copie a ses dix questions, et le dit quand elle sort de la liste', () => {
+    for (const topic of ['speed', 'sanity', 'zero'] as QuizTopic[]) {
+      for (const n of [4, 5, 6]) {
+        for (let seed = 1; seed <= 10; seed++) {
+          const rng = createRng(seed * 31 + n)
+          // des entités qui chassent comme une entité standard : peu de questions de vitesse ou de seuil sur elles
+          const standard = GHOSTS.filter((g) => g.speed.summary.startsWith('1,7') && g.huntSanity.normal === 50)
+          const studied = (n === 4 && standard.length >= 4 ? standard : GHOSTS.filter((g) => g.id !== 'the-mimic')).slice(seed % 3, (seed % 3) + n)
+          const ids = new Set(studied.map((g) => g.id))
+          const outside = GHOSTS.filter((g) => !ids.has(g.id))
+          const qs = buildQuiz({ topics: [topic], ghosts: studied, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng, onlyListed: true, fillUp: true })
+          expect(qs.length, `${topic}, ${studied.map((g) => g.id).join(', ')}`).toBe(10)
+          const first = qs.findIndex((q) => q.beyond)
+          for (const [i, q] of qs.entries()) {
+            expect(!!q.beyond, `${topic} ${q.id} : les questions qui complètent viennent à la fin`).toBe(first >= 0 && i >= first)
+            if (!q.beyond) expect(straysOf(q, outside), q.prompt).toEqual([])
+          }
+        }
+      }
+    }
+  })
+})
+
+/** Les entités dans un ordre tiré au hasard. */
+function shuffleIds(rng: () => number): string[] {
+  const ids = GHOSTS.map((g) => g.id)
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[ids[i], ids[j]] = [ids[j], ids[i]]
+  }
+  return ids
+}

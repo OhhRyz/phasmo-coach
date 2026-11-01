@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { FicheExpress } from '../components/FicheExpress'
 import { Modal, Seg } from '../components/ui'
 import {
@@ -25,14 +25,14 @@ import { createRng } from '../engine/random'
 import { de, le } from '../engine/cards'
 import { buildQuiz, DEFAULT_TOPICS, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
 import { NBSP, NNBSP, safeDate, spellLdV } from '../engine/format'
-import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
+import { studiedGhosts, WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
-import { ignoreKey } from '../engine/keys'
+import { bareSpace, ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
-import { clearRun, readRun, saveRun } from './savedRun'
+import { clearRun, saveRun } from './savedRun'
 import { START_REVIEW } from './reviewSession'
+import { COPY_KEY, defaultPool, readCopy, RESUME_PARAM, scopeLine, STUDIED_MIN, type Answer, type QuizPool as Pool, type SavedCopy } from './quizRun'
 
-type Pool = 'all' | 'weak' | 'one'
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
 const LETTERS = 'ABCDEFGHIJ'
@@ -41,14 +41,6 @@ export { WEAK_COUNT } from '../engine/progress'
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 const STAMP_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' })
-
-interface Answer {
-  q: Question
-  selected: string[]
-  correct: boolean
-  /** la carte liée, déjà apprise, revient dans la révision du jour */
-  requeued: boolean
-}
 
 /** Les chiffres « elzéviriens » de Fell font lire « 0 » comme un « o » : on les compose en Caslon. */
 function Digits({ text }: { text: string }) {
@@ -67,24 +59,6 @@ function Digits({ text }: { text: string }) {
   )
 }
 
-/** La copie en cours (voir savedRun) : reprise depuis la page du quiz après un détour. */
-const COPY_KEY = 'phasmo-coach/copie-quiz'
-interface SavedCopy {
-  questions: Question[]
-  index: number
-  answers: Answer[]
-  selected: string[]
-  checked: boolean
-}
-const validCopy = (c: SavedCopy) =>
-  Array.isArray(c.questions) &&
-  Array.isArray(c.answers) &&
-  Array.isArray(c.selected) &&
-  c.answers.length > 0 &&
-  typeof c.index === 'number' &&
-  c.index >= 0 &&
-  c.index < c.questions.length
-
 /** Au-delà, une réponse court sur plusieurs lignes : on entoure sa lettre, ou on la souligne, plutôt que tout le bloc. */
 const SHORT_ANSWER = 22
 
@@ -93,6 +67,9 @@ const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one
 const COUNTS = [5, 10, 20, 30]
 /** Les abréviations des fiches, en toutes lettres sur la copie (« LdV » → « ligne de vue »). */
 const spell = spellLdV
+/** À la première question qui complète une copie sur les entités étudiées (voir QuizOptions.fillUp). */
+const fillNote = (themes: number) =>
+  `Plus de question sur tes entités étudiées pour ${themes > 1 ? 'ces thèmes' : 'ce thème'}${NNBSP}: la fin de la copie porte aussi sur les autres entités.`
 /** Paramètres d'adresse qui lancent la copie tout de suite (raccourcis de l'accueil, des fiches, des mécaniques). */
 const QUICK_PARAMS = ['ghost', 'pool', 'topic', 'n']
 
@@ -198,16 +175,31 @@ function Mimeo({
 }
 
 export function Quiz() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  const { key: entry } = useLocation()
   const focusGhost = params.get('ghost')
   const mastery = useMastery()
   const { state, deck, dispatch } = useStore()
+  // les entités déjà étudiées en révision : par défaut, la copie porte sur elles (voir defaultPool)
+  const studied = useMemo(
+    () =>
+      studiedGhosts(deck, state.cards)
+        .map((id) => getGhost(id)!)
+        .filter(Boolean)
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    [deck, state.cards],
+  )
 
   const topicParam = QUIZ_TOPICS.find((t) => t.id === params.get('topic'))?.id
   const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : DEFAULT_TOPICS)
   const countParam = Number(params.get('n'))
   const [count, setCount] = useState(COUNTS.includes(countParam) ? countParam : 10)
-  const [pool, setPool] = useState<Pool>(focusGhost && getGhost(focusGhost) ? 'one' : params.get('pool') === 'weak' ? 'weak' : 'all')
+  const [pool, setPool] = useState<Pool>(() => {
+    if (focusGhost && getGhost(focusGhost)) return 'one'
+    const asked = params.get('pool')
+    if (asked === 'weak' || asked === 'all') return asked
+    return defaultPool(studied.length)
+  })
   const [empty, setEmpty] = useState(false)
   const [questions, setQuestions] = useState<Question[] | null>(null)
   const [index, setIndex] = useState(0)
@@ -218,10 +210,13 @@ export function Quiz() {
   const [fiche, setFiche] = useState<string | null>(null)
   const [quitOpen, setQuitOpen] = useState(false)
   // une copie laissée en route dans cet onglet (autre onglet, retour, rechargement) : proposée à la reprise
-  const [saved, setSaved] = useState(() => readRun<SavedCopy>(COPY_KEY, validCopy))
+  const [saved, setSaved] = useState(readCopy)
   const nextRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
+  const promptRef = useRef<HTMLHeadingElement>(null)
   const autoStarted = useRef(false)
+  // l'entrée de l'historique où la copie en cours a été distribuée (voir SavedCopy.entry)
+  const startedAt = useRef<string | undefined>(undefined)
 
   // les moins maîtrisées parmi les entités déjà travaillées ; sinon, les premières à découvrir
   const { weak, started } = useMemo(() => {
@@ -236,7 +231,9 @@ export function Quiz() {
   const start = (only?: QuizTopic[]) => {
     clearRun(COPY_KEY)
     setSaved(null)
-    const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : GHOSTS
+    startedAt.current = entry
+    // « Déjà étudiées » sans entité étudiée (réglage gardé d'une autre visite) : toutes
+    const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : pool === 'studied' && studied.length ? studied : GHOSTS
     if (only) setTopics(only)
     const qs = buildQuiz({
       topics: only ?? (topics.length ? topics : DEFAULT_TOPICS),
@@ -246,6 +243,10 @@ export function Quiz() {
       count,
       rng: createRng(Date.now() & 0xffffffff),
       mastery,
+      // les entités déjà étudiées : aucune question sur une entité qu'on n'a jamais vue ; s'il en manque pour ces
+      // thèmes, la fin de la copie porte sur toutes (et le dit, voir fillNote)
+      onlyListed: ghosts === studied,
+      fillUp: ghosts === studied,
     })
     // aucun contenu pour ces thèmes (ex. pas de test 0 preuve définitif pour cette entité)
     if (!qs.length) {
@@ -272,10 +273,27 @@ export function Quiz() {
     setQuitOpen(false)
   }
 
-  // venu d'un raccourci (« Me tester sur… », « quiz éclair », « Quiz sur ces entités ») : la copie est distribuée tout de suite
+  // venu d'un raccourci (« Me tester sur… », « quiz rapide », « Quiz sur ces entités ») : la copie est distribuée
+  // tout de suite ; venu de « Reprendre la copie » (RESUME_QUIZ), la copie en cours reprend sans second geste
   useEffect(() => {
-    if (autoStarted.current || !QUICK_PARAMS.some((k) => params.has(k))) return
+    if (autoStarted.current) return
     autoStarted.current = true
+    if (params.get(RESUME_PARAM) === 'reprendre') {
+      setParams(
+        (p) => {
+          p.delete(RESUME_PARAM)
+          return p
+        },
+        { replace: true },
+      )
+      resume()
+      return
+    }
+    if (!QUICK_PARAMS.some((k) => params.has(k))) return
+    // une copie est encore en cours (celle de ce raccourci, après un rechargement ou le bouton retour, ou une autre
+    // laissée en route) : on ne la jette pas sans le demander. La page, réglée comme le demande le raccourci,
+    // propose « Reprendre la copie » ; le bouton distribue la nouvelle
+    if (saved) return
     start()
     // une seule fois, à l'arrivée sur la page
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,11 +304,12 @@ export function Quiz() {
   // la copie en cours se garde à chaque réponse (rendue ou abandonnée, elle s'efface)
   useEffect(() => {
     if (!questions || index >= questions.length || answers.length === 0) return
-    saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked })
+    saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked, entry: startedAt.current })
   }, [questions, index, answers, selected, checked])
 
   const resume = () => {
     if (!saved) return
+    startedAt.current = saved.entry
     setEmpty(false)
     setQuestions(saved.questions)
     setIndex(saved.index)
@@ -333,15 +352,35 @@ export function Quiz() {
     setChecked(false)
   }, [questions, index, answers, dispatch])
 
+  /** « ‹ Quitter la copie » (ou Échap) : sans réponse, rien à perdre ; sinon, on le confirme. */
+  const askQuit = useCallback(() => {
+    if (answers.length) setQuitOpen(true)
+    else {
+      clearRun(COPY_KEY)
+      setQuestions(null)
+    }
+  }, [answers.length])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // une fiche est posée sur la copie : les touches sont à elle
       if (fiche || quitOpen) return
-      // sur une case qui a le focus, les lettres restent actives ; Entrée y garde son rôle (cocher, ou répondre),
-      // sauf sur une question à plusieurs réponses déjà cochées : Entrée valide, comme l'annonce la consigne
+      // Espace sur l'énoncé, avant la réponse : rien à actionner, et la question ne sort pas de l'écran
+      if (q && !checked && bareSpace(e)) {
+        e.preventDefault()
+        return
+      }
+      // les lettres et chiffres répondent où que soit le focus (hors champ de saisie) ; sur une case, Entrée garde
+      // son rôle (cocher, ou répondre), sauf sur une question à plusieurs réponses déjà cochées : Entrée valide,
+      // comme l'annonce la consigne. Sur un autre lien ou bouton, Entrée l'actionne (voir ignoreKey)
       const validates = e.key === 'Enter' && !!q?.multi && !checked && selected.length > 0
       if (ignoreKey(e, (el) => !!el.closest('.choice') && (e.key !== 'Enter' || validates))) return
       if (!q) return
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        askQuit()
+        return
+      }
       if (e.key === 'Enter') {
         e.preventDefault()
         if (checked) next()
@@ -356,7 +395,15 @@ export function Quiz() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [q, checked, selected, next, check, fiche, quitOpen])
+  }, [q, checked, selected, next, check, fiche, quitOpen, askQuit])
+
+  // chaque question (la première aussi, en arrivant d'un onglet ou d'un lien) : le focus sur son énoncé, sans
+  // contour ni défilement. Resté sur l'onglet ou le lien touché, il y garderait Entrée
+  useEffect(() => {
+    if (!questions || index >= questions.length || checked) return
+    promptRef.current?.focus({ preventScroll: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions, index])
 
   // « Question suivante » prend le focus dès la correction (comme un autoFocus), et reste à l'écran :
   // sur téléphone, au-dessus de la barre d'onglets (scroll-padding de la page + marge de .qz-next)
@@ -393,7 +440,32 @@ export function Quiz() {
         ? `les ${n} entités les moins maîtrisées`
         : 'l’entité la moins maîtrisée'
       : `${n} ${plural(n, 'entité')} à découvrir`
-    const poolLabel = pool === 'one' && one ? one.name : pool === 'weak' ? weakLabel : `les ${GHOSTS.length} entités`
+    const studiedPool = pool === 'studied' && studied.length > 0
+    const poolLabel =
+      pool === 'one' && one ? one.name : pool === 'weak' ? weakLabel : studiedPool ? `les ${studied.length} entités étudiées` : `les ${GHOSTS.length} entités`
+    // sur quelles entités porte la copie, et pourquoi, dit avant le bouton ; l'autre choix à un geste (voir defaultPool)
+    const scope =
+      pool === 'one' && one ? (
+        <p className="qz-scope">La copie ne porte que sur {le(one.name)}.</p>
+      ) : pool === 'weak' ? (
+        <p className="qz-scope">
+          La copie porte sur {weakLabel}.{' '}
+          <TypedLink onClick={() => setPool(defaultPool(studied.length))}>
+            {defaultPool(studied.length) === 'studied' ? `Les ${studied.length} entités étudiées` : 'Toutes les entités'}
+          </TypedLink>
+        </p>
+      ) : (
+        <p className="qz-scope">
+          {scopeLine(studiedPool ? 'studied' : 'all', studied.length, GHOSTS.length)}{' '}
+          {studiedPool ? (
+            <TypedLink onClick={() => setPool('all')}>Toutes les entités</TypedLink>
+          ) : studied.length >= STUDIED_MIN ? (
+            <TypedLink onClick={() => setPool('studied')}>Seulement les {studied.length} étudiées</TypedLink>
+          ) : (
+            <TypedLink to={START_REVIEW}>Commencer par la révision du jour</TypedLink>
+          )}
+        </p>
+      )
     const history = quizzes.slice(-5).reverse()
     // un seul libellé pour les deux boutons qui lancent la même copie
     const startLabel = `Commencer le quiz (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
@@ -425,6 +497,7 @@ export function Quiz() {
                 chasse, tests. Les questions visent plus souvent les entités que tu maîtrises le moins{NNBSP}; une erreur sur une carte
                 déjà apprise la remet dans ta révision du jour.
               </p>
+              {scope}
               {saved && (
                 <p className="qz-resume">
                   <span className="pencil-note">
@@ -478,6 +551,7 @@ export function Quiz() {
                   value={pool}
                   onChange={setPool}
                   options={[
+                    ...(studied.length >= STUDIED_MIN || pool === 'studied' ? [{ value: 'studied' as Pool, label: 'Déjà étudiées' }] : []),
                     { value: 'all' as Pool, label: 'Toutes' },
                     { value: 'weak' as Pool, label: started ? 'Les moins maîtrisées' : 'À découvrir' },
                     ...(one ? [{ value: 'one' as Pool, label: one.name }] : []),
@@ -489,6 +563,11 @@ export function Quiz() {
               <p className="pencil-note qz-weak">
                 {started ? 'Les moins maîtrisées' : 'À découvrir'}
                 {NNBSP}: {weak.map((g) => g.name).join(', ')}.
+              </p>
+            )}
+            {studiedPool && (
+              <p className="pencil-note qz-weak">
+                Déjà étudiées{NNBSP}: {studied.map((g) => g.name).join(', ')}.
               </p>
             )}
           </Page>
@@ -774,7 +853,7 @@ export function Quiz() {
           Quiz{NNBSP}: question {index + 1} sur {questions.length}
         </h1>
         <FileHead>
-          <button type="button" className="link-btn qz-quit" onClick={() => (answers.length ? setQuitOpen(true) : quit())}>
+          <button type="button" className="link-btn qz-quit" onClick={askQuit} aria-keyshortcuts="Escape">
             ‹ Quitter la copie
           </button>
           <span>Quiz · {topicLabel(q.topic)}</span>
@@ -804,12 +883,13 @@ export function Quiz() {
           </header>
 
           <div className="qz-q">
-            <h2 className="qz-prompt">
+            <h2 className="qz-prompt" ref={promptRef} tabIndex={-1}>
               <span className="qz-num">{index + 1}.</span>
               {q.prompt}
             </h2>
             {q.quote && <blockquote className="qz-quote">{q.quote}</blockquote>}
             {q.note && <p className="pencil-note">{q.note}</p>}
+            {q.beyond && !questions[index - 1]?.beyond && <p className="pencil-note">{fillNote(new Set(questions.map((x) => x.topic)).size)}</p>}
           </div>
 
           <Consigne className="qz-consigne">

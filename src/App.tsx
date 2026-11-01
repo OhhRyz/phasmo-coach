@@ -16,7 +16,9 @@ import { MechanicsPage } from './pages/Mechanics'
 import { Notebook } from './pages/Notebook'
 import { NotFound } from './pages/NotFound'
 import { Profile } from './pages/Profile'
+import { ProgressPage } from './pages/Progress'
 import { Quiz } from './pages/Quiz'
+import { RESUME_PARAM } from './pages/quizRun'
 import { Report } from './pages/Report'
 import { Review } from './pages/Review'
 import { Scenario } from './pages/Scenario'
@@ -30,10 +32,15 @@ function ScrollToTop() {
   return null
 }
 
-/** Un lien vers le quiz depuis le quiz (?ghost=, ?topic=) repart d'une copie neuve. */
+/**
+ * Un lien vers le quiz depuis le quiz (?ghost=, ?topic=) repart d'une copie neuve. « Reprendre la copie »
+ * (?copie=reprendre, effacé une fois servi) n'en distribue pas : son paramètre ne compte pas.
+ */
 function QuizRoute() {
   const { search } = useLocation()
-  return <Quiz key={search} />
+  const params = new URLSearchParams(search)
+  params.delete(RESUME_PARAM)
+  return <Quiz key={params.toString()} />
 }
 
 function SafeRoutes({ children }: { children: React.ReactNode }) {
@@ -62,6 +69,7 @@ export function App() {
               <Route path="/carnet" element={<Notebook />} />
               <Route path="/coaching" element={<Coaching />} />
               <Route path="/profil" element={<Profile />} />
+              <Route path="/progression" element={<ProgressPage />} />
               <Route path="/rapport" element={<Report />} />
               <Route path="/importer" element={<ImportNotes />} />
               <Route path="/installer" element={<InstallPage />} />

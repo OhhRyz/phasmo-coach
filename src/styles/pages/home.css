@@ -80,6 +80,13 @@
 .home .home-down svg { flex: none; color: var(--pencil); overflow: visible; margin-bottom: -18px; }
 .home .home-down + section { margin-top: 40px; }
 
+/* le registre de l'accueil mène à la page « Ma progression » (registre et chiffres du profil réunis) */
+.page .registry-more { margin: -10px 0 14px; }
+.registry-more .link { display: inline-flex; align-items: center; min-height: 40px; font-size: 14.5px; }
+.progression .entry { margin-bottom: 0; }
+.page .progress-stats { margin: 22px 0 0; max-width: 40em; }
+.progression .progress-registry { margin-top: 44px; }
+
 /* suspects et registre : ce qu'on peut toucher */
 .page .suspects-legend { margin: -6px 0 4px; font-size: 20.5px; line-height: 1.1; }
 .page .registry-tap { margin: -12px 0 14px; font-size: 20.5px; line-height: 1.1; }
@@ -103,16 +110,17 @@
   /* cibles tactiles d'au moins 40 px */
   .home .link, .home .suspects-more a { display: inline-flex; align-items: center; min-height: 40px; }
   .home .install-note .link { margin-top: 2px; }
-  .home .registry { grid-template-rows: repeat(15, 40px); }
+  .home .registry, .progression .registry { grid-template-rows: repeat(15, 40px); }
   /* le lien occupe toute la hauteur de la ligne (40 px) ; le surligneur reste à la hauteur du nom */
-  .home .registry .nm { display: flex; align-items: center; min-height: 40px; padding: 0; }
-  .home .registry .nm::before { top: 10px; bottom: 9px; }
-  :root[data-theme="dark"] .home .registry .nm::before { top: 21px; bottom: 8px; }
-  .home .registry .nm::after { /* zone de toucher : toute la ligne */
+  .home .registry .nm, .progression .registry .nm { display: flex; align-items: center; min-height: 40px; padding: 0; }
+  .home .registry .nm::before, .progression .registry .nm::before { top: 10px; bottom: 9px; }
+  :root[data-theme="dark"] .home .registry .nm::before, :root[data-theme="dark"] .progression .registry .nm::before { top: 21px; bottom: 8px; }
+  .home .registry .nm::after, .progression .registry .nm::after { /* zone de toucher : toute la ligne */
     content: ""; position: absolute; left: -34px; right: -34px; top: 0; bottom: 0;
   }
   .home .guide-steps li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
-  .home .guide-when { display: block; margin: 0; }
+  /* sous le mot-clé, sur sa propre ligne : à 320 px, « chaque jour, ≈ 6 min au début » passe à la ligne au lieu d'être coupé */
+  .home .guide-when { display: block; margin: 0; white-space: normal; }
   .page .guide-steps p { font-size: 16px; }
   .guide-steps { gap: 14px; }
   .home .entry .stamp { margin-bottom: 12px; }

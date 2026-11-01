@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ExportedLine, useBackupFile, useCopyProgress, useExportBackup, usePasteProgress } from '../components/Backup'
+import { notebookStats, NotebookStats } from '../components/Registry'
 import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
@@ -92,8 +93,7 @@ export function Profile() {
   const perDay = state.settings.newPerDay
   const setPerDay = (v: number) => dispatch({ type: 'settings', settings: { newPerDay: Math.min(NEW_MAX, Math.max(NEW_MIN, v)) } })
   const initial = (state.profile.name.trim()[0] ?? '?').toUpperCase()
-  const seen = deck.filter((c) => state.cards[c.id]).length
-  const days = Math.round((now - state.profile.createdAt) / 86_400_000)
+  const stats = notebookStats(state, deck, now)
 
   return (
     <>
@@ -135,25 +135,9 @@ export function Profile() {
                 {role === 'coach' ? 'Coach' : 'En formation'}
               </Stamp>
             </div>
-            <p className="idcard-stats">
-              <span>
-                <b>{seen || 'aucune'}</b> question{seen > 1 ? 's' : ''} vue{seen > 1 ? 's' : ''}
-              </span>
-              <span>
-                <b>{state.log.length || 'aucune'}</b> révision{state.log.length > 1 ? 's' : ''}
-              </span>
-              <span>
-                {days > 0 ? (
-                  <>
-                    <b>{days}</b> jour{days > 1 ? 's' : ''}
-                  </>
-                ) : (
-                  'ouvert aujourd’hui'
-                )}
-              </span>
-            </p>
+            <NotebookStats {...stats} />
             <p className="idcard-progress">
-              <TypedLink to="/?progression=1">Voir ma progression</TypedLink>
+              <TypedLink to="/progression">Voir ma progression</TypedLink>
             </p>
           </article>
 
@@ -230,7 +214,7 @@ export function Profile() {
                 ]}
               />
             </div>
-            <p className="pencil-note settings-hint">le disjoncteur, en haut, bascule aussi jour et nuit</p>
+            <p className="pencil-note settings-hint">{fr('l’interrupteur « Lumière », en haut de la page, bascule aussi entre jour et nuit')}</p>
           </section>
 
           <section aria-labelledby="h-rev">
@@ -280,6 +264,18 @@ export function Profile() {
             >
               {fr('Inclure les questions « Mécaniques »')}
             </CheckLine>
+
+            {/* côté coach : ses notes sont écrites pour l'élève, elles n'encombrent pas sa propre révision (sauf choix) */}
+            {role === 'coach' && (
+              <CheckLine
+                checked={!!state.settings.reviewOwnNotes}
+                onChange={(v) => dispatch({ type: 'settings', settings: { reviewOwnNotes: v } })}
+                seed="pf-own-notes"
+                hint={fr('Décoché : elles partent chez ton élève en cartes avec le partage, sans revenir dans ta révision.')}
+              >
+                Me reposer aussi mes propres notes
+              </CheckLine>
+            )}
 
             <div className="field focus-field">
               <span className="field-label" id="lbl-focus">

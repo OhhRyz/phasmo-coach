@@ -47,8 +47,17 @@ function Intervals() {
   )
 }
 
+/** Un élément livré avec l'app sous sa propre licence, dont le texte est copié dans public/licences. */
+interface Licensed {
+  name: string
+  by: string
+  licence: string
+  file: string
+  use: string
+}
+
 /** Les cinq polices livrées avec l'app, et le texte de leur licence (copié dans public/licences). */
-const FONTS = [
+const FONTS: Licensed[] = [
   { name: 'IM Fell English', by: 'Igino Marini', licence: 'SIL Open Font License 1.1', file: 'LICENSE-IMFellEnglish.txt', use: 'titres et noms' },
   { name: 'Libre Caslon Text', by: 'Pablo Impallari et Rodrigo Fuenzalida', licence: 'SIL Open Font License 1.1', file: 'LICENSE-LibreCaslonText.txt', use: 'texte des fiches' },
   { name: 'Special Elite', by: 'Astigmatic (Brian J. Bonislawsky)', licence: 'Apache 2.0', file: 'LICENSE-SpecialElite.txt', use: 'en-têtes tapés' },
@@ -56,15 +65,26 @@ const FONTS = [
   { name: 'Caveat', by: 'Pablo Impallari (Impallari Type)', licence: 'SIL Open Font License 1.1', file: 'LICENSE-Caveat.txt', use: 'écriture à la main' },
 ]
 
+/** Le code d'autres projets livré avec l'app, sous sa propre licence (le reste est listé dans package.json). */
+const LIBS: Licensed[] = [
+  {
+    name: 'qrcode-generator',
+    by: 'Kazuhiko Arase',
+    licence: 'Licence MIT',
+    file: 'LICENSE-qrcode-generator.txt',
+    use: 'le code QR de la page « Installer l’app », dessiné sur l’appareil',
+  },
+]
+
 /**
  * Le texte d'une licence, lu dans une fenêtre : une fois l'app installée, son service worker renverrait
  * l'app à la place d'un fichier ouvert comme une page.
  */
 function useLicence() {
-  const [open, setOpen] = useState<(typeof FONTS)[number] | null>(null)
+  const [open, setOpen] = useState<Licensed | null>(null)
   const [text, setText] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
-  const show = (font: (typeof FONTS)[number]) => (e: MouseEvent) => {
+  const show = (font: Licensed) => (e: MouseEvent) => {
     e.preventDefault()
     setOpen(font)
     setText(null)
@@ -204,6 +224,23 @@ export function About() {
                 <span className="fonts-by">
                   de {f.by}, {f.use}
                 </span>
+                <a className="fonts-lic" href={`./licences/${f.file}`} onClick={licence.show(f)}>
+                  {f.licence}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="h-libs">
+          <H id="h-libs" count="une bibliothèque">
+            Code d’autres projets
+          </H>
+          <ul className="fonts">
+            {LIBS.map((f) => (
+              <li key={f.file}>
+                <span className="fonts-name">{f.name}</span>
+                <span className="fonts-by">{fr(`de ${f.by}, pour ${f.use}`)}</span>
                 <a className="fonts-lic" href={`./licences/${f.file}`} onClick={licence.show(f)}>
                   {f.licence}
                 </a>

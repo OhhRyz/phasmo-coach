@@ -1,5 +1,5 @@
 import { GHOST_BY_ID } from '../data'
-import type { CoachNote } from '../engine/cards'
+import { firstLineTitle, type CoachNote } from '../engine/cards'
 import type { CardState, Grade } from '../engine/srs'
 
 export type ActivityKind = 'review' | 'quiz' | 'scenario' | 'ear'
@@ -34,6 +34,11 @@ export interface Settings {
   includeMechanics: boolean
   /** dernier partage du carnet par lien (pour n'envoyer ensuite que les notes nouvelles ou modifiées) */
   lastSharedAt?: number
+  /**
+   * Côté coach : ses propres notes reviennent aussi dans sa révision. Faux par défaut : elles sont écrites pour
+   * l'élève, qui les reçoit en cartes avec le partage (voir skipsOwnReview). Sans effet pour les autres rôles.
+   */
+  reviewOwnNotes?: boolean
 }
 
 /**
@@ -105,11 +110,6 @@ function isObject(v: unknown): v is Record<string, unknown> {
 const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback)
 
 /** Nettoie des notes venues d'un lien, d'un fichier ou du stockage (les entrées invalides sont ignorées). */
-/** Titre d'une note sans titre : sa première ligne, coupée proprement. */
-function firstLine(body: string): string {
-  const line = body.trim().split(/\n/)[0].trim()
-  return line.length > 60 ? `${line.slice(0, 59).trimEnd()}…` : line
-}
 
 /** Les mauvaises réponses d'une note posée en QCM : 3 au plus, sans blancs, 200 caractères chacune. */
 function wrongAnswers(raw: unknown): string[] | undefined {
@@ -138,7 +138,7 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
       createdAt,
       updatedAt: time(n.updatedAt) ?? createdAt,
       ghostId: typeof n.ghostId === 'string' && GHOST_BY_ID[n.ghostId] ? n.ghostId : null,
-      title: title || firstLine(body),
+      title: title || firstLineTitle(body),
       body,
       asCard: n.asCard !== false,
       question: typeof n.question === 'string' && n.question.trim() ? n.question.slice(0, 500) : undefined,

@@ -1,4 +1,5 @@
 import { detectDevice, isTablet, UNKNOWN_APP, type Browser, type Device } from '../engine/device'
+import { fr, NNBSP } from '../engine/format'
 
 /**
  * La marche à suivre pour installer l'app, selon l'appareil et le navigateur. Les libellés entre « »
@@ -346,6 +347,20 @@ export function guideFor(d: Device): Guide {
     after: PHONE_LINK,
     copyLink: true,
   }
+}
+
+/**
+ * Sur ordinateur, « Copier un message pour Discord » : le lien de la page « Installer l'app », puis une
+ * ligne par téléphone. Le lien touché dans Discord s'ouvre dans son navigateur intégré, d'où l'on ne peut
+ * pas installer : d'abord Safari (iPhone) ou Chrome (Android), puis le bouton de la page.
+ */
+export function discordMessage(url: string): string {
+  const button = installLabel({ os: 'ios' })
+  return [
+    `Phasmo Coach${NNBSP}: ${url}`,
+    fr(`Sur iPhone : ouvre ce lien dans Safari, puis touche « ${button} ».`),
+    fr('Sur Android : ouvre-le dans Chrome, puis touche le même bouton.'),
+  ].join('\n')
 }
 
 /** Choix manuel de l'appareil (« Ce n'est pas ton appareil ? ») : le navigateur le plus courant de chacun. */

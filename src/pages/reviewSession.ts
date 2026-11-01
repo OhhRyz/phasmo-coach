@@ -1,7 +1,7 @@
 import type { Card } from '../engine/cards'
 import { dayKey, startOfDay } from '../engine/format'
 import { askKey, SAME_ASK_GAP, SAME_GHOST_GAP } from '../engine/progress'
-import { LEARN_AHEAD, type CardState } from '../engine/srs'
+import { isDue, LEARN_AHEAD, type CardState } from '../engine/srs'
 import { DEFAULT_NEW_PER_DAY, type ReviewEntry } from '../store/schema'
 
 /** Cartes nouvelles proposées d'un coup après la séance (« Apprendre 10 cartes »). */
@@ -15,7 +15,7 @@ export const LEARN_MORE = 10
  */
 export const REQUEUE_WITHIN = LEARN_AHEAD
 
-/** Une carte ratée repasse au moins autant de cartes plus loin (en dernier s'il en reste moins). */
+/** Une carte ratée repasse au moins autant de cartes plus loin (en dernier s'il en reste moins, voir REQUEUE_MIN_OTHERS). */
 export const REQUEUE_GAP = 5
 
 /**
@@ -25,9 +25,19 @@ export const REQUEUE_GAP = 5
  */
 export const MAX_RETURNS = 1
 
-/** La carte repasse-t-elle dans cette séance ? `returns` : combien de fois elle y est déjà repassée. */
-export function comesBackInSession(next: CardState, at: number, returns = 0): boolean {
-  return next.due - at < REQUEUE_WITHIN && returns < MAX_RETURNS
+/**
+ * Une carte ratée ne repasse dans la séance que s'il reste au moins autant d'autres cartes avant la fin : sinon
+ * elle reviendrait juste après sa correction, reconnaissable à sa formulation. Elle attend alors la séance
+ * suivante : due une minute plus tard, elle est déjà comptée dans « Continuer avec N cartes » (LEARN_AHEAD).
+ */
+export const REQUEUE_MIN_OTHERS = 3
+
+/**
+ * La carte repasse-t-elle dans cette séance ? `returns` : combien de fois elle y est déjà repassée ;
+ * `others` : combien d'autres cartes restent dans la séance (sans elle).
+ */
+export function comesBackInSession(next: CardState, at: number, returns = 0, others = Infinity): boolean {
+  return next.due - at < REQUEUE_WITHIN && returns < MAX_RETURNS && others >= REQUEUE_MIN_OTHERS
 }
 
 /** Combien de cartes au moins avant son retour : d'autant plus que son échéance est lointaine (une par minute). */
@@ -104,6 +114,22 @@ export function answersBefore(log: readonly ReviewEntry[], since: number): Recor
 export function stillToAsk(queue: readonly Card[], answered: { again: boolean } | null): Set<string> {
   const rest = answered && !answered.again ? queue.slice(1) : queue
   return new Set(rest.map((c) => c.id))
+}
+
+/**
+ * Les cartes d'une séance close qui peuvent encore se poser quand on la reprend : ni répondues depuis la clôture
+ * (`closedAt` ; un autre onglet partage la progression), ni plus dues. Sinon la reprise reposerait une carte
+ * répondue ailleurs quelques minutes plus tôt, et la noterait trop tôt. Une carte jamais vue reste.
+ */
+export function stillFresh(
+  queue: readonly Card[],
+  log: readonly ReviewEntry[],
+  cards: Readonly<Record<string, CardState>>,
+  closedAt: number,
+  now: number,
+): Card[] {
+  const since = new Set(log.filter((l) => l.t > closedAt).map((l) => l.id))
+  return queue.filter((c) => !since.has(c.id) && (!cards[c.id] || isDue(cards[c.id], now)))
 }
 
 /**

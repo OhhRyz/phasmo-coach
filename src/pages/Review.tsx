@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import {
   FileHead,
   H,
@@ -23,7 +23,7 @@ import { isCoachNote, isOwnNote } from '../engine/notes'
 import { buildReviewQueue, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
 import { questionForCard, type Question } from '../engine/quiz'
 import { humanDuration, isDue, schedule, type CardState, type Grade } from '../engine/srs'
-import { ignoreKey } from '../engine/keys'
+import { bareSpace, ignoreKey } from '../engine/keys'
 import type { Profile } from '../store/schema'
 import { useStore } from '../store/store'
 import {
@@ -41,6 +41,7 @@ import {
   resumeSession,
   SAVED_SESSION_KEY,
   START_PARAM,
+  stillFresh,
   stillToAsk,
   type SavedSession,
 } from './reviewSession'
@@ -300,6 +301,8 @@ function ChoiceRow({
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
   const [params, setParams] = useSearchParams()
+  // chaque arrivée sur la page (onglet « Réviser » touché, lien suivi, même sur la page) : voir le focus plus bas
+  const { key: visit } = useLocation()
   // une séance laissée en route dans cet onglet (fiche ouverte, autre onglet, retour, rechargement) reprend où elle
   // en était ; close, elle rouvre son bilan, sauf si l'on vient d'un lien qui demande une séance (voir restoreSaved)
   const [resumed] = useState(() =>
@@ -449,7 +452,9 @@ export function Review() {
       // la séance s'inscrit au registre dès la première réponse, et se met à jour à chacune : laissée en route,
       // elle compte quand même (registre, profil, bilan du coach)
       dispatch({ type: 'activity', activity: { t: since, kind: 'review', score: correct, total: reviewed, label: 'Révision' } })
-      const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: comesBackInSession(next, at, passes[card.id] ?? 0), next, at }
+      // en fin de séance (moins de REQUEUE_MIN_OTHERS autres cartes), une carte ratée attend la séance suivante
+      const again = comesBackInSession(next, at, passes[card.id] ?? 0, queue.length - 1)
+      const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again, next, at }
       if (!o.again) setSettled((n) => n + 1)
       if (choice === undefined) {
         setPrevious(`la carte précédente ${returnLine(o)}`)
@@ -459,7 +464,7 @@ export function Review() {
         setOutcome(o)
       }
     },
-    [card, finished, outcome, state.cards, review, done, good, advance, passes, dispatch, since],
+    [card, finished, outcome, state.cards, review, done, good, advance, passes, dispatch, since, queue.length],
   )
 
   const pick = useCallback(
@@ -475,8 +480,14 @@ export function Review() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // sur un choix ou « Je ne sais pas », les chiffres et lettres restent actifs ; Entrée et Espace y gardent leur rôle
-      if (ignoreKey(e, (el) => !!el.closest('.rv-card') && e.key !== 'Enter' && e.key !== ' ')) return
+      // les chiffres et lettres répondent où que soit le focus (hors champ de saisie) ; sur un lien ou un bouton,
+      // Entrée et Espace gardent leur rôle : « Carte suivante », « Je ne sais pas »… (voir ignoreKey)
+      // Espace sur la question d'un QCM pas encore répondu : rien à actionner, et la carte ne sort pas de l'écran
+      if (card && !finished && !fiche && question && !outcome && bareSpace(e)) {
+        e.preventDefault()
+        return
+      }
+      if (ignoreKey(e)) return
       // fin de séance : la carte suivante est encore en tête de file, mais hors de l'écran ; fiche express
       // posée sur la carte : les touches sont à elle
       if (!card || finished || fiche) return
@@ -513,13 +524,22 @@ export function Review() {
   const answerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
 
-  // nouvelle carte : elle revient en haut de l'écran, et le focus sur sa question (Tab mène aux choix)
+  // nouvelle carte : elle revient en haut de l'écran, et le focus sur sa question (Tab mène aux choix). Dès
+  // l'arrivée sur la page aussi : resté sur l'onglet « Réviser », le focus y garderait Entrée et Espace, et les
+  // touches de réponse sembleraient mortes. La question n'a pas de contour au focus : rien ne bouge à l'écran.
+  // Carte déjà répondue (séance reprise, onglet retouché pendant la correction) : le focus va à l'action suivante
   useEffect(() => {
-    if (done === 0 || !cardKey) return
+    if (!cardKey || finished) return
+    if (outcome || revealed) {
+      if (outcome) actRef.current?.querySelector<HTMLElement>('.btn-tape')?.focus({ preventScroll: true })
+      else answerRef.current?.focus({ preventScroll: true })
+      return
+    }
     const el = pileRef.current
-    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' })
+    if (done > 0 && el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' })
     promptRef.current?.focus({ preventScroll: true })
-  }, [cardKey])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardKey, visit, finished])
 
   // réponse donnée (ou carte retournée) : l'action suivante prend le focus et reste à l'écran, au-dessus
   // de la barre d'onglets du téléphone (scroll-padding de la page, marge de .rv-act)
@@ -558,6 +578,37 @@ export function Review() {
     titleRef.current?.focus({ preventScroll: true })
   }, [finished])
 
+  /**
+   * « Reprendre la séance » (close avant sa dernière carte) : elle repart où elle en était, avec ses compteurs
+   * et sur la même ligne du registre (même début). Une correction lue au moment de clore mène à la carte suivante.
+   * Les cartes répondues depuis dans un autre onglet, ou qui ne sont plus dues, ne se reposent pas (voir
+   * stillFresh) ; s'il n'en reste aucune, c'est une nouvelle séance.
+   */
+  const resume = () => {
+    const at = Date.now()
+    const [head, ...tail] = queue
+    let rest = outcome ? tail : queue
+    const fresh = (list: readonly Card[]) => stillFresh(list, state.log, state.cards, ended ?? since, at)
+    // la carte dont on lisait la correction repasse plus loin si elle devait repasser (comme advance)
+    if (outcome?.again && head && fresh([head]).length) {
+      rest = requeue(rest, head, requeueGap(outcome.next, outcome.at))
+      setPasses((p) => ({ ...p, [outcome.cardId]: (p[outcome.cardId] ?? 0) + 1 }))
+    }
+    const kept = fresh(rest)
+    if (!kept.length) {
+      restart(0)
+      return
+    }
+    // « N cartes terminées sur M » : les cartes retirées ne comptent plus dans la séance
+    const dropped = new Set(rest.filter((c) => !kept.includes(c)).map((c) => c.id))
+    if (dropped.size) setTotal((t) => Math.max(settled, t - dropped.size))
+    setOutcome(null)
+    setRevealed(false)
+    setQueue(kept)
+    setEnded(null)
+    setFinished(false)
+  }
+
   /** Nouvelle séance : les compteurs repartent de zéro (la précédente est déjà au registre). */
   const restart = (extraNew: number) => {
     setEnded(null)
@@ -595,7 +646,8 @@ export function Review() {
     // continuer plutôt que d'en apprendre d'autres ; le bouton annonce la séance que le clic lancera
     const pending = buildReviewQueue(state, deck, now).length
     const learnable = pending > 0 ? 0 : buildReviewQueue(state, deck, now, LEARN_MORE).length
-    const next = nextSession(pending, learnable, finished && stillToAsk(queue, outcome).size > 0)
+    const interrupted = finished && stillToAsk(queue, outcome).size > 0
+    const next = nextSession(pending, learnable, interrupted)
     // quand revient la prochaine carte ? (en apprentissage : à la minute ; en révision : le jour prévu)
     const inDeck = new Set(deck.map((c) => c.id))
     let nextDue = Infinity
@@ -691,7 +743,7 @@ export function Review() {
           )}
           <div className="rv-next">
             {next ? (
-              <TapeButton onClick={() => restart(next.extraNew)}>{next.label}</TapeButton>
+              <TapeButton onClick={() => (interrupted && pending > 0 ? resume() : restart(next.extraNew))}>{next.label}</TapeButton>
             ) : (
               <TapeButton to="/quiz">Faire un quiz</TapeButton>
             )}
@@ -784,8 +836,9 @@ export function Review() {
   const headLeft = isNote ? noteLabel(note, state.profile) : hides && !shown ? HIDDEN_GHOST : deckLabel(card)
   const headRight = isNote ? (shown ? (ghost?.name ?? '') : '') : KIND_LABEL[card.kind]
 
-  // le compteur ne recule jamais : le numéro de la question dans la séance (une carte qui repasse en est une
-  // nouvelle), et les cartes terminées, celles qui ne repasseront plus aujourd'hui
+  // le compteur ne recule jamais : le numéro de la réponse dans la séance (une carte qui repasse en demande
+  // une nouvelle), et les cartes terminées, celles qui ne repasseront plus aujourd'hui. « Réponse 16 » à côté de
+  // « 10 cartes terminées sur 12 » se lit sans calcul : une carte ratée demande deux réponses
   const asked = done + (outcome ? 0 : 1)
   const last = queue.length === 1 && !outcome?.again
   const left = queue.length - 1
@@ -818,7 +871,8 @@ export function Review() {
       <aside className={`rv-help ${where}`} aria-label="La révision espacée">
         <p className="pencil-note">
           La révision espacée te repose chaque carte juste avant que tu l’oublies. Bonne réponse{NNBSP}: elle revient plus tard, demain
-          puis de plus en plus loin. Erreur{NNBSP}: elle repasse quelques cartes plus loin dans la séance, souvent posée autrement.
+          puis de plus en plus loin. Erreur{NNBSP}: elle repasse quelques cartes plus loin dans la séance, souvent posée autrement (à
+          la fin de la séance, elle attend la suivante).
         </p>
         <TypedLink onClick={closeHelp}>Compris</TypedLink>
       </aside>
@@ -857,7 +911,7 @@ export function Review() {
 
         <div className="rv-progress">
           <p className="rv-step" aria-live="polite">
-            Question <b>{asked}</b>
+            Réponse <b>{asked}</b>
             {pass > 0 && <span className="rv-again"> · carte déjà vue</span>}
           </p>
           <ProgressBar value={total ? settled / total : 0} label="Cartes terminées pour cette séance" />
@@ -1006,9 +1060,12 @@ export function Review() {
           <SessionCard rows={graded} ahead={stillToAsk(queue, outcome)} notes={state.notes} profile={state.profile} />
         </section>
 
-        <div className="rv-foot">
-          <TypedLink onClick={finish}>Terminer la séance</TypedLink>
-        </div>
+        {/* dernière carte répondue : le bouton de la carte dit déjà « Terminer la séance » */}
+        {!(answered && last) && (
+          <div className="rv-foot">
+            <TypedLink onClick={finish}>Terminer la séance</TypedLink>
+          </div>
+        )}
       </Page>
 
       <FicheExpress ghostId={fiche} onClose={() => setFiche(null)} back="Retour à la carte" later="après la séance" />

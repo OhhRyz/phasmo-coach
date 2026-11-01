@@ -49,7 +49,7 @@ import {
   studiedGhosts,
   unseenCards,
 } from './progress'
-import { createRng } from './random'
+import { createRng, shuffle } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
 import {
   decodePayload,
@@ -1819,7 +1819,7 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
           const g = rng() < pRight ? 3 : 1
           const next = schedule(prev, g, now)
           state = { ...state, cards: { ...state.cards, [card.id]: next }, log: [...state.log, { id: card.id, t: now, g, isNew: !prev }] }
-          if (comesBackInSession(next, now, pass)) {
+          if (comesBackInSession(next, now, pass, rest.length)) {
             rest = requeue(rest, card, requeueGap(next, now))
             passes[card.id] = pass + 1
           }
@@ -2296,6 +2296,46 @@ describe('Quiz : un même signe ne revient pas sous deux formes dans la copie', 
       const signs = qs.filter((q) => /^q:(tell|obs|zero):/.test(q.id)).map((q) => q.ghostId)
       expect(new Set(signs).size, `graine ${seed} : ${signs.join(', ')}`).toBe(signs.length)
     }
+  })
+})
+
+describe('Quiz : une même question ne se pose qu’une fois par copie', () => {
+  const screen = (q: Question) => `${q.prompt}|${q.quote ?? ''}`
+  const names = new Set(GHOSTS.flatMap((g) => [g.name, `${g.name} (${g.nameEn})`]))
+
+  it('« La santé mentale moyenne est encore au-dessus de 50 %… » : un énoncé, une fois, quelle que soit l’entité', () => {
+    let early = 0
+    for (let seed = 1; seed <= 300; seed++) {
+      const qs = buildQuiz({ topics: ['behavior', 'speed', 'sanity', 'zero'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed * 7919) })
+      expect(qs.length).toBe(10)
+      const screens = qs.map(screen)
+      expect(new Set(screens).size, `graine ${seed}`).toBe(screens.length)
+      if (qs.some((q) => q.id.startsWith('q:early:'))) early++
+    }
+    // la question se pose toujours, une fois par copie
+    expect(early).toBeGreaterThan(10)
+  })
+
+  it('les mauvaises réponses en phrases ne se relisent pas d’une question à l’autre de la copie', () => {
+    let repeats = 0
+    let copies = 0
+    for (const size of [4, 6, 9, 30]) {
+      for (let seed = 1; seed <= 60; seed++) {
+        const rng = createRng(seed * 104729 + size)
+        const ghosts = size === GHOSTS.length ? GHOSTS : shuffle(rng, GHOSTS).slice(0, size)
+        const qs = buildQuiz({ topics: ['behavior', 'speed', 'sanity', 'zero'], ghosts, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng })
+        expect(qs.length, `${size} entités, graine ${seed}`).toBe(10)
+        copies++
+        const read = new Set<string>()
+        for (const q of qs) {
+          const sentences = [...new Set(q.choices.map((c) => c.label))].filter((l) => l.length > 12 && !names.has(l))
+          if (sentences.some((l) => read.has(l))) repeats++
+          for (const l of sentences) read.add(l)
+        }
+      }
+    }
+    // une phrase ne revient qu'à défaut d'autre question : presque jamais
+    expect(repeats / copies, `${repeats} sur ${copies} copies`).toBeLessThanOrEqual(0.02)
   })
 })
 

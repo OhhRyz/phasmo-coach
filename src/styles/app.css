@@ -139,6 +139,9 @@ button.btn-tape { border: 0; cursor: pointer; }
   animation: settle .5s cubic-bezier(.2, .9, .3, 1.15) both;
 }
 .toast::before { content: ""; position: absolute; left: 50%; top: -10px; width: 64px; height: 20px; margin-left: -32px; background: var(--tape); transform: rotate(3deg); }
+/* message qui propose d'annuler : le bouton reste touchable (le reste du message laisse passer les clics) */
+.toast--action { pointer-events: auto; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px 16px; }
+.toast-act { display: inline-flex; align-items: center; min-height: 40px; margin: -8px 0; font-size: 16px; }
 @media (max-width: 759px) { .toasts { bottom: calc(96px + env(safe-area-inset-bottom)); } }
 
 /* état vide */

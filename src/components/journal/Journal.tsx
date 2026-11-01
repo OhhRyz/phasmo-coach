@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -244,8 +245,11 @@ export function TapeButton({
   autoFocus,
   className = '',
   disabledHint,
+  state,
 }: {
   to?: string
+  /** l'état d'historique passé avec `to` (voir FROM_CODEX) */
+  state?: unknown
   onClick?: () => void
   children: ReactNode
   type?: 'button' | 'submit'
@@ -262,7 +266,7 @@ export function TapeButton({
     <>
     <span className={`btn-wrap${disabled ? ' is-disabled' : ''}${className ? ` ${className}` : ''}`}>
       {to ? (
-        <Link className="btn-tape" to={to} style={style}>
+        <Link className="btn-tape" to={to} state={state} style={style}>
           {children}
           {arrow && <TapeArrow />}
         </Link>
@@ -305,7 +309,18 @@ export function EndActions({ children, className = '' }: { children: ReactNode; 
 }
 
 /** Lien ou bouton secondaire : texte tapé souligné au stylo rouge. */
-export function TypedLink({ to, onClick, children, className = '' }: { to?: string; onClick?: () => void; children: ReactNode; className?: string }) {
+export function TypedLink({
+  to,
+  onClick,
+  children,
+  className = '',
+}: {
+  to?: string
+  /** l'événement dit si le geste vient du clavier (`detail === 0`) */
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void
+  children: ReactNode
+  className?: string
+}) {
   if (to) {
     return (
       <Link className={`link ${className}`} to={to}>

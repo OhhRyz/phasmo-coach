@@ -108,11 +108,20 @@ export function Modal({
   const box = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
   close.current = onClose
+  // le déclencheur (bouton, lien) se note au rendu qui ouvre la fenêtre : au moment de l'effet, un champ de la
+  // fenêtre en autoFocus a déjà pris le focus, et c'est lui qu'on rendrait, disparu, à la fermeture
+  const trigger = useRef<HTMLElement | null>(null)
+  const wasOpen = useRef(false)
+  if (open !== wasOpen.current) {
+    if (open && typeof document !== 'undefined') trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    wasOpen.current = open
+  }
   useEffect(() => {
     if (!open) return
-    const back = document.activeElement as HTMLElement | null
+    const back = trigger.current
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close.current()
+      // un formulaire de la fenêtre qui gère lui-même Échap (texte à ne pas perdre) l'a déjà traité
+      if (e.key === 'Escape' && !e.defaultPrevented) close.current()
       if (e.key !== 'Tab' || !box.current) return
       // le focus reste sur la fiche tant qu'elle est posée
       const items = box.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')
@@ -137,13 +146,14 @@ export function Modal({
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
-      // le déclencheur a pu disparaître (note supprimée) : on rend le focus au titre de la page
-      if (back?.isConnected) back.focus()
+      // le déclencheur a pu disparaître (note supprimée) : on rend le focus au titre de la page, sans remonter
+      // en haut de la page
+      if (back?.isConnected) back.focus({ preventScroll: true })
       else {
         const h1 = document.querySelector<HTMLElement>('main h1')
         if (h1) {
           if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1')
-          h1.focus()
+          h1.focus({ preventScroll: true })
         }
       }
     }

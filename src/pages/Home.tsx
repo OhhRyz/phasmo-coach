@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CircledNumber,
   Envelope,
@@ -11,7 +11,6 @@ import {
   Page,
   PaperButton,
   Polaroid,
-  RoughCircle,
   Stamp,
   Sticky,
   Tally,
@@ -21,16 +20,18 @@ import {
 } from '../components/journal/Journal'
 import { UvPrint } from '../components/journal/Charts'
 import { GHOSTS, getGhost } from '../data'
-import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/progress'
+import { buildReviewQueue, streak, studiedGhosts, WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { dayKey, fr, NBSP, NNBSP, num, safeDate } from '../engine/format'
 import { coachNameOf, coachNotes, isOwnNote, sortNotes } from '../engine/notes'
 import { shareSummary, shareSummaryLine } from '../engine/share'
 import { installHint, isStandalone, platform } from '../engine/device'
 import { useAppInstalled } from '../install'
 import { useBackupFile, useCopyProgress, usePasteProgress } from '../components/Backup'
+import { Registry, registryCounts } from '../components/Registry'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { readContract, RESUME_CONTRACT } from './contractRun'
+import { copyMeta, quickQuizLabel, readCopy, RESUME_QUIZ } from './quizRun'
 import { EXHIBITS } from './exhibits'
 import { START_REVIEW } from './reviewSession'
 import { installLinkText as installLinkFor } from './installGuide'
@@ -64,6 +65,23 @@ function storeGuideSeen() {
   }
 }
 
+/**
+ * « Mode d'emploi » du pied de page (?guide=1) : on descend jusqu'à la fiche, le focus suit (clavier). `key` :
+ * l'entrée d'historique, pour qu'un nouveau clic sur le lien ramène à la fiche même si l'adresse n'a pas changé.
+ */
+function useGuideArrival(asked: boolean, key: string, ready = true) {
+  useEffect(() => {
+    if (!asked || !ready) return
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById('mode-d-emploi')
+      if (!el) return
+      el.scrollIntoView({ block: 'start' })
+      el.querySelector<HTMLElement>('.guide-actions .btn-tape, .guide-actions .link')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [asked, key, ready])
+}
+
 /** Le carnet est-il sur une seule colonne (téléphone, tablette) ? Les exercices passent alors sous « Les suspects ». */
 const STACKED = '(max-width: 1180px)'
 function useStacked(): boolean {
@@ -95,8 +113,11 @@ const metaLine = (meta: string) =>
     .map((seg) => seg.replace(/ /g, NBSP))
     .join(`${NBSP}· `)
 
-/** Sur iPhone, l'app installée ne reprend pas ce qui a été noté dans l'onglet de Safari. */
-const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
+/**
+ * Sur iPhone, l'app installée ne reprend pas d'elle-même ce qui a été noté dans l'onglet de Safari : rien ne
+ * presse pour autant, la progression se copie ici et se colle là-bas.
+ */
+export const IOS_FRESH_START = 'Tu peux le faire maintenant ou plus tard : ta progression passe du navigateur à l’app par copier-coller.'
 const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : copie d’abord ta progression ici, puis colle-la dans l’app.'
 
 /** Le lien vers la page « Installer l'app » : un iPad ou une tablette Android n'est pas un téléphone. */
@@ -128,6 +149,13 @@ function KeepDataNote({ hint, installLink }: { hint: string; installLink: string
 function Welcome() {
   const { state, dispatch } = useStore()
   const [name, setName] = useState('')
+  // « Mode d'emploi » du pied de page, avant même le prénom : la fiche s'ouvre ici, en haut de la page
+  const [params, setParams] = useSearchParams()
+  const { key } = useLocation()
+  const asked = params.get('guide') === '1'
+  const nameRef = useRef<HTMLInputElement>(null)
+  const stacked = useStacked()
+  useGuideArrival(asked, key)
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
   const installLink = useMemo(installLinkText, [])
@@ -140,6 +168,10 @@ function Welcome() {
   const minutes = sessionMinutes(state.settings.newPerDay, 0)
   // notes d'un coach déjà collées (lien ouvert avant le carnet) : elles attendent l'ouverture
   const notes = state.notes.length
+  const closeGuide = () => {
+    setParams({}, { replace: true })
+    nameRef.current?.focus()
+  }
   return (
     <Notebook single className="home">
       <Page section="1" label="Nouveau carnet">
@@ -163,6 +195,7 @@ function Welcome() {
             )}
           </p>
         </div>
+        {asked && <Guide stacked={stacked} minutes={minutes} onDone={closeGuide} beforeName />}
         {hint && (
           <div className="pencil-note install-note">
             <p>
@@ -212,7 +245,16 @@ function Welcome() {
         >
           <label className="field">
             <span>Ton prénom</span>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus required maxLength={40} />
+            <input
+              ref={nameRef}
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Prénom ou pseudo"
+              autoFocus={!asked}
+              required
+              maxLength={40}
+            />
           </label>
           <p className="pencil-note welcome-local">{fr('aucun compte : tout reste sur cet appareil (sauvegarde possible depuis le profil)')}</p>
           <div className="welcome-go">
@@ -236,7 +278,18 @@ function Welcome() {
  * d'une journée de cartes nouvelles, calculée comme celle de la fiche « Révision du jour » (les premiers jours :
  * ensuite, les cartes à revoir s'y ajoutent).
  */
-function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number; onDone: (to?: string) => void }) {
+function Guide({
+  stacked,
+  minutes,
+  onDone,
+  beforeName,
+}: {
+  stacked: boolean
+  minutes: number
+  onDone: (to?: string) => void
+  /** Ouverte avant le prénom (pied de page) : la révision attend l'ouverture du carnet, plus bas. */
+  beforeName?: boolean
+}) {
   return (
     <section className="guide settle" id="mode-d-emploi" aria-labelledby="h-guide" style={{ '--r': '-.4deg', '--d': '.15s' } as Style}>
       <IndexCard head={<span id="h-guide">Mode d’emploi</span>} right="à lire une fois" rotate={0}>
@@ -245,7 +298,7 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
           <li>
             <CircledNumber n={1} delay={0.5} />
             <div>
-              <b className="guide-k">Réviser</b> <span className="guide-when">{`chaque jour, ≈${NBSP}${minutes}${NBSP}min au début`}</span>
+              <b className="guide-k">Réviser</b> <span className="guide-when">{`chaque jour, ≈${NBSP}${minutes}${NBSP}min au${NBSP}début`}</span>
               <p>{fr('Des questions à choix multiple sur les entités ; le carnet te repose ce que tu commences à oublier.')}</p>
             </div>
           </li>
@@ -255,7 +308,14 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
               <b className="guide-k">Exercices</b> <span className="guide-when">les enveloppes kraft</span>
               <p>
                 {fr(
-                  `Quiz, contrat simulé, bruits de pas : ${stacked ? 'les enveloppes sont plus bas, après « Les suspects »' : 'les enveloppes sont en bas de la page'}.`,
+                  // avant le prénom, la page n'a encore ni enveloppes ni « Les suspects » : elles viennent avec le carnet
+                  `Quiz, contrat simulé, bruits de pas : ${
+                    beforeName
+                      ? `une fois le carnet ouvert, les enveloppes sont ${stacked ? 'sur l’accueil, après « Les suspects »' : 'en bas de l’accueil'}`
+                      : stacked
+                        ? 'les enveloppes sont plus bas, après « Les suspects »'
+                        : 'les enveloppes sont en bas de la page'
+                  }.`,
                 )}{' '}
                 <span className="on-mouse">Clique sur une enveloppe</span>
                 <span className="on-touch">Touche une enveloppe</span> pour l’ouvrir.
@@ -270,11 +330,19 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
             </div>
           </li>
         </ol>
-        <div className="plan-actions guide-actions">
-          <TapeButton onClick={() => onDone(START_REVIEW)}>Commencer par la révision</TapeButton>
-          <TypedLink onClick={() => onDone()}>J’ai compris, ranger la fiche</TypedLink>
-        </div>
-        <p className="pencil-note guide-again">{fr('tu la retrouveras en bas de chaque page : « Mode d’emploi »')}</p>
+        {beforeName ? (
+          <div className="plan-actions guide-actions">
+            <TypedLink onClick={() => onDone()}>J’ai compris, ranger la fiche</TypedLink>
+          </div>
+        ) : (
+          <div className="plan-actions guide-actions">
+            <TapeButton onClick={() => onDone(START_REVIEW)}>Commencer par la révision</TapeButton>
+            <TypedLink onClick={() => onDone()}>J’ai compris, ranger la fiche</TypedLink>
+          </div>
+        )}
+        <p className="pencil-note guide-again">
+          {fr(beforeName ? 'pour commencer, écris ton prénom plus bas et ouvre le carnet' : 'tu la retrouveras en bas de chaque page : « Mode d’emploi »')}
+        </p>
       </IndexCard>
     </section>
   )
@@ -322,8 +390,9 @@ export function Home() {
   const stacked = useStacked()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
   const asked = params.get('guide') === '1'
-  // « Voir ma progression » (page profil) : on descend jusqu'au registre des entités
+  // ancien lien « Voir ma progression » (?progression=1) : on descend jusqu'au registre des entités
   const toProgress = params.get('progression') === '1'
   const [guideSeen, setGuideSeen] = useState(readGuideSeen)
   const showGuide = state.onboarded && (asked || !guideSeen)
@@ -348,16 +417,7 @@ export function Home() {
   }, [toProgress, state.onboarded])
 
   // rouverte depuis le pied de page : on descend jusqu'à la fiche (le focus suit, pour le clavier)
-  useEffect(() => {
-    if (!asked || !state.onboarded) return
-    const raf = requestAnimationFrame(() => {
-      const el = document.getElementById('mode-d-emploi')
-      if (!el) return
-      el.scrollIntoView({ block: 'start' })
-      el.querySelector<HTMLElement>('.btn-tape')?.focus({ preventScroll: true })
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [asked, state.onboarded])
+  useGuideArrival(asked, location.key, state.onboarded)
 
   const closeGuide = (to?: string) => {
     storeGuideSeen()
@@ -406,9 +466,7 @@ export function Home() {
   // une carte ratée repasse dans la séance : on compte les réponses attendues, pas les cartes
   const minutes = sessionMinutes(newCount, dueCount)
   const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)?.name).filter(Boolean)
-  const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
-  const untouched = GHOSTS.filter((g) => (mastery[g.id] ?? 0) === 0).length
-  const inProgress = GHOSTS.length - acquired - untouched
+  const { acquired } = registryCounts(mastery)
   const role = state.profile.role
   const isCoach = role === 'coach'
   const coach = coachNameOf(state.profile)
@@ -422,6 +480,10 @@ export function Home() {
   const lastEar = lastOf('ear')
   // un contrat laissé en route dans cet onglet : l'enveloppe le dit
   const contract = useMemo(() => readContract(), [])
+  // une copie du quiz laissée en route : l'enveloppe du quiz la propose à la reprise
+  const copy = useMemo(() => readCopy(), [])
+  // le quiz rapide porte sur les entités déjà étudiées en révision, s'il y en a assez (voir defaultPool)
+  const studied = useMemo(() => studiedGhosts(deck, state.cards).length, [deck, state.cards])
   const hasData = state.log.length > 0 || state.activity.length > 0 || state.notes.length > 0
 
   if (!state.onboarded) return <Welcome />
@@ -489,14 +551,16 @@ export function Home() {
           delay={0.2}
         />
         <Envelope
-          to={EXHIBITS.quiz.to}
+          to={copy ? RESUME_QUIZ : EXHIBITS.quiz.to}
           piece="Exercice"
           title={EXHIBITS.quiz.title}
           text={fr(EXHIBITS.quiz.what)}
-          meta={metaLine(EXHIBITS.quiz.meta)}
-          action={EXHIBITS.quiz.action}
+          meta={metaLine(copy ? copyMeta(copy) : EXHIBITS.quiz.meta)}
+          action={copy ? 'Reprendre la copie' : EXHIBITS.quiz.action}
           hand={
-            lastQuiz ? (
+            copy ? (
+              'copie en cours, à reprendre'
+            ) : lastQuiz ? (
               <>
                 dernier{NNBSP}: <span className="env-score">{`${lastQuiz.score}/${lastQuiz.total}`}</span>
               </>
@@ -614,7 +678,7 @@ export function Home() {
                 </p>
                 <div className="plan-actions">
                   <TapeButton to={START_REVIEW}>Commencer la révision</TapeButton>
-                  <TypedLink to="/quiz?n=5">ou un quiz rapide (5 questions)</TypedLink>
+                  <TypedLink to="/quiz?n=5">{quickQuizLabel(studied, 5)}</TypedLink>
                 </div>
               </>
             ) : (
@@ -716,55 +780,15 @@ export function Home() {
           </FileHead>
 
           <section aria-labelledby="h-reg" id="progression" tabIndex={-1}>
-            <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
-              Les {GHOSTS.length} entités
-            </H>
-            <p className="registry-legend">Ta maîtrise est surlignée et chiffrée en{NBSP}%{NNBSP}; les entités acquises sont entourées.</p>
-            <p className="pencil-note registry-tap">
-              <span className="on-mouse">clique sur un nom</span>
-              <span className="on-touch">touche un nom</span> pour ouvrir sa fiche
-            </p>
-            <ol className="registry">
-              {GHOSTS.map((g, i) => {
-                const m = mastery[g.id] ?? 0
-                const ok = m >= 0.85
-                const cls = ok ? 'ok' : m === 0 ? 'zero' : m < 0.4 ? 'weak' : undefined
-                return (
-                  <li key={g.id} className={cls} style={{ '--m': m } as Style}>
-                    <span className="num">{String(i + 1).padStart(2, '0')}</span>
-                    <Link className="nm" to={`/codex/${g.id}`} style={{ '--i': i } as Style}>
-                      {ok ? (
-                        <RoughCircle seed={g.id} delay={1.1 + i * 0.03}>
-                          {g.name}
-                        </RoughCircle>
-                      ) : (
-                        g.name
-                      )}
-                    </Link>
-                    <span className="pct">{m === 0 ? '–' : pct(m)}</span>
-                  </li>
-                )
-              })}
-            </ol>
-            <div className="registry-sum">
-              <span>
-                <b>{acquired || 'aucune'}</b> acquise{acquired > 1 ? 's' : ''}
-              </span>
-              <span>
-                <b>{inProgress || 'aucune'}</b> en cours
-              </span>
-              <span>
-                {untouched ? (
-                  <>
-                    <b>{untouched}</b> pas encore travaillée{untouched > 1 ? 's' : ''}
-                  </>
-                ) : (
-                  <>
-                    <b>toutes</b> travaillées
-                  </>
-                )}
-              </span>
-            </div>
+            <Registry
+              id="h-reg"
+              mastery={mastery}
+              after={
+                <p className="registry-more">
+                  <TypedLink to="/progression">Ma progression</TypedLink>
+                </p>
+              }
+            />
           </section>
 
           <section className="notes" aria-labelledby="h-notes">

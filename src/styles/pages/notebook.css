@@ -276,3 +276,13 @@
   .pli-notes { grid-template-columns: 1fr; gap: 28px; }
   .pli-notes .sticky { margin-right: 12px; }
 }
+
+/* la question de révision que posera la note (sans question écrite) : tapée sous la case */
+.note-card-preview { margin: 8px 0 0 40px; font-family: "Courier Prime", monospace; font-size: 15px; line-height: 1.45; color: var(--ink); }
+.note-card-preview .typed-label { margin-right: 8px; }
+/* Échap ou « Annuler » sur une note écrite : on demande avant de la perdre */
+.note-ask { display: grid; gap: 6px; padding-top: 12px; border-top: 1.5px dashed color-mix(in srgb, var(--ink) 28%, transparent); }
+.note-ask-q { margin: 0; font-size: 18px; color: var(--ink); }
+.note-ask-q small { display: block; font-size: 14.5px; font-style: italic; color: var(--ink-3); }
+.note-ask .link { display: inline-flex; align-items: center; min-height: 40px; }
+@media (max-width: 759px) { .note-card-preview { margin-left: 0; } }

@@ -1,4 +1,4 @@
-import type { Profile } from '../store/schema'
+import type { Profile, Settings } from '../store/schema'
 import type { CoachNote } from './cards'
 
 /**
@@ -51,7 +51,7 @@ export function isCoachNote(note: CoachNote, profile: Profile): boolean {
 }
 
 /** Une note écrite sur cet appareil par la personne qui tient le carnet. */
-export function isOwnNote(note: CoachNote, profile: Profile): boolean {
+export function isOwnNote(note: CoachNote, profile: Pick<Profile, 'name'>): boolean {
   return !!profile.name && !!note.author && same(note.author, profile.name)
 }
 
@@ -68,4 +68,18 @@ export function coachNotes(notes: CoachNote[], profile: Profile, ghostId?: strin
 /** Une note qui deviendra vraiment une carte : il faut un texte ou une réponse au dos. */
 export function makesCard(note: Pick<CoachNote, 'asCard' | 'body' | 'answer'>): boolean {
   return note.asCard && !!(note.body?.trim() || note.answer?.trim())
+}
+
+/**
+ * Une note écrite par le coach lui-même, sur son carnet : elle est pour son élève (qui la reçoit en carte avec le
+ * partage) et ne revient pas dans la révision du coach, sauf s'il le demande (réglage « reviewOwnNotes »). Une
+ * note sans signature, sur le carnet d'un coach, est la sienne (écrite avant d'avoir donné son prénom).
+ */
+export function skipsOwnReview(note: CoachNote, profile: Pick<Profile, 'role' | 'name'>, settings: Pick<Settings, 'reviewOwnNotes'>): boolean {
+  return profile.role === 'coach' && !settings.reviewOwnNotes && (isOwnNote(note, profile) || !note.author.trim())
+}
+
+/** Les notes qui deviennent des cartes dans la révision de cet appareil (voir skipsOwnReview). */
+export function reviewNotes(notes: CoachNote[], profile: Pick<Profile, 'role' | 'name'>, settings: Pick<Settings, 'reviewOwnNotes'>): CoachNote[] {
+  return notes.some((n) => skipsOwnReview(n, profile, settings)) ? notes.filter((n) => !skipsOwnReview(n, profile, settings)) : notes
 }

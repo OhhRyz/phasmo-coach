@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import type { CoachNote } from '../engine/cards'
 import { NNBSP, validTime } from '../engine/format'
 import { isOwnNote, makesCard } from '../engine/notes'
@@ -17,6 +17,8 @@ export function useNoteActions() {
   const toast = useToast()
   const [editing, setEditing] = useState<CoachNote | null>(null)
   const [deleting, setDeleting] = useState<CoachNote | null>(null)
+  // Échap ou un clic à côté : l'éditeur demande avant de perdre une modification
+  const editorClose = useRef<(() => void) | null>(null)
   const profile = state.profile
   // côté coach : une note déjà partagée (pas modifiée depuis le dernier envoi) est peut-être chez l'élève
   const lastShared = validTime(state.settings.lastSharedAt)
@@ -24,8 +26,8 @@ export function useNoteActions() {
 
   const modals = (
     <>
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Modifier la note">
-        {editing && <NoteEditor note={editing} bare onDone={() => setEditing(null)} />}
+      <Modal open={!!editing} onClose={() => (editorClose.current ? editorClose.current() : setEditing(null))} title="Modifier la note">
+        {editing && <NoteEditor note={editing} bare onDone={() => setEditing(null)} closeRef={editorClose} />}
       </Modal>
 
       <Modal

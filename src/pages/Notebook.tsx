@@ -19,7 +19,7 @@ import { Empty } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { fr, plural, relativeDays, safeDate, validTime } from '../engine/format'
-import { coachNameOf, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
+import { coachNameOf, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
 import { downloadJson, importCounts, importSummary, isNotesFile, readNotesPayload, type NotesPayload } from '../engine/share'
 import type { CardState } from '../engine/srs'
 import { notesFileName } from '../engine/transfer'
@@ -98,10 +98,14 @@ export function isLongNote(n: CoachNote): boolean {
   return n.body.length + (n.question?.length ?? 0) + (n.answer?.length ?? 0) > 150
 }
 
-/** L'état de la note dans la révision, au crayon sous le papier. */
-function noteStatus(n: CoachNote, rs: CardState | undefined, now: number): string {
+/**
+ * L'état de la note dans la révision, au crayon sous le papier. `forStudent` : une note du coach sur son propre
+ * carnet, qui part en carte chez l'élève sans revenir dans sa révision à lui (voir skipsOwnReview).
+ */
+function noteStatus(n: CoachNote, rs: CardState | undefined, now: number, forStudent = false): string {
   if (!n.asCard) return 'pas en révision'
   if (!makesCard(n)) return fr('pas en révision : il manque un texte ou une réponse')
+  if (forStudent) return 'carte pour ton élève, hors de ta révision'
   if (!rs) return 'en révision, pas encore révisée'
   const due = validTime(rs.due)
   if (rs.phase === 'review' && due != null) return due <= now ? 'en révision, à revoir aujourd’hui' : `en révision, revient ${relativeDays(due)}`
@@ -232,7 +236,10 @@ function Carnet() {
   const total = state.notes.length
   // rien à exporter (bouton grisé) : on arrive sur le bouton d'import
   const landOn = asked === 'export' && !total ? 'import' : asked
-  const inReview = state.notes.filter(makesCard).length
+  // côté coach, ses notes en carte partent chez l'élève : elles ne comptent dans sa révision que s'il le demande
+  const forStudent = (n: CoachNote) => skipsOwnReview(n, profile, state.settings)
+  const inReview = state.notes.filter((n) => makesCard(n) && !forStudent(n)).length
+  const studentCards = state.notes.filter((n) => makesCard(n) && forStudent(n)).length
   const pinned = state.notes.filter((n) => n.pinned).length
   const filtering = !!query.trim() || !!activeGhost
   const visibleGroups = groups.filter((grp) => grp.notes.length || (!filtering && grp.key === 'coach'))
@@ -249,7 +256,7 @@ function Carnet() {
     const g = n.ghostId ? getGhost(n.ghostId) : undefined
     const hand: Hand = isCoachNote(n, profile) ? 'coach' : 'mine'
     const long = isLongNote(n)
-    const status = noteStatus(n, state.cards[`n:${n.id}`], now)
+    const status = noteStatus(n, state.cards[`n:${n.id}`], now, forStudent(n))
     const meta = `${safeDate(SHORT, n.createdAt)} · ${g ? g.name : 'Général'}`
     const sign = n.author ? `— ${n.author}` : undefined
     const rotate = TILT[i % TILT.length]
@@ -308,7 +315,18 @@ function Carnet() {
                 'aucune note'
               ) : (
                 <>
-                  <b>{total}</b> note{total > 1 ? 's' : ''} · {inReview ? <><b>{inReview}</b> en révision</> : 'aucune en révision'}
+                  <b>{total}</b> note{total > 1 ? 's' : ''} ·{' '}
+                  {studentCards && !inReview ? (
+                    <>
+                      <b>{studentCards}</b> {studentCards > 1 ? 'cartes' : 'carte'} pour ton élève
+                    </>
+                  ) : inReview ? (
+                    <>
+                      <b>{inReview}</b> en révision
+                    </>
+                  ) : (
+                    'aucune en révision'
+                  )}
                 </>
               )}
             </span>

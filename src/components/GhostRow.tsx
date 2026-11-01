@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { FROM_CODEX } from '../pages/codexReturn'
 import type { Ghost } from '../data/types'
 import { sanityText, speedText } from '../engine/format'
 import { roughLine, roughRng } from './journal/rough'
@@ -61,7 +62,7 @@ export function GhostRow({
       )}
       <span className="cx-main">
         <span className="cx-name">
-          <Link to={`/codex/${ghost.id}`} className="cx-link">
+          <Link to={`/codex/${ghost.id}`} state={FROM_CODEX} className="cx-link">
             {circled ? (
               <RoughCircle seed={`row-${ghost.id}`} padX={0.06} padY={0.18} delay={0.35}>
                 {ghost.name}

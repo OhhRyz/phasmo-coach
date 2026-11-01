@@ -2,7 +2,7 @@ import { requestPersistentStorage } from '../engine/device'
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { GHOSTS, MECHANICS } from '../data'
 import { buildDeck, type Card, type CoachNote } from '../engine/cards'
-import { adoptCoach, onboardProfile } from '../engine/notes'
+import { adoptCoach, onboardProfile, reviewNotes } from '../engine/notes'
 import { recordAnswer } from '../engine/progress'
 import { schedule, type Grade } from '../engine/srs'
 import {
@@ -176,7 +176,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const deck = useMemo(() => buildDeck(GHOSTS, MECHANICS, state.notes), [state.notes])
+  // côté coach, ses propres notes partent chez l'élève : elles n'entrent dans sa révision que s'il le demande
+  const { role, name } = state.profile
+  const reviewOwn = !!state.settings.reviewOwnNotes
+  const notes = useMemo(() => reviewNotes(state.notes, { role, name }, { reviewOwnNotes: reviewOwn }), [state.notes, role, name, reviewOwn])
+  const deck = useMemo(() => buildDeck(GHOSTS, MECHANICS, notes), [notes])
   const review = useCallback((cardId: string, grade: Grade) => dispatch({ type: 'review', cardId, grade, now: Date.now() }), [])
 
   const value = useMemo(() => ({ state, deck, dispatch, review, saveFailed }), [state, deck, review, saveFailed])

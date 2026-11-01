@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type MutableRefObject } from 'react'
 import { GHOSTS } from '../data'
-import type { CoachNote } from '../engine/cards'
-import { makesCard } from '../engine/notes'
+import { firstLineTitle, noteQuestion, type CoachNote } from '../engine/cards'
+import { NNBSP } from '../engine/format'
+import { makesCard, skipsOwnReview } from '../engine/notes'
 import { newId, useStore } from '../store/store'
 import { CheckLine, PaperButton, TapeButton, TypedLink } from './journal/Journal'
 import { useToast } from './Toast'
@@ -13,10 +14,31 @@ const WRONG_EXAMPLES = ['ex. 90 secondes, comme les autres', 'ex. 180 secondes',
 
 /** Le titre d'une note : celui qui a été écrit, sinon la première ligne du texte. Jamais un titre inventé. */
 export function noteTitle(title: string, body: string): string {
-  const t = title.trim()
-  if (t) return t
-  const line = body.trim().split('\n')[0].trim()
-  return line.length > 60 ? `${line.slice(0, 59).trimEnd()}…` : line
+  return title.trim() || firstLineTitle(body)
+}
+
+/** Ce que contient le formulaire d'une note, pour savoir si quelque chose a été écrit ou changé depuis l'ouverture. */
+export interface NoteDraft {
+  title: string
+  body: string
+  ghost: string | null
+  asCard: boolean
+  question: string
+  answer: string
+  wrong: string[]
+}
+
+/** Quelque chose a été écrit ou changé : fermer le formulaire le perdrait (on demande d'abord). */
+export function draftChanged(from: NoteDraft, to: NoteDraft): boolean {
+  return (
+    from.title !== to.title ||
+    from.body !== to.body ||
+    from.ghost !== to.ghost ||
+    from.asCard !== to.asCard ||
+    from.question !== to.question ||
+    from.answer !== to.answer ||
+    from.wrong.join('\n') !== to.wrong.join('\n')
+  )
 }
 
 /**
@@ -31,6 +53,7 @@ export function NoteEditor({
   bare,
   autoFocus = true,
   onDone,
+  closeRef,
 }: {
   ghostId?: string | null
   note?: CoachNote
@@ -39,6 +62,8 @@ export function NoteEditor({
   /** curseur dans le titre à l'ouverture (nouvelle note seulement) */
   autoFocus?: boolean
   onDone?: () => void
+  /** la fenêtre qui contient le formulaire passe par là pour se fermer (Échap, clic à côté) : on demande avant de perdre le texte */
+  closeRef?: MutableRefObject<(() => void) | null>
 }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
@@ -58,8 +83,18 @@ export function NoteEditor({
   const titleRef = useRef<HTMLInputElement>(null)
   // côté coach, la case part avec le partage : elle décide si l'élève reçoit la note en carte de révision
   const coach = state.profile.role === 'coach'
+  // côté coach, ses notes partent chez l'élève sans revenir dans sa propre révision (réglage du profil)
+  const ownReview = !coach || !!state.settings.reviewOwnNotes
   const uid = useId()
   const refocus = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const askRef = useRef<HTMLDivElement>(null)
+  const backTo = useRef<HTMLElement | null>(null)
+  // Échap ou « Annuler » sur un formulaire où l'on a écrit : on demande avant de tout perdre
+  const [asking, setAsking] = useState(false)
+  const draft: NoteDraft = { title, body, ghost, asCard, question, answer, wrong }
+  const [opened, setOpened] = useState<NoteDraft>(draft)
+  const changed = draftChanged(opened, draft)
 
   // le formulaire replié : le focus revient sur « + Ajouter une note » au lieu de tomber sur la page
   useEffect(() => {
@@ -82,7 +117,14 @@ export function NoteEditor({
     setAsCard(true)
     setCustom(false)
     setGhost(ghostId)
+    setAsking(false)
+    setOpened({ title: '', body: '', ghost: ghostId, asCard: true, question: '', answer: '', wrong: ['', '', ''] })
   }
+
+  // la question posée : le curseur va sur « Continuer à écrire » (le choix sans perte)
+  useEffect(() => {
+    if (asking) askRef.current?.querySelector<HTMLElement>('.note-ask-keep')?.focus()
+  }, [asking])
 
   const empty = !title.trim() && !body.trim()
   const noBack = !body.trim() && !answer.trim()
@@ -90,7 +132,7 @@ export function NoteEditor({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (empty) return
+    if (empty || needsTitle) return
     const now = Date.now()
     const n: CoachNote = {
       id: note?.id ?? newId(),
@@ -108,7 +150,7 @@ export function NoteEditor({
       pinned: note?.pinned,
     }
     dispatch({ type: 'note:upsert', note: n })
-    toast(note ? 'Note mise à jour' : makesCard(n) ? 'Note ajoutée à la révision' : 'Note enregistrée')
+    toast(note ? 'Note mise à jour' : makesCard(n) && !skipsOwnReview(n, state.profile, state.settings) ? 'Note ajoutée à la révision' : 'Note enregistrée')
     if (!note) reset()
     if (compact && !note) fold()
     // note suivante : le curseur repart dans le titre du formulaire vidé (le bouton, lui, se désactive)
@@ -116,10 +158,54 @@ export function NoteEditor({
     onDone?.()
   }
 
-  const cancel = () => {
-    if (!note) fold()
+  /** Fermer sans enregistrer (ou, dans « Mes notes », vider le formulaire toujours ouvert). */
+  const discard = () => {
+    setAsking(false)
+    if (note) return onDone?.()
+    reset()
+    if (compact) fold()
+    else titleRef.current?.focus()
     onDone?.()
   }
+
+  /** Échap, « Annuler » ou un clic à côté de la fenêtre : rien d'écrit, on ferme ; sinon on demande d'abord. */
+  const cancel = () => {
+    if (!changed) {
+      if (note || compact) discard()
+      return
+    }
+    backTo.current = document.activeElement instanceof HTMLElement && formRef.current?.contains(document.activeElement) ? document.activeElement : null
+    setAsking(true)
+  }
+
+  const keepWriting = () => {
+    setAsking(false)
+    const el = backTo.current
+    requestAnimationFrame(() => (el?.isConnected ? el : formRef.current?.querySelector<HTMLElement>('textarea'))?.focus())
+  }
+
+  // la fenêtre qui contient le formulaire (Échap, clic à côté) passe par la même question
+  useEffect(() => {
+    if (!closeRef) return
+    closeRef.current = asking ? keepWriting : cancel
+    return () => {
+      closeRef.current = null
+    }
+  })
+
+  const onKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== 'Escape' || e.nativeEvent.isComposing) return
+    // la fenêtre qui contient le formulaire ne se ferme pas d'elle-même : c'est le formulaire qui décide
+    e.preventDefault()
+    if (asking) keepWriting()
+    else cancel()
+  }
+
+  const derived = asCard && !question.trim() && (body.trim() || answer.trim()) ? noteQuestion({ title, body, question, answer, ghostId: ghost, createdAt: note?.createdAt ?? Date.now() }, GHOSTS) : null
+  const preview = derived?.front ?? ''
+  // « Que retenir de la note du 1er novembre ? » ne dit pas ce qu'on demande : pour en faire une carte, un titre
+  // (ou une question écrite) d'abord
+  const needsTitle = !!derived?.vague
 
   if (!open) {
     return (
@@ -132,15 +218,27 @@ export function NoteEditor({
   }
 
   const submitBtn = (
-    <TapeButton type="submit" disabled={empty} arrow={false} disabledHint="écris ta note pour l’enregistrer">
+    <TapeButton
+      type="submit"
+      disabled={empty || needsTitle}
+      arrow={false}
+      disabledHint={empty ? 'écris ta note pour l’enregistrer' : `donne-lui un titre${NNBSP}: il servira de question`}
+    >
       {note ? 'Enregistrer' : 'Enregistrer la note'}
     </TapeButton>
   )
 
   return (
-    <form className={`note-form${bare ? ' is-bare' : ''}`} onSubmit={submit} style={bare ? undefined : ({ '--r': note ? '0deg' : '-.4deg' } as Style)}>
+    <form
+      ref={formRef}
+      className={`note-form${bare ? ' is-bare' : ''}`}
+      onSubmit={submit}
+      onKeyDown={onKeyDown}
+      style={bare ? undefined : ({ '--r': note ? '0deg' : '-.4deg' } as Style)}
+    >
       <label className="field">
-        <span>Titre (facultatif)</span>
+        {/* une carte qui ne dirait que « la note du 1er novembre » : le titre devient la question, il n’est plus facultatif */}
+        <span>{needsTitle ? 'Titre (il servira de question)' : 'Titre (facultatif)'}</span>
         <input
           ref={titleRef}
           className="input"
@@ -180,30 +278,38 @@ export function NoteEditor({
           seed={`asCard-${note?.id ?? 'new'}`}
           hint={
             coach
-              ? 'Ton élève la recevra comme une carte quand tu partageras tes notes (et elle te sera reposée aussi).'
+              ? ownReview
+                ? 'Ton élève la recevra comme une carte quand tu partageras tes notes (et elle te sera reposée aussi).'
+                : 'Ton élève la recevra comme une carte quand tu partageras tes notes. Elle ne revient pas dans ta propre révision (réglage du profil).'
               : 'Elle te sera reposée d’elle-même, juste avant que tu l’oublies.'
           }
         >
           {coach ? 'En faire une question de révision' : 'Me la reposer en révision'}
         </CheckLine>
         {asCard && noBack && !!title.trim() && <p className="pencil-note note-card-hint">écris un texte ou une réponse pour en faire une carte</p>}
+        {preview && (
+          <p className="note-card-preview">
+            <span className="typed-label">Question posée</span> {preview}
+          </p>
+        )}
+        {needsTitle && <p className="pencil-note note-card-hint">donne-lui un titre{NNBSP}: il servira de question</p>}
       </div>
       {asCard && !custom && (
         <p className="note-custom">
-          <TypedLink onClick={() => setCustom(true)}>Personnaliser la question de révision (facultatif)</TypedLink>
+          <TypedLink onClick={() => setCustom(true)}>Écrire toi-même la question et la réponse de la carte (facultatif)</TypedLink>
         </p>
       )}
       {asCard && custom && (
         <div className="note-qa-fields">
           <label className="field">
-            <span>Question (facultatif)</span>
+            <span>{coach ? 'Question posée à ton élève (facultatif)' : 'Question posée en révision (facultatif)'}</span>
             <input className="input" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="ex. Combien de temps l’encens bloque-t-il un Démon ?" />
-            <small>Sinon, la carte demande de se souvenir du titre.</small>
+            <small>Laisse vide pour garder la question tirée de la note.</small>
           </label>
           <label className="field">
-            <span>Réponse attendue (facultatif)</span>
+            <span>Bonne réponse (facultatif)</span>
             <input className="input" value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="ex. 60 secondes au lieu de 90" />
-            <small>Sinon, le texte de la note sert de réponse.</small>
+            <small>Laisse vide pour que le texte de la note serve de réponse.</small>
           </label>
         </div>
       )}
@@ -225,7 +331,22 @@ export function NoteEditor({
           {wrongs.length > 0 && !answer.trim() && <p className="pencil-note">écris aussi la réponse attendue pour en faire un QCM</p>}
         </div>
       )}
-      {bare ? (
+      {asking ? (
+        <div className="note-ask" ref={askRef} role="group" aria-labelledby={`${uid}-ask`}>
+          <p className="note-ask-q" id={`${uid}-ask`}>
+            {note ? `Abandonner tes modifications${NNBSP}?` : `Abandonner cette note${NNBSP}?`}
+            <small>{note ? 'Elles ne seront pas enregistrées.' : 'Ce que tu as écrit sera perdu.'}</small>
+          </p>
+          <div className={bare ? 'modal-actions note-actions' : 'row note-actions'}>
+            <TypedLink onClick={keepWriting} className="note-ask-keep">
+              {note ? 'Continuer à modifier' : 'Continuer à écrire'}
+            </TypedLink>
+            <TapeButton arrow={false} onClick={discard}>
+              Abandonner
+            </TapeButton>
+          </div>
+        </div>
+      ) : bare ? (
         <div className="modal-actions note-actions">
           <TypedLink onClick={cancel}>Annuler</TypedLink>
           {submitBtn}

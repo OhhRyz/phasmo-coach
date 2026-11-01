@@ -24,6 +24,7 @@ import {
   type CoachNote,
 } from './cards'
 import { fr, NBSP, NNBSP, redactGhostName as redact } from './format'
+import { entityMentions } from './mentions'
 import { createRng, hashString, pick, sample, shuffle, weightedPick, type Rng } from './random'
 
 /**
@@ -62,6 +63,8 @@ export interface Question {
   cardId?: string
   /** une précision au crayon sous l'énoncé (aucune question composée n'en a besoin aujourd'hui : un départage nomme l'entité dans chaque réponse) */
   note?: string
+  /** une question qui complète une série sur une liste d'entités (QuizOptions.fillUp) : elle peut en nommer d'autres */
+  beyond?: boolean
 }
 
 export interface QuizOptions {
@@ -73,6 +76,16 @@ export interface QuizOptions {
   rng: Rng
   /** maîtrise 0..1 par entité : les entités faibles sortent plus souvent */
   mastery?: Record<string, number>
+  /**
+   * Toutes les questions portent sur les entités de la série, jamais sur une entité proche (la série sur les
+   * entités déjà étudiées : un débutant ne trouve pas pour bonne réponse une entité qu'il n'a jamais vue).
+   */
+  onlyListed?: boolean
+  /**
+   * Avec onlyListed : s'il n'y a pas `count` questions sur les entités de la série, la copie se complète de
+   * questions sur toutes les entités, placées à la fin et marquées `beyond` (la page le dit à la première).
+   */
+  fillUp?: boolean
 }
 
 /** Ce que buildQuiz ajoute aux options pour une série sur une seule entité (« Me tester sur X »). */
@@ -208,7 +221,7 @@ function pickDistractors(g: Ghost, statement: string, ctx: Ctx, n = 3, also: (o:
  * Les entités de ctx.pool passent avant les autres (autant qu'il en faut et qu'il y en a, au plus ctx.poolMax,
  * un nombre tiré à partir de ctx.poolMin), puis celles de ctx.known, puis toutes, chaque groupe tiré par
  * `take` ; s'il manque des autres, encore des entités de ctx.pool. Celles de ctx.avoid sont écartées s'il
- * en reste assez.
+ * en reste assez. Une série qui ne sort pas de sa liste (ctx.onlyListed) ne prend que des entités de ctx.pool.
  */
 function withOffer(ctx: Ctx, g: Ghost, eligible: readonly Ghost[], n: number, take: (rest: readonly Ghost[], k: number) => Ghost[]): Ghost[] | null {
   const must = ctx.offer && ctx.offer.id !== g.id ? ctx.offer : null
@@ -235,9 +248,11 @@ function withOffer(ctx: Ctx, g: Ghost, eligible: readonly Ghost[], n: number, ta
     const most = ctx.poolMax ?? k
     const least = Math.min(ctx.poolMin ?? most, most)
     fill(listed, least < most ? least + Math.floor(ctx.rng() * (most - least + 1)) : most)
-    const known = ctx.known
-    if (known) fill(others.filter((o) => known.has(o.id)), k)
-    fill(others, k)
+    if (!ctx.onlyListed) {
+      const known = ctx.known
+      if (known) fill(others.filter((o) => known.has(o.id)), k)
+      fill(others, k)
+    }
     // pas assez d'autres entités : encore des entités de la série
     fill(listed, k)
   } else picked = take(rest, k)
@@ -1614,7 +1629,9 @@ const distinguish: Gen = (g, ctx) => {
   // le Mimic peut copier n'importe quel comportement : une mauvaise réponse pourrait être vraie pour lui ;
   // « Les Jumeaux » à la place d'un sujet au singulier fausserait l'accord
   if (g.id === MIMIC || plural(g)) return null
-  const pairs = duelsFor(g, ctx.allGhosts)
+  // une série qui ne sort pas de sa liste : l'autre entité du départage en fait partie, elle aussi
+  const listed = ctx.onlyListed ? ctx.pool : undefined
+  const pairs = duelsFor(g, ctx.allGhosts).filter((d) => !listed || listed.has(d.x.id))
   if (!pairs.length) return null
   const tries = shuffle(ctx.rng, pairs).map((d) => ({
     d,
@@ -1779,6 +1796,11 @@ function trueFalseQuestions(m: Mechanics, rng: Rng): Question[] {
 /** Les questions qui reposent sur un signe de terrain de l'entité (signe clé, observation, test sans preuve). */
 const SIGN_FAMILY = /^q:(tell|obs|zero):/
 
+/** Au-delà de cette longueur, une réponse est une phrase (un signe, un résumé), pas un nombre ni un mot. */
+const SENTENCE = 12
+/** Tirages sans question nouvelle avant d'accepter une question qui reprend une phrase déjà lue dans la copie. */
+const REPEAT_PATIENCE = 30
+
 /**
  * Construit une série de questions variées, en privilégiant les entités les moins maîtrisées. Une série sur
  * une partie des entités (« les moins maîtrisées ») prend ses mauvaises réponses d'abord parmi elles : la
@@ -1791,6 +1813,9 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   const out: Question[] = []
   if (!topics.length) return out
   const seen = new Set<string>()
+  // une même question ne se pose qu'une fois par copie, même pour deux entités : « La santé mentale moyenne est
+  // encore au-dessus de 50 %… » a un identifiant par entité, mais le même énoncé
+  const screens = new Set<string>()
   // une seule entité : les questions à choix de noms ne la donnent pas toujours pour réponse
   const solo = opts.ghosts.length === 1
   // un signe de terrain ne revient pas sous deux formes dans la copie (un test, puis la même chose en rapport de
@@ -1803,66 +1828,97 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     : pool
       ? { ...opts, pool }
       : opts
+  // une série qui ne sort pas de sa liste : ni l'énoncé, ni la citation, ni une réponse ne nomme une entité hors
+  // de la liste (« … plutôt que le Gallu ? », « plus tôt qu'un Démon », « Gallu » parmi les choix)
+  const strays = pool && opts.onlyListed ? strayCheck(opts.allGhosts.filter((o) => !pool.has(o.id))) : null
   const byId = new Map(opts.allGhosts.map((o) => [o.id, o]))
   const named = (q: Question) =>
     q.choices.every((c) => {
       const o = byId.get(c.id)
       return !!o && c.label === ghostChoice(o).label
     })
+  // les phrases déjà lues parmi les réponses de la copie (pas les noms ni les nombres) : une question qui en reprend
+  // une passe après les autres tant qu'il y a le choix (REPEAT_PATIENCE), sinon les premières questions d'une
+  // copie liraient deux fois les mêmes mauvaises réponses. Une série sur une seule entité n'a pas ce choix
+  const nameLabels = new Set(opts.allGhosts.map((o) => ghostChoice(o).label))
+  const sentences = (q: Question) => q.choices.map((c) => c.label).filter((l) => l.length > SENTENCE && !nameLabels.has(l))
+  const read = new Set<string>()
   const generators = solo ? SOLO_GENERATORS : GENERATORS
   const tf = topics.includes('mechanics') ? trueFalseQuestions(opts.mechanics, rng) : []
   const weight = (g: Ghost) => 1.25 - (opts.mastery?.[g.id] ?? 0)
-  let attempts = 0
-  let misses = 0
   let topicIdx = Math.floor(rng() * topics.length)
 
-  // une seule entité s'épuise vite : on s'arrête après une longue série de tirages sans question nouvelle
-  while (out.length < count && attempts < count * 40 && misses < 120) {
-    attempts++
-    misses++
-    const topic = topics[topicIdx % topics.length]
-    topicIdx++
-    let q: Question | null = null
-    if (topic === 'mechanics') {
-      q = tf.find((t) => !seen.has(t.id)) ?? null
-    } else if (opts.ghosts.length) {
-      const g = weightedPick(rng, opts.ghosts, weight)
-      const gen = pick(rng, generators[topic])
-      q = gen(g, ctx)
-      // aucune autre entité de la liste ne pouvait être une mauvaise réponse : la bonne serait le seul nom de la
-      // liste parmi les choix. La question porte alors sur une entité qu'on confond avec g, g parmi les mauvaises
-      // (sans entité proche qui s'y prête, la question ne se pose pas)
-      if (q && pool && named(q) && q.choices.filter((c) => pool.has(c.id)).length === 1) {
-        let alt: Question | null = null
-        for (const o of shuffle(rng, rivals(opts.allGhosts).get(g.id) ?? [])) if ((alt = gen(o, { ...ctx, offer: g }))) break
-        q = alt
+  /** Tire des questions sur `list` jusqu'à `count` (ou à court d'idées) ; `extra` les marque `beyond`. */
+  const deal = (list: Ghost[], c: Ctx, listed: ReadonlySet<string> | null, stray: ((q: Question) => boolean) | null, extra = false) => {
+    let attempts = 0
+    let misses = 0
+    // une seule entité s'épuise vite : on s'arrête après une longue série de tirages sans question nouvelle
+    while (out.length < count && attempts < count * 40 && misses < 120) {
+      attempts++
+      misses++
+      const topic = topics[topicIdx % topics.length]
+      topicIdx++
+      let q: Question | null = null
+      if (topic === 'mechanics') {
+        q = tf.find((t) => !seen.has(t.id) && !stray?.(t)) ?? null
+      } else if (list.length) {
+        const g = weightedPick(rng, list, weight)
+        const gen = pick(rng, generators[topic])
+        q = gen(g, c)
+        // aucune autre entité de la liste ne pouvait être une mauvaise réponse : la bonne serait le seul nom de la
+        // liste parmi les choix. La question porte alors sur une entité qu'on confond avec g, g parmi les mauvaises
+        // (sans entité proche qui s'y prête, la question ne se pose pas)
+        if (q && listed && named(q) && q.choices.filter((x) => listed.has(x.id)).length === 1) {
+          let alt: Question | null = null
+          // une série qui ne sort pas de sa liste (onlyListed) : la question ne se pose pas
+          if (!c.onlyListed) for (const o of shuffle(rng, rivals(opts.allGhosts).get(g.id) ?? [])) if ((alt = gen(o, { ...c, offer: g }))) break
+          q = alt
+        }
       }
+      if (!q || seen.has(q.id) || screens.has(screenOf(q)) || stray?.(q)) continue
+      if (!solo && misses <= REPEAT_PATIENCE && sentences(q).some((l) => read.has(l))) continue
+      if (!solo && q.ghostId && SIGN_FAMILY.test(q.id)) {
+        if (signed.has(q.ghostId)) continue
+        signed.add(q.ghostId)
+      }
+      seen.add(q.id)
+      screens.add(screenOf(q))
+      for (const l of sentences(q)) read.add(l)
+      misses = 0
+      if (solo && named(q)) {
+        tally.named++
+        if (q.correct.includes(opts.ghosts[0].id)) tally.self++
+      }
+      // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
+      out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)), ...(q.note ? { note: fr(q.note) } : {}), ...(extra ? { beyond: true } : {}) })
     }
-    if (!q || seen.has(q.id)) continue
-    if (!solo && q.ghostId && SIGN_FAMILY.test(q.id)) {
-      if (signed.has(q.ghostId)) continue
-      signed.add(q.ghostId)
-    }
-    seen.add(q.id)
-    misses = 0
-    if (solo && named(q)) {
-      tally.named++
-      if (q.correct.includes(opts.ghosts[0].id)) tally.self++
-    }
-    // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
-    out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)), ...(q.note ? { note: fr(q.note) } : {}) })
   }
+  deal(opts.ghosts, ctx, pool, strays)
+  // pas assez de questions sur la liste pour ces thèmes : la fin de la copie porte sur toutes les entités, comme
+  // une copie sur toutes (sans liste à privilégier parmi les mauvaises réponses)
+  if (strays && opts.fillUp && out.length < count) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true)
   // une entité qui a peu de questions dans ces thèmes (le Mimic copie tout : seuls ses tests se posent) : la
   // série se complète de ses questions rédigées plutôt que de s'arrêter à deux
   if (solo && out.length < count / 2 && !topics.includes('expert')) {
     for (let i = 0; i < 40 && out.length < count; i++) {
       const q = authored(opts.ghosts[0], ctx)
-      if (!q || seen.has(q.id)) continue
+      if (!q || seen.has(q.id) || screens.has(screenOf(q))) continue
       seen.add(q.id)
+      screens.add(screenOf(q))
       out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)) })
     }
   }
   return out
+}
+
+/**
+ * Une question nomme-t-elle l'une de ces entités ? Son nom parmi les réponses, ou annoncé par un article dans
+ * l'énoncé, la citation, la précision ou une réponse (voir entityMentions). Le corrigé peut les nommer.
+ */
+export function strayCheck(outside: readonly Ghost[]): (q: Question) => boolean {
+  const labels = new Set(outside.map((o) => ghostChoice(o).label))
+  const mentions = (t: string | undefined) => !!t && entityMentions(t, outside).some((m) => typeof m !== 'string')
+  return (q) => q.choices.some((c) => labels.has(c.label) || mentions(c.label)) || mentions(q.prompt) || mentions(q.quote) || mentions(q.note)
 }
 
 /**

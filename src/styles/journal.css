@@ -285,7 +285,9 @@ button { font: inherit; color: inherit; }
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to bottom, rgba(255,255,255,.18), transparent 40%, rgba(0,0,0,.08));
 }
-.tab:hover { transform: translateY(0); filter: none; }
+/* au survol de la souris seulement : sur un écran tactile, l'onglet touché garderait son survol après un retour
+   en arrière du navigateur, et deux onglets sembleraient ouverts à la fois */
+@media (hover: hover) { .tab:hover { transform: translateY(0); filter: none; } }
 /* le contour de focus (clavier) : l'intercalaire est découpé en trapèze, un contour extérieur serait rogné ;
    il se dessine donc à l'intérieur, et l'onglet se soulève comme au survol pour être vu en entier */
 .tab:focus-visible { outline: none; z-index: 4; transform: translateY(0); filter: none; }

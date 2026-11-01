@@ -40,3 +40,9 @@ dans `licences/`) :
 - Courier Prime (Quote-Unquote Apps) — SIL Open Font License 1.1 ;
 - Caveat (Impallari Type) — SIL Open Font License 1.1 ;
 - Special Elite (Astigmatic) — Apache License 2.0.
+
+## Code d’autres projets
+
+- qrcode-generator 2.0.4 (Kazuhiko Arase) — licence MIT ; dessine sur l’appareil le code QR de la page
+  « Installer l’app ». Texte de la licence dans `public/licences/LICENSE-qrcode-generator.txt` (publié
+  avec le site, dans `licences/`).

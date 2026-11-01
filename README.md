@@ -20,7 +20,10 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
 - **Quiz** générés à partir des fiches, centrés sur ce qui sert sans preuve : comportements, vitesse et
   ligne de vue, seuils de chasse, tests sans preuve, comment distinguer deux entités, questions expertes,
   vrai/faux sur les mécaniques. Les preuves restent dans le codex et les fiches, sans être à apprendre par
-  cœur. Les questions visent d’abord les entités les moins maîtrisées. Une erreur ramène dans la révision du jour la carte correspondante, si elle était déjà apprise.
+  cœur. Par défaut, la copie porte sur les entités déjà étudiées en révision (dès qu’il y en a quatre ;
+  « Toutes » reste à un clic) sans en nommer d’autres, et vise d’abord les moins maîtrisées ; s’il manque des
+  questions sur elles pour les thèmes cochés, la fin de la copie le dit et passe aux autres entités. Une erreur ramène dans la révision du jour la
+  carte correspondante, si elle était déjà apprise. Une copie laissée en route se reprend (« Reprendre la copie »).
 - **Mises en situation** : un contrat raconté rapport par rapport en Professionnel (conseillé pour
   débuter), Cauchemar, Démence ou 0 preuve, avec carnet de preuves, élimination et désignation de l’entité.
 - **À l’oreille** : reconnaître la vitesse d’une entité au rythme de ses pas (sons synthétisés).
@@ -30,11 +33,15 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
   partagent par simple lien (aucun serveur) et sont les seules écrites au stylo rouge ; en retour, un
   **bilan de progression** par lien (maîtrise de chaque entité, série, notes du coach retenues ou à
   reprendre).
-- **Jour ou nuit** : le disjoncteur « Lumière » en haut de l’écran bascule le thème (ou dans le profil :
-  comme l’appareil, jour, nuit).
+- **Jour ou nuit** : l’interrupteur « Lumière » (allumée ou éteinte) en haut de l’écran bascule le thème
+  (ou dans le profil : comme l’appareil, jour, nuit).
 - **Installable** sur téléphone (PWA) et utilisable hors ligne. Sur iPhone, l’app installée a sa propre
   mémoire : « Copier ma progression » dans Safari, puis « Coller ma progression » dans l’app (sans
-  fichier) ; la sauvegarde complète en fichier reste dans le profil.
+  fichier) ; la sauvegarde complète en fichier reste dans le profil. Sur ordinateur, la page *Installer
+  l’app* montre aussi le code QR de la page, à scanner avec le téléphone, et « Copier un message pour
+  Discord » (le lien, puis la marche à suivre sur iPhone et sur Android).
+- **Ma progression** : le registre des entités (maîtrise de chacune) et les chiffres du profil réunis sur
+  une seule page, ouverte depuis le profil ou depuis le registre de l’accueil.
 
 Tout est stocké dans le navigateur de l’appareil (`localStorage`) : pas de compte, pas de serveur.
 
@@ -45,7 +52,7 @@ Tout est stocké dans le navigateur de l’appareil (`localStorage`) : pas de co
   rangées dans *Exercices*).
 - **Mode d’emploi** : à la première ouverture, une fiche en trois étapes (Réviser chaque jour, les
   Exercices dans les enveloppes, le Codex pendant une partie) ; on la range d’un clic et on la rouvre par
-  le lien « Mode d’emploi » en bas de chaque page.
+  le lien « Mode d’emploi » en bas de chaque page (même avant d’avoir écrit son prénom).
 - **Exercices** : les enveloppes disent ce qu’on y fait, combien de temps, et le geste pour l’ouvrir ;
   « À faire » (révision, contrat, quiz, oreille) puis « À lire » (mécaniques, codex). Chaque exercice
   commence par une ligne « Consigne » et finit par « et maintenant ? ».
@@ -151,3 +158,5 @@ lu comme le ferait un visiteur : toutes les données de base concordent. L’app
   utilisé : les bruits de pas sont synthétisés.
 - Polices embarquées (`src/assets/fonts/`, licences incluses) : IM Fell English, Libre Caslon Text,
   Courier Prime et Caveat sous SIL Open Font License 1.1 ; Special Elite sous Apache 2.0.
+- Code QR de la page « Installer l’app » : [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)
+  de Kazuhiko Arase, sous licence MIT (texte dans `public/licences/`).

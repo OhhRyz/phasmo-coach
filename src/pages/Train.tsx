@@ -9,6 +9,7 @@ import type { Activity } from '../store/schema'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { readContract, RESUME_CONTRACT } from './contractRun'
+import { copyMeta, readCopy, RESUME_QUIZ } from './quizRun'
 import { EXHIBITS, reviseLabel } from './exhibits'
 import { isRetained } from '../engine/cards'
 
@@ -55,6 +56,8 @@ export function Train() {
   const lastEar = lastOf('ear')
   // un contrat laissé en route (détour par le codex…) : l'enveloppe le dit, la page propose de le reprendre
   const contract = useMemo(() => readContract(), [])
+  // de même, une copie du quiz laissée en route
+  const copy = useMemo(() => readCopy(), [])
   const recent = state.activity.slice(-4).reverse()
   // seulement les faits à retenir : ceux « bons à savoir » (relever les preuves) ne comptent pas
   const facts = MECHANICS.topics.flatMap((t) => t.facts).filter(isRetained)
@@ -175,13 +178,13 @@ export function Train() {
               delay={0.22}
             />
             <Envelope
-              to={EXHIBITS.quiz.to}
+              to={copy ? RESUME_QUIZ : EXHIBITS.quiz.to}
               piece={piece(EXHIBITS.quiz.n)}
               title={EXHIBITS.quiz.title}
               text={fr(EXHIBITS.quiz.what)}
-              meta={metaLine(EXHIBITS.quiz.meta)}
-              action={EXHIBITS.quiz.action}
-              hand={lastQuiz ? `dernier${NNBSP}: ${scoreOf(lastQuiz)}` : NOT_YET}
+              meta={metaLine(copy ? copyMeta(copy) : EXHIBITS.quiz.meta)}
+              action={copy ? 'Reprendre la copie' : EXHIBITS.quiz.action}
+              hand={copy ? 'copie en cours, à reprendre' : lastQuiz ? `dernier${NNBSP}: ${scoreOf(lastQuiz)}` : NOT_YET}
               rotate={-0.7}
               delay={0.29}
             />
