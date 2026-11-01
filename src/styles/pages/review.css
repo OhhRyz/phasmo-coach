@@ -278,6 +278,15 @@ html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
   .rv-libstamp { right: 2px; font-size: 16px !important; }
 }
 
+/* petit téléphone : l'en-tête passe sur deux lignes (à gauche d'abord) plutôt que de couper « Entité inconnue » */
+@media (max-width: 389px) {
+  .rv-card .ic-head { display: grid; grid-template-columns: minmax(min-content, 1fr) auto; align-items: center; }
+  .rv-card .ic-head span:first-child,
+  .rv-card .ic-head span:last-child { white-space: normal; line-height: 15px; }
+  .rv-card .ic-head span:first-child { overflow: visible; } /* le mot le plus long tient toujours (min-content) ; l'accent de « É » n'est pas rogné */
+  .rv-card .ic-head span:last-child:not(:first-child) { text-align: right; }
+}
+
 @media (hover: none) {
   .rv-keys { display: none; }
 }

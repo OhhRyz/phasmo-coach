@@ -791,7 +791,7 @@ export function Ear() {
       <Modal
         open={quitOpen}
         onClose={() => setQuitOpen(false)}
-        title="Quitter la série ?"
+        title={`Quitter la série${NNBSP}?`}
         actions={
           <>
             <TypedLink onClick={() => setQuitOpen(false)}>Continuer la série</TypedLink>

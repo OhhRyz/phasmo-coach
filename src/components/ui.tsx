@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { EVIDENCE } from '../data/evidence'
+import { fr } from '../engine/format'
 import type { EvidenceId, Ghost } from '../data/types'
 import { masteryLevel } from '../engine/progress'
 import { H } from './journal/Journal'
@@ -14,7 +15,7 @@ export function Evidence({ id, forced, fake, short }: { id: EvidenceId; forced?:
     <span
       className={`evw${forced ? ' forced' : ''}`}
       style={{ '--c': ev.color } as Style}
-      title={forced ? `${ev.label} : preuve forcée` : fake ? `${ev.label} : fausse preuve` : ev.label}
+      title={forced ? `${ev.label}\u202f: preuve forcée` : fake ? `${ev.label}\u202f: fausse preuve` : ev.label}
     >
       {short ? ev.short : ev.label}
       {fake && <span className="faint"> (fausse)</span>}
@@ -138,8 +139,8 @@ export function Modal({
   // rendue hors du carnet : sinon la fiche passerait sous la barre d'onglets
   return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title} ref={box} tabIndex={-1}>
-        <h2>{title}</h2>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={fr(title)} ref={box} tabIndex={-1}>
+        <h2>{fr(title)}</h2>
         {children}
         {actions && <div className="modal-actions">{actions}</div>}
       </div>

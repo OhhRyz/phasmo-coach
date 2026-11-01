@@ -137,13 +137,33 @@ export const SAME_ASK_GAP = 5
 /**
  * La séance dans un ordre tiré pour la journée, où deux cartes d'une même entité ne se suivent pas de moins
  * de SAME_GHOST_GAP cartes : la carte d'avant ne souffle pas la réponse (son entité, nommée dans la
- * correction), et des cartes apprises ensemble ne reviennent pas ensemble dans le même ordre. À chaque pas,
- * l'entité qui a le plus de cartes à placer passe d'abord ; à égalité, une carte d'une autre sorte que la
- * précédente (signes, seuil, vitesse, test…).
+ * correction), et des cartes apprises ensemble ne reviennent pas ensemble dans le même ordre. Les cartes sans
+ * entité (mécaniques, notes générales) ne soufflent rien : elles se mêlent au hasard au reste, d'un bout à
+ * l'autre de la séance (comptées comme une seule entité, la plus chargée, elles l'ouvriraient d'un bloc).
+ * `before` : les cartes déjà placées devant (les notes du coach), dont l'entité ne revient pas trop tôt.
  */
-export function spreadByGhost(cards: readonly Card[], rng: Rng): Card[] {
-  const rest = shuffle(rng, cards)
+export function spreadByGhost(cards: readonly Card[], rng: Rng, before: readonly Card[] = []): Card[] {
+  const loose = shuffle(rng, cards.filter((c) => !c.ghostId))
+  const spread = spreadGhostCards(cards.filter((c) => c.ghostId), rng, before)
+  // insérer une carte ne fait qu'éloigner davantage deux cartes d'une même entité (ou d'une même question)
   const out: Card[] = []
+  let i = 0
+  let j = 0
+  while (i < spread.length || j < loose.length) {
+    const fromLoose = j < loose.length && (i >= spread.length || rng() * (loose.length - j + spread.length - i) < loose.length - j)
+    out.push(fromLoose ? loose[j++] : spread[i++])
+  }
+  return out
+}
+
+/**
+ * Les cartes d'entités, espacées (voir spreadByGhost). À chaque pas, l'entité qui a le plus de cartes à
+ * placer passe d'abord ; à égalité, une carte d'une autre sorte que la précédente (signes, seuil, vitesse,
+ * test…).
+ */
+function spreadGhostCards(cards: readonly Card[], rng: Rng, before: readonly Card[]): Card[] {
+  const rest = shuffle(rng, cards)
+  const out: Card[] = [...before]
   const left = new Map<string, number>()
   const keyOf = (c: Card) => c.ghostId ?? ''
   for (const c of rest) left.set(keyOf(c), (left.get(keyOf(c)) ?? 0) + 1)
@@ -174,14 +194,14 @@ export function spreadByGhost(cards: readonly Card[], rng: Rng): Card[] {
     left.set(keyOf(c), (left.get(keyOf(c)) ?? 1) - 1)
     out.push(c)
   }
-  return out
+  return out.slice(before.length)
 }
 
 /**
  * File de la séance : cartes dues + nouvelles cartes dans la limite du jour (réparties entre plusieurs
  * entités, voir pickNewCards). Une note du coach toute neuve passe avant tout ; le reste, cartes dues et
  * nouvelles mêlées, suit un ordre tiré pour la journée, sans deux cartes d'une même entité à moins de
- * SAME_GHOST_GAP cartes l'une de l'autre (voir spreadByGhost).
+ * SAME_GHOST_GAP cartes l'une de l'autre, notes du coach comprises (voir spreadByGhost).
  */
 export function buildReviewQueue(state: PersistedState, deck: Card[], now: number, extraNew = 0): Card[] {
   const due = dueCards(deck, state.cards, now)
@@ -194,7 +214,7 @@ export function buildReviewQueue(state: PersistedState, deck: Card[], now: numbe
   const coach = all.filter((c) => isCoachCard(c, state.profile))
   const fresh = all.filter((c) => !isCoachCard(c, state.profile))
   const rng = createRng(parseInt(hashString(`séance|${dayKey(now)}`), 36))
-  return [...coach, ...spreadByGhost([...due, ...fresh], rng)]
+  return [...coach, ...spreadByGhost([...due, ...fresh], rng, coach)]
 }
 
 /**

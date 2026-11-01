@@ -33,6 +33,7 @@ import {
   QUIZ_TOPICS,
   type Question,
   type QuizTopic,
+  warmQuiz,
 } from './quiz'
 import { askKey, buildReviewQueue, ghostMastery, learnedCount, pickNewCards, SAME_GHOST_GAP, sessionGhosts, unseenCards } from './progress'
 import { createRng } from './random'
@@ -1569,6 +1570,44 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       }
     }
   })
+
+  it('« Me tester sur X » se compose sans faire attendre, même sur le Poltergeist', () => {
+    // ses signes parlent tous d'objets : il faut une mauvaise réponse qui en parle aussi, et il y en a peu.
+    // Chercher les groupes sans elle, puis les refuser un à un, coûtait plus d'une demi-seconde par série
+    const polt = getGhost('poltergeist')!
+    const run = (topics: QuizTopic[], seed: number) => {
+      const t = performance.now()
+      const qs = buildQuiz({ topics, ghosts: [polt], allGhosts: GHOSTS, mechanics: MECHANICS, count: 30, rng: createRng(seed) })
+      return { ms: performance.now() - t, n: qs.length }
+    }
+    run(['behavior'], 1)
+    for (const topics of [['behavior'], ['zero']] as QuizTopic[][]) {
+      const runs = [2, 3, 4, 5, 6].map((seed) => run(topics, seed))
+      const ms = runs.map((r) => r.ms).sort((a, b) => a - b)
+      expect(ms[2], `${topics} : ${ms.map((x) => x.toFixed(0)).join(' / ')} ms`).toBeLessThan(300)
+      if (topics[0] === 'behavior') for (const r of runs) expect(r.n).toBe(30)
+    }
+  })
+
+  it('warmQuiz prépare les séries par étapes, sans rien changer aux questions', () => {
+    // une autre liste (mêmes fiches) : rien n'est encore prêt pour elle
+    const [cold, warm] = [[...GHOSTS], [...GHOSTS]]
+    let steps = 0
+    expect(warmQuiz(warm, () => steps++ < 3)).toBe(false)
+    expect(warmQuiz(warm)).toBe(true)
+    // déjà prête : chaque étape ne coûte plus rien
+    const t = performance.now()
+    expect(warmQuiz(warm)).toBe(true)
+    expect(performance.now() - t).toBeLessThan(50)
+    for (const [ghosts, seed] of [[GHOSTS, 1], [[getGhost('kormos')!], 2], [[getGhost('poltergeist')!], 3]] as const) {
+      const quiz = (all: Ghost[]) =>
+        buildQuiz({ topics: DEFAULT_TOPICS, ghosts: ghosts === GHOSTS ? all : [...ghosts], allGhosts: all, mechanics: MECHANICS, count: 20, rng: createRng(seed) })
+      expect(quiz(warm)).toEqual(quiz(cold))
+    }
+    const card = buildDeck(GHOSTS, MECHANICS, []).find((c) => c.id === 'g:spirit:spd')!
+    const ctx = (all: Ghost[]) => ({ allGhosts: all, mechanics: MECHANICS, day: '2026-11-01' })
+    expect(questionForCard(card, ctx(warm))).toEqual(questionForCard(card, ctx([...GHOSTS])))
+  })
 })
 
 describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni le nom, ni la fréquence', () => {
@@ -1610,6 +1649,52 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
     const b = buildReviewQueue(later, deck, T0 + 5 * DAY).map((c) => c.id)
     expect(a.filter((id) => queue.some((c) => c.id === id))).not.toEqual(queue.map((c) => c.id).filter((id) => a.includes(id)))
     expect(b.length).toBeGreaterThan(0)
+  })
+
+  it('révision : les faits de mécanique se mêlent à la séance au lieu de l’ouvrir d’un bloc', () => {
+    // réglages par défaut (12 nouvelles cartes par jour, mécaniques comprises), réponses justes à 85 %
+    let state = { ...initialState(T0), onboarded: true }
+    const rng = createRng(5)
+    let mixed = 0
+    for (let d = 0; d < 30; d++) {
+      const now = T0 + d * DAY
+      const queue = buildReviewQueue(state, deck, now)
+      const ids = queue.map((c) => c.id).join(' ')
+      for (let i = 0; i < queue.length; i++) {
+        for (let j = Math.max(0, i - SAME_GHOST_GAP); j < i; j++) if (queue[i].ghostId) expect(queue[j].ghostId, `jour ${d} : ${ids}`).not.toBe(queue[i].ghostId)
+      }
+      const facts = queue.map((c) => (c.deck === 'mechanics' ? 'M' : 'g')).join('')
+      const m = facts.split('M').length - 1
+      if (m >= 10 && queue.length - m >= 10) {
+        mixed++
+        // ni une longue suite de faits, ni une première moitié de séance faite surtout de faits
+        expect(Math.max(...(facts.match(/M+/gu) ?? ['']).map((s) => s.length)), `jour ${d} : ${facts}`).toBeLessThanOrEqual(12)
+        const half = facts.slice(0, Math.ceil(facts.length / 2))
+        expect((half.split('M').length - 1) / half.length, `jour ${d} : ${facts}`).toBeLessThanOrEqual(m / facts.length + 0.2)
+      }
+      const cards = { ...state.cards }
+      const log = [...state.log]
+      for (const c of queue) {
+        const g = rng() < 0.85 ? 3 : 1
+        cards[c.id] = schedule(cards[c.id], g, now)
+        log.push({ id: c.id, t: now, g, isNew: !state.cards[c.id] })
+      }
+      state = { ...state, cards, log }
+    }
+    expect(mixed).toBeGreaterThanOrEqual(5)
+  })
+
+  it('révision : la note du coach ne souffle pas la carte suivante', () => {
+    const base = initialState(T0)
+    const profile = { ...base.profile, name: 'Léa', coachName: 'Ryz', role: 'student' as const }
+    for (const g of GHOSTS) {
+      const notes: CoachNote[] = [{ id: 'c1', createdAt: T0, updatedAt: T0, ghostId: g.id, title: 'Note du coach', body: 'texte', asCard: true, author: 'Ryz' }]
+      const queue = buildReviewQueue({ ...base, onboarded: true, profile, notes }, buildDeck(GHOSTS, MECHANICS, notes), T0)
+      expect(queue[0].id).toBe('n:c1')
+      // sa correction nomme l'entité : la carte d'après n'a pas cette entité pour réponse
+      const next = queue.slice(1, 1 + SAME_GHOST_GAP)
+      expect(next.map((c) => c.ghostId), `${g.id} : ${queue.slice(0, 5).map((c) => c.id).join(' ')}`).not.toContain(g.id)
+    }
   })
 
   it('révision : une même question ne revient pas pour une autre entité dans la journée', () => {

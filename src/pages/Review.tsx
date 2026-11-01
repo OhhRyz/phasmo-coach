@@ -24,6 +24,7 @@ import { humanDuration, isDue, schedule, type CardState, type Grade } from '../e
 import { ignoreKey } from '../engine/keys'
 import type { Profile } from '../store/schema'
 import { useStore } from '../store/store'
+import { LEARN_MORE, nextSession, stillToAsk } from './reviewSession'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -32,8 +33,6 @@ const RIGHT: Grade = 3
 const WRONG: Grade = 1
 
 const REQUEUE_WITHIN = 20 * 60_000
-/** Cartes nouvelles proposées d'un coup après la séance. */
-const LEARN_MORE = 10
 /** L'explication de la répétition espacée, montrée pendant la première séance, jusqu'à ce qu'on la ferme. */
 const HELP_KEY = 'phasmo-coach/aide-revision'
 
@@ -98,25 +97,30 @@ function deckLabel(c: Card): string {
   return getGhost(c.ghostId ?? '')?.name ?? 'Entité'
 }
 
-/** Titre court d'une carte pour la fiche de séance. */
-function cardTitle(c: Card, notes: CoachNote[], profile: Profile): { name: string; kind: string } {
+/**
+ * Titre court d'une carte pour la fiche de séance. Une carte qui repassera dans la séance (`masked`) n'y
+ * nomme pas son entité, comme l'en-tête de la carte : elle se lirait en face de la question.
+ */
+function cardTitle(c: Card, notes: CoachNote[], profile: Profile, masked: boolean): { name: string; kind: string } {
   if (c.deck === 'coach') {
     const note = notes.find((n) => `n:${n.id}` === c.id)
-    return { name: noteLabel(note, profile), kind: getGhost(c.ghostId ?? '')?.name ?? '' }
+    return { name: noteLabel(note, profile), kind: masked ? '' : (getGhost(c.ghostId ?? '')?.name ?? '') }
   }
   if (c.deck === 'mechanics') return { name: deckLabel(c), kind: 'Mécanique' }
-  return { name: deckLabel(c), kind: KIND_LABEL[c.kind] }
+  return { name: masked ? 'Entité inconnue' : deckLabel(c), kind: KIND_LABEL[c.kind] }
 }
 
-/** Fiche de séance : chaque réponse y reçoit son tampon. */
+/** Fiche de séance : chaque réponse y reçoit son tampon. `ahead` : les cartes qui repasseront dans la séance. */
 function SessionCard({
   rows,
   closed,
+  ahead,
   notes,
   profile,
 }: {
   rows: { id: string; t: number; g: Grade; card: Card }[]
   closed?: boolean
+  ahead?: ReadonlySet<string>
   notes: CoachNote[]
   profile: Profile
 }) {
@@ -146,7 +150,7 @@ function SessionCard({
           </li>
         )}
         {shown.map((r, k) => {
-          const { name, kind } = cardTitle(r.card, notes, profile)
+          const { name, kind } = cardTitle(r.card, notes, profile, !closed && !!ahead?.has(r.id))
           const ok = r.g >= 3
           return (
             <li key={`${r.id}-${r.t}`}>
@@ -461,9 +465,11 @@ export function Review() {
     const ended = finished && done > 0
     const title = finished ? 'Séance terminée' : 'Tout est à jour'
     const sessions = state.activity.filter((a) => a.kind === 'review').slice(-5)
-    // cartes encore dues (séance interrompue) : on propose de reprendre plutôt que d'en apprendre d'autres
+    // cartes encore dues (séance interrompue, ou questions laissées pour une autre séance) : on propose de
+    // continuer plutôt que d'en apprendre d'autres ; le bouton annonce la séance que le clic lancera
     const pending = buildReviewQueue(state, deck, now).length
-    const learn = Math.min(LEARN_MORE, remainingNew)
+    const learnable = pending > 0 ? 0 : buildReviewQueue(state, deck, now, LEARN_MORE).length
+    const next = nextSession(pending, learnable, finished && stillToAsk(queue, outcome).size > 0)
     // quand revient la prochaine carte ? (en apprentissage : à la minute ; en révision : le jour prévu)
     const inDeck = new Set(deck.map((c) => c.id))
     let nextDue = Infinity
@@ -542,17 +548,13 @@ export function Review() {
             </p>
           )}
           <div className="rv-next">
-            {pending > 0 ? (
-              <TapeButton onClick={() => restart(0)}>Reprendre la séance</TapeButton>
-            ) : learn > 0 ? (
-              <TapeButton onClick={() => restart(LEARN_MORE)}>
-                Apprendre {learn} {word(learn, 'carte')}
-              </TapeButton>
+            {next ? (
+              <TapeButton onClick={() => restart(next.extraNew)}>{next.label}</TapeButton>
             ) : (
               <TapeButton to="/quiz">Faire un quiz</TapeButton>
             )}
             <div className="rv-next-links">
-              {(pending > 0 || learn > 0) && <TypedLink to="/quiz">Faire un quiz</TypedLink>}
+              {next && <TypedLink to="/quiz">Faire un quiz</TypedLink>}
               <TypedLink to="/enquete">Lancer une mise en situation</TypedLink>
             </div>
           </div>
@@ -823,7 +825,7 @@ export function Review() {
                 </span>
               </>
             ) : (
-              <div className="rv-self" role="group" aria-label="As-tu su répondre ?">
+              <div className="rv-self" role="group" aria-label={`As-tu su répondre${NNBSP}?`}>
                 <button type="button" className="rv-self-btn" onClick={() => record(RIGHT)} aria-keyshortcuts="o">
                   Je savais <span className="kbd">O</span>
                 </button>
@@ -852,7 +854,7 @@ export function Review() {
 
         {help('rv-help--side')}
         <section className={`rv-log${graded.length ? '' : ' is-empty'}`} aria-label="Réponses de la séance">
-          <SessionCard rows={graded} notes={state.notes} profile={state.profile} />
+          <SessionCard rows={graded} ahead={stillToAsk(queue, outcome)} notes={state.notes} profile={state.profile} />
         </section>
 
         <div className="rv-foot">

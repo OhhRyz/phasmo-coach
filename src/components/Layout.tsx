@@ -126,7 +126,7 @@ function Breaker() {
     window.setTimeout(() => setTheme(next), 120)
   }
   return (
-    <button className="breaker" type="button" aria-pressed={dark} aria-label="Disjoncteur : passer en thème clair ou sombre" onClick={flip}>
+    <button className="breaker" type="button" aria-pressed={dark} aria-label={'Disjoncteur\u202f: passer en thème clair ou sombre'} onClick={flip}>
       <span className="breaker-box">
         <span className="breaker-lever" />
       </span>

@@ -315,6 +315,9 @@ const EXTRA = 10
  * bonne réponse a plusieurs versions (entière, plus courte), l'appelant tire ce nombre une fois et essaie
  * toutes les versions avant d'en accepter un autre (voir byRank) : sinon une bonne réponse longue, faute de
  * mauvaises réponses plus longues, finirait trop souvent la plus longue.
+ *
+ * `need` : au moins une mauvaise réponse du groupe le vérifie (fits le refuserait sinon) ; la recherche saute
+ * d'emblée les groupes qui n'en ont aucune, sans rien changer à celui qu'elle trouve.
  */
 function matching<T>(
   rng: Rng,
@@ -325,6 +328,7 @@ function matching<T>(
   ranks: readonly number[] = shuffle(rng, [...Array(n + 1).keys()]),
   /** d'abord les réponses aux marques identiques à celles de la bonne (sinon, l'ordre de `pool` seul compte) */
   sameFirst = true,
+  need?: (o: Option<T>) => boolean,
 ): Option<T>[] | null {
   const r = shapeOf(right)
   const usable = distinctBy(
@@ -359,27 +363,32 @@ function matching<T>(
   function search(top: readonly Option<T>[], wanted: number): Option<T>[] | null {
     const lens = top.map((o) => shapeOf(o.label).len)
     const marks = top.map((o) => shapeOf(o.label).marks)
+    const needed = top.map((o) => !need || need(o))
+    // au-delà de la dernière réponse qui vérifie `need`, un groupe qui n'en a pas encore n'en aura jamais
+    const lastNeeded = needed.lastIndexOf(true)
     const idx: number[] = []
     // les premiers rangs d'abord ; un groupe trop étalé en longueur ne fait que s'étaler davantage : on coupe
-    const step = (start: number, longerCount: number, min: number, max: number): Option<T>[] | null => {
+    const step = (start: number, longerCount: number, min: number, max: number, got: boolean): Option<T>[] | null => {
       if (idx.length === n) {
         if (longerCount !== wanted || (!r.unit && !balancedMarks([r.marks, ...idx.map((i) => marks[i])]))) return null
         const chosen = idx.map((i) => top[i])
         return fits(chosen) ? chosen : null
       }
       for (let i = start; i <= top.length - (n - idx.length); i++) {
+        if (!got && i > lastNeeded) break
+        if (!got && !needed[i] && idx.length === n - 1) continue
         const more = longerCount + (lens[i] > r.len ? 1 : 0)
         const lo = Math.min(min, lens[i])
         const hi = Math.max(max, lens[i])
         if (more > wanted || wanted - more > n - idx.length - 1 || !closeLengths(lo, hi)) continue
         idx.push(i)
-        const found = step(i + 1, more, lo, hi)
+        const found = step(i + 1, more, lo, hi, got || needed[i])
         idx.pop()
         if (found) return found
       }
       return null
     }
-    return step(0, 0, r.len, r.len)
+    return step(0, 0, r.len, r.len, false)
   }
 }
 
@@ -442,6 +451,18 @@ export function keepsSense(full: string, short: string): boolean {
 const spellLdV = (s: string) => s.replace(/\bLdV\b/gu, 'ligne de vue')
 
 /* ---------- seuils de chasse ---------- */
+
+/**
+ * Une valeur par sorte de nombre (seuils, vitesses), calculée la première fois qu'on la demande : une carte de
+ * seuil n'attend pas qu'on ait aussi préparé les vitesses.
+ */
+function byKind<T>(f: (kind: NumberKind) => T): (kind: NumberKind) => T {
+  const cache = new Map<NumberKind, T>()
+  return (kind) => {
+    if (!cache.has(kind)) cache.set(kind, f(kind))
+    return cache.get(kind)!
+  }
+}
 
 /** Une valeur par liste d'entités, calculée une fois. */
 function perList<T>(f: (all: readonly Ghost[]) => T): (all: readonly Ghost[]) => T {
@@ -662,7 +683,7 @@ const numberPlan = perList((all) => {
     }
     return { weight, sides, ranks }
   }
-  return { san: plan('san'), spd: plan('spd') }
+  return byKind(plan)
 })
 const SIMULATED = 24
 
@@ -680,7 +701,7 @@ function weightedSample<T>(rng: Rng, items: readonly T[], n: number, weight: (t:
 
 /** Les trois mauvaises valeurs d'une question en nombres : le rang de la bonne tiré selon balancedRanks, puis chaque côté selon les fréquences. */
 function numberChoices(kind: NumberKind, a: NumberAsk, ctx: Ctx): number[] | null {
-  const { weight, sides, ranks } = numberPlan(ctx.allGhosts)[kind]
+  const { weight, sides, ranks } = numberPlan(ctx.allGhosts)(kind)
   const side = sides.get(a.key)
   if (!side || !side.counts.length) return null
   const w = ranks.get(a.key)
@@ -849,7 +870,7 @@ const summaryPlan = perList((all) => {
     }
     return { ok, weight }
   }
-  return { san: plan('san'), spd: plan('spd') }
+  return byKind(plan)
 })
 
 /**
@@ -860,7 +881,7 @@ const summaryPlan = perList((all) => {
  */
 function summaryQuestion(kind: NumberKind, g: Ghost, ctx: Ctx): Question | null {
   const k = SUMMARIES[kind]
-  const { ok, weight } = summaryPlan(ctx.allGhosts)[kind]
+  const { ok, weight } = summaryPlan(ctx.allGhosts)(kind)
   if (!ok.includes(g)) return null
   const right = k.label(g)
   const wrong = pickSummaries(kind, g, ok, weight, ctx.rng, ctx.longest)
@@ -1425,34 +1446,45 @@ function wrongClaimsFor(g: Ghost, all: readonly Ghost[]): (Claim & { label: stri
   const cached = byGhost.get(g.id)
   if (cached) return cached
   const out: (Claim & { label: string })[] = []
-  for (const c of claimsOf(all)) {
+  for (const { claim: c, text, bare } of claimVersions(all)) {
     if (c.z.id === g.id) continue
-    // sans ses apartés, mais jamais coupée : « L’autre a une activité d’objets ordinaire » (sans « … et attend 180 s
-    // après l’encens ») serait vrai de presque toutes les entités ; ni sans les nombres qui la rendaient fausse
-    const versions = [c.text, withoutAsides(c.text)].filter((t) => keepsSense(c.text, t))
-    for (const text of distinctBy(versions.map((t) => plainClaim(t, c.z)), (t) => t)) {
-      if (text.length < 30) continue
-      if (names(text, g) || pronounClash(text, g) || fitsToo(text, all, true)(g) || numbersFit(text, g) || huntsAlready(text, g)) continue
-      const bare = asOther(text, c.z)
-      // un nom entre « » n'est pas caviardé : il soufflerait de qui parle la phrase ; et la phrase a un seul sujet
-      if (names(bare, c.z) || subjects(bare) !== 1 || !agrees(bare, c.z, g)) continue
-      out.push({ ...c, text, label: naming(bare, g) })
-    }
+    if (names(text, g) || pronounClash(text, g) || fitsToo(text, all, true)(g) || numbersFit(text, g) || huntsAlready(text, g) || !agrees(bare, c.z, g)) continue
+    out.push({ ...c, text, label: naming(bare, g) })
   }
   byGhost.set(g.id, out)
   return out
 }
 
+/**
+ * Les versions de chaque phrase des confusions qui peuvent servir de mauvaise réponse, quelle que soit
+ * l'entité de la question (wrongClaimsFor ne garde ensuite que celles qui lui sont fausses) : calculées une
+ * fois par liste. `bare` : la phrase avec « l'autre » à la place de l'entité dont elle parle (voir asOther).
+ */
+const claimVersions = perList((all) => {
+  const out: { claim: Claim; text: string; bare: string }[] = []
+  for (const c of claimsOf(all)) {
+    // sans ses apartés, mais jamais coupée : « L’autre a une activité d’objets ordinaire » (sans « … et attend 180 s
+    // après l’encens ») serait vrai de presque toutes les entités ; ni sans les nombres qui la rendaient fausse
+    const versions = [c.text, withoutAsides(c.text)].filter((t) => keepsSense(c.text, t))
+    for (const text of distinctBy(versions.map((t) => plainClaim(t, c.z)), (t) => t)) {
+      if (text.length < 30) continue
+      const bare = asOther(text, c.z)
+      // un nom entre « » n'est pas caviardé : il soufflerait de qui parle la phrase ; et la phrase a un seul sujet
+      if (names(bare, c.z) || subjects(bare) !== 1) continue
+      out.push({ claim: c, text, bare })
+    }
+  }
+  return out
+})
+
 /** Une paire à départager : ce que la fiche de x dit de g, et les phrases qui peuvent servir de mauvaises réponses. */
 interface Duel {
   x: Ghost
-  /** la bonne réponse, puis sa version sans apartés */
+  /** la bonne réponse entière, puis ses versions plus courtes (aucune n'est la seule à contenir le mot que souffle le nom de g) */
   rights: string[]
   explain: string
   /** score : d'abord ce que la fiche de x dit d'autres entités, puis ce qu'on dit des entités qu'on confond avec x ou g */
   wrong: { option: Option<Ghost>; score: number }[]
-  /** les libellés de toutes les mauvaises réponses possibles */
-  labels: string[]
 }
 const duels = new WeakMap<readonly Ghost[], Map<string, Duel[]>>()
 
@@ -1495,9 +1527,14 @@ function duelsFor(g: Ghost, all: readonly Ghost[]): Duel[] {
           score: (c.z.id === x.id ? 8 : 0) + (c.y.id === x.id ? 4 : 0) + (nearX.has(c.z.id) ? 2 : 0) + (nearG.has(c.z.id) ? 1 : 0),
         }))
       if (new Set(wrong.map((w) => w.option.value.id)).size < 3) continue
+      const labels = wrong.map((w) => w.option.label)
+      // une bonne réponse qui serait la seule à contenir le mot que souffle le nom de g (voir hintAlone) ne se pose
+      // jamais : écartée ici une fois pour toutes, plutôt qu'à chaque tirage
+      const usable = rights.filter((v) => !hintAlone(g, v, labels))
+      if (!usable.length) continue
       // le corrigé garde les deux noms, et ce qui distingue x de son côté
       const full = noLeadingMais(confusionWithoutEvidence(pair.why))
-      out.push({ x, rights, wrong, labels: wrong.map((w) => w.option.label), explain: names(full, g) ? full : `${called(g)}${NNBSP}: ${uncap(full)}` })
+      out.push({ x, rights: usable, wrong, explain: names(full, g) ? full : `${called(g)}${NNBSP}: ${uncap(full)}` })
     }
   }
   byGhost.set(g.id, out)
@@ -1519,7 +1556,9 @@ const distinguish: Gen = (g, ctx) => {
   // le Mimic peut copier n'importe quel comportement : une mauvaise réponse pourrait être vraie pour lui ;
   // « Les Jumeaux » à la place d'un sujet au singulier fausserait l'accord
   if (g.id === MIMIC || plural(g)) return null
-  const tries = shuffle(ctx.rng, duelsFor(g, ctx.allGhosts)).map((d) => ({
+  const pairs = duelsFor(g, ctx.allGhosts)
+  if (!pairs.length) return null
+  const tries = shuffle(ctx.rng, pairs).map((d) => ({
     d,
     pool: shuffle(ctx.rng, d.wrong)
       .sort((a, b) => b.score - a.score)
@@ -1528,10 +1567,8 @@ const distinguish: Gen = (g, ctx) => {
   return byRank(ctx.rng, (ranks) => {
     for (const { d, pool } of tries) {
       for (const right of d.rights) {
-        // aucune mauvaise réponse possible ne contient le mot que souffle le nom de g : inutile de chercher
-        if (hintAlone(g, right, d.labels)) continue
         const fits = (chosen: readonly Option<Ghost>[]) => distinctGhosts(chosen) && !hintAlone(g, right, chosen.map((o) => o.label))
-        const wrong = matching(ctx.rng, right, pool, 3, fits, ranks)
+        const wrong = matching(ctx.rng, right, pool, 3, fits, ranks, true, hintNeed(g, right))
         if (!wrong) continue
         return {
           id: `q:dist:${d.x.id}:${g.id}`,
@@ -1760,6 +1797,31 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   return out
 }
 
+/**
+ * Prépare à l'avance ce qui ne dépend que des fiches : les poids des nombres et des résumés (tirages simulés),
+ * les phrases des départages, les signes qui peuvent servir de mauvaise réponse. Sans cela, la première série
+ * (ou la première carte de seuil, de vitesse) le calcule au moment où l'on appuie. Une étape à la fois, tant
+ * que `more()` le permet ; une étape déjà faite ne coûte rien. Renvoie true quand tout est prêt : à rappeler
+ * pendant les temps morts (requestIdleCallback) tant qu'il renvoie false. Ne change aucune question.
+ */
+export function warmQuiz(all: readonly Ghost[], more: () => boolean = () => true): boolean {
+  const steps: (() => unknown)[] = [
+    () => numberPlan(all)('san'),
+    () => numberPlan(all)('spd'),
+    () => summaryPlan(all)('san'),
+    () => summaryPlan(all)('spd'),
+    () => claimVersions(all),
+    // les entités que distinguish et signOfGhost interrogent (jamais le Mimic, ni les Jumeaux pour un départage)
+    ...all.filter((g) => g.id !== MIMIC && !plural(g)).map((g) => () => duelsFor(g, all)),
+    ...all.filter((g) => g.id !== MIMIC).map((g) => () => signVersions(g, all)),
+  ]
+  for (const step of steps) {
+    if (!more()) return false
+    step()
+  }
+  return true
+}
+
 /* ==========================================================================
    Les cartes de révision posées en QCM
    ========================================================================== */
@@ -1843,18 +1905,28 @@ const NAME_HINTS: Readonly<Record<string, RegExp>> = {
   obake: /(?<!\p{L})(?:formes?|modèles?|transform\p{L}*|métamorph\p{L}*)(?!\p{L})/iu,
 }
 
-/** La bonne réponse est-elle la seule à contenir le mot que souffle le nom de g (son nom lui-même mis à part) ? */
+/** Le texte contient-il le mot que souffle le nom de g (son nom lui-même mis à part) ? Calculé une fois par texte. */
 const hintCache = new Map<string, boolean>()
-function hintAlone(g: Ghost, right: string, wrong: readonly string[]): boolean {
+function hints(g: Ghost, t: string): boolean {
   const re = NAME_HINTS[g.id]
   if (!re) return false
-  const has = (t: string) => {
-    const key = `${g.id}|${t}`
-    let v = hintCache.get(key)
-    if (v === undefined) hintCache.set(key, (v = re.test(redact(t, g))))
-    return v
-  }
-  return has(right) && !wrong.some(has)
+  const key = `${g.id}|${t}`
+  let v = hintCache.get(key)
+  if (v === undefined) hintCache.set(key, (v = re.test(redact(t, g))))
+  return v
+}
+
+/** La bonne réponse est-elle la seule à contenir le mot que souffle le nom de g ? */
+function hintAlone(g: Ghost, right: string, wrong: readonly string[]): boolean {
+  return hints(g, right) && !wrong.some((t) => hints(g, t))
+}
+
+/**
+ * Ce que doit vérifier au moins une mauvaise réponse pour que la bonne ne soit pas la seule à contenir le mot
+ * que souffle le nom de g (voir matching, `need`) ; rien si la bonne ne le contient pas.
+ */
+function hintNeed(g: Ghost, right: string): ((o: Option<unknown>) => boolean) | undefined {
+  return hints(g, right) ? (o) => hints(g, o.label) : undefined
 }
 
 /**
@@ -1985,7 +2057,7 @@ function signOfGhost(x: Ghost, ctx: Ctx): Question | null {
           const labels = chosen.map((o) => o.label)
           return apart(chosen) && !twinOf(right, labels) && !hintAlone(x, right, labels)
         }
-        const wrong = matching(ctx.rng, right, options, 3, fits, ranks)
+        const wrong = matching(ctx.rng, right, options, 3, fits, ranks, true, hintNeed(x, right))
         if (!wrong) continue
         return {
           id: `q:sign-of:${x.id}:${k}`,
@@ -2003,14 +2075,21 @@ function signOfGhost(x: Ghost, ctx: Ctx): Question | null {
   })
 }
 
-/** Les trois premiers mots d'une réponse (« plus actif quand »). */
-const opening = (s: string) =>
-  s
-    .toLocaleLowerCase('fr')
-    .split(/[^\p{L}\d’']+/u)
-    .filter(Boolean)
-    .slice(0, 3)
-    .join(' ')
+/** Les trois premiers mots d'une réponse (« plus actif quand »). Calculés une fois par libellé. */
+const openings = new Map<string, string>()
+function opening(s: string): string {
+  let v = openings.get(s)
+  if (v === undefined) {
+    v = s
+      .toLocaleLowerCase('fr')
+      .split(/[^\p{L}\d’']+/u)
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(' ')
+    openings.set(s, v)
+  }
+  return v
+}
 
 /**
  * Une seule mauvaise réponse commence comme la bonne (« Plus actif quand plusieurs joueurs sont à proximité »
@@ -2147,7 +2226,7 @@ function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: 
       if (hintAlone(g, right, pool.map((o) => o.label))) continue
       const fits = (chosen: readonly Option<Ghost>[]) =>
         distinctGhosts(chosen) && namingBalanced([right, ...chosen.map((o) => o.label)], all) && !hintAlone(g, right, chosen.map((o) => o.label))
-      const wrong = matching(ctx.rng, right, pool, 3, fits, ranks)
+      const wrong = matching(ctx.rng, right, pool, 3, fits, ranks, true, hintNeed(g, right))
       if (!wrong) continue
       return {
         id: `q:test-of:${g.id}:${k}`,

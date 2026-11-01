@@ -909,7 +909,7 @@ export function Quiz() {
     <Modal
       open={quitOpen}
       onClose={() => setQuitOpen(false)}
-      title="Quitter la copie ?"
+      title={`Quitter la copie${NNBSP}?`}
       actions={
         <>
           <TypedLink onClick={() => setQuitOpen(false)}>Continuer la copie</TypedLink>

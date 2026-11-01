@@ -164,9 +164,10 @@ function Welcome() {
 
 /**
  * Mode d'emploi, une seule fois après l'ouverture du carnet (puis par le lien du pied de page) : les trois
- * usages de l'app, dans l'ordre où on s'en sert, avec les noms des onglets.
+ * usages de l'app, dans l'ordre où on s'en sert, avec les noms des onglets. `minutes` : la durée d'une séance
+ * d'une journée de cartes nouvelles, calculée comme celle de la fiche « Révision du jour ».
  */
-function Guide({ stacked, onDone }: { stacked: boolean; onDone: (to?: string) => void }) {
+function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number; onDone: (to?: string) => void }) {
   return (
     <section className="guide settle" id="mode-d-emploi" aria-labelledby="h-guide" style={{ '--r': '-.4deg', '--d': '.15s' } as Style}>
       <IndexCard head={<span id="h-guide">Mode d’emploi</span>} right="à lire une fois" rotate={0}>
@@ -175,7 +176,7 @@ function Guide({ stacked, onDone }: { stacked: boolean; onDone: (to?: string) =>
           <li>
             <CircledNumber n={1} delay={0.5} />
             <div>
-              <b className="guide-k">Réviser</b> <span className="guide-when">chaque jour, ≈{NBSP}5{NBSP}min</span>
+              <b className="guide-k">Réviser</b> <span className="guide-when">{`chaque jour, ≈${NBSP}${minutes}${NBSP}min`}</span>
               <p>{fr('Des questions à choix multiple sur les entités ; le carnet te repose ce que tu commences à oublier.')}</p>
             </div>
           </li>
@@ -477,7 +478,7 @@ export function Home() {
             </div>
           )}
 
-          {showGuide && <Guide stacked={stacked} onDone={closeGuide} />}
+          {showGuide && <Guide stacked={stacked} minutes={sessionMinutes(state.settings.newPerDay, 0)} onDone={closeGuide} />}
 
           {isCoach && <CoachCard />}
 

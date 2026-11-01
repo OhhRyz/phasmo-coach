@@ -3,7 +3,7 @@ import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeB
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
-import { fr, safeDate } from '../engine/format'
+import { fr, NNBSP, safeDate } from '../engine/format'
 import { coachNameOf } from '../engine/notes'
 import { downloadJson } from '../engine/share'
 import { hydrate } from '../store/schema'
@@ -220,7 +220,9 @@ export function Profile() {
               </div>
               {(perDay <= NEW_MIN || perDay >= NEW_MAX) && (
                 <p className="pencil-note settings-hint pace-limit" role="note">
-                  {perDay <= NEW_MIN ? `${NEW_MIN} au minimum : le bouton − ne descend pas plus bas` : `${NEW_MAX} au maximum : le bouton + ne monte pas plus haut`}
+                  {perDay <= NEW_MIN
+                    ? `${NEW_MIN} au minimum${NNBSP}: le bouton − ne descend pas plus bas`
+                    : `${NEW_MAX} au maximum${NNBSP}: le bouton + ne monte pas plus haut`}
                 </p>
               )}
               <input

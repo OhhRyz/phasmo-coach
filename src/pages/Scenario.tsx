@@ -250,7 +250,8 @@ export function Scenario() {
   }
 
   const submitGuess = () => {
-    if (!scenario || !guess) return
+    // seulement un nom entouré dans la liste affichée (guessList, plus bas)
+    if (!scenario || !guess || !guessList.some((g) => g.id === guess)) return
     setGuessOpen(false)
     if (guess === scenario.ghostId) {
       finish('solved', wrong.length)
@@ -912,11 +913,11 @@ export function Scenario() {
       <Modal
         open={guessOpen}
         onClose={() => setGuessOpen(false)}
-        title="Quelle est l’entité ?"
+        title={`Quelle est l’entité${NNBSP}?`}
         actions={
           <>
             <TypedLink onClick={() => setGuessOpen(false)}>Retour au contrat</TypedLink>
-            <TapeButton disabled={!guess} onClick={submitGuess} className="sc-validate" disabledHint="choisis un nom dans la liste">
+            <TapeButton disabled={!guessList.some((g) => g.id === guess)} onClick={submitGuess} className="sc-validate" disabledHint="choisis un nom dans la liste">
               Valider
             </TapeButton>
           </>
@@ -953,7 +954,15 @@ export function Scenario() {
         {filtered && (
           <p className="sc-guess-all">
             {guessAll ? (
-              <TypedLink onClick={() => setGuessAll(false)}>revenir aux {candidates.length} entités de mon carnet</TypedLink>
+              <TypedLink
+                onClick={() => {
+                  setGuessAll(false)
+                  // un nom pris hors du carnet n'y est plus affiché : il ne reste pas entouré en cachette
+                  if (!candidates.some((g) => g.id === guess)) setGuess('')
+                }}
+              >
+                revenir aux {candidates.length} entités de mon carnet
+              </TypedLink>
             ) : (
               <TypedLink onClick={() => setGuessAll(true)}>
                 mon carnet se trompe peut-être{NNBSP}: voir les {GHOSTS.length - wrong.length} entités
@@ -966,7 +975,7 @@ export function Scenario() {
       <Modal
         open={quitOpen}
         onClose={() => setQuitOpen(false)}
-        title="Abandonner le contrat ?"
+        title={`Abandonner le contrat${NNBSP}?`}
         actions={
           <>
             <TypedLink onClick={() => setQuitOpen(false)}>Continuer le contrat</TypedLink>

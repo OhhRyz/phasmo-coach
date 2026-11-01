@@ -843,7 +843,7 @@ export function photoSVG(key: string, uid: string, o: PhotoOptions = PHOTO_PRESE
   const fx = L.fx ?? sc.fx
   const fy = L.fy ?? sc.fy
   const flash = o.flash ?? 1
-  const text = esc(label ?? (o.alt ? `Photographie floue : ${o.alt}` : 'Photographie floue d’une silhouette'))
+  const text = esc(label ?? (o.alt ? `Photographie floue\u202f: ${o.alt}` : 'Photographie floue d’une silhouette'))
 
   const specks = Array.from(
     { length: 7 },

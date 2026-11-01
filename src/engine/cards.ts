@@ -235,8 +235,12 @@ function restated(grams: string[], o: Ghost, lex: Lexicon, ratio: number): boole
  * visible pendant les chasses » (Fantôme) ne compte pas : « moins » n'est pas « plus ».
  */
 export function restatedBy(statement: string, o: Ghost, all: readonly Ghost[]): boolean {
-  return restated([...bigramsOf(statement)], o, lexicon(all), 0.8)
+  let grams = statementGrams.get(statement)
+  if (!grams) statementGrams.set(statement, (grams = [...bigramsOf(statement)]))
+  return restated(grams, o, lexicon(all), 0.8)
 }
+/** Les paires de mots d'un énoncé, calculées une fois par énoncé (les fiches et leurs phrases ne changent pas). */
+const statementGrams = new Map<string, string[]>()
 
 /** Les nombres cités devant une unité (« 1,7 m/s », « 50 % »). */
 const cited = (text: string, unit: RegExp) =>
@@ -253,6 +257,17 @@ const cited = (text: string, unit: RegExp) =>
  * vraie de la bonne réponse). Sinon, parler de vitesse ou de seuil suffit à écarter les entités particulières.
  */
 export function fitsToo(statement: string, all: readonly Ghost[], precise = false): (o: Ghost) => boolean {
+  // le même énoncé revient pour chaque entité, à chaque question : son examen se fait une fois par liste
+  let byText = fitsCache.get(all)
+  if (!byText) fitsCache.set(all, (byText = new Map()))
+  const key = `${precise ? 1 : 0}|${statement}`
+  let fits = byText.get(key)
+  if (!fits) byText.set(key, (fits = fitsTooNow(statement, all, precise)))
+  return fits
+}
+const fitsCache = new WeakMap<readonly Ghost[], Map<string, (o: Ghost) => boolean>>()
+
+function fitsTooNow(statement: string, all: readonly Ghost[], precise: boolean): (o: Ghost) => boolean {
   const sanityTalk = /chass/iu.test(statement) && /%|santé mentale|seuil/iu.test(statement)
   const speedTalk = /m\/s|vitesse|rapide|ralenti|accél|\blente?\b/iu.test(statement)
   const pct = precise && sanityTalk ? cited(statement, /%/u) : []
