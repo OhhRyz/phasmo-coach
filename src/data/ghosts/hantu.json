@@ -70,8 +70,8 @@
       "definitive": true
     },
     {
-      "text": "Pendant une chasse, si l'entité semble changer de vitesse au hasard sans être influencée par l'équipement ou par un joueur (en passant d'une pièce chaude à une pièce froide, par exemple), c'est très probablement un Hantu.",
-      "definitive": false
+      "text": "Pendant une chasse, si l'entité est rapide dans sa pièce (la plus froide) et ralentit dans les pièces plus chaudes, c'est un Hantu : sa vitesse suit la température de chaque pièce traversée. L'Obambo change aussi de vitesse en pleine chasse, mais d'un coup, à heure fixe (toutes les 2 minutes à la montre du jeu), quelle que soit la pièce.",
+      "definitive": true
     }
   ],
   "eliminationTests": [
@@ -258,7 +258,8 @@
     "https://phasmopedia.com/en/ghosts/hantu/",
     "https://allthings.how/phasmophobia-how-to-identify-a-hantu/",
     "https://phasmophobia.wiki.fextralife.com/Hantu",
-    "https://insider-gaming.com/phasmophobia-chronicle-update-v0-13-patch-notes/"
+    "https://insider-gaming.com/phasmophobia-chronicle-update-v0-13-patch-notes/",
+    "Retour du coach (700 h de jeu), novembre 2026"
   ],
   "uncertain": [
     "Bornes exactes des paliers de température (15 °C inclus ou non, etc.) : non vérifiées."

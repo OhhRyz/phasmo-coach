@@ -14,7 +14,7 @@
     "summary": "1,5 ou 1,9 m/s selon la chasse · accélère en LdV",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
-      "La vitesse lente correspondrait à une chasse lancée depuis sa portée standard, la rapide à une chasse lancée depuis sa portée étendue.",
+      "À chaque chasse, c'est une chance sur deux d'avoir le jumeau lent ou le rapide : rien ne l'oblige à alterner, tu peux tomber 3 ou 4 fois de suite sur le lent avant de voir le rapide.",
       "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
       "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer les Jumeaux."
     ]
@@ -31,7 +31,7 @@
   "summary": "Une seule entité dotée de deux portées d'interaction, capable d'agir à deux endroits presque en même temps et de chasser tantôt lentement, tantôt vite.",
   "keyTells": [
     "Deux interactions quasi simultanées, dont une loin de l'entité",
-    "Vitesse de chasse ~1,5 ou ~1,9 m/s, qui change d'une chasse à l'autre",
+    "Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse (une chance sur deux)",
     "Capteurs de mouvement et sel ne réagissent qu'à sa position réelle"
   ],
   "tells": [
@@ -45,7 +45,7 @@
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Si la vitesse de l'entité alterne entre 1,5 m/s et 1,9 m/s d'une chasse à l'autre, ça pourrait être les Jumeaux. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s).", "definitive": false },
+    { "text": "Si la vitesse de l'entité alterne entre 1,5 m/s et 1,9 m/s d'une chasse à l'autre, ça pourrait être les Jumeaux. La même vitesse plusieurs chasses de suite ne les écarte pas : c'est une chance sur deux à chaque chasse, tu peux avoir 3 ou 4 fois le lent avant le rapide. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s), qui suit la montre du jeu et peut changer de vitesse en pleine chasse.", "definitive": false },
     { "text": "Si des interactions ont souvent lieu loin de la pièce de l'entité, ça pourrait être les Jumeaux.", "definitive": false }
   ],
   "eliminationTests": [
@@ -129,10 +129,10 @@
     "https://phasmophobia.wiki.fextralife.com/The_Twins",
     "https://phasmophobia.fandom.com/wiki/The_Twins",
     "https://phasmopedia.com/en/ghosts/the-twins/",
-    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes",
+    "Retour du coach (700 h de jeu), novembre 2026"
   ],
   "uncertain": [
-    "Portées d'interaction : en partie non vérifiées.",
-    "Vitesse lente = chasse lancée depuis la portée standard, rapide = portée étendue ? Une autre source parle d'un tirage à 50/50."
+    "Portées d'interaction : en partie non vérifiées."
   ]
 }

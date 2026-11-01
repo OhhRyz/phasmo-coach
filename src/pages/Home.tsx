@@ -117,7 +117,7 @@ function Welcome() {
           </Stamp>
           <p className="entry-line">
             {fr(
-              `Réviser les ${GHOSTS.length} entités en une dizaine de minutes par jour, t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
+              `Réviser les ${GHOSTS.length} entités chaque jour (5${NBSP}min au début, 15 à 25${NBSP}min ensuite, révisions comprises), t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
             )}
           </p>
         </div>
@@ -165,7 +165,8 @@ function Welcome() {
 /**
  * Mode d'emploi, une seule fois après l'ouverture du carnet (puis par le lien du pied de page) : les trois
  * usages de l'app, dans l'ordre où on s'en sert, avec les noms des onglets. `minutes` : la durée d'une séance
- * d'une journée de cartes nouvelles, calculée comme celle de la fiche « Révision du jour ».
+ * d'une journée de cartes nouvelles, calculée comme celle de la fiche « Révision du jour » (les premiers jours :
+ * ensuite, les cartes à revoir s'y ajoutent).
  */
 function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number; onDone: (to?: string) => void }) {
   return (
@@ -176,7 +177,7 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
           <li>
             <CircledNumber n={1} delay={0.5} />
             <div>
-              <b className="guide-k">Réviser</b> <span className="guide-when">{`chaque jour, ≈${NBSP}${minutes}${NBSP}min`}</span>
+              <b className="guide-k">Réviser</b> <span className="guide-when">{`chaque jour, ≈${NBSP}${minutes}${NBSP}min au début`}</span>
               <p>{fr('Des questions à choix multiple sur les entités ; le carnet te repose ce que tu commences à oublier.')}</p>
             </div>
           </li>
@@ -304,7 +305,7 @@ export function Home() {
 
   const dueCount = queue.filter((c) => state.cards[c.id]).length
   const newCount = queue.length - dueCount
-  // les cartes nouvelles repassent dans la séance : on compte les réponses attendues, pas les cartes
+  // une carte ratée repasse dans la séance : on compte les réponses attendues, pas les cartes
   const minutes = sessionMinutes(newCount, dueCount)
   const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)?.name).filter(Boolean)
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length

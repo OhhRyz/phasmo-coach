@@ -20,7 +20,7 @@ import {
   type CoachNote,
 } from './cards'
 import { EMPTY_FILTER, filterGhosts, matchesEvidence, type FilterState } from './filter'
-import { redactGhostName, speedClasses } from './format'
+import { fr, redactGhostName, speedClasses } from './format'
 import {
   buildQuiz,
   confusionWithoutEvidence,
@@ -29,13 +29,26 @@ import {
   isCorrect,
   keepsSense,
   partnerClaim,
+  CARD_PEERS,
   questionForCard,
   QUIZ_TOPICS,
   type Question,
   type QuizTopic,
   warmQuiz,
 } from './quiz'
-import { askKey, buildReviewQueue, ghostMastery, learnedCount, pickNewCards, SAME_GHOST_GAP, sessionGhosts, unseenCards } from './progress'
+import {
+  askKey,
+  buildReviewQueue,
+  ghostMastery,
+  learnedCount,
+  NEW_GHOSTS_PER_DAY,
+  pickNewCards,
+  SAME_GHOST_GAP,
+  sessionGhosts,
+  spreadByGhost,
+  studiedGhosts,
+  unseenCards,
+} from './progress'
 import { createRng } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
 import {
@@ -52,7 +65,8 @@ import {
 } from './share'
 import { adoptCoach, coachNameOf, isCoachNote, onboardProfile } from './notes'
 import { hydrate, initialState, sanitizeNotes } from '../store/schema'
-import { cardMastery, isDue, schedule } from './srs'
+import { cardMastery, isDue, LEARN_AHEAD, schedule, type CardState } from './srs'
+import { comesBackInSession, requeue, requeueGap } from '../pages/reviewSession'
 import { speedToBpm, bpmToSpeed } from './audio'
 
 const DAY = 86_400_000
@@ -61,13 +75,39 @@ const T0 = new Date('2026-10-31T10:00:00').getTime()
 const valueOf = (label: string) => Number(label.replace(/[^\d,]/gu, '').replace(',', '.'))
 
 describe('répétition espacée', () => {
-  it('fait passer une nouvelle carte par les étapes puis la gradue à 1 jour', () => {
-    let s = schedule(undefined, 3, T0)
-    expect(s.phase).toBe('learning')
-    expect(s.due - T0).toBe(10 * 60_000)
-    s = schedule(s, 3, T0 + 10 * 60_000)
+  it('une nouvelle carte juste du premier coup passe à demain, sans repasser dans la séance', () => {
+    const s = schedule(undefined, 3, T0)
     expect(s.phase).toBe('review')
     expect(s.interval).toBe(1)
+    expect(s.due - T0).toBe(DAY)
+  })
+
+  it('ratée, une nouvelle carte repasse dans la minute, puis passe à demain si elle est juste', () => {
+    let s = schedule(undefined, 1, T0)
+    expect(s.phase).toBe('learning')
+    expect(s.due - T0).toBe(60_000)
+    s = schedule(s, 3, T0 + 60_000)
+    expect(s.phase).toBe('review')
+    expect(s.interval).toBe(1)
+    // une carte apprise puis ratée garde son étape de 10 min
+    const lapse = schedule(s, 1, s.due)
+    expect(lapse.phase).toBe('relearning')
+    expect(lapse.due - s.due).toBe(10 * 60_000)
+  })
+
+  it('une carte sauvegardée à l’étape 1 de l’ancien calendrier (1 min, 10 min) reprend sans accroc', () => {
+    const old: CardState = { phase: 'learning', step: 1, interval: 0, ease: 2.5, due: T0, reps: 1, lapses: 0, last: T0 - 600_000 }
+    const good = schedule(old, 3, T0)
+    expect(good.phase).toBe('review')
+    expect(good.interval).toBe(1)
+    const hard = schedule(old, 2, T0)
+    expect(hard.phase).toBe('learning')
+    expect(hard.due - T0).toBe(60_000)
+    const again = schedule(old, 1, T0)
+    expect([again.phase, again.step, again.due - T0]).toEqual(['learning', 0, 60_000])
+    expect(schedule(old, 4, T0).interval).toBe(4)
+    expect(cardMastery(old)).toBeGreaterThan(0)
+    expect(cardMastery(old)).toBeLessThan(cardMastery(good))
   })
 
   it('« Facile » sur une nouvelle carte la programme à 4 jours', () => {
@@ -95,8 +135,7 @@ describe('répétition espacée', () => {
   })
 
   it('les quatre boutons donnent des intervalles strictement croissants', () => {
-    let s = schedule(undefined, 3, T0)
-    s = schedule(s, 3, T0 + 600_000) // graduée à 1 jour
+    const s = schedule(undefined, 3, T0) // graduée à 1 jour
     for (const state of [s, { ...s, ease: 1.3 }, { ...s, interval: 7 }]) {
       const ivl = ([2, 3, 4] as const).map((g) => schedule(state, g, state.due).interval)
       expect(ivl[0]).toBeLessThan(ivl[1])
@@ -899,8 +938,10 @@ describe('révision en QCM', () => {
     note('doublons', { question: 'Q ?', answer: 'Même', wrong: ['même', '  '] }),
   ]
   const deck = buildDeck(GHOSTS, MECHANICS, notes)
-  const ctx = (day: string) => ({ allGhosts: GHOSTS, mechanics: MECHANICS, notes, day })
+  const ctx = (day: string, pass = 0) => ({ allGhosts: GHOSTS, mechanics: MECHANICS, notes, day, pass })
   const DAYS = ['2026-10-31', '2026-11-01', '2026-11-07', '2026-12-25', '2027-03-14', '2026-10-31#1', '2026-10-31#2']
+  /** la carte au premier passage, puis quand elle revient dans la séance (posée autrement) ; « #2 » : une troisième fois */
+  const PASSES = [0, 1]
   const facts = MECHANICS.topics.flatMap((t) => t.facts)
   /** un choix d'entité : son nom seul, sans nom anglais entre parenthèses */
   const label = (g: Ghost) => g.name
@@ -913,8 +954,8 @@ describe('révision en QCM', () => {
   it('chaque carte devient un QCM à une seule bonne réponse, ou se déclare « à retourner »', () => {
     const asked = { ghost: 0, fact: 0, note: 0 }
     for (const day of DAYS) {
-      for (const c of deck) {
-        const q = questionForCard(c, ctx(day))
+      for (const c of deck) for (const pass of PASSES) {
+        const q = questionForCard(c, ctx(day, pass))
         // le Mimic copie tout : parmi les choix, il serait toujours la bonne réponse ; ses cartes se retournent
         if (c.ghostId === 'the-mimic') {
           expect(q, c.id).toBeNull()
@@ -961,15 +1002,16 @@ describe('révision en QCM', () => {
       }
     }
     // toutes les cartes des entités (seuils, vitesses, signes, tests) ont leurs choix, sauf celles du Mimic
-    expect(asked.ghost).toBe(deck.filter((c) => c.deck === 'ghost' && c.ghostId !== 'the-mimic').length * DAYS.length)
-    expect(asked.note).toBe(2 * DAYS.length)
-    expect(asked.fact).toBe(facts.filter((f) => !f.evidence && (f.choices?.length ?? 0) >= 2).length * DAYS.length)
-  })
+    const n = DAYS.length * PASSES.length
+    expect(asked.ghost).toBe(deck.filter((c) => c.deck === 'ghost' && c.ghostId !== 'the-mimic').length * n)
+    expect(asked.note).toBe(2 * n)
+    expect(asked.fact).toBe(facts.filter((f) => !f.evidence && (f.choices?.length ?? 0) >= 2).length * n)
+  }, 60_000)
 
   it('les mauvaises réponses d’un signe ne décrivent pas l’entité', () => {
     for (const day of DAYS) {
-      for (const c of deck.filter((x) => (x.kind === 'tells' || x.kind === 'reverse' || x.kind === 'sanity' || x.kind === 'speed') && x.ghostId !== 'the-mimic')) {
-        const q = questionForCard(c, ctx(day))!
+      for (const c of deck.filter((x) => (x.kind === 'tells' || x.kind === 'reverse' || x.kind === 'sanity' || x.kind === 'speed') && x.ghostId !== 'the-mimic')) for (const pass of PASSES) {
+        const q = questionForCard(c, ctx(day, pass))!
         const g = getGhost(c.ghostId!)!
         for (const x of q.choices) {
           if (x.id === g.id) continue
@@ -984,18 +1026,20 @@ describe('révision en QCM', () => {
         }
       }
     }
-  })
+  }, 60_000)
 
   it('même carte, même jour : mêmes choix dans le même ordre', () => {
     for (const c of deck) {
-      const a = questionForCard(c, ctx('2026-10-31'))
-      const b = questionForCard(c, ctx('2026-10-31'))
-      expect(b, c.id).toEqual(a)
+      for (const pass of PASSES) {
+        const a = questionForCard(c, ctx('2026-10-31', pass))
+        const b = questionForCard(c, ctx('2026-10-31', pass))
+        expect(b, c.id).toEqual(a)
+      }
     }
     // un autre jour, l'ordre change pour au moins une partie des cartes
     const order = (day: string) => deck.map((c) => questionForCard(c, ctx(day))?.choices.map((x) => x.id).join() ?? '').join('|')
     expect(order('2026-11-01')).not.toBe(order('2026-10-31'))
-  })
+  }, 60_000)
 
   it('une note devient un QCM avec sa question, sa réponse et ses mauvaises réponses, telles qu’écrites', () => {
     const q = questionForCard(deck.find((c) => c.id === 'n:qcm')!, ctx('2026-10-31'))!
@@ -1062,8 +1106,12 @@ describe('des réponses de même forme', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, [])
     for (const day of ['2026-10-31', '2026-11-01', '2026-11-07', '2026-12-25', '2027-03-14', '2027-06-21']) {
       for (const c of deck) {
-        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day })
-        if (q) keep(q)
+        // au premier passage, et quand la carte revient dans la séance ou un autre jour (posée autrement), un
+        // jour sur deux
+        for (const [pass, seen] of day.endsWith('1') ? [[0, 0], [1, 0], [0, 1]] : [[0, 0]]) {
+          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, seen })
+          if (q) keep(q)
+        }
       }
     }
     questions = [...out.values()].filter(composed)
@@ -1239,8 +1287,18 @@ describe('des réponses de même forme', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, []).filter((c) => c.kind === 'sanity' || c.kind === 'speed')
     for (let d = 1; d <= 40; d++) {
       for (const c of deck) {
-        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2026-12-${d}` })
-        if (q) asked.push(q)
+        // d'un jour à l'autre, une carte alterne ses deux façons (seen) : autant de l'une que de l'autre
+        for (const seen of [0, 1]) {
+          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2026-12-${d}`, seen })
+          if (q) asked.push(q)
+        }
+      }
+      // une carte qui revient dans la séance, posée autrement (une sur cinq environ)
+      if (d % 5 === 0) {
+        for (const c of deck) {
+          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2026-12-${d}`, pass: 1 })
+          if (q) asked.push(q)
+        }
       }
     }
     const cases = [
@@ -1332,8 +1390,10 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, [])
     for (const day of ['2026-11-01', '2026-11-02', '2026-11-03', '2026-12-24']) {
       for (const c of deck) {
-        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day })
-        if (q) keep(q)
+        for (const pass of day === '2026-11-01' || day === '2026-12-24' ? [0, 1] : [0]) {
+          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass })
+          if (q) keep(q)
+        }
       }
     }
     composed = [...out.values()].filter((q) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
@@ -1636,7 +1696,11 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
     const unseen = unseenCards(deck, {}, initialState(T0).settings)
     const first = pickNewCards(unseen, 12)
     expect(first).toHaveLength(12)
-    expect(new Set(first.map((c) => c.ghostId)).size).toBeGreaterThanOrEqual(4)
+    // six entités au moins, deux cartes chacune : les QCM de la séance ne tournent pas sur quatre noms
+    const perGhost = new Map<string, number>()
+    for (const c of first) perGhost.set(c.ghostId!, (perGhost.get(c.ghostId!) ?? 0) + 1)
+    expect(perGhost.size).toBeGreaterThanOrEqual(NEW_GHOSTS_PER_DAY)
+    expect(Math.max(...perGhost.values())).toBeLessThanOrEqual(2)
     const state = { ...initialState(T0), onboarded: true }
     const queue = buildReviewQueue(state, deck, T0)
     for (let i = 0; i < queue.length; i++) {
@@ -1716,8 +1780,11 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
       expect(new Set(keys).size, `jour ${d} : ${keys.join(' / ')}`).toBe(keys.length)
       // la question d'une carte due ne revient parmi les nouvelles que s'il ne reste rien d'autre
       const dueKeys = new Set(queue.filter((c) => due.has(c.id)).map(askKey).filter(Boolean))
+      // ce qui reste à découvrir sans reposer une question des cartes dues : une même question ne compte qu'une
+      // fois (sept vitesses « 1,7 m/s » ne font qu'une nouvelle carte possible dans la journée)
       const others = unseenCards(deck, state.cards, state.settings).filter((c) => !askKey(c) || !dueKeys.has(askKey(c)))
-      if (others.length >= state.settings.newPerDay) for (const k of keys) expect(dueKeys.has(k), `jour ${d} : ${k}`).toBe(false)
+      const open = others.filter((c) => !askKey(c)).length + new Set(others.map(askKey).filter(Boolean)).size
+      if (open >= state.settings.newPerDay) for (const k of keys) expect(dueKeys.has(k), `jour ${d} : ${k}`).toBe(false)
       if (d === 0) {
         // la première séance : pas deux fois le même énoncé (avec sa citation)
         const asked = queue
@@ -1732,65 +1799,202 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
   }, 60_000)
 
   it('révision sur sept jours : la carte d’avant ne souffle pas la réponse', () => {
-    let state = { ...initialState(T0), onboarded: true }
-    const shown: { card: (typeof deck)[number]; q: Question | null }[] = []
-    for (let d = 0; d < 7; d++) {
-      let now = T0 + d * DAY
-      const queue = buildReviewQueue(state, deck, now)
-      const peers = sessionGhosts(queue)
-      const day = new Date(now).toISOString().slice(0, 10)
-      const rest = [...queue]
-      const passes: Record<string, number> = {}
-      while (rest.length) {
-        const card = rest.shift()!
-        const pass = passes[card.id] ?? 0
-        shown.push({ card, q: questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, day: pass ? `${day}#${pass}` : day, peers }) })
-        // tout juste : la carte s'espace ; en apprentissage, elle repasse plus loin dans la séance (comme la page Réviser)
-        const prev = state.cards[card.id]
-        const next = schedule(prev, 3, now)
-        state = { ...state, cards: { ...state.cards, [card.id]: next }, log: [...state.log, { id: card.id, t: now, g: 3, isNew: !prev }] }
-        if (next.due - now < 20 * 60_000) {
-          rest.splice(Math.min(rest.length, Math.max(3, Math.round((next.due - now) / 60_000))), 0, card)
-          passes[card.id] = pass + 1
+    // tout juste, puis juste à 80 % (les cartes ratées repassent plus loin, posées autrement), selon la règle de la page Réviser
+    for (const pRight of [1, 0.8]) {
+      let state = { ...initialState(T0), onboarded: true }
+      const shown: { card: (typeof deck)[number]; q: Question | null }[] = []
+      const rng = createRng(Math.round(pRight * 100))
+      for (let d = 0; d < 7; d++) {
+        let now = T0 + d * DAY
+        const queue = buildReviewQueue(state, deck, now)
+        const peers = sessionGhosts(queue)
+        const day = new Date(now).toISOString().slice(0, 10)
+        let rest = [...queue]
+        const passes: Record<string, number> = {}
+        while (rest.length) {
+          const card = rest.shift()!
+          const pass = passes[card.id] ?? 0
+          shown.push({ card, q: questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, peers }) })
+          const prev = state.cards[card.id]
+          const g = rng() < pRight ? 3 : 1
+          const next = schedule(prev, g, now)
+          state = { ...state, cards: { ...state.cards, [card.id]: next }, log: [...state.log, { id: card.id, t: now, g, isNew: !prev }] }
+          if (comesBackInSession(next, now, pass)) {
+            rest = requeue(rest, card, requeueGap(next, now))
+            passes[card.id] = pass + 1
+          }
+          now += 20_000
         }
-        now += 20_000
       }
+      let n = 0
+      let hinted = 0
+      for (let i = 0; i < shown.length; i++) {
+        const { q } = shown[i]
+        if (!q || !named(q)) continue
+        n++
+        if (shown.slice(Math.max(0, i - 3), i).some((x) => x.card.ghostId === q.correct[0])) hinted++
+      }
+      expect(n, `juste à ${pRight}`).toBeGreaterThan(100)
+      expect(hinted / n, `juste à ${pRight} : ${hinted}/${n}`).toBeLessThanOrEqual(0.35)
     }
-    let n = 0
-    let hinted = 0
-    for (let i = 0; i < shown.length; i++) {
-      const { q } = shown[i]
-      if (!q || !named(q)) continue
-      n++
-      if (shown.slice(Math.max(0, i - 3), i).some((x) => x.card.ghostId === q.correct[0])) hinted++
-    }
-    expect(n).toBeGreaterThan(100)
-    expect(hinted / n, `${hinted}/${n}`).toBeLessThanOrEqual(0.35)
   }, 60_000)
 
-  it('révision : les mauvaises réponses viennent d’abord des autres entités de la séance', () => {
+  it('révision : une ou deux mauvaises réponses viennent des autres entités de la séance, jamais toutes', () => {
     const peers = ['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee', 'mare', 'demon', 'yurei']
     const share = (withPeers: boolean) => {
       let n = 0
       let fromPeers = 0
+      let questions = 0
+      let none = 0
+      let one = 0
       for (const day of ['2026-11-01', '2026-11-02', '2026-11-03']) {
         for (const c of deck.filter((x) => x.ghostId && peers.includes(x.ghostId))) {
-          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, ...(withPeers ? { peers } : {}) })
-          if (!q || !named(q)) continue
-          for (const x of q.choices) {
-            if (x.id === c.ghostId) continue
-            n++
-            if (peers.includes(x.id)) fromPeers++
+          for (const pass of [0, 1]) {
+            const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, ...(withPeers ? { peers } : {}) })
+            if (!q || !named(q)) continue
+            questions++
+            const wrong = q.choices.filter((x) => x.id !== c.ghostId)
+            const listed = wrong.filter((x) => peers.includes(x.id)).length
+            n += wrong.length
+            fromPeers += listed
+            // « … une vitesse de chasse habituelle de 1,7 m/s » : seules quatre entités n'y passent jamais, aucune de la séance
+            if (listed === 0 && !/1,7\s?m\/s/u.test(q.prompt)) none++
+            if (listed === 1) one++
+            // jamais plus de CARD_PEERS : les autres viennent de toutes les entités
+            if (withPeers) expect(listed, `${c.id} : ${q.choices.map((x) => x.label).join(' / ')}`).toBeLessThanOrEqual(CARD_PEERS)
           }
         }
       }
       expect(n).toBeGreaterThan(100)
-      return fromPeers / n
+      return { share: fromPeers / n, none: none / questions, one: one / questions }
     }
     const [without, withPeers] = [share(false), share(true)]
-    expect(withPeers, `${withPeers} (sans : ${without})`).toBeGreaterThanOrEqual(0.45)
-    expect(withPeers).toBeGreaterThan(1.5 * without)
+    // la bonne réponse n'est presque jamais le seul nom de la séance parmi les choix
+    expect(withPeers.none, `${withPeers.none} (sans : ${without.none})`).toBeLessThanOrEqual(0.05)
+    // une ou deux, tirées : en moyenne la moitié des mauvaises réponses au plus, au moins un tiers, bien plus
+    // que le hasard (les huit entités de la séance sont souvent confondues entre elles)
+    expect(withPeers.share, `${withPeers.share} (sans : ${without.share})`).toBeGreaterThanOrEqual(1 / 3 - 0.02)
+    expect(withPeers.share).toBeLessThanOrEqual(0.5)
+    expect(withPeers.share).toBeGreaterThan(1.5 * without.share)
+    // ni toujours une seule, ni toujours deux
+    expect(withPeers.one, `${withPeers.one}`).toBeGreaterThanOrEqual(0.3)
+    expect(withPeers.one, `${withPeers.one}`).toBeLessThanOrEqual(0.8)
   })
+
+  it('révision : deux cartes de la même sorte ne se suivent pas quand on peut l’éviter', () => {
+    // huit entités, quatre signes et quatre tests : on peut alterner, et on alterne
+    const mk = (g: string, kind: 'tells' | 'test', k: number) => ({ id: `${g}:${kind}`, deck: 'ghost' as const, kind, ghostId: g, front: '', back: '', order: k })
+    const ids = ['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee', 'jinn', 'mare', 'revenant']
+    for (let seed = 1; seed <= 30; seed++) {
+      const out = spreadByGhost(ids.map((g, k) => mk(g, k % 2 ? 'tells' : 'test', k)), createRng(seed))
+      for (let i = 1; i < out.length; i++) expect(out[i].kind, out.map((c) => c.kind).join(' ')).not.toBe(out[i - 1].kind)
+    }
+    // trente jours de séances : presque toujours aussi peu de paires que le permettent les sortes de la séance
+    let state = { ...initialState(T0), onboarded: true }
+    const rng = createRng(5)
+    let excess = 0
+    for (let d = 0; d < 30; d++) {
+      const now = T0 + d * DAY
+      const queue = buildReviewQueue(state, deck, now)
+      const counts = new Map<string, number>()
+      for (const c of queue) counts.set(c.kind, (counts.get(c.kind) ?? 0) + 1)
+      const most = Math.max(0, ...counts.values())
+      const unavoidable = Math.max(0, most - (queue.length - most) - 1)
+      const pairs = queue.slice(1).filter((c, i) => c.kind === queue[i].kind).length
+      expect(pairs - unavoidable, `jour ${d} : ${queue.map((c) => c.kind).join(' ')}`).toBeLessThanOrEqual(4)
+      excess += pairs - unavoidable
+      const cards = { ...state.cards }
+      const log = [...state.log]
+      for (const c of queue) {
+        const g = rng() < 0.85 ? 3 : 1
+        cards[c.id] = schedule(cards[c.id], g, now)
+        log.push({ id: c.id, t: now, g, isNew: !state.cards[c.id] })
+      }
+      state = { ...state, cards, log }
+    }
+    expect(excess).toBeLessThanOrEqual(30)
+  })
+
+  it('révision : « Apprendre 10 cartes » après la séance passe à d’autres entités, sans reposer une question du jour', () => {
+    const state = { ...initialState(T0), onboarded: true }
+    const first = buildReviewQueue(state, deck, T0)
+    // la première séance, tout juste
+    const at = T0 + 5 * 60_000
+    const done = {
+      ...state,
+      cards: Object.fromEntries(first.map((c) => [c.id, schedule(undefined, 3, at)])),
+      log: first.map((c) => ({ id: c.id, t: at, g: 3 as const, isNew: true })),
+    }
+    expect(buildReviewQueue(done, deck, at + 60_000)).toHaveLength(0)
+    const more = buildReviewQueue(done, deck, at + 60_000, 10)
+    expect(more).toHaveLength(10)
+    const before = new Set(first.map((c) => c.ghostId))
+    // le même fait (le test de la photo, puis le signe de la photo) attend un autre jour
+    for (const c of more) expect(before.has(c.ghostId), `${c.id} : ${[...before].join(', ')}`).toBe(false)
+    expect(new Set(more.map((c) => c.ghostId)).size).toBe(5)
+    const asked = new Set(first.map(askKey).filter(Boolean))
+    for (const c of more) if (askKey(c)) expect(asked.has(askKey(c)), c.id).toBe(false)
+    // le lendemain, les entités de la veille reprennent leurs cartes
+    const tomorrow = buildReviewQueue(done, deck, T0 + DAY)
+    expect(tomorrow.filter((c) => !done.cards[c.id]).some((c) => before.has(c.ghostId))).toBe(true)
+  })
+
+  it('révision : « Signes clés » et « Signe à reconnaître » ne se posent pas pareil', () => {
+    for (const day of ['2026-11-01', '2026-11-02', '2026-11-03']) {
+      for (const g of GHOSTS.filter((x) => x.id !== 'the-mimic')) {
+        const tells = deck.find((c) => c.id === `g:${g.id}:tells`)
+        if (!tells) continue
+        const q = questionForCard(tells, { allGhosts: GHOSTS, mechanics: MECHANICS, day })!
+        // d'habitude l'entité est nommée et l'on cherche son signe ; sinon, un autre énoncé que les signes à reconnaître
+        expect(q.prompt, `${g.id} (${day})`).not.toBe(fr('Quelle entité correspond à ce signe ?'))
+        for (const rev of deck.filter((c) => c.ghostId === g.id && c.kind === 'reverse')) {
+          expect(questionForCard(rev, { allGhosts: GHOSTS, mechanics: MECHANICS, day })!.prompt).not.toBe(q.prompt)
+        }
+      }
+    }
+    const named = deck.filter((c) => c.kind === 'tells' && c.ghostId !== 'the-mimic')
+    const signOf = named.filter((c) => questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: '2026-11-01' })!.prompt.startsWith('Lequel de ces signes'))
+    expect(signOf.length / named.length).toBeGreaterThanOrEqual(0.8)
+  })
+
+  it('révision : une carte qui revient dans la séance se pose autrement quand c’est possible', () => {
+    const ctx = (pass: number, day = '2026-11-01') => ({ allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, peers: ['spirit', 'wraith', 'jinn', 'banshee', 'mare'] })
+    // un test d'abord cité (« Ce test confirme quelle entité ? »), puis l'entité nommée et ses tests en choix ;
+    // une carte de test sur deux commence dans l'autre sens (voir startsOther), et revient citée
+    const test = deck.find((c) => c.id === 'g:spirit:test:0')!
+    const a = questionForCard(test, ctx(0))!
+    const b = questionForCard(test, ctx(1))!
+    expect(a.prompt).toBe(fr('Ce test confirme quelle entité ?'))
+    expect(namesGhost(b.prompt, getGhost('spirit')!), b.prompt).toBe(true)
+    expect(b.quote).toBeUndefined()
+    expect(b.choices.every((c) => c.label.length > 40)).toBe(true)
+    const polt = deck.find((c) => c.id === 'g:poltergeist:test:0')!
+    const [p0, p1] = [questionForCard(polt, ctx(0))!, questionForCard(polt, ctx(1))!]
+    expect(namesGhost(p0.prompt, getGhost('poltergeist')!), p0.prompt).toBe(true)
+    expect(p1.prompt).toBe(fr('Ce test confirme quelle entité ?'))
+    // un signe à reconnaître, puis « Lequel de ces signes est celui de l'Esprit ? », son signe parmi les choix
+    const rev = deck.find((c) => c.id === 'g:spirit:rev:0')!
+    const r = questionForCard(rev, ctx(1))!
+    expect(r.prompt).toBe(fr('Lequel de ces signes est celui de l’Esprit ?'))
+    expect(r.choices.find((c) => r.correct.includes(c.id))!.label).toBe(rev.quote)
+    // un troisième passage reprend la première façon, avec d'autres choix
+    const c = questionForCard(test, ctx(2))!
+    expect(c.prompt).toBe(a.prompt)
+    // sur toutes les cartes des entités : le plus souvent un autre énoncé ou une autre citation, jamais le même écran
+    let other = 0
+    let n = 0
+    for (const day of ['2026-11-01', '2026-11-02']) {
+      for (const card of deck.filter((x) => x.deck === 'ghost' && x.ghostId !== 'the-mimic')) {
+        const q0 = questionForCard(card, ctx(0, day))!
+        const q1 = questionForCard(card, ctx(1, day))!
+        n++
+        if (q0.prompt !== q1.prompt || q0.quote !== q1.quote) other++
+        else expect(q1.choices.map((x) => x.label), card.id).not.toEqual(q0.choices.map((x) => x.label))
+        expect(q1.cardId).toBe(card.id)
+      }
+    }
+    expect(other / n, `${other}/${n}`).toBeGreaterThanOrEqual(0.6)
+  }, 60_000)
 
   /** Le quiz sous toutes ses formes : sur toutes les entités, sur une seule, et les cartes. */
   let asked: Question[] = []
@@ -1807,6 +2011,13 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
       for (const c of deck) {
         const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2027-02-${d}` })
         if (q) asked.push(q)
+        // la carte qui revient dans la séance, ou un autre jour : posée autrement
+        if (d <= 3) {
+          const again = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2027-02-${d}`, pass: 1 })
+          if (again) asked.push(again)
+          const later = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2027-02-${d}`, seen: 1 })
+          if (later) asked.push(later)
+        }
       }
     }
     asked = asked.filter((q) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
@@ -1870,7 +2081,7 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
     let checked = 0
     for (const q of asked) {
       const re = q.ghostId && HINTS[q.ghostId]
-      if (!re || named(q) || !/^q:(?:dist|sign-of|test-of):|^q:card:g:[^:]+:(?:tells|test:\d+)$/u.test(q.id)) continue
+      if (!re || named(q) || !/^q:(?:dist|sign-of|test-of):|^q:card:g:[^:]+:(?:tells|test:\d+|rev:\d+)$/u.test(q.id)) continue
       checked++
       const g = getGhost(q.ghostId!)!
       const has = q.choices.map((c) => re.test(redactGhostName(c.label, g)))
@@ -1878,5 +2089,168 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
       expect(alone, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(false)
     }
     expect(checked).toBeGreaterThan(30)
+  })
+})
+
+describe('révision : une carte qui revient (dans la séance ou un autre jour) ne se devine ni ne se répète', () => {
+  const deck = buildDeck(GHOSTS, MECHANICS, [])
+  const days = Array.from({ length: 20 }, (_, i) => `2027-01-${String(i + 1).padStart(2, '0')}`)
+  const named = (q: Question) => q.choices.every((c) => getGhost(c.id) && c.label === getGhost(c.id)!.name)
+  const wrongIds = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id)).map((c) => c.id)
+
+  it('un signe à reconnaître posé à l’envers : ses mauvaises réponses sont des phrases comme lui, sans point final qui le désigne', () => {
+    let n = 0
+    for (const day of days) {
+      for (const c of deck.filter((x) => x.kind === 'reverse')) {
+        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass: 1 })
+        if (!q || q.quote) continue
+        n++
+        // son propre signe, entier ou raccourci (sans aparté, sa première phrase)
+        const right = q.choices.find((x) => q.correct.includes(x.id))!
+        expect(c.quote!.startsWith(right.label.slice(0, 24)), `${c.id} : ${right.label}`).toBe(true)
+        // la seule réponse qui finit par un point (ou la seule sans) ne se remarque pas
+        const dots = q.choices.filter((x) => /\.$/u.test(x.label)).length
+        expect(dots === 1 || dots === q.choices.length - 1, `${c.id} : ${q.choices.map((x) => x.label).join(' | ')}`).toBe(false)
+        expect(homogeneous(q.choices), c.id).toBe(true)
+        // une mauvaise réponse n'est jamais vraie de toutes les entités (donc de celle-ci)
+        for (const x of q.choices) expect(x.label, c.id).not.toMatch(/comme toutes les entités/iu)
+      }
+    }
+    expect(n).toBeGreaterThan(200)
+    // la marque elle-même : une phrase rédigée parmi des notes brèves ne passe plus
+    expect(homogeneous(['Ne perturbe jamais le sel', 'Chasse plus tôt dans le noir', 'Le sel ne le ralentit pas en chasse.', 'Éteint les lumières'])).toBe(false)
+  }, 60_000)
+
+  it('« Signes clés » cité quand il revient : ni le genre, ni « ce n’est pas cette entité », ni un autre nom', () => {
+    let quoted = 0
+    for (const day of days) {
+      for (const c of deck.filter((x) => x.kind === 'tells')) {
+        for (const [pass, seen] of [[1, 0], [0, 1], [2, 1]]) {
+          const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, seen })
+          if (!q?.quote) continue
+          quoted++
+          expect(q.quote, c.id).not.toMatch(/f[ée]minin|masculin|\bsexe\b|prénom/iu)
+          expect(q.quote, c.id).not.toMatch(/(?:cette|ces) entités?/iu)
+          for (const o of GHOSTS) expect(namesGhost(q.quote, o), `${c.id} : ${q.quote}`).toBe(false)
+        }
+      }
+    }
+    expect(quoted).toBeGreaterThan(500)
+  }, 60_000)
+
+  it('un fait ou une note qui revient : jamais les mêmes choix dans le même ordre que la fois d’avant', () => {
+    const notes: CoachNote[] = [
+      { id: 'n2', createdAt: T0, updatedAt: T0, ghostId: 'spirit', title: 'Encens', body: 'x', asCard: true, author: 'Ryz', question: 'Un Esprit rechasse-t-il avant 180 s ?', answer: 'Non', wrong: ['Oui'] },
+      { id: 'n4', createdAt: T0, updatedAt: T0, ghostId: 'banshee', title: 'Cri', body: 'x', asCard: true, author: 'Ryz', question: 'Où entend-on le cri ?', answer: 'Au parabolique', wrong: ['À la Spirit Box', 'À l’EMF', 'Au thermomètre'] },
+    ]
+    const withNotes = buildDeck(GHOSTS, MECHANICS, notes)
+    let checked = 0
+    for (const day of days) {
+      for (const c of withNotes.filter((x) => x.kind === 'fact' || x.kind === 'note')) {
+        const ctx = (pass: number) => ({ allGhosts: GHOSTS, mechanics: MECHANICS, notes, day, pass })
+        for (const pass of [1, 2, 3]) {
+          const [a, b] = [questionForCard(c, ctx(pass - 1)), questionForCard(c, ctx(pass))]
+          if (!a || !b) continue
+          checked++
+          expect(b.choices.map((x) => x.label), `${c.id} ${day} #${pass}`).not.toEqual(a.choices.map((x) => x.label))
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(1000)
+  }, 60_000)
+
+  it('même énoncé au retour : d’autres noms que la fois d’avant quand il en reste assez', () => {
+    const peers = ['spirit', 'wraith', 'jinn', 'banshee', 'mare', 'phantom']
+    let same = 0
+    let kept3 = 0
+    let kept2 = 0
+    for (const day of days) {
+      for (const c of deck.filter((x) => x.deck === 'ghost' && x.ghostId !== 'the-mimic')) {
+        const ctx = (pass: number) => ({ allGhosts: GHOSTS, mechanics: MECHANICS, day, pass, peers })
+        const [a, b] = [questionForCard(c, ctx(0))!, questionForCard(c, ctx(1))!]
+        if (`${a.prompt}|${a.quote ?? ''}` !== `${b.prompt}|${b.quote ?? ''}` || !named(a)) continue
+        same++
+        const before = new Set(wrongIds(a))
+        const kept = wrongIds(b).filter((id) => before.has(id)).length
+        if (kept >= 2) kept2++
+        if (kept === 3) kept3++
+      }
+    }
+    expect(same).toBeGreaterThan(100)
+    expect(kept3 / same, `${kept3}/${same}`).toBeLessThanOrEqual(0.1)
+    expect(kept2 / same, `${kept2}/${same}`).toBeLessThanOrEqual(0.35)
+  }, 60_000)
+
+  it('d’un jour à l’autre, une carte alterne ses deux façons de se poser', () => {
+    let other = 0
+    let alternates = 0
+    for (const day of days.slice(0, 6)) {
+      for (const c of deck.filter((x) => x.deck === 'ghost' && x.ghostId !== 'the-mimic')) {
+        const ask = (seen: number, pass = 0) => questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, seen, pass })!
+        const screen = (q: Question) => `${q.prompt}|${q.quote ?? ''}`
+        // une carte qui sait se poser autrement dans la séance le fait aussi le lendemain
+        if (screen(ask(0)) === screen(ask(0, 1))) continue
+        alternates++
+        if (screen(ask(1)) !== screen(ask(0))) other++
+        // et reprend sa première façon le surlendemain
+        expect(ask(2).prompt, c.id).toBe(ask(0).prompt)
+      }
+    }
+    expect(alternates).toBeGreaterThan(300)
+    expect(other / alternates, `${other}/${alternates}`).toBeGreaterThanOrEqual(0.9)
+  }, 60_000)
+
+  it('la première séance ne lit pas que deux énoncés', () => {
+    const wording = (p: string) => GHOSTS.reduce((w, g) => w.split(g.name).join('X'), p).replace(/(?:du|de la|de l’|le|la|l’|les) X/gu, 'X')
+    let top2 = 0
+    let total = 0
+    for (let d = 1; d <= 20; d++) {
+      const now = new Date(`2026-11-${String(d).padStart(2, '0')}T14:00:00`).getTime()
+      const queue = buildReviewQueue({ ...initialState(now), onboarded: true }, deck, now)
+      const peers = sessionGhosts(queue)
+      const ws = queue
+        .map((c) => questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2026-11-${String(d).padStart(2, '0')}`, peers }))
+        .filter((q): q is Question => !!q)
+        .map((q) => wording(q.prompt))
+      const counts = [...ws.reduce((m, w) => m.set(w, (m.get(w) ?? 0) + 1), new Map<string, number>()).values()].sort((a, b) => b - a)
+      top2 += counts[0] + (counts[1] ?? 0)
+      total += ws.length
+    }
+    // avant : « Lequel de ces signes est celui de X ? » et « Ce test confirme quelle entité ? » faisaient 80 % des écrans
+    expect(top2 / total, `${top2}/${total}`).toBeLessThanOrEqual(0.7)
+  }, 60_000)
+
+  it('hors de la séance, les mauvaises réponses prennent d’abord des entités déjà étudiées', () => {
+    const peers = ['spirit', 'wraith', 'jinn', 'banshee', 'mare', 'phantom']
+    const known = ['poltergeist', 'revenant', 'shade', 'demon', 'yurei', 'oni', 'yokai', 'hantu']
+    let outside = 0
+    let fromKnown = 0
+    for (const day of days) {
+      for (const c of deck.filter((x) => x.ghostId && peers.includes(x.ghostId))) {
+        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day, peers, known })
+        if (!q || !named(q)) continue
+        for (const id of wrongIds(q)) {
+          if (peers.includes(id)) continue
+          outside++
+          if (known.includes(id)) fromKnown++
+        }
+      }
+    }
+    expect(outside).toBeGreaterThan(100)
+    // huit entités étudiées sur les vingt-quatre hors séance : bien plus que leur part
+    expect(fromKnown / outside, `${fromKnown}/${outside}`).toBeGreaterThanOrEqual(0.6)
+    // et studiedGhosts les trouve dans l'état
+    const cards = { 'g:shade:tells': schedule(undefined, 3, T0), 'm:x': schedule(undefined, 3, T0) }
+    expect(studiedGhosts(deck, cards)).toEqual(['shade'])
+  }, 60_000)
+
+  it('une carte ratée deux fois en fin de séance est déjà due pour la suivante (avance d’apprentissage)', () => {
+    const missed = schedule(undefined, 1, T0)
+    expect(missed.due - T0).toBeLessThan(LEARN_AHEAD)
+    expect(isDue(missed, T0)).toBe(true)
+    expect(isDue({ ...missed, due: T0 + LEARN_AHEAD + 60_000 }, T0)).toBe(false)
+    // une carte en révision reste due au jour prévu, pas avant
+    const learned = schedule(undefined, 3, T0)
+    expect(isDue(learned, T0)).toBe(false)
   })
 })

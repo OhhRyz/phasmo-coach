@@ -21,7 +21,8 @@
       "Repères par tranche de santé mentale : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
       "Sa vitesse suit la santé en pleine chasse : si l'équipe prend des pilules, il ralentit.",
       "Il a l'accélération en LdV : jusqu'à 1,65 × sa vitesse actuelle après 13 s de LdV continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
-      "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit."
+      "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit.",
+      "En partie sans preuve jouée sans santé mentale (équipe à 0 %), il chasse d'emblée à 2,25 m/s et monte jusqu'à 3,71 m/s en ligne de vue : l'entité la plus rapide du jeu."
     ]
   },
   "huntSanity": {
@@ -37,7 +38,7 @@
   "summary": "Entité qui maudit ceux qui l'entendent et qui devient de plus en plus rapide à mesure que la santé mentale de l'équipe chute.",
   "keyTells": [
     "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
-    "Peut atteindre 3,71 m/s : l'entité la plus rapide du jeu",
+    "Sans santé mentale (0 %), l'entité la plus rapide du jeu : 2,25 m/s, jusqu'à 3,71 m/s en LdV",
     "Encens en chasse : aveuglé 7 s au lieu de 5 s",
     "Malédiction quand tu l'entends au micro parabolique ou à l'enregistreur de son : santé qui baisse 2× plus vite"
   ],
@@ -64,7 +65,7 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse) tout en ayant l'accélération en LdV, ça peut être un Moroi. Attention : les Jumeaux, le Gallu (état enragé) et l'Obambo (état agressif) changent aussi de vitesse d'une chasse à l'autre avec une LdV standard.",
+      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse, tant que personne ne prend de pilules pour la faire remonter) tout en ayant l'accélération en LdV, ça peut être un Moroi. Attention : les Jumeaux (une chance sur deux à chaque chasse d'avoir le lent ou le rapide), le Gallu (selon son état : affaibli, normal ou enragé) et l'Obambo (toutes les 2 minutes à la montre du jeu) changent aussi de vitesse avec une LdV standard. Sans santé mentale (0 %), le Moroi est déjà au maximum : sa vitesse ne change plus d'une chasse à l'autre. Et les pilules, en faisant remonter la santé, le ralentissent.",
       "definitive": false
     },
     {
@@ -265,7 +266,8 @@
     "tybayn wiki: wiki_known_bugs_moroi",
     "tybayn wiki: wiki_gallu_states_* (aveuglement de 6 s en état affaibli)",
     "https://phasmopedia.com/en/ghosts/moroi/",
-    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes"
+    "https://kineticgames.co.uk/news/phasmophobia-v01714-patch-notes",
+    "Retour du coach (700 h de jeu), novembre 2026"
   ],
   "uncertain": [
     "Les pilules lèvent-elles la malédiction ? Une seule source l'affirme (la malédiction par l'enregistreur de son, si le son est enregistré, est en revanche confirmée).",

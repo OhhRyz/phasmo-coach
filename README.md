@@ -70,7 +70,7 @@ le profil) : « Seul·e », « Je suis coaché·e » ou « Je coache quelqu’un
 
 1. **La personne qui s’entraîne** installe l’app sur son téléphone (iPhone : Safari → bouton
    *Partager* → *Sur l’écran d’accueil* ; Android : menu de Chrome → *Installer l’application*) et fait
-   sa *Révision du jour* (≈ 5 à 10 min, réglable dans le profil). Une fois installée, l’app marche hors ligne.
+   sa *Révision du jour* (5 min au début, puis 15 à 25 min avec les révisions ; le rythme se règle dans le profil). Une fois installée, l’app marche hors ligne.
    L’app le rappelle elle-même tant qu’elle tourne dans un onglet : sur iPhone, Safari peut effacer les
    données d’un site non installé après 7 jours sans visite.
 2. **Le coach** ouvre l’app sur son propre appareil, choisit « Je coache quelqu’un » sur la page

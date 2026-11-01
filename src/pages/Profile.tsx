@@ -234,7 +234,7 @@ export function Profile() {
                 value={perDay}
                 onChange={(e) => dispatch({ type: 'settings', settings: { newPerDay: Number(e.target.value) } })}
               />
-              <p className="pencil-note settings-hint">{fr('entre 8 et 15, c’est un bon rythme : une dizaine de minutes par jour, révisions comprises')}</p>
+              <p className="pencil-note settings-hint">{fr('entre 8 et 15, c’est un bon rythme : 5 min par jour au début, puis 15 à 25 min, révisions comprises')}</p>
             </div>
 
             <CheckLine

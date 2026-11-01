@@ -61,12 +61,12 @@
   ],
   "confirmationTests": [
     {
-      "text": "Si tu vois l'entité traverser un tas de sel pendant un événement ou une chasse sans le perturber, c'est un Spectre. Depuis l'arrivée du Gallu, ce n'est plus une preuve absolue : un Gallu en état enragé (après encens, sel ou crucifix) ne perturbe pas non plus le sel, et un bug connu fait que seul l'hôte voit parfois un Gallu perturber le sel. Fais faire l'observation par l'hôte.",
-      "definitive": false
+      "text": "Si tu vois l'entité traverser un tas de sel sans le perturber, pendant un événement ou une chasse, c'est un Spectre. Seul un Gallu enragé (juste après encens, sel ou crucifix) fait pareil, mais en chasse le Gallu enragé file nettement plus vite : 1,96 m/s au lieu de 1,7 hors ligne de vue. Fais faire l'observation par l'hôte : à cause d'un bug, seul l'hôte voit parfois un Gallu perturber le sel.",
+      "definitive": true
     },
     {
-      "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre (mêmes réserves : Gallu enragé, et observation à faire par l'hôte).",
-      "definitive": false
+      "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre. Seul un Gallu enragé ferait pareil : fais ce test quand ni encens, ni sel, ni crucifix n'a servi depuis la dernière chasse, et laisse l'hôte observer.",
+      "definitive": true
     },
     {
       "text": "Pour écarter le Gallu : à la fin d'une chasse, un Gallu n'est jamais enragé (il passe en affaibli ou reste normal), et dans ces deux états il perturbe le premier sel qu'il touche. Si, après une chasse et sans encens ni crucifix utilisé entre-temps, l'entité traverse ton sel sans le perturber (constaté par l'hôte), ce n'est pas un Gallu : avec EMF 5 + Spirit Box, il ne reste que le Spectre.",
@@ -134,9 +134,9 @@
   ],
   "observations": [
     {
-      "text": "Pendant une chasse, tu vois l'entité marcher sur ton tas de sel : il reste parfaitement intact.",
+      "text": "Pendant une chasse, l'entité marche sur ton tas de sel à un rythme de pas normal, sans te voir : le sel reste parfaitement intact.",
       "kind": "hunt",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
       "text": "Ton détecteur de mouvement, placé juste au-dessus d'une ligne de sel qui barre tout le passage, s'active, mais le sel n'a pas bougé.",
@@ -248,7 +248,8 @@
     "https://www.destructoid.com/how-to-identify-a-gallu-in-phasmophobia/",
     "https://www.screenhype.co.uk/how-to-identify-dayan-gallu-obambo-ghosts-phasmophobia/",
     "https://progameguides.com/phasmophobia/how-to-identify-the-wraith-in-phasmophobia-all-strengths-and-weaknesses/",
-    "tybayn wiki: wiki_known_bugs_gallu"
+    "tybayn wiki: wiki_known_bugs_gallu",
+    "Retour du coach (700 h de jeu), novembre 2026"
   ],
   "uncertain": [
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu : ce n'est peut-être pas propre au Spectre.",

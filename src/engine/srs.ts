@@ -23,8 +23,20 @@ export interface CardState {
 const MIN = 60_000
 const DAY = 86_400_000
 
-export const LEARNING_STEPS = [1 * MIN, 10 * MIN]
+/**
+ * Une seule étape : une carte nouvelle juste du premier coup passe à demain, sans repasser dans la séance ;
+ * ratée, elle repasse une fois plus loin dans la séance, puis passe à demain si elle est juste. Une carte
+ * restée à l'étape 1 de l'ancien calendrier (1 min, 10 min) passe aussi à demain sur « Bien ».
+ */
+export const LEARNING_STEPS = [1 * MIN]
+/** Une carte apprise puis ratée repasse dans la séance (l'étape tombe avant LEARN_AHEAD, voir reviewSession). */
 export const RELEARNING_STEPS = [10 * MIN]
+/**
+ * Une carte en apprentissage due dans moins de 20 min compte déjà comme due (comme l'avance d'apprentissage
+ * d'Anki) : ratée en fin de séance, elle fait partie de la séance suivante, même lancée tout de suite (« elle
+ * reviendra à ta prochaine séance »), et le bouton de fin de séance la compte.
+ */
+export const LEARN_AHEAD = 20 * MIN
 export const START_EASE = 2.5
 export const MIN_EASE = 1.3
 const GRADUATE_DAYS = 1
@@ -113,10 +125,10 @@ export function endOfDay(now: number): number {
   return d.getTime()
 }
 
-/** Une carte en apprentissage est due à l'instant prévu ; une carte en révision dès le jour prévu. */
+/** Une carte en apprentissage est due à l'instant prévu (avec LEARN_AHEAD d'avance) ; une carte en révision dès le jour prévu. */
 export function isDue(s: CardState, now: number): boolean {
   if (s.phase === 'review') return s.due <= endOfDay(now)
-  return s.due <= now
+  return s.due <= now + LEARN_AHEAD
 }
 
 /** Maîtrise d'une carte entre 0 et 1. */
