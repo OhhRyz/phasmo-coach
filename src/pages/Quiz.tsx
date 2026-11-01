@@ -24,12 +24,13 @@ import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
 import { de, le } from '../engine/cards'
 import { buildQuiz, DEFAULT_TOPICS, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
-import { NBSP, NNBSP, safeDate } from '../engine/format'
+import { NBSP, NNBSP, safeDate, spellLdV } from '../engine/format'
 import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
 import { clearRun, readRun, saveRun } from './savedRun'
+import { START_REVIEW } from './reviewSession'
 
 type Pool = 'all' | 'weak' | 'one'
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -91,7 +92,7 @@ const topicLabel = (id: QuizTopic) => QUIZ_TOPICS.find((t) => t.id === id)?.labe
 const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
 const COUNTS = [5, 10, 20, 30]
 /** Les abréviations des fiches, en toutes lettres sur la copie (« LdV » → « ligne de vue »). */
-const spell = (s: string) => s.replace(/\bLdV\b/g, 'ligne de vue')
+const spell = spellLdV
 /** Paramètres d'adresse qui lancent la copie tout de suite (raccourcis de l'accueil, des fiches, des mécaniques). */
 const QUICK_PARAMS = ['ghost', 'pool', 'topic', 'n']
 
@@ -669,7 +670,7 @@ export function Quiz() {
             <TypedLink onClick={() => setQuestions(null)}>Changer les réglages</TypedLink>
             {!one && <TypedLink to="/entrainement">Retour aux exercices</TypedLink>}
             {requeued > 0 ? (
-              <TypedLink to="/revision">
+              <TypedLink to={START_REVIEW}>
                 Revoir {requeued > 1 ? `mes ${requeued} erreurs` : 'mon erreur'} dans la révision{NBSP}→
               </TypedLink>
             ) : mistakes.length > 0 && weakest ? (
@@ -819,7 +820,7 @@ export function Quiz() {
               </>
             ) : q.multi ? (
               <>
-                coche {q.correct.length} réponses, puis <b>Valider</b>.{' '}
+                coche {q.correct.length} {plural(q.correct.length, 'réponse')}, puis <b>Valider</b>.{' '}
                 <span className="qz-count">
                   ({selected.length === 0 ? 'aucune cochée' : `${selected.length} ${plural(selected.length, 'cochée')}`})
                 </span>
@@ -905,7 +906,7 @@ export function Quiz() {
               <TapeButton
                 disabled={selected.length === 0}
                 onClick={() => check(selected)}
-                disabledHint={`coche ${q.correct.length} réponses pour valider`}
+                disabledHint={`coche ${q.correct.length} ${plural(q.correct.length, 'réponse')} pour valider`}
               >
                 Valider
               </TapeButton>

@@ -1143,7 +1143,7 @@ const speedProfile: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
     correct: [g.id],
-    explain: `${called(g)}${NNBSP}: ${[g.speed.summary, ...g.speed.details.slice(0, 1)].join(' — ')}`,
+    explain: spellLdV(`${called(g)}${NNBSP}: ${[g.speed.summary, ...g.speed.details.slice(0, 1)].join(' — ')}`),
     cardId: `g:${g.id}:spd`,
   }
 }
@@ -1206,7 +1206,8 @@ const observationQuestion: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `${called(g)}${NNBSP}: ${g.summary}`,
+    // pourquoi l'observation désigne l'entité, quand la fiche le dit ; sinon son résumé
+    explain: `${called(g)}${NNBSP}: ${o.why ?? g.summary}`,
     cardId: `g:${g.id}:tells`,
   }
 }
@@ -1259,6 +1260,14 @@ const abilityOfGhost: Gen = (g, ctx) => {
 
 /* ---------- sans preuve : tests et départages ---------- */
 
+/**
+ * La correction d'une question sur un test de g (`text`, le test tel qu'écrit sur sa fiche) : pourquoi il
+ * désigne g quand la fiche le dit (why), sinon le résumé de la fiche.
+ */
+function testExplain(g: Ghost, text: string): string {
+  return `Test de confirmation ${de(g.name)}. ${g.confirmationTests.find((t) => t.text === text)?.why ?? g.summary}`
+}
+
 // p : rang parmi les tests sans preuve (les premiers ont leur carte)
 const zeroTestQuotes = perGhost((g) =>
   zeroTests(g)
@@ -1297,7 +1306,7 @@ const zeroTest: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...others]).map(ghostChoice),
     correct: [g.id],
-    explain: `Test de confirmation ${de(g.name)}. ${g.summary}`,
+    explain: testExplain(g, t.text),
     cardId: t.p < TESTS_PER_GHOST ? `g:${g.id}:test:${t.k}` : `g:${g.id}:tells`,
   }
 }
@@ -2279,7 +2288,7 @@ function testQuote(card: Card, g: Ghost, ctx: Ctx): Question | null {
         multi: false,
         choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
         correct: [g.id],
-        explain: `Test de confirmation ${de(g.name)}. ${g.summary}`,
+        explain: testExplain(g, t.text),
       }
     }
   }
@@ -2386,7 +2395,7 @@ function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: 
         multi: false,
         choices: shuffle(ctx.rng, [{ id: g.id, label: right }, ...wrong.map((o) => ({ id: o.value.id, label: o.label }))]),
         correct: [g.id],
-        explain: `Test de confirmation ${de(g.name)}. ${g.summary}`,
+        explain: testExplain(g, t.text),
         ...(cardId ? { cardId } : {}),
       }
     }
@@ -2610,7 +2619,7 @@ export function questionForCard(card: Card, ctx: CardQuizContext): Question | nu
     id: `q:card:${card.id}`,
     topic: CARD_TOPIC[card.kind],
     prompt: fr(q.prompt),
-    explain: fr(noLeadingMais(q.explain)),
+    explain: fr(noLeadingMais(spellLdV(q.explain))),
     cardId: card.id,
   })
   const finish = (b: { q: Question; form: string } | null) => (b ? { q: done(b.q), form: b.form } : null)

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { buildDeck, namesGhost, type Card } from '../engine/cards'
-import { dayKey } from '../engine/format'
+import { dayKey, spellLdV } from '../engine/format'
 import { askKey, buildReviewQueue, SAME_ASK_GAP, SAME_GHOST_GAP, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
-import { questionForCard, type Question } from '../engine/quiz'
+import { buildQuiz, questionForCard, QUIZ_TOPICS, type Question } from '../engine/quiz'
 import { createRng, hashString } from '../engine/random'
 import { schedule, type Grade } from '../engine/srs'
 import { initialState, type PersistedState } from '../store/schema'
@@ -12,19 +12,35 @@ import { expectedAnswers, sessionMinutes } from './reviewPlan'
 import {
   answersBefore,
   comesBackInSession,
+  CORRECTION_FIRST_LINES,
+  CORRECTION_GAP,
+  framesNewCard,
+  FRAMED_PER_SESSION,
+  FRAMED_UNTIL,
+  HIDDEN_GHOST,
   LEARN_MORE,
   MAX_RETURNS,
   nextSession,
   passesBefore,
+  placeCorrection,
   requeue,
   REQUEUE_GAP,
   REQUEUE_WITHIN,
   requeueGap,
+  restoreSaved,
   resumeSession,
+  START_PARAM,
+  START_REVIEW,
   stillToAsk,
   type SavedSession,
 } from './reviewSession'
+import { reviseLabel } from './exhibits'
 import { pageTitle } from '../components/Layout'
+import { exactName, searchCodex, searchTarget } from './Codex'
+import { CONTRACT_KEY, readContract, validContract, type SavedContract } from './contractRun'
+import { saveRun } from './savedRun'
+import { generateScenario } from '../engine/scenario'
+import { EMPTY_FILTER } from '../engine/filter'
 
 const speeds = allSpeeds(GHOSTS)
 const SERIES = 2000
@@ -142,6 +158,118 @@ describe('révision : la fiche de séance ne souffle pas la réponse', () => {
   it('une carte terminée pour la séance se nomme dès sa correction', () => {
     expect([...stillToAsk([a, b, c], { again: false })]).toEqual(['b', 'c'])
     expect(stillToAsk([a], { again: false }).size).toBe(0)
+  })
+
+  it('l’entité tue se lit comme une énigme à résoudre, pas comme une fiche cassée', () => {
+    expect(HIDDEN_GHOST).toBe('Entité à trouver')
+    expect(HIDDEN_GHOST).not.toMatch(/inconnu/i)
+  })
+})
+
+describe('révision : une carte nouvelle se pose en QCM sans faire croire qu’on devait la savoir', () => {
+  it('les deux premières cartes nouvelles de chaque séance le disent en toutes lettres', () => {
+    expect(FRAMED_PER_SESSION).toBe(2)
+    expect(framesNewCard(0, 0)).toBe(true)
+    expect(framesNewCard(1, 1)).toBe(true)
+    expect(framesNewCard(2, 2)).toBe(false)
+    // un autre jour, une autre séance : la première carte nouvelle le redit
+    expect(framesNewCard(0, 12)).toBe(true)
+  })
+
+  it('passé les premiers jours de cartes nouvelles, le tampon « Nouvelle » suffit', () => {
+    expect(FRAMED_UNTIL).toBeGreaterThanOrEqual(24)
+    expect(framesNewCard(0, FRAMED_UNTIL - 1)).toBe(true)
+    expect(framesNewCard(0, FRAMED_UNTIL)).toBe(false)
+  })
+})
+
+describe('révision sur téléphone : la barre « Carte suivante » ne couvre pas la correction', () => {
+  // écran de 844 px : barre d'onglets en bas, la barre d'action collée au-dessus (de 706 à 758 px)
+  const barTop = 706
+
+  it('une correction qui tient au-dessus de la barre y monte tout entière, et la barre reste collée', () => {
+    const back = { top: 374, bottom: 934 }
+    const { flows, dy } = placeCorrection(back, barTop)
+    expect(flows).toBe(false)
+    expect(back.bottom - dy).toBeLessThanOrEqual(barTop - CORRECTION_GAP)
+    expect(back.top - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+  })
+
+  it('déjà visible : rien ne bouge', () => {
+    expect(placeCorrection({ top: 200, bottom: 500 }, barTop)).toEqual({ flows: false, dy: 0 })
+  })
+
+  it('trop longue pour l’écran : ses premières lignes montent, et la barre suit la carte au lieu de couvrir la suite', () => {
+    const back = { top: 264, bottom: 930 }
+    const small = 430
+    const { flows, dy } = placeCorrection(back, small)
+    expect(flows).toBe(true)
+    expect(back.top + CORRECTION_FIRST_LINES - dy).toBeLessThanOrEqual(small - CORRECTION_GAP)
+    expect(back.top - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+  })
+
+  it('ne fait jamais monter le haut de la correction hors de l’écran', () => {
+    const { dy } = placeCorrection({ top: 40, bottom: 600 }, 500)
+    expect(40 - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+  })
+
+  // première carte d'une séance, « Je ne sais pas » (Chromium, 390 x 844) : la bonne réponse entourée au-dessus
+  // de la correction, la correction seule tiendrait au-dessus de la barre
+  const right = { top: 119, bottom: 211 }
+  const back = { top: 320, bottom: 904 }
+
+  it('après une erreur, la bonne réponse entourée reste à l’écran, et la barre suit la carte si tout ne tient pas', () => {
+    expect(placeCorrection(back, barTop).flows).toBe(false)
+    const { flows, dy } = placeCorrection(back, barTop, right)
+    expect(right.top - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+    expect(flows).toBe(true)
+    // elle monte en haut de l'écran : la correction se lit au plus loin
+    expect(right.top - dy).toBe(CORRECTION_GAP)
+  })
+
+  it('la bonne réponse et toute la correction tiennent au-dessus de la barre : tout monte, la barre reste collée', () => {
+    const near = { top: 300, bottom: 392 }
+    const fit = { top: 420, bottom: 860 }
+    const { flows, dy } = placeCorrection(fit, barTop, near)
+    expect(flows).toBe(false)
+    expect(fit.bottom - dy).toBeLessThanOrEqual(barTop - CORRECTION_GAP)
+    expect(near.top - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+  })
+
+  it('correction très longue après une erreur : ses premières lignes montent sans faire sortir la bonne réponse', () => {
+    const long = { top: 264, bottom: 1400 }
+    const r = { top: 90, bottom: 180 }
+    const { flows, dy } = placeCorrection(long, 430, r)
+    expect(flows).toBe(true)
+    expect(r.top - dy).toBeGreaterThanOrEqual(CORRECTION_GAP)
+  })
+
+  it('la bonne réponse déjà au-dessus de l’écran (on avait fait défiler pour répondre) : la page remonte jusqu’à elle', () => {
+    const above = { top: -140, bottom: -48 }
+    const { dy } = placeCorrection({ top: 60, bottom: 500 }, barTop, above)
+    expect(dy).toBeLessThan(0)
+    expect(above.top - dy).toBe(CORRECTION_GAP)
+    // sans bonne réponse à montrer, la page ne remonte jamais
+    expect(placeCorrection({ top: 60, bottom: 500 }, barTop).dy).toBe(0)
+  })
+
+  it('sans bonne réponse à montrer (bonne réponse, carte sans choix) : rien ne change', () => {
+    for (const [b, t] of [
+      [{ top: 374, bottom: 934 }, barTop],
+      [{ top: 200, bottom: 500 }, barTop],
+      [{ top: 264, bottom: 930 }, 430],
+      [back, barTop],
+    ] as const)
+      expect(placeCorrection(b, t, undefined)).toEqual(placeCorrection(b, t))
+    expect(placeCorrection(back, barTop)).toEqual({ flows: false, dy: back.bottom - (barTop - CORRECTION_GAP) })
+  })
+})
+
+describe('Exercices : le bouton de révision s’accorde au nombre de cartes', () => {
+  it('« Réviser mes 3 cartes », jamais « Réviser mes 1 carte »', () => {
+    expect(reviseLabel(3)).toBe('Réviser mes 3 cartes')
+    expect(reviseLabel(1)).toBe('Réviser la carte du jour')
+    expect(reviseLabel(1)).not.toMatch(/mes 1/)
   })
 })
 
@@ -534,6 +662,72 @@ describe('Révision : une séance laissée en route reprend où elle en était',
     const other = resumeSession({ ...saved, outcome: { cardId: ids[5] } }, deck, log, now)
     expect(other?.outcome).toBeNull()
   })
+
+  it('une séance en cours n’est pas close', () => {
+    expect(resumeSession(saved, deck, log, now)).toMatchObject({ finished: false, ended: null })
+  })
+})
+
+describe('Révision : le bilan d’une séance close revient le jour même', () => {
+  const deck = buildDeck(GHOSTS, MECHANICS, [])
+  const now = new Date(2026, 10, 1, 18, 0).getTime()
+  const since = now - 10 * 60_000
+  const ended = since + 4 * 60_000
+  const ids = deck.slice(0, 3).map((c) => c.id)
+  const log = [0, 1, 2].map((k) => ({ id: ids[k], t: since + (k + 1) * 60_000, g: (k === 1 ? 1 : 3) as Grade, isNew: true }))
+  const closed: SavedSession<{ cardId: string }> = {
+    day: dayKey(now),
+    since,
+    queue: [],
+    peers: [],
+    known: [],
+    done: 3,
+    good: 2,
+    passes: {},
+    total: 3,
+    settled: 3,
+    outcome: null,
+    revealed: false,
+    previous: null,
+    finished: true,
+    ended,
+  }
+
+  it('après un détour (codex, autre onglet, rechargement), la page rouvre le bilan, même sans carte restante', () => {
+    const r = resumeSession(closed, deck, log, now)
+    expect(r).toMatchObject({ finished: true, ended, done: 3, good: 2, since })
+    expect(r?.queue).toEqual([])
+  })
+
+  it('les réponses données après la clôture (une autre séance) ne la rendent pas caduque', () => {
+    const later = [...log, { id: ids[0], t: ended + 60_000, g: 3 as Grade, isNew: false }]
+    expect(resumeSession(closed, deck, later, now)?.finished).toBe(true)
+  })
+
+  it('le lendemain, après une remise à zéro, ou sans heure de clôture : pas de bilan', () => {
+    expect(resumeSession({ ...closed, day: '2026-10-31' }, deck, log, now)).toBeNull()
+    expect(resumeSession(closed, deck, [], now)).toBeNull()
+    expect(resumeSession({ ...closed, ended: null }, deck, log, now)).toBeNull()
+    expect(resumeSession({ ...closed, ended: now + 60_000 }, deck, log, now)).toBeNull()
+    // seules les réponses d'avant la clôture comptent : une réponse manquante la rend caduque
+    expect(resumeSession({ ...closed, ended: since + 2 * 60_000 }, deck, log, now)).toBeNull()
+  })
+
+  it('un lien qui demande une séance (« Commencer la révision ») ne rouvre pas le bilan : il lance une séance', () => {
+    const r = resumeSession(closed, deck, log, now)
+    expect(restoreSaved(r, true)).toBeNull()
+    // l'onglet, le retour, un détour par une fiche : le bilan revient
+    expect(restoreSaved(r, false)).toBe(r)
+    expect(START_REVIEW).toBe(`/revision?${START_PARAM}=nouvelle`)
+  })
+
+  it('une séance en cours reprend, même depuis un lien qui demande une séance', () => {
+    const running = resumeSession({ ...closed, finished: false, ended: null, queue: deck.slice(3, 6).map((c) => c.id), total: 6 }, deck, log, now)
+    expect(running?.finished).toBe(false)
+    expect(restoreSaved(running, true)).toBe(running)
+    expect(restoreSaved(running, false)).toBe(running)
+    expect(restoreSaved(null, true)).toBeNull()
+  })
 })
 
 describe('Titre de l’onglet : une page, un titre', () => {
@@ -544,5 +738,124 @@ describe('Titre de l’onglet : une page, un titre', () => {
     expect(pageTitle('/codex')).toBe('Codex · Phasmo Coach')
     expect(pageTitle('/codex/wraith')).toBe(`${getGhost('wraith')!.name} · Codex · Phasmo Coach`)
     expect(pageTitle('/nulle-part')).toBe('Page introuvable · Phasmo Coach')
+  })
+})
+
+describe('Codex : Entrée dans la recherche ouvre la fiche quand une seule entité correspond', () => {
+  const [a, b, c] = GHOSTS
+  it('une seule entité retenue (recherche et carnet) : sa fiche', () => {
+    expect(searchTarget([a], [])).toBe(a)
+    // le carnet a écarté les autres trouvailles de la recherche : il en reste une
+    expect(searchTarget([a], [b, c])).toBe(a)
+  })
+  it('la recherche ne trouve qu’une entité, écartée par le carnet : sa fiche quand même', () => {
+    expect(searchTarget([], [b])).toBe(b)
+  })
+  it('plusieurs entités, ou aucune : Entrée ne fait rien', () => {
+    expect(searchTarget([a, b], [])).toBeNull()
+    expect(searchTarget([], [b, c])).toBeNull()
+    expect(searchTarget([], [])).toBeNull()
+  })
+
+  const enter = (query: string, filter = EMPTY_FILTER) => {
+    const { matching, out } = searchCodex(GHOSTS, query, filter)
+    return searchTarget(matching, out)?.id ?? null
+  }
+
+  it('le nom exact d’une entité ouvre sa fiche, même quand d’autres fiches le citent (Démon, Ombre, Oni)', () => {
+    expect(enter('Démon')).toBe('demon')
+    expect(enter('ombre')).toBe('shade')
+    expect(enter('oni')).toBe('oni')
+    expect(enter('  le démon ')).toBe('demon')
+    expect(enter('Demon')).toBe('demon')
+    expect(enter('les jumeaux')).toBe('the-twins')
+    expect(enter('Mimic')).toBe('the-mimic')
+    expect(enter('The Twins')).toBe('the-twins')
+    // les 30 noms, en français comme en anglais
+    for (const g of GHOSTS) {
+      expect(enter(g.name)).toBe(g.id)
+      expect(enter(g.nameEn)).toBe(g.id)
+    }
+  })
+
+  it('le nom exact d’une entité écartée par le carnet : la recherche ne trouve qu’elle, barrée, et Entrée ouvre sa fiche', () => {
+    const emf = { ...EMPTY_FILTER, evidence: { emf: 'found' as const } }
+    const r = searchCodex(GHOSTS, 'Démon', emf)
+    expect(r.matching).toEqual([])
+    expect(r.out.map((g) => g.id)).toEqual(['demon'])
+    expect(enter('Démon', emf)).toBe('demon')
+  })
+
+  it('un bout de nom ou un comportement cherche toujours dans tout le texte des fiches', () => {
+    expect(exactName(GHOSTS, 'dém')).toBeNull()
+    expect(exactName(GHOSTS, '')).toBeNull()
+    expect(searchCodex(GHOSTS, 'dém', EMPTY_FILTER).matching.length).toBeGreaterThan(1)
+  })
+})
+
+describe('Mise en situation : le contrat en cours survit à un détour', () => {
+  const now = Date.parse('2026-11-01T15:00:00')
+  const scenario = generateScenario(getGhost('hantu')!, 'pro', createRng(42), GHOSTS)
+  const run: SavedContract = {
+    scenario,
+    revealed: 3,
+    filter: { ...EMPTY_FILTER, evidence: { freezing: 'found', emf: 'excluded' } },
+    struck: ['spirit'],
+    wrong: ['wraith'],
+  }
+  const roundTrip = (r: unknown) => JSON.parse(JSON.stringify(r)) as SavedContract
+
+  it('se garde pour l’onglet et la journée, et se relit tel quel', () => {
+    sessionStorage.clear()
+    saveRun(CONTRACT_KEY, run, now)
+    expect(readContract(now)).toEqual(roundTrip(run))
+    // le lendemain, plus de contrat à reprendre
+    expect(readContract(now + 86_400_000)).toBeNull()
+    sessionStorage.clear()
+    expect(readContract(now)).toBeNull()
+  })
+
+  it('un contrat abîmé ou impossible ne se reprend pas', () => {
+    expect(validContract(roundTrip(run))).toBe(true)
+    const bad: unknown[] = [
+      { ...run, scenario: { ...scenario, ghostId: 'personne' } },
+      { ...run, scenario: { ...scenario, difficulty: 'facile' } },
+      { ...run, scenario: { ...scenario, clues: [] } },
+      { ...run, revealed: 1 },
+      { ...run, revealed: scenario.clues.length + 1 },
+      { ...run, revealed: 2.5 },
+      { ...run, filter: { ...EMPTY_FILTER, evidence: { laser: 'found' } } },
+      { ...run, filter: null },
+      { ...run, struck: 'spirit' },
+      // deux erreurs terminent le contrat : il n'est plus « en cours »
+      { ...run, wrong: ['wraith', 'phantom'] },
+      { ...run, wrong: ['personne'] },
+      { revealed: 3 },
+    ]
+    for (const b of bad) expect(validContract(roundTrip(b)), JSON.stringify(b).slice(0, 80)).toBe(false)
+  })
+})
+
+describe('« LdV » en toutes lettres là où on le lit', () => {
+  it('spellLdV écrit « ligne de vue », sans toucher aux autres mots', () => {
+    expect(spellLdV('1,7 m/s · accélère en LdV')).toBe('1,7 m/s · accélère en ligne de vue')
+    expect(spellLdV('2,5 m/s si disjoncteur allumé, LdV et > 3 m')).toBe('2,5 m/s si disjoncteur allumé, ligne de vue et > 3 m')
+    expect(spellLdV('LdVx et xLdV')).toBe('LdVx et xLdV')
+  })
+
+  it('aucune question de la révision ni du quiz n’écrit « LdV » (énoncé, citation, réponses, correction)', () => {
+    const deck = buildDeck(GHOSTS, MECHANICS, [])
+    const shown: string[] = []
+    const add = (q: Question | null) => {
+      if (!q) return
+      shown.push(q.prompt, q.quote ?? '', q.note ?? '', q.explain, ...q.choices.map((c) => c.label))
+    }
+    for (const card of deck) for (const pass of [0, 1, 2]) add(questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, day: '2026-11-01', pass, seen: pass }))
+    for (const t of QUIZ_TOPICS) for (let seed = 1; seed <= 12; seed++) for (const q of buildQuiz({ topics: [t.id], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) })) add(q)
+    expect(shown.filter((t) => /\bLdV\b/.test(t))).toEqual([])
+    // le verso des cartes de vitesse garde le résumé de la fiche : la page de révision l'écrit en toutes lettres
+    const backs = deck.filter((c) => /\bLdV\b/.test(c.back))
+    expect(backs.length).toBeGreaterThan(0)
+    for (const c of backs) expect(spellLdV(c.back)).not.toMatch(/\bLdV\b/)
   })
 })

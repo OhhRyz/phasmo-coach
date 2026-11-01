@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { GhostRow } from '../components/GhostRow'
 import { UvPrint } from '../components/journal/Charts'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
-import { Empty, Seg } from '../components/ui'
+import { Empty, Seg, useMedia } from '../components/ui'
 import { GHOSTS } from '../data'
 import { EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost } from '../data/types'
@@ -92,24 +93,58 @@ function noneHint(ticked: boolean, moreCount: number): string {
   return 'vérifie le nombre de preuves de la partie, ou décoche une preuve'
 }
 
-const PHONE = '(max-width: 759px)'
-
-/** Vrai tant que la fenêtre correspond à la requête (suit les changements de taille). */
-function useMedia(query: string): boolean {
-  const [on, setOn] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(query).matches)
-  useEffect(() => {
-    if (typeof matchMedia === 'undefined') return
-    const mq = matchMedia(query)
-    const sync = () => setOn(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [query])
-  return on
+/** Un nom tel qu'on le tape : sans accents ni majuscules, sans article (« le Démon », « les Jumeaux », « The Twins »). */
+function nameKey(s: string): string {
+  return normalizeText(s)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/^(?:(?:le|la|les|the) |l')/u, '')
 }
+
+/**
+ * L'entité dont la recherche est exactement le nom, en français ou en anglais (« Démon », « ombre », « le
+ * mimic », « Twins »), ou null. D'autres fiches citent son nom (l'Oni parle du Démon) : la recherche ne
+ * trouve alors qu'elle.
+ */
+export function exactName<T extends Pick<Ghost, 'name' | 'nameEn'>>(ghosts: readonly T[], query: string): T | null {
+  const q = nameKey(query)
+  if (!q) return null
+  const hits = ghosts.filter((g) => nameKey(g.name) === q || nameKey(g.nameEn) === q)
+  return hits.length === 1 ? hits[0] : null
+}
+
+/**
+ * Ce que trouve la recherche, et ce qu'en garde le carnet : `matching`, les entités qui collent ; `out`,
+ * celles que la recherche trouve mais que le carnet écarte. Le nom exact d'une entité ne trouve qu'elle.
+ */
+export function searchCodex(ghosts: readonly Ghost[], query: string, filter: FilterState): { matching: Ghost[]; out: Ghost[] } {
+  const q = normalizeText(query.trim())
+  const exact = exactName(ghosts, query)
+  const byQuery = exact
+    ? [exact]
+    : q
+      ? ghosts.filter((g) => [g.name, g.nameEn, g.summary, ...g.keyTells].some((t) => normalizeText(t).includes(q)))
+      : [...ghosts]
+  const matching = filterGhosts(byQuery, filter)
+  return { matching, out: byQuery.filter((g) => !matching.includes(g)) }
+}
+
+/**
+ * Entrée dans la recherche : la fiche à ouvrir quand une seule entité correspond. Celle qui reste avec le
+ * carnet, sinon la seule que trouve la recherche (même écartée par le carnet) ; null s'il y a le choix.
+ */
+export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | null {
+  if (matching.length === 1) return matching[0]
+  return matching.length === 0 && out.length === 1 ? out[0] : null
+}
+
+const PHONE = '(max-width: 759px)'
 
 export function Codex() {
   const mastery = useMastery()
+  const navigate = useNavigate()
+  const searchId = useId()
+  const searchRef = useRef<HTMLInputElement>(null)
   const [initial] = useState(loadSession)
   const [filter, setFilter] = useState<FilterState>(initial.filter)
   const [query, setQuery] = useState(initial.query)
@@ -140,14 +175,7 @@ export function Codex() {
     filter.los !== null ||
     filter.evidenceCount !== 3
 
-  const { matching, out } = useMemo(() => {
-    const q = normalizeText(query.trim())
-    const byQuery = q
-      ? GHOSTS.filter((g) => [g.name, g.nameEn, g.summary, ...g.keyTells].some((t) => normalizeText(t).includes(q)))
-      : GHOSTS
-    const m = filterGhosts(byQuery, filter)
-    return { matching: m, out: byQuery.filter((g) => !m.includes(g)) }
-  }, [filter, query])
+  const { matching, out } = useMemo(() => searchCodex(GHOSTS, query, filter), [filter, query])
 
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
   const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
@@ -179,10 +207,21 @@ export function Codex() {
     }
   }, [])
 
+  // « Tout effacer » : le carnet de preuves, les critères et la recherche
+  const clearAll = () => {
+    setFilter(EMPTY_FILTER)
+    setQuery('')
+  }
+  const searched = query.trim()
+  // Entrée dans la recherche : une seule entité correspond, sa fiche s'ouvre
+  const target = searched ? searchTarget(matching, out) : null
+
   const found = marked(filter, 'found').length
   const excluded = marked(filter, 'excluded').length
-  const searching = active || query.trim() !== ''
+  const searching = active || searched !== ''
   const only = searching && matching.length === 1 ? matching[0] : null
+  // le carnet seul conclut (entouré au stylo rouge) ; une recherche, elle, trouve sans rien déduire (pas de cercle)
+  const deduced = !!only && pool.length === 1
   const moreCount = filter.speed.length + (filter.huntAbove != null ? 1 : 0) + (filter.los !== null ? 1 : 0)
   // la réponse du carnet, lisible juste sous le titre (sur téléphone le registre est loin en dessous)
   const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'absente')].filter(Boolean)
@@ -270,25 +309,57 @@ export function Codex() {
             <div className="cx-actions cx-actions--verdict">
               <p className="cx-verdict">
                 {/* une recherche par le nom n'élimine rien : elle trouve */}
-                <span className="typed-label">{pool.length === 1 ? 'Il ne reste que' : 'Résultat'}</span>
-                <RoughCircle seed={`only-${only.id}`} padX={0.08} padY={0.22} delay={0.2}>
+                <span className="typed-label">{deduced ? 'Il ne reste que' : 'Résultat de ta recherche'}</span>
+                {deduced ? (
+                  <RoughCircle seed={`only-${only.id}`} padX={0.08} padY={0.22} delay={0.2}>
+                    <span className="cx-verdict-name">{only.name}</span>
+                  </RoughCircle>
+                ) : (
                   <span className="cx-verdict-name">{only.name}</span>
-                </RoughCircle>
+                )}
               </p>
               <TapeButton to={`/codex/${only.id}`}>Ouvrir sa fiche</TapeButton>
             </div>
           )}
 
-          <label className="field cx-search">
-            <span>Chercher dans le codex</span>
-            <input
-              className="input"
-              type="search"
-              placeholder="un nom, un comportement…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </label>
+          {/* Entrée (« Rechercher » sur le clavier du téléphone) ouvre la fiche quand une seule entité correspond */}
+          <form
+            className="field cx-search"
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (target) navigate(`/codex/${target.id}`)
+            }}
+          >
+            <label className="field-label" htmlFor={searchId}>
+              Chercher dans le codex
+            </label>
+            <div className="cx-search-line">
+              <input
+                ref={searchRef}
+                id={searchId}
+                className="input"
+                type="search"
+                enterKeyHint="search"
+                placeholder="un nom, un comportement…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {/* le mot reste visible tant que le champ n'est pas vide (la croix du navigateur n'apparaît qu'au survol) */}
+              {query !== '' && (
+                <button
+                  type="button"
+                  className="link link-btn cx-search-clear"
+                  onClick={() => {
+                    setQuery('')
+                    searchRef.current?.focus()
+                  }}
+                >
+                  Effacer<span className="sr-only"> la recherche</span>
+                </button>
+              )}
+            </div>
+          </form>
 
           <div className="cx-more-bar">
             <button
@@ -301,7 +372,7 @@ export function Codex() {
               {showMore ? 'Replier vitesse, seuil et ligne de vue' : 'Vitesse, seuil et ligne de vue'}
               {!showMore && moreCount > 0 && <span className="cx-more-n"> ({moreCount})</span>}
             </button>
-            {active && <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>}
+            {(active || searched !== '') && <TypedLink onClick={clearAll}>Tout effacer</TypedLink>}
           </div>
 
           {/* toujours rendu (masqué quand replié) : aria-controls pointe vers un élément qui existe */}
@@ -324,7 +395,7 @@ export function Codex() {
             <div className="field">
               <span>Accélère en ligne de vue</span>
               <Seg
-                label="Ligne de vue"
+                label="Accélère en ligne de vue"
                 value={filter.los === null ? 'any' : filter.los ? 'yes' : 'no'}
                 onChange={(v) => setFilter({ ...filter, los: v === 'any' ? null : v === 'yes' })}
                 options={[
@@ -333,6 +404,7 @@ export function Codex() {
                   { value: 'no', label: 'Non' },
                 ]}
               />
+              <span className="pencil-note cx-field-hint">quand elle te voit pendant une chasse</span>
             </div>
           </div>
         </div>
@@ -351,15 +423,28 @@ export function Codex() {
         <section aria-labelledby="cx-h-reg" className="cx-reg-section" ref={regRef} tabIndex={-1}>
           <H id="cx-h-reg">Les {GHOSTS.length} entités</H>
 
+          {/* une recherche en cours se lit comme une recherche, pas comme une déduction du carnet */}
+          {searched !== '' && (
+            <p className="cx-searchline">
+              <span className="typed-label">Recherche</span>
+              <span className="cx-searchline-q">
+                «{NNBSP}
+                {searched}
+                {NNBSP}»
+              </span>
+              <TypedLink onClick={() => setQuery('')}>Effacer la recherche</TypedLink>
+            </p>
+          )}
+
           <div className="cx-count" aria-live="polite">
             <span className="cx-count-n">
-              {only ? (
+              {deduced ? (
                 <RoughCircle seed="cx-count-one" padX={0.1} padY={0.1} delay={0.15}>
                   <b>1</b> possible
                 </RoughCircle>
               ) : (
                 <>
-                  <b>{matching.length === 0 ? 'Aucune' : matching.length}</b> {!active && query.trim() ? 'trouvée' : 'possible'}
+                  <b>{matching.length === 0 ? 'Aucune' : matching.length}</b> {!active && searched ? 'trouvée' : 'possible'}
                   {matching.length > 1 ? 's' : ''}
                 </>
               )}
@@ -390,13 +475,14 @@ export function Codex() {
                   </>
                 )}
               </p>
+              {/* la recherche reste : effacer le carnet fait réapparaître ce qu'elle a trouvé */}
               <p className="cx-empty-act">
-                <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>
+                <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Effacer preuves et critères</TypedLink>
               </p>
             </Empty>
           ) : (
             matching.length === 0 &&
-            (query.trim() && out.length === 0 ? (
+            (searched && out.length === 0 ? (
               <Empty title="Aucune entité ne correspond à ta recherche">
                 <p>Essaie un autre mot{NNBSP}: un nom ou un comportement.</p>
               </Empty>
@@ -405,7 +491,7 @@ export function Codex() {
                 <p>{fr(`${noneHint(ticked, moreCount).replace(/^./, (c) => c.toUpperCase())}.`)}</p>
                 {active && (
                   <p className="cx-empty-act">
-                    <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>
+                    <TypedLink onClick={clearAll}>Tout effacer</TypedLink>
                   </p>
                 )}
               </Empty>
@@ -422,7 +508,7 @@ export function Codex() {
               </div>
               <ol className="cx-reg">
                 {rows.map(({ g, n }) => (
-                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} circled={only === g} />
+                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} circled={deduced && only === g} />
                 ))}
               </ol>
             </>

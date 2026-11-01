@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { ExportedLine, useBackupFile, useCopyProgress, useExportBackup, usePasteProgress } from '../components/Backup'
 import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { fr, NNBSP, safeDate } from '../engine/format'
+import { isStandalone, platform } from '../engine/device'
 import { coachNameOf } from '../engine/notes'
-import { downloadJson } from '../engine/share'
-import { hydrate } from '../store/schema'
 import { useStore } from '../store/store'
 import { useTheme } from '../theme'
 import { sessionMinutes } from './reviewPlan'
@@ -14,13 +15,6 @@ import { sessionMinutes } from './reviewPlan'
 export type { ReportPayload } from '../engine/share'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
-
-/** « 1 question, aucune note » : le contenu d'une sauvegarde, au singulier comme au pluriel. */
-function importText(nCards: number, nNotes: number): string {
-  const cards = nCards === 0 ? 'aucune question vue' : `${nCards} question${nCards > 1 ? 's' : ''} vue${nCards > 1 ? 's' : ''}`
-  const notes = nNotes === 0 ? 'aucune note' : `${nNotes} note${nNotes > 1 ? 's' : ''}`
-  return `La progression actuelle sera remplacée par celle du fichier (${cards}, ${notes}). Pense à exporter avant si besoin.`
-}
 
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const NEW_MIN = 3
@@ -51,27 +45,48 @@ function NameInput({ value, onCommit }: { value: string; onCommit: (name: string
 export function Profile() {
   const { state, deck, dispatch } = useStore()
   const toast = useToast()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [confirm, setConfirm] = useState<'progress' | 'all' | 'import' | null>(null)
-  const [pendingImport, setPendingImport] = useState<ReturnType<typeof hydrate> | null>(null)
+  const [confirm, setConfirm] = useState<'progress' | 'all' | null>(null)
   const now = useMemo(() => Date.now(), [])
   const [theme, setTheme] = useTheme()
   const role = state.profile.role
   const coach = coachNameOf(state.profile)
   const coaching = role === 'coach' ? 'Je coache quelqu’un' : role === 'student' ? (coach ? `Coaché·e par ${coach}` : 'Coaché·e') : 'Seul·e'
 
-  const exportAll = () => downloadJson(`phasmo-coach-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`, state)
+  const { exportFile, exported } = useExportBackup()
+  const backupFile = useBackupFile()
+  const standalone = useMemo(isStandalone, [])
+  // sur iPhone et iPad seulement, l'app installée a sa propre mémoire, à part du navigateur ; ailleurs, elle
+  // partage celle du navigateur : il n'y a rien à faire passer de l'un à l'autre
+  const ios = useMemo(() => platform() === 'ios', [])
+  const copyProgress = useCopyProgress(
+    !ios
+      ? 'C’est copié : dans l’autre carnet, touche « Coller ma progression », dans son profil.'
+      : standalone
+        ? 'C’est copié : dans l’autre carnet (le navigateur, par exemple), touche « Coller ma progression », dans son profil.'
+        : 'C’est copié. Ouvre maintenant l’app installée et touche « Coller ma progression » : sur sa première page, ou dans son profil.',
+  )
+  const pasteProgress = usePasteProgress()
 
-  const onFile = async (file: File) => {
-    try {
-      const raw = JSON.parse(await file.text())
-      if (raw?.version !== 1 || typeof raw.cards !== 'object') throw new Error('format')
-      setPendingImport(hydrate(raw))
-      setConfirm('import')
-    } catch {
-      toast('Fichier de sauvegarde non reconnu')
-    }
-  }
+  // lien d'une autre page (?sauvegarde=1 : exporter, ?sauvegarde=importer) : on arrive sur le bouton, surligné
+  const [params, setParams] = useSearchParams()
+  const [asked, setAsked] = useState<'export' | 'import' | null>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const v = params.get('sauvegarde')
+    if (v !== '1' && v !== 'importer') return
+    setAsked(v === 'importer' ? 'import' : 'export')
+    setParams({}, { replace: true })
+  }, [params]) // seul le paramètre du lien déclenche l'arrivée
+  useEffect(() => {
+    if (!asked) return
+    const raf = requestAnimationFrame(() => {
+      const item = exportRef.current
+      if (!item) return
+      item.scrollIntoView({ block: 'center' })
+      item.querySelector<HTMLElement>('.backup-export')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [asked])
 
   const focus = state.settings.focus ?? []
   const perDay = state.settings.newPerDay
@@ -147,27 +162,43 @@ export function Profile() {
               Changer d’appareil
             </h2>
             <div className="pocket-item">
-              <h3>Sauvegarde complète</h3>
-              <p>Un fichier avec toute ta progression et tes notes, pour changer d’appareil ou garder une copie.</p>
+              <h3>Copier-coller</h3>
+              <p>
+                {fr(
+                  ios
+                    ? 'Sur iPhone et iPad, l’app installée a sa propre mémoire : copie ta progression dans le navigateur, colle-la dans l’app (ou l’inverse).'
+                    : 'Pour passer ta progression d’un carnet à l’autre sans fichier : copie-la d’un côté, colle-la de l’autre.',
+                )}
+              </p>
               <div className="pocket-btns">
-                <PaperButton onClick={exportAll} rotate={0.8}>
+                <PaperButton onClick={copyProgress.copy} rotate={-0.6}>
+                  Copier ma progression
+                </PaperButton>
+                <PaperButton onClick={pasteProgress.paste} disabled={pasteProgress.busy} rotate={0.7}>
+                  Coller ma progression
+                </PaperButton>
+              </div>
+              {copyProgress.panel}
+              {pasteProgress.panel}
+            </div>
+            <div className={`pocket-item${asked ? ' is-asked' : ''}`} id="sauvegarde" ref={exportRef}>
+              <h3>
+                <span className="pocket-hl">Sauvegarde complète</span>
+              </h3>
+              <p>
+                {fr('Un fichier avec tout le carnet (progression, séances et notes), pour changer d’appareil ou garder une copie. Pour tes notes seules, il y a l’export de')}{' '}
+                <TypedLink to="/carnet?sauvegarde=1">{fr('« Mes notes »')}</TypedLink>.
+              </p>
+              <div className="pocket-btns">
+                <PaperButton onClick={exportFile} rotate={0.8} className={asked === 'import' ? undefined : 'backup-export'}>
                   Exporter
                 </PaperButton>
-                <PaperButton onClick={() => fileRef.current?.click()} rotate={-0.6}>
+                <PaperButton onClick={backupFile.choose} rotate={-0.6} className={asked === 'import' ? 'backup-export' : undefined}>
                   Importer
                 </PaperButton>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="application/json,.json"
-                  hidden
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    e.target.value = '' // le même fichier pourra être choisi à nouveau
-                    if (f) void onFile(f)
-                  }}
-                />
               </div>
+              <ExportedLine name={exported} />
+              {backupFile.panel}
             </div>
           </section>
 
@@ -302,7 +333,7 @@ export function Profile() {
       <Modal
         open={confirm !== null}
         onClose={() => setConfirm(null)}
-        title={fr(confirm === 'import' ? 'Remplacer par cette sauvegarde ?' : confirm === 'all' ? 'Tout effacer ?' : 'Réinitialiser la progression ?')}
+        title={fr(confirm === 'all' ? 'Tout effacer ?' : 'Réinitialiser la progression ?')}
         actions={
           <>
             <TypedLink onClick={() => setConfirm(null)}>Annuler</TypedLink>
@@ -311,8 +342,7 @@ export function Profile() {
               onClick={() => {
                 if (confirm === 'progress') dispatch({ type: 'reset-progress' })
                 if (confirm === 'all') dispatch({ type: 'reset-all' })
-                if (confirm === 'import' && pendingImport) dispatch({ type: 'replace', state: pendingImport })
-                toast(confirm === 'import' ? 'Sauvegarde restaurée' : 'C’est fait')
+                toast('C’est fait')
                 setConfirm(null)
               }}
             >
@@ -322,9 +352,7 @@ export function Profile() {
         }
       >
         <p className="modal-text">
-          {confirm === 'import'
-            ? importText(Object.keys(pendingImport?.cards ?? {}).length, pendingImport?.notes.length ?? 0)
-            : 'Cette action est définitive. Exporte une sauvegarde avant si tu veux pouvoir revenir en arrière.'}
+          Cette action est définitive. Exporte une sauvegarde avant si tu veux pouvoir revenir en arrière.
         </p>
       </Modal>
 

@@ -78,6 +78,15 @@ export function detectDevice(ua: string, maxTouchPoints = 0, standalone = false)
   return { os, ipad, browser, version, inApp, standalone }
 }
 
+/**
+ * Une tablette plutôt qu'un téléphone : iPad (même en « mode ordinateur »), tablette Android (Chrome y
+ * retire « Mobile » de sa signature, ou se dit « X11; Linux » en version ordinateur). Fonction pure.
+ */
+export function isTablet(ua: string, maxTouchPoints = 0): boolean {
+  const d = detectDevice(ua, maxTouchPoints)
+  return d.ipad || (d.os === 'android' && !/Mobile/.test(ua))
+}
+
 /** L'appareil qui affiche la page. */
 export function currentDevice(): Device {
   if (typeof navigator === 'undefined') return detectDevice('')

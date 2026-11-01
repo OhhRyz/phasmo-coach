@@ -1,0 +1,51 @@
+/* ==========================================================================
+   Sauvegarde : copier-coller de la progression, fichier exporté, mauvais fichier
+   (accueil, page « Installer l'app », profil, « Mes notes ») ; chargé en dernier
+   ========================================================================== */
+
+/* ce qu'il faut faire une fois copié (zone toujours présente, annoncée quand elle se remplit) */
+.page p.backup-next { margin: 10px 0 0; font-size: 21px; line-height: 1.1; color: var(--pencil); }
+.page p.backup-next:empty { margin: 0; }
+
+/* le code de la progression : à copier à la main, ou à coller */
+.backup-manual, .backup-paste { display: grid; gap: 8px; margin-top: 14px; max-width: 36em; }
+.backup-paste .paste-btns { margin-top: 2px; }
+.textarea.backup-code {
+  display: block; width: 100%; height: 96px; min-height: 0; padding: 8px 10px; resize: none;
+  font-family: "Courier Prime", monospace; font-size: 13px; line-height: 1.5; word-break: break-all;
+  color: var(--ink-2); background: var(--paper-lo); border: 1px dashed var(--ink-3);
+}
+.textarea.backup-code:focus { background: var(--paper-lo); border-color: var(--red-pen); outline: none; }
+
+.page p.backup-hint, .page p.backup-done, .page .backup-error, .page p.backup-error { margin: 8px 0 0; font-size: 20px; line-height: 1.1; color: var(--pencil); }
+.page .backup-error p { margin: 0; font-size: inherit; line-height: inherit; color: inherit; }
+.backup-error .link { display: inline-flex; align-items: center; min-height: 40px; }
+/* un nom de fichier ne déborde jamais d'une ligne étroite */
+.backup-done, .backup-error, .toast { overflow-wrap: anywhere; }
+
+/* arrivé par « Exporter ma sauvegarde » : le titre surligné, le bouton entouré au surligneur */
+.pocket-hl { position: relative; isolation: isolate; }
+.is-asked .pocket-hl::before {
+  content: ""; position: absolute; left: -6px; right: -6px; top: 10%; bottom: -2px; z-index: -1;
+  background: var(--hl); border-radius: 2px 7px 3px 6px / 6px 3px 7px 2px;
+  transform: skewX(-8deg) rotate(-.8deg); transform-origin: left center;
+  box-shadow: 0 0 12px var(--hl-glow); mix-blend-mode: var(--blend);
+}
+html.js .is-asked .pocket-hl::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) .35s both; }
+.is-asked .backup-export { box-shadow: 0 0 0 4px var(--hl), 0 0 14px var(--hl-glow); }
+
+/* iPhone, page « Installer l'app » : les deux gestes, puis l'autre solution (fichier) */
+.install-keep-steps { margin: 6px 0 0; padding-left: 1.5em; font-size: 16px; line-height: 28px; }
+.install-keep-steps li::marker { font-family: "Courier Prime", monospace; font-weight: 700; }
+.page .install-keep .install-keep-alt { margin-top: 12px; font-size: 15px; color: var(--ink-2); }
+.install-keep .install-keep-alt .link { min-height: 0; display: inline; }
+
+/* accueil de l'app installée : reprendre ce qui a été commencé dans le navigateur */
+.welcome-resume-btns { margin: 12px 0 6px; }
+.welcome-resume-btns .paper-btn { min-height: 44px; }
+
+/* le lien de la bande « stockage plein » */
+.save-warning a { color: inherit; text-decoration-color: currentColor; }
+
+/* dans la pochette de kraft du profil : le crayon prend l'encre du kraft, sinon il ne se lit pas */
+.page .pocket p.pencil-note, .page .pocket .backup-error, .page .pocket p.backup-error { color: var(--kraft-ink); }

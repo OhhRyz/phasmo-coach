@@ -1,5 +1,6 @@
 import { useMemo, type CSSProperties } from 'react'
-import { Consigne, Envelope, FileHead, Notebook, Page, RoughCircle, Tape, TapeButton } from '../components/journal/Journal'
+import { Consigne, Envelope, FileHead, Notebook, Page, RoughCircle, Tape, TypedLink } from '../components/journal/Journal'
+import { useMedia } from '../components/ui'
 import { GHOSTS, MECHANICS } from '../data'
 import { fr, NBSP, NNBSP, safeDate } from '../engine/format'
 import { buildReviewQueue } from '../engine/progress'
@@ -7,7 +8,8 @@ import { cardMastery } from '../engine/srs'
 import type { Activity } from '../store/schema'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
-import { EXHIBITS } from './exhibits'
+import { readContract, RESUME_CONTRACT } from './contractRun'
+import { EXHIBITS, reviseLabel } from './exhibits'
 import { isRetained } from '../engine/cards'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -39,6 +41,8 @@ const metaLine = (meta: string) =>
 /**
  * #/entrainement, « Exercices » : ce qu'on fait (révision, contrat, quiz, oreille), puis ce qu'on lit
  * (mécaniques, codex). Chaque enveloppe dit ce qu'on y fait, combien de temps, et le geste pour l'ouvrir.
+ * La page mène aux enveloppes : un en-tête court, la révision du jour en simple lien, l'historique après
+ * les enveloppes sur téléphone.
  */
 export function Train() {
   const { state, deck } = useStore()
@@ -49,12 +53,44 @@ export function Train() {
   const lastQuiz = lastOf('quiz')
   const lastScenario = lastOf('scenario')
   const lastEar = lastOf('ear')
+  // un contrat laissé en route (détour par le codex…) : l'enveloppe le dit, la page propose de le reprendre
+  const contract = useMemo(() => readContract(), [])
   const recent = state.activity.slice(-4).reverse()
   // seulement les faits à retenir : ceux « bons à savoir » (relever les preuves) ne comptent pas
   const facts = MECHANICS.topics.flatMap((t) => t.facts).filter(isRetained)
   const factsLearned = facts.filter((f) => cardMastery(state.cards[`m:${f.id}`]) >= 0.35).length
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
   const lastDate = recent[0] ? safeDate(SHORT, recent[0].t, '') : ''
+  // téléphone : l'historique passe après les enveloppes, qui arrivent ainsi dans le premier écran
+  const phone = useMedia('(max-width: 759px)')
+
+  const history = (
+    <div className="libcard tr-libcard settle" style={{ '--r': '1.4deg', '--d': '.3s' } as Style}>
+      <Tape />
+      <h2>Derniers exercices</h2>
+      <div className="cols">
+        <span>Date</span>
+        <span>Exercice</span>
+        <span>Note</span>
+      </div>
+      <ol>
+        {recent.length === 0 && (
+          <li>
+            <span className="d">—</span>
+            <span className="what">pas encore d’exercice</span>
+            <span className="res" />
+          </li>
+        )}
+        {recent.map((a, k) => (
+          <li key={`${a.t}-${k}`} style={{ '--r': `${[-2, 1, -1, 2][k]}deg` } as Style}>
+            <span className="d">{safeDate(SHORT, a.t)}</span>
+            <span className="what">{KIND_LABEL[a.kind] ?? a.label}</span>
+            <span className="res">{scoreOf(a)}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
 
   return (
     <div className="tr">
@@ -68,55 +104,31 @@ export function Train() {
             <span>{lastDate ? `Dernier exercice le ${lastDate}` : 'Aucun exercice pour l’instant'}</span>
           </FileHead>
 
-          {/* titre et consigne à gauche, historique à droite ; la bande Dymo a toute la largeur en dessous */}
+          {/* titre et consigne à gauche, historique à droite (après les enveloppes sur téléphone) */}
           <div className="tr-head tr-grid">
             <h1 className="entry-date tr-title">
               <em>Le tiroir des</em>
               exercices
             </h1>
-            <Consigne className="tr-consigne">{fr('choisis une enveloppe et touche-la pour l’ouvrir ; pas d’idée ? commence par la révision du jour')}</Consigne>
-            <div className="tr-go">
+            <Consigne className="tr-consigne">
+              <span className="on-mouse">clique sur une enveloppe</span>
+              <span className="on-touch">touche une enveloppe</span> pour commencer un exercice
+            </Consigne>
+            {/* la révision du jour reste à portée, en simple lien : la page mène d'abord aux exercices */}
+            <p className="tr-alt">
               {due > 0 ? (
-                <TapeButton to={EXHIBITS.revision.to}>
-                  Réviser mes {due} carte{due > 1 ? 's' : ''}
-                </TapeButton>
+                <>
+                  <span className="typed-label">Pas d’idée{NNBSP}?</span>
+                  <TypedLink to={EXHIBITS.revision.to}>{reviseLabel(due)}</TypedLink>
+                </>
               ) : (
-                <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
+                <>
+                  <span className="typed-label">Rien à réviser aujourd’hui</span>
+                  <TypedLink to={EXHIBITS.revision.to}>apprendre de nouvelles cartes</TypedLink>
+                </>
               )}
-            </div>
-            <p className="tr-down pencil-note" aria-hidden>
-              les enveloppes sont juste en dessous
-              <svg className="draw" width="46" height="52" viewBox="0 0 46 52">
-                <path d="M10 2 C 2 18, 8 34, 30 46" strokeWidth="2" pathLength={1} style={{ '--d': '.9s' } as Style} />
-                <path d="M19 47 L31 47 L27 36" strokeWidth="2" pathLength={1} style={{ '--d': '1.5s', '--dur': '.3s' } as Style} />
-              </svg>
             </p>
-
-            <div className="libcard tr-libcard settle" style={{ '--r': '1.4deg', '--d': '.3s' } as Style}>
-              <Tape />
-              <h2>Derniers exercices</h2>
-              <div className="cols">
-                <span>Date</span>
-                <span>Exercice</span>
-                <span>Note</span>
-              </div>
-              <ol>
-                {recent.length === 0 && (
-                  <li>
-                    <span className="d">—</span>
-                    <span className="what">pas encore d’exercice</span>
-                    <span className="res" />
-                  </li>
-                )}
-                {recent.map((a, k) => (
-                  <li key={`${a.t}-${k}`} style={{ '--r': `${[-2, 1, -1, 2][k]}deg` } as Style}>
-                    <span className="d">{safeDate(SHORT, a.t)}</span>
-                    <span className="what">{KIND_LABEL[a.kind] ?? a.label}</span>
-                    <span className="res">{scoreOf(a)}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            {!phone && history}
           </div>
         </Page>
       </Notebook>
@@ -151,13 +163,13 @@ export function Train() {
               delay={0.15}
             />
             <Envelope
-              to={EXHIBITS.situation.to}
+              to={contract ? RESUME_CONTRACT : EXHIBITS.situation.to}
               piece={piece(EXHIBITS.situation.n)}
               title={EXHIBITS.situation.title}
               text={fr(EXHIBITS.situation.what)}
               meta={metaLine(EXHIBITS.situation.meta)}
-              action={EXHIBITS.situation.action}
-              hand={lastScenario ? `dernier contrat${NNBSP}: ${scoreOf(lastScenario)}` : NOT_YET}
+              action={contract ? 'Reprendre le contrat' : EXHIBITS.situation.action}
+              hand={contract ? 'contrat en cours, à reprendre' : lastScenario ? `dernier contrat${NNBSP}: ${scoreOf(lastScenario)}` : NOT_YET}
               rotate={1.1}
               labelRotate={-0.8}
               delay={0.22}
@@ -236,6 +248,8 @@ export function Train() {
             />
           </div>
         </section>
+
+        {phone && <div className="tr-history">{history}</div>}
       </div>
     </div>
   )

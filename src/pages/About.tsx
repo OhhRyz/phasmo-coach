@@ -127,7 +127,8 @@ export function About() {
           </p>
           <p className="prose">
             Tout est enregistré dans le navigateur de cet appareil (aucun compte, aucun serveur). Pour changer d’appareil, exporte une
-            sauvegarde depuis le <Link to="/profil">profil</Link>{NNBSP}; pour partager des notes ou un bilan, tout se passe dans la page{' '}
+            sauvegarde depuis le <Link to="/profil?sauvegarde=1">profil</Link> (ou, du navigateur à l’app installée, copie-colle ta
+            progression){NNBSP}; pour partager des notes ou un bilan, tout se passe dans la page{' '}
             <Link to="/coaching">Coaching</Link>.
           </p>
         </section>

@@ -3,7 +3,7 @@
  * Calculés à partir des données de l'entité.
  */
 import type { Ghost } from '../../data/types'
-import { NBSP, NNBSP, num } from '../../engine/format'
+import { NBSP, NNBSP, num, spellLdV } from '../../engine/format'
 
 const W = 480
 const L = 14
@@ -98,7 +98,7 @@ export function SpeedChart({ ghost }: { ghost: Ghost }) {
   /** la vitesse la plus haute, si son chiffre heurterait l'étiquette « 3 m/s » du bout de la règle */
   const edge = x(far) > R - 60 ? far : null
   return (
-    <svg className="chart" viewBox={`0 0 ${W} 100`} role="img" aria-label={`Vitesse en chasse${NNBSP}: ${s.summary}`}>
+    <svg className="chart" viewBox={`0 0 ${W} 100`} role="img" aria-label={`Vitesse en chasse${NNBSP}: ${spellLdV(s.summary)}`}>
       {s.isRange && s.max != null && <path className="red" d={`M${x(s.min)} 56 H${x(s.max)}`} strokeWidth="5" opacity=".55" />}
       {losTarget != null && (
         <>

@@ -42,6 +42,9 @@
 /* notes : celles du coach (stylo rouge), puis les miennes */
 .ghost-file .ghost-notes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; margin-top: 18px; }
 .ghost-file .ghost-notes + .note-add, .ghost-file .ghost-notes .note-add { margin: 0; }
+/* sous chaque note : « Modifier · Supprimer », comme dans « Mes notes » */
+.ghost-file .gh-note { display: grid; gap: 6px; min-width: 0; }
+.ghost-file .gh-note-acts { justify-self: end; margin-left: 0; }
 .ghost-file section[aria-labelledby="h-coach"] + section[aria-labelledby="h-mine"] { margin-top: 44px; }
 .ghost-file .ghost-side { margin-top: 44px; }
 .ghost-file .libcard li.next .d { grid-column: 1 / -1; white-space: nowrap; }
@@ -92,7 +95,7 @@
   .ghost-file .ghost-head { grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; }
   .ghost-file .ghost-head .ghost-name { grid-column: 1; grid-row: 1; align-self: center; white-space: nowrap; }
   .ghost-file .ghost-head .grade { position: static !important; grid-column: 2; grid-row: 1; align-self: start; margin: -6px 0 0 !important; }
-  .ghost-file .ghost-head :is(.stamp, .ghost-alias) { grid-column: 1 / -1; }
+  .ghost-file .ghost-head :is(.stamp, .ghost-alias, .gh-stamp-why) { grid-column: 1 / -1; }
   .ghost-file .gh-unsure ul { font-size: 20px; }
   /* cibles tactiles : le lien vers la pile et les noms des sosies, sans changer la mise en page */
   .ghost-file .ghost-actions .link { display: inline-flex; align-items: center; min-height: 40px; }

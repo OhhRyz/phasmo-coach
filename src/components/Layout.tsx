@@ -197,6 +197,9 @@ export function Layout({ children }: { children: ReactNode }) {
   const due = useMemo(() => (state.onboarded ? buildReviewQueue(state, deck, Date.now()).length : 0), [state, deck])
   const trainActive = TRAIN_PATHS.some((p) => pathname.startsWith(p))
   const current = (active: boolean) => (active ? ('page' as const) : undefined)
+  // coach ou coaché·e : la page Coaching (partager, recevoir) a sa place dans l'en-tête, pas un sixième onglet
+  const role = state.profile.role
+  const coachName = state.profile.coachName.trim()
 
   return (
     <>
@@ -210,6 +213,12 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="brand-sub">Carnet d’enquête{state.profile.name ? ` de ${state.profile.name}` : ''}</span>
         </Link>
         <div className="desk-tools">
+          {role !== 'solo' && (
+            <Link to="/coaching" className="who who--coaching" aria-current={current(pathname.startsWith('/coaching'))}>
+              <b>Coaching</b>
+              <span>{role === 'coach' ? 'ton élève' : coachName ? `avec ${coachName}` : 'ton coach'}</span>
+            </Link>
+          )}
           <Link to="/profil" className="who" aria-current={current(pathname.startsWith('/profil'))}>
             <b>{state.profile.name || 'Profil'}</b>
             <span>réglages</span>
@@ -250,8 +259,8 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {saveFailed && (
         <p className="save-warning" role="alert">
-          Ta progression n’a pas pu être enregistrée sur cet appareil (stockage plein ou bloqué). Exporte une sauvegarde depuis le
-          profil pour ne rien perdre.
+          Ta progression n’a pas pu être enregistrée sur cet appareil (stockage plein ou bloqué).{' '}
+          <Link to="/profil?sauvegarde=1">Exporte une sauvegarde</Link> depuis le profil pour ne rien perdre.
         </p>
       )}
 

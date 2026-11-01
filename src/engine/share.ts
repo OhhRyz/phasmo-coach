@@ -23,7 +23,9 @@ function fromBase64Url(s: string): Uint8Array {
 }
 
 async function pipe(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {
-  const res = new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(stream))
+  const body = new Response(bytes as BodyInit).body
+  if (!body) throw new Error('flux indisponible')
+  const res = new Response(body.pipeThrough(stream))
   return new Uint8Array(await res.arrayBuffer())
 }
 
@@ -164,6 +166,11 @@ export function readNotesPayload(raw: unknown): NotesPayload | null {
   const notes = sanitizeNotes(Array.isArray(raw.notes) ? raw.notes.slice(0, MAX_SHARED_NOTES) : raw.notes)
   if (!notes.length) return null
   return { kind: 'phasmo-coach/notes', from: text(raw.from, 80).trim(), at: validTime(raw.at), notes }
+}
+
+/** Un fichier de notes (« Mes notes »), même vide ou abîmé : pour dire où l'importer quand il arrive au mauvais endroit. */
+export function isNotesFile(raw: unknown): boolean {
+  return isObj(raw) && raw.kind === 'phasmo-coach/notes'
 }
 
 /** Valide chaque champ d'un bilan reçu : un lien peut contenir n'importe quoi. */

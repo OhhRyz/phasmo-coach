@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { EVIDENCE } from '../data/evidence'
 import { fr } from '../engine/format'
@@ -7,6 +7,19 @@ import { masteryLevel } from '../engine/progress'
 import { H } from './journal/Journal'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
+
+/** Vrai tant que la fenêtre correspond à la requête média (suit les changements de taille). */
+export function useMedia(query: string): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      if (typeof matchMedia === 'undefined') return () => {}
+      const mq = matchMedia(query)
+      mq.addEventListener('change', cb)
+      return () => mq.removeEventListener('change', cb)
+    },
+    () => typeof matchMedia !== 'undefined' && matchMedia(query).matches,
+  )
+}
 
 /** Nom d'une preuve, souligné dans sa couleur du jeu. */
 export function Evidence({ id, forced, fake, short }: { id: EvidenceId; forced?: boolean; fake?: boolean; short?: boolean }) {

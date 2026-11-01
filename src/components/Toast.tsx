@@ -5,6 +5,11 @@ interface ToastItem {
   text: string
 }
 
+/** Durée d'affichage d'un message : 2,8 s, un peu plus pour un texte long (6 s au plus). */
+export function toastDuration(text: string): number {
+  return Math.min(6000, Math.max(2800, text.length * 65))
+}
+
 const ToastContext = createContext<(text: string) => void>(() => {})
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -12,7 +17,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback((text: string) => {
     const id = Date.now() + Math.random()
     setItems((cur) => [...cur.slice(-2), { id, text }])
-    window.setTimeout(() => setItems((cur) => cur.filter((t) => t.id !== id)), 2800)
+    // un message long (nom de fichier, par exemple) reste le temps d'être lu
+    window.setTimeout(() => setItems((cur) => cur.filter((t) => t.id !== id)), toastDuration(text))
   }, [])
   return (
     <ToastContext.Provider value={push}>

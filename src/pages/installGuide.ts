@@ -1,4 +1,4 @@
-import { UNKNOWN_APP, type Browser, type Device } from '../engine/device'
+import { detectDevice, isTablet, UNKNOWN_APP, type Browser, type Device } from '../engine/device'
 
 /**
  * La marche à suivre pour installer l'app, selon l'appareil et le navigateur. Les libellés entre « »
@@ -68,6 +68,15 @@ export function menuOf(b: Browser): string {
 export function deviceName(d: Pick<Device, 'os' | 'ipad'>): string {
   if (d.os === 'ios') return d.ipad ? 'iPad' : 'iPhone'
   return d.os === 'android' ? 'Android' : 'ordinateur'
+}
+
+/**
+ * Le lien de l'accueil vers la marche à suivre : « sur ton iPad », « sur ta tablette » (Android, même en
+ * version ordinateur), sinon « sur ton téléphone ».
+ */
+export function installLinkText(ua: string, maxTouchPoints = 0): string {
+  const d = detectDevice(ua, maxTouchPoints)
+  return `Installer l’app ${d.ipad ? 'sur ton iPad' : isTablet(ua, maxTouchPoints) ? 'sur ta tablette' : 'sur ton téléphone'}`
 }
 
 /** Le bouton principal : « Ajouter à l'écran d'accueil » sur téléphone, « Installer l'app » sur ordinateur. */

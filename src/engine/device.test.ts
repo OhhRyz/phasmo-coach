@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buttonHint, CHOICES, deviceLabel, guideFor, installLabel, menuOf, type Guide } from '../pages/installGuide'
-import { detectDevice, UNKNOWN_APP, type Device } from './device'
+import { buttonHint, CHOICES, deviceLabel, guideFor, installLabel, installLinkText, menuOf, type Guide } from '../pages/installGuide'
+import { detectDevice, isTablet, UNKNOWN_APP, type Device } from './device'
 import { fr } from './format'
 
 /** User agents relevés sur de vrais appareils (versions récentes). */
@@ -164,6 +164,24 @@ describe('Appareil reconnu pour installer l’app', () => {
     expect(detectDevice(UA.androidTabletDesktopMode, 0).os).toBe('desktop')
     expect(detectDevice(UA.chromebook, 10).os).toBe('desktop')
     expect(guideFor(detectDevice(UA.androidTabletDesktopMode, 10)).key).toBe('android-chrome')
+  })
+
+  it('tablette ou téléphone : le lien de l’accueil nomme le bon appareil', () => {
+    // Chrome sur tablette Android retire « Mobile » de sa signature ; Firefox s'y dit « Tablet »
+    const androidTablet = 'Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    const firefoxTablet = 'Mozilla/5.0 (Android 14; Tablet; rv:132.0) Gecko/132.0 Firefox/132.0'
+    for (const [ua, touch] of [[UA.androidTabletDesktopMode, 10], [androidTablet, 5], [firefoxTablet, 5]] as const) {
+      expect(isTablet(ua, touch), ua).toBe(true)
+      expect(installLinkText(ua, touch)).toBe('Installer l’app sur ta tablette')
+    }
+    expect(installLinkText(UA.ipadDesktopMode, 5)).toBe('Installer l’app sur ton iPad')
+    expect(installLinkText(UA.ipadMobile, 5)).toBe('Installer l’app sur ton iPad')
+    for (const ua of [UA.iphoneSafari26, UA.androidChrome, UA.androidFirefox, UA.androidSamsung]) {
+      expect(isTablet(ua, 5), ua).toBe(false)
+      expect(installLinkText(ua, 5)).toBe('Installer l’app sur ton téléphone')
+    }
+    // un ordinateur Linux sans écran tactile n'est pas une tablette
+    expect(isTablet(UA.androidTabletDesktopMode, 0)).toBe(false)
   })
 
   it('un user agent vide ne plante pas', () => {

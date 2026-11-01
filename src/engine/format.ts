@@ -20,6 +20,14 @@ export function fr(text: string): string {
     .replace(/(\d)[ ](%|m\/s|°C|minutes?|secondes?|mètres?|heures?|jours?|min|s|j|h|pts|m)(?![\p{L}\d])/gu, `$1${NBSP}$2`)
 }
 
+/**
+ * « LdV » des résumés courts des fiches, en toutes lettres là où on le lit (« accélère en ligne de vue ») :
+ * le jargon n'arrive jamais abrégé sous les yeux d'un débutant.
+ */
+export function spellLdV(text: string): string {
+  return text.replace(/\bLdV\b/gu, 'ligne de vue')
+}
+
 export function num(n: number): string {
   return nf.format(n)
 }

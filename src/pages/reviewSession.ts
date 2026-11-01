@@ -2,7 +2,7 @@ import type { Card } from '../engine/cards'
 import { dayKey, startOfDay } from '../engine/format'
 import { askKey, SAME_ASK_GAP, SAME_GHOST_GAP } from '../engine/progress'
 import { LEARN_AHEAD, type CardState } from '../engine/srs'
-import type { ReviewEntry } from '../store/schema'
+import { DEFAULT_NEW_PER_DAY, type ReviewEntry } from '../store/schema'
 
 /** Cartes nouvelles proposées d'un coup après la séance (« Apprendre 10 cartes »). */
 export const LEARN_MORE = 10
@@ -99,10 +99,62 @@ export function answersBefore(log: readonly ReviewEntry[], since: number): Recor
  * Les cartes qui passeront encore dans la séance : toute la file, sauf la carte en cours une fois répondue
  * si elle ne repasse pas. La fiche de séance tait leur entité, comme l'en-tête de la carte : une carte ratée
  * qui revient trouverait sinon sa réponse écrite en face d'elle (« Poltergeist · Test sans preuve · À revoir »).
+ * Elle s'y lit « Entité à trouver » (HIDDEN_GHOST) jusqu'à sa dernière réponse de la séance, puis se nomme.
  */
 export function stillToAsk(queue: readonly Card[], answered: { again: boolean } | null): Set<string> {
   const rest = answered && !answered.again ? queue.slice(1) : queue
   return new Set(rest.map((c) => c.id))
+}
+
+/**
+ * Ce qui tient lieu du nom de l'entité, dans l'en-tête de la carte et sur la fiche de séance, tant que ce nom
+ * serait la réponse : un mot d'enquête, pas un « inconnu » qui ferait croire à une fiche cassée.
+ */
+export const HIDDEN_GHOST = 'Entité à trouver'
+
+/** Une carte nouvelle : les deux premières de chaque séance disent qu'on n'est pas censé la connaître… */
+export const FRAMED_PER_SESSION = 2
+/** … pendant les trois premiers jours de cartes nouvelles (au réglage par défaut) ; ensuite, le tampon « Nouvelle » suffit. */
+export const FRAMED_UNTIL = 3 * DEFAULT_NEW_PER_DAY
+
+/**
+ * Une carte nouvelle se pose en QCM avant qu'on ait rien appris : sa consigne le dit en toutes lettres
+ * (« si tu ne sais pas, réponds au hasard… »), mais pas à chaque carte, ce serait du bruit. `inSession` :
+ * les cartes nouvelles déjà répondues dans la séance ; `ever` : depuis le début du carnet.
+ */
+export function framesNewCard(inSession: number, ever: number): boolean {
+  return inSession < FRAMED_PER_SESSION && ever < FRAMED_UNTIL
+}
+
+/** Marge entre la correction et le haut de l'écran, ou la barre d'action. */
+export const CORRECTION_GAP = 12
+/** Une correction trop longue pour l'écran : on en montre au moins le tampon et les premières lignes. */
+export const CORRECTION_FIRST_LINES = 150
+
+/**
+ * Téléphone, réponse donnée : où amener la correction (`top`, `bottom` : sa place à l'écran), sachant que la
+ * barre d'action collée au bas de l'écran commence à `barTop`. Entière entre le haut de l'écran et la barre,
+ * elle y monte tout entière, et la barre reste collée. Plus longue, elle monte jusqu'à ses premières lignes,
+ * et la barre suit la carte (`flows`) : collée, elle couvrirait la suite du texte pendant la lecture.
+ * `right` : la bonne réponse entourée, après une erreur (la correction dit « la bonne réponse est entourée ») ;
+ * elle fait alors partie du bloc à montrer et ne sort jamais par le haut de l'écran. Si elle ne tient pas avec
+ * toute la correction au-dessus de la barre, la barre suit la carte et ne couvre rien.
+ * `dy` : de combien faire défiler la page (jamais au-delà du haut de la correction, ni de la bonne réponse) ;
+ * négatif, de combien remonter jusqu'à la bonne réponse, si elle est déjà au-dessus de l'écran.
+ */
+export function placeCorrection(
+  back: { top: number; bottom: number },
+  barTop: number,
+  right?: { top: number; bottom: number },
+): { flows: boolean; dy: number } {
+  const room = barTop - 2 * CORRECTION_GAP
+  const top = right ? Math.min(right.top, back.top) : back.top
+  const flows = back.bottom - top > room
+  // la correction seule tient au-dessus de la barre : elle monte tout entière, autant que la bonne réponse le permet
+  const target = back.bottom - back.top > room ? Math.min(back.bottom, back.top + CORRECTION_FIRST_LINES) : back.bottom
+  const dy = Math.max(0, Math.min(target - (barTop - CORRECTION_GAP), top - CORRECTION_GAP))
+  // la bonne réponse est déjà passée au-dessus de l'écran (on avait fait défiler pour répondre) : on remonte jusqu'à elle
+  return { flows, dy: right && right.top < CORRECTION_GAP ? right.top - CORRECTION_GAP : dy }
 }
 
 const cards = (n: number) => `${n} ${n > 1 ? 'cartes' : 'carte'}`
@@ -123,6 +175,24 @@ export function nextSession(pending: number, learnable: number, interrupted: boo
 /** La séance en cours, gardée pour l'onglet : un détour (fiche, autre onglet, retour, rechargement) n'y fait rien perdre. */
 export const SAVED_SESSION_KEY = 'phasmo-coach/seance-revision'
 
+/**
+ * Le paramètre des liens qui demandent une séance (« Commencer la révision », « Revoir mes erreurs dans la
+ * révision »…) : ils lancent une séance, là où l'onglet, le retour ou un détour par une fiche rouvrent le bilan
+ * d'une séance close.
+ */
+export const START_PARAM = 'seance'
+/** Le lien qui demande une séance de révision (voir START_PARAM). */
+export const START_REVIEW = `/revision?${START_PARAM}=nouvelle`
+
+/**
+ * La séance gardée à reprendre en ouvrant la page. `startNow` : on vient d'un lien qui demande une séance.
+ * Une séance en cours reprend toujours, là où elle en était ; une séance close ne rouvre son bilan qu'en
+ * revenant sur la page, pas quand un lien demande à réviser (la page repart alors sur les cartes dues).
+ */
+export function restoreSaved<T extends { finished: boolean }>(resumed: T | null, startNow: boolean): T | null {
+  return resumed?.finished && startNow ? null : resumed
+}
+
 /** Ce qu'il faut pour reprendre une séance là où on l'a laissée (les cartes par leur identifiant). */
 export interface SavedSession<O = unknown> {
   /** le jour de la séance : le lendemain, on repart sur les cartes du jour */
@@ -140,38 +210,46 @@ export interface SavedSession<O = unknown> {
   outcome: O | null
   revealed: boolean
   previous: string | null
+  /** la séance est close : revenir sur la page rouvre son bilan, le jour même */
+  finished?: boolean
+  /** l'heure de la clôture : le bilan ne compte que les réponses données avant */
+  ended?: number | null
 }
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
 const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0)
 
 /**
- * La séance gardée, si elle se reprend : du même jour, avec au moins une réponse et encore des cartes, et dont
- * les réponses sont bien au journal (une remise à zéro ou une sauvegarde importée entre-temps la rend caduque).
- * Les cartes sorties du paquet (note supprimée…) sont retirées de la file.
+ * La séance gardée, si elle se reprend : du même jour, avec au moins une réponse, et dont les réponses sont
+ * bien au journal (une remise à zéro ou une sauvegarde importée entre-temps la rend caduque). En cours, il lui
+ * reste des cartes ; close (`finished`), elle rouvre son bilan, avec les seules réponses données avant sa
+ * clôture. Les cartes sorties du paquet (note supprimée…) sont retirées de la file.
  */
 export function resumeSession<O extends { cardId: string }>(
   raw: unknown,
   deck: readonly Card[],
   log: readonly ReviewEntry[],
   now: number,
-): (Omit<SavedSession<O>, 'queue'> & { queue: Card[] }) | null {
+): (Omit<SavedSession<O>, 'queue' | 'finished' | 'ended'> & { queue: Card[]; finished: boolean; ended: number | null }) | null {
   if (!raw || typeof raw !== 'object') return null
   const s = raw as Partial<SavedSession<O>>
   if (s.day !== dayKey(now) || typeof s.since !== 'number' || s.since > now) return null
   const done = count(s.done)
   if (done === 0) return null
+  const since = s.since
+  const finished = s.finished === true
+  const ended = finished && typeof s.ended === 'number' && Number.isFinite(s.ended) && s.ended >= since && s.ended <= now ? s.ended : null
+  if (finished && ended == null) return null
   const byId = new Map(deck.map((c) => [c.id, c]))
   const queue = strings(s.queue)
     .map((id) => byId.get(id))
     .filter((c): c is Card => !!c)
-  if (!queue.length) return null
-  const since = s.since
-  if (log.filter((l) => l.t >= since).length < done) return null
+  if (!queue.length && !finished) return null
+  if (log.filter((l) => l.t >= since && (ended == null || l.t <= ended)).length < done) return null
   const passes: Record<string, number> = {}
   if (s.passes && typeof s.passes === 'object') for (const [id, n] of Object.entries(s.passes)) passes[id] = count(n)
   // la correction gardée ne vaut que pour la carte en tête de file
-  const outcome = s.outcome && typeof s.outcome === 'object' && s.outcome.cardId === queue[0].id ? s.outcome : null
+  const outcome = s.outcome && typeof s.outcome === 'object' && queue.length > 0 && s.outcome.cardId === queue[0].id ? s.outcome : null
   return {
     day: s.day,
     since,
@@ -186,5 +264,7 @@ export function resumeSession<O extends { cardId: string }>(
     outcome,
     revealed: s.revealed === true && !outcome,
     previous: typeof s.previous === 'string' ? s.previous : null,
+    finished,
+    ended,
   }
 }

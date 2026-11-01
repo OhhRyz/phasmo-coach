@@ -32,6 +32,8 @@
   font-family: "Courier Prime", monospace; font-size: 14.5px; letter-spacing: .03em; color: var(--ink-2);
 }
 .home .coach-card .plan-actions { margin-top: 20px; }
+.home .coach-card .coach-more { margin-top: 8px; }
+.home .coach-card .coach-more .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* révision : rien à revoir */
 .home .plan-n--none { height: auto; min-height: 84px; align-items: center; }
@@ -88,7 +90,7 @@
 .home-shelf .home-shelf-hint { margin: 0; font-size: 21px; color: var(--desk-ink); }
 .home-shelf--in-page { max-width: none; margin: 56px 0 8px; padding: 0; }
 .home-shelf--in-page .home-shelf-hint { color: var(--pencil); }
-.home-shelf--in-page .envelopes { grid-template-columns: 1fr 1fr; }
+.home-shelf--in-page .envelopes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* mots du coach */
 .home .notes-empty { grid-column: 1 / -1; max-width: 30em; }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { CircledNumber, FileHead, IndexCard, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
+import { ExportedLine, useCopyProgress, useExportBackup } from '../components/Backup'
 import { useToast } from '../components/Toast'
 import { Seg } from '../components/ui'
 import { currentDevice, type Device } from '../engine/device'
@@ -75,6 +76,8 @@ function GuideCard({
   cardRef: Ref<HTMLElement>
 }) {
   const n = guide.steps.length
+  // iPhone avec une progression : la copier vient avant tout, sinon on ouvre l'app installée sans rien à y coller
+  const keep = keepData && !chosen && detected.os === 'ios' && !detected.inApp
   return (
     <section
       className="install-guide settle"
@@ -88,6 +91,7 @@ function GuideCard({
         rotate={0}
       >
         <Tape />
+        {keep && <KeepData />}
         {guide.intro && <p className="install-intro">{fr(guide.intro)}</p>}
         {n > 0 && (
           <ol className="guide-steps install-steps">
@@ -104,18 +108,40 @@ function GuideCard({
         )}
         {guide.after && <p className="install-after">{fr(guide.after)}</p>}
         {(guide.copyLink || chosen) && <CopyLink label={chosen ? copyLabel : undefined} />}
-        {keepData && !chosen && detected.os === 'ios' && !detected.inApp && (
-          <div className="install-keep">
-            <p>
-              {fr(
-                'Important : l’app installée a sa propre mémoire, séparée du navigateur. Elle repart d’une page blanche : exporte d’abord ta sauvegarde, puis importe-la dans l’app (page profil).',
-              )}
-            </p>
-            <TypedLink to="/profil">Exporter ma sauvegarde</TypedLink>
-          </div>
-        )}
       </IndexCard>
     </section>
+  )
+}
+
+/**
+ * iPhone : l'app installée a sa propre mémoire, séparée du navigateur, et repart d'une page blanche. Deux
+ * gestes pour y retrouver sa progression : la copier ici, avant les étapes d'installation, la coller dans
+ * l'app ; le fichier reste possible.
+ */
+function KeepData() {
+  const copyProgress = useCopyProgress(
+    'C’est copié. Ajoute maintenant l’app à l’écran d’accueil (étapes ci-dessous), ouvre-la, puis touche « Coller ma progression » sur sa première page.',
+  )
+  const { exportFile, exported } = useExportBackup()
+  return (
+    <div className="install-keep">
+      <p>{fr('Avant tout : l’app installée a sa propre mémoire, séparée du navigateur, et repart d’une page blanche. Pour y retrouver ta progression :')}</p>
+      <ol className="install-keep-steps">
+        <li>{fr('ici, avant d’installer l’app, touche « Copier ma progression » ;')}</li>
+        <li>{fr('dans l’app installée, sur sa première page, touche « Coller ma progression ».')}</li>
+      </ol>
+      <div className="install-copy">
+        <PaperButton rotate={-0.8} onClick={copyProgress.copy}>
+          Copier ma progression
+        </PaperButton>
+      </div>
+      {copyProgress.panel}
+      <p className="install-keep-alt">
+        {fr('Autre solution, avec un fichier :')} <TypedLink onClick={exportFile}>exporter ma sauvegarde</TypedLink>
+        {fr(', puis importe-la dans l’app (sur sa première page, ou dans son profil).')}
+      </p>
+      <ExportedLine name={exported} />
+    </div>
   )
 }
 

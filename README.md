@@ -32,7 +32,9 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
   reprendre).
 - **Jour ou nuit** : le disjoncteur « Lumière » en haut de l’écran bascule le thème (ou dans le profil :
   comme l’appareil, jour, nuit).
-- **Installable** sur téléphone (PWA) et utilisable hors ligne.
+- **Installable** sur téléphone (PWA) et utilisable hors ligne. Sur iPhone, l’app installée a sa propre
+  mémoire : « Copier ma progression » dans Safari, puis « Coller ma progression » dans l’app (sans
+  fichier) ; la sauvegarde complète en fichier reste dans le profil.
 
 Tout est stocké dans le navigateur de l’appareil (`localStorage`) : pas de compte, pas de serveur.
 

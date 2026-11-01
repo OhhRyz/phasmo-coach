@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   FileHead,
   H,
@@ -17,7 +18,7 @@ import { FicheExpress } from '../components/FicheExpress'
 import { ProgressBar } from '../components/ui'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { namesGhost, type Card, type CardKind, type CoachNote } from '../engine/cards'
-import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate } from '../engine/format'
+import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate, spellLdV } from '../engine/format'
 import { isCoachNote, isOwnNote } from '../engine/notes'
 import { buildReviewQueue, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
 import { questionForCard, type Question } from '../engine/quiz'
@@ -28,13 +29,18 @@ import { useStore } from '../store/store'
 import {
   answersBefore,
   comesBackInSession,
+  framesNewCard,
+  HIDDEN_GHOST,
   LEARN_MORE,
   nextSession,
   passesBefore,
+  placeCorrection,
   requeue,
   requeueGap,
+  restoreSaved,
   resumeSession,
   SAVED_SESSION_KEY,
+  START_PARAM,
   stillToAsk,
   type SavedSession,
 } from './reviewSession'
@@ -69,6 +75,24 @@ const STAMP_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'sh
 const pileLayers = (left: number) => (left <= 0 ? 0 : Math.min(14, Math.ceil(Math.sqrt(left) * 2.4)))
 
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** Téléphone : la barre d'action colle au bas de l'écran, au-dessus de la barre d'onglets (review.css). */
+const PHONE = '(max-width: 759px)'
+
+/**
+ * La consigne d'une carte nouvelle posée en QCM (voir framesNewCard) : on ne la connaît pas encore, et ce
+ * n'est pas une faute.
+ */
+const NEW_CARD = (
+  <>
+    {fr('Nouvelle carte : si tu ne sais pas, réponds au hasard ou ')}
+    <span className="on-mouse">clique sur</span>
+    <span className="on-touch">touche</span>
+    {fr(' « Je ne sais pas » ; la correction t’apprend la réponse.')}
+  </>
+)
+/** Une carte nouvelle ratée (ou « Je ne sais pas ») : la correction le dit d'abord. */
+const NEW_CARD_MISSED = 'c’est normal la première fois'
 
 /** Le mot seul, accordé au nombre (le nombre est composé à part, souvent en gras). */
 const word = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
@@ -139,7 +163,7 @@ function cardTitle(c: Card, notes: CoachNote[], profile: Profile, masked: boolea
     return { name: noteLabel(note, profile), kind: masked ? '' : (getGhost(c.ghostId ?? '')?.name ?? '') }
   }
   if (c.deck === 'mechanics') return { name: deckLabel(c), kind: 'Mécanique' }
-  return { name: masked ? 'Entité inconnue' : deckLabel(c), kind: KIND_LABEL[c.kind] }
+  return { name: masked ? HIDDEN_GHOST : deckLabel(c), kind: KIND_LABEL[c.kind] }
 }
 
 /** Fiche de séance : chaque réponse y reçoit son tampon. `ahead` : les cartes qui repasseront dans la séance. */
@@ -275,8 +299,16 @@ function ChoiceRow({
 
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
-  // une séance laissée en route dans cet onglet (fiche ouverte, autre onglet, retour, rechargement) reprend où elle en était
-  const [resumed] = useState(() => resumeSession<Outcome>(readSaved(), deck, state.log, Date.now()))
+  const [params, setParams] = useSearchParams()
+  // une séance laissée en route dans cet onglet (fiche ouverte, autre onglet, retour, rechargement) reprend où elle
+  // en était ; close, elle rouvre son bilan, sauf si l'on vient d'un lien qui demande une séance (voir restoreSaved)
+  const [resumed] = useState(() =>
+    restoreSaved(resumeSession<Outcome>(readSaved(), deck, state.log, Date.now()), params.has(START_PARAM)),
+  )
+  // le lien a servi : un retour sur la page (fiche, autre onglet) rouvrira la séance, ou son bilan
+  useEffect(() => {
+    if (params.has(START_PARAM)) setParams({}, { replace: true })
+  }, [params, setParams])
   const [queue, setQueue] = useState<Card[]>(() => resumed?.queue ?? buildReviewQueue(state, deck, Date.now()))
   // les entités de la séance, fixées au départ : une ou deux d'entre elles parmi les mauvaises réponses des
   // QCM, pour que la bonne ne soit pas « l'entité de la carte d'avant »
@@ -285,7 +317,10 @@ export function Review() {
   const [known, setKnown] = useState<string[]>(() => resumed?.known ?? studiedGhosts(deck, state.cards))
   const [done, setDone] = useState(resumed?.done ?? 0)
   const [good, setGood] = useState(resumed?.good ?? 0)
-  const [finished, setFinished] = useState(false)
+  // une séance close le reste le jour même : revenir sur la page rouvre son bilan
+  const [finished, setFinished] = useState(resumed?.finished ?? false)
+  // l'heure de la clôture : le bilan ne compte pas les réponses données après (une autre séance, plus tard)
+  const [ended, setEnded] = useState<number | null>(resumed?.ended ?? null)
   // début de séance : relit dans le journal les réponses données depuis, et fixe le jour des choix
   const [since, setSince] = useState(() => resumed?.since ?? Date.now())
   const [outcome, setOutcome] = useState<Outcome | null>(resumed?.outcome ?? null)
@@ -302,11 +337,13 @@ export function Review() {
   const [settled, setSettled] = useState(resumed?.settled ?? 0)
   // fiche express ouverte depuis la correction : on la lit sans quitter la carte
   const [fiche, setFiche] = useState<string | null>(null)
+  // téléphone, longue correction : la barre d'action suit la carte au lieu de couvrir le texte (voir placeCorrection)
+  const [barFlows, setBarFlows] = useState(false)
 
-  // la séance en cours est gardée pour l'onglet à chaque réponse ; terminée (ou pas commencée), elle s'efface
+  // la séance est gardée pour l'onglet à chaque réponse, puis close avec son bilan ; sans réponse, elle s'efface
   useEffect(() => {
     try {
-      if (finished || done === 0) {
+      if (done === 0) {
         sessionStorage.removeItem(SAVED_SESSION_KEY)
         return
       }
@@ -324,12 +361,14 @@ export function Review() {
         outcome,
         revealed,
         previous,
+        finished,
+        ended,
       }
       sessionStorage.setItem(SAVED_SESSION_KEY, JSON.stringify(saved))
     } catch {
       /* stockage indisponible : la séance ne survivra pas à un rechargement, sans gêner */
     }
-  }, [finished, since, queue, peers, known, done, good, passes, total, settled, outcome, revealed, previous])
+  }, [finished, ended, since, queue, peers, known, done, good, passes, total, settled, outcome, revealed, previous])
 
   const card = queue[0]
   const now = Date.now()
@@ -337,10 +376,10 @@ export function Review() {
   const graded = useMemo(() => {
     const byId = new Map(deck.map((c) => [c.id, c]))
     return state.log
-      .filter((l) => l.t >= since)
+      .filter((l) => l.t >= since && (ended == null || l.t <= ended))
       .map((l) => ({ ...l, card: byId.get(l.id) }))
       .filter((l): l is typeof l & { card: Card } => !!l.card)
-  }, [state.log, deck, since])
+  }, [state.log, deck, since, ended])
   // première séance : rien au journal avant elle
   const firstSession = useMemo(() => !state.log.some((l) => l.t < since), [state.log, since])
 
@@ -358,9 +397,24 @@ export function Review() {
   // l'état de la carte quand elle arrive : « Nouvelle » ne disparaît pas sous les yeux une fois la réponse notée
   const cardKey = card ? `${card.id}#${pass}` : ''
   const arrival = useMemo(() => (card ? state.cards[card.id] : undefined), [cardKey])
+  // carte jamais vue : sa consigne dit qu'on n'est pas censé la connaître (les premières seulement, voir framesNewCard)
+  const framed = useMemo(() => {
+    if (!card || state.cards[card.id]) return false
+    let ever = 0
+    let inSession = 0
+    for (const l of state.log) {
+      if (!l.isNew) continue
+      ever++
+      if (l.t >= since) inSession++
+    }
+    return framesNewCard(inSession, ever)
+  }, [cardKey])
 
   // la séance est déjà au registre (inscrite dès la première réponse, voir record) : terminer ne fait que la clore
-  const finish = useCallback(() => setFinished(true), [])
+  const finish = useCallback(() => {
+    setFinished(true)
+    setEnded(Date.now())
+  }, [])
 
   /** Carte suivante ; une carte ratée repart plus loin dans la pile (au moins REQUEUE_GAP cartes, voir requeue). */
   const advance = useCallback(
@@ -470,19 +524,27 @@ export function Review() {
   // réponse donnée (ou carte retournée) : l'action suivante prend le focus et reste à l'écran, au-dessus
   // de la barre d'onglets du téléphone (scroll-padding de la page, marge de .rv-act)
   useEffect(() => {
-    if (!outcome && !revealed) return
+    if (!outcome && !revealed) {
+      setBarFlows(false)
+      return
+    }
     const act = actRef.current
     if (outcome) act?.querySelector<HTMLElement>('.btn-tape')?.focus({ preventScroll: true })
     else answerRef.current?.focus({ preventScroll: true })
     const behavior: ScrollBehavior = reducedMotion() ? 'auto' : 'smooth'
     const show = () => {
       if (!act?.isConnected) return
-      // téléphone : le bouton colle au bas de l'écran ; on fait monter la correction (tampon et premières lignes) au-dessus de lui
+      // téléphone : le bouton colle au bas de l'écran ; la correction monte au-dessus de lui, tout entière si
+      // elle y tient, sinon jusqu'à ses premières lignes, et le bouton suit alors la carte (voir placeCorrection)
       const back = act.parentElement?.querySelector<HTMLElement>('.rv-feedback .rv-back')
-      if (back && getComputedStyle(act).position === 'sticky') {
-        const b = back.getBoundingClientRect()
-        const dy = Math.min(b.bottom, b.top + 150) - (act.getBoundingClientRect().top - 12)
-        if (dy > 0) window.scrollBy({ top: Math.min(dy, b.top - 12), behavior })
+      if (back && matchMedia(PHONE).matches) {
+        // la place du bouton une fois collé (qu'il le soit encore ou non) : au-dessus de la barre d'onglets
+        const barTop = window.innerHeight - (parseFloat(getComputedStyle(act).bottom) || 0) - act.offsetHeight
+        // après une erreur, la bonne réponse entourée reste à l'écran : la correction dit qu'elle est entourée
+        const right = outcome && !outcome.ok ? act.parentElement?.querySelector<HTMLElement>('.rv-choice.right') : null
+        const { flows, dy } = placeCorrection(back.getBoundingClientRect(), barTop, right?.getBoundingClientRect())
+        setBarFlows(flows)
+        if (dy !== 0) window.scrollBy({ top: dy, behavior })
       } else act.scrollIntoView({ block: 'nearest', behavior })
     }
     show()
@@ -498,6 +560,7 @@ export function Review() {
 
   /** Nouvelle séance : les compteurs repartent de zéro (la précédente est déjà au registre). */
   const restart = (extraNew: number) => {
+    setEnded(null)
     const fresh = buildReviewQueue(state, deck, Date.now(), extraNew)
     setQueue(fresh)
     setPeers(sessionGhosts(fresh))
@@ -564,8 +627,10 @@ export function Review() {
     // une séance close sans réponse : les réponses d'une séance laissée plus tôt dans la journée sont déjà au registre
     const today = dayKey(now)
     const answeredToday = finished && done === 0 ? state.log.filter((l) => dayKey(l.t) === today).length : 0
-    // les cartes de la séance encore à revoir (ratées deux fois : déjà dues pour la séance suivante)
+    // les cartes de la séance encore à revoir, déjà dues pour la séance suivante : ratées deux fois, ou ratées
+    // une fois dans une séance terminée avant leur retour
     const again = returns.filter((r) => r.when === 'à ta prochaine séance').reduce((n, r) => n + r.n, 0)
+    const seenCards = returns.reduce((n, r) => n + r.n, 0)
     return (
       <Notebook className="rv rv-done">
         <Page side="left" section="2" label={title}>
@@ -589,7 +654,7 @@ export function Review() {
                 {', '}
                 {missed === 0 ? 'aucune erreur' : `${missed} ${word(missed, 'erreur')}`}.{' '}
                 {again > 0
-                  ? `${again} ${word(again, 'carte ratée deux fois repasse', 'cartes ratées deux fois repassent')} à ta prochaine séance, les autres reviendront plus tard`
+                  ? `${again} ${word(again, 'carte à revoir repasse', 'cartes à revoir repassent')} à ta prochaine séance${again < seenCards ? ', les autres reviendront plus tard' : ''}`
                   : 'Les cartes reviendront plus tard, juste avant que tu les oublies'}
                 {NNBSP}: c’est ce qui les fixe en mémoire.
               </p>
@@ -708,15 +773,15 @@ export function Review() {
   const note = isNote ? state.notes.find((n) => `n:${n.id}` === card.id) : undefined
   // seules les vraies notes du coach sont au stylo rouge ; une note de l'élève reste à l'encre
   const hand = isNote ? handOf(note, state.profile) : undefined
-  // le texte d'une note reste tel qu'il a été écrit ; le reste reçoit la typographie française
-  const text = (s: string) => (isNote ? s : fr(s))
+  // le texte d'une note reste tel qu'il a été écrit ; le reste reçoit la typographie française, « LdV » en toutes lettres
+  const text = (s: string) => (isNote ? s : fr(spellLdV(s)))
   const answered = !!outcome
   const shown = answered || revealed
   // l'en-tête ne souffle jamais la réponse : l'entité n'y paraît qu'une fois nommée par la question, ou après la réponse
   const prompt = question ? question.prompt : text(card.front)
   const quote = question ? question.quote : card.quote ? text(card.quote) : undefined
   const hides = !isNote && !!ghost && !namesGhost(`${prompt} ${quote ?? ''}`, ghost) && card.deck === 'ghost'
-  const headLeft = isNote ? noteLabel(note, state.profile) : hides && !shown ? 'Entité inconnue' : deckLabel(card)
+  const headLeft = isNote ? noteLabel(note, state.profile) : hides && !shown ? HIDDEN_GHOST : deckLabel(card)
   const headRight = isNote ? (shown ? (ghost?.name ?? '') : '') : KIND_LABEL[card.kind]
 
   // le compteur ne recule jamais : le numéro de la question dans la séance (une carte qui repasse en est une
@@ -729,13 +794,22 @@ export function Review() {
   const rightLabel = question?.choices.find((c) => question.correct.includes(c.id))?.label
   const backText = card.kind === 'test' && question ? question.explain : text(card.back)
   const showBack = backText !== rightLabel && backText !== quote
+  // une carte nouvelle posée en QCM : sa consigne dit qu'on n'est pas censé la connaître (voir framesNewCard)
+  const newQcm = framed && !!question
   const instruction = question
     ? answered
       ? 'Lis la correction, puis passe à la carte suivante.'
-      : 'Choisis la bonne réponse.'
+      : newQcm
+        ? NEW_CARD
+        : 'Choisis la bonne réponse.'
     : revealed
       ? `Dis honnêtement si tu savais${NNBSP}: la carte reviendra plus tôt sinon.`
-      : `Cherche la réponse de tête, puis touche «${NNBSP}Voir la réponse${NNBSP}».`
+      : (
+          <>
+            Cherche la réponse de tête, puis <span className="on-mouse">clique sur</span>
+            <span className="on-touch">touche</span> «{NNBSP}Voir la réponse{NNBSP}».
+          </>
+        )
 
   // première séance : la révision espacée en deux phrases, au crayon (en haut sur téléphone, sur la page de droite sinon)
   const help = (where: string) =>
@@ -806,7 +880,8 @@ export function Review() {
           >
             <div className="rv-instr-line">
               <p className="rv-instr">{instruction}</p>
-              {!arrival && (
+              {/* la consigne d'une carte nouvelle le dit déjà en toutes lettres : le tampon n'y revient pas */}
+              {!arrival && !newQcm && (
                 <Stamp small tone="violet" rotate={4}>
                   Nouvelle
                 </Stamp>
@@ -857,7 +932,9 @@ export function Review() {
                       {outcome.ok ? 'Exact' : 'À revoir'}
                     </Stamp>
                     <p className="pencil-note rv-return">
-                      {outcome.ok ? `elle ${returnLine(outcome)}` : `la bonne réponse est entourée · elle ${returnLine(outcome)}`}
+                      {outcome.ok
+                        ? `elle ${returnLine(outcome)}`
+                        : `${arrival ? '' : `${NEW_CARD_MISSED} · `}la bonne réponse est entourée · elle ${returnLine(outcome)}`}
                     </p>
                   </div>
                   {verso}
@@ -869,7 +946,7 @@ export function Review() {
                   {isNote ? (
                     <p className="rv-hand hand">{card.back}</p>
                   ) : (
-                    <p className="rv-answer">{fr(card.back)}</p>
+                    <p className="rv-answer">{text(card.back)}</p>
                   )}
                   {card.backList && card.backList.length > 0 && (
                     <ul className={isNote ? 'rv-list rv-list--hand' : 'rv-list'}>
@@ -888,7 +965,7 @@ export function Review() {
         </div>
 
         {(answered || (!question && revealed)) && (
-          <div ref={actRef} className={`rv-act${answered ? '' : ' rv-act--self'}`}>
+          <div ref={actRef} className={`rv-act${answered ? '' : ' rv-act--self'}${barFlows ? ' rv-act--flow' : ''}`}>
             {answered ? (
               <>
                 <TapeButton onClick={goOn}>{last ? 'Terminer la séance' : 'Carte suivante'}</TapeButton>

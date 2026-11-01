@@ -30,8 +30,8 @@
   font-family: "Courier Prime", monospace; font-size: 13px; line-height: 1.5; word-break: break-all;
   color: var(--ink-2); background: var(--paper-lo); border: 1px dashed var(--ink-3);
 }
-/* iPhone : l'app installée repart d'une page blanche */
-.install-keep { margin-top: 18px; padding-top: 10px; border-top: 1px dashed var(--ink-3); }
+/* iPhone : l'app installée repart d'une page blanche ; copier sa progression vient avant les étapes */
+.install-keep { margin: 0 0 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--ink-3); }
 .page .install-keep p { margin: 0; font-size: 16px; line-height: 28px; }
 .install-keep .link { display: inline-flex; align-items: center; min-height: 40px; }
 

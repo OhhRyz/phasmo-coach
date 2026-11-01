@@ -2298,3 +2298,47 @@ describe('Quiz : un même signe ne revient pas sous deux formes dans la copie', 
     }
   })
 })
+
+describe('Esprit : le double encensement s’explique dans la correction', () => {
+  const spirit = getGhost('spirit')!
+  const plainly = (s: string) => s.replace(/[  ]/g, ' ')
+
+  it('la carte du test cite le test, et la correction dit ce que fait le second encensement', () => {
+    const card = buildDeck(GHOSTS, MECHANICS, []).find((c) => c.id === 'g:spirit:test:0')!
+    expect(plainly(card.back)).toMatch(/encense-la de nouveau/)
+    for (const day of ['2026-11-01', '2026-11-02', '2026-11-03']) {
+      for (const pass of [0, 1]) {
+        const q = questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: [], day, pass })!
+        expect(q.correct).toEqual(['spirit'])
+        const e = plainly(q.explain)
+        // le mécanisme, avec les délais de la fiche : 90 s (standard), 60 s (Démon) après le nouveau minuteur
+        expect(e, q.prompt).toMatch(/nouveau minuteur d’encens/)
+        expect(e, q.prompt).toMatch(/90 s/)
+        expect(e, q.prompt).toMatch(/Démon[^.]*60 s/)
+      }
+    }
+  })
+
+  it('au quiz, l’observation du double encensement s’explique de même ; les autres gardent le résumé de la fiche', () => {
+    const seen = new Set<string>()
+    for (let seed = 1; seed <= 120 && seen.size < 2; seed++) {
+      const qs = buildQuiz({ topics: ['behavior', 'zero'], ghosts: [spirit], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) })
+      for (const q of qs.filter((x) => x.id.startsWith('q:obs:spirit:') || x.id.startsWith('q:zero:spirit:'))) {
+        if (!/second encensement/.test(q.quote ?? '')) continue
+        seen.add(q.id)
+        expect(plainly(q.explain)).toMatch(/nouveau minuteur d’encens/)
+      }
+    }
+    expect(seen.size).toBeGreaterThan(0)
+    // un test sans « why » : la correction reste le résumé de la fiche
+    const demon = getGhost('demon')!
+    expect(demon.confirmationTests.every((t) => t.why == null)).toBe(true)
+  })
+
+  it('l’explication ne fait que reprendre les délais de la fiche (180 s, 90 s, 60 s), sans en inventer', () => {
+    const whys = [...spirit.confirmationTests, ...spirit.observations].map((t) => t.why).filter((w): w is string => !!w)
+    expect(whys.length).toBe(3)
+    const facts = plainly([spirit.summary, ...spirit.keyTells, ...spirit.confirmationTests.map((t) => t.text), ...spirit.confusions.map((c) => c.why)].join(' '))
+    for (const w of whys) for (const [n] of plainly(w).matchAll(/\d+ s\b/g)) expect(facts, n).toContain(n)
+  })
+})

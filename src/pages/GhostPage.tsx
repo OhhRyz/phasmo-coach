@@ -18,20 +18,22 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { roughLine, roughRng, tickPath } from '../components/journal/rough'
+import { NoteActionLinks, useNoteActions } from '../components/NoteActions'
 import { NoteEditor } from '../components/NoteEditor'
 import { NoteText } from './Notebook'
-import { Empty } from '../components/ui'
+import { Empty, useMedia } from '../components/ui'
 import { SOURCE_REPO_URL } from '../config'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import type { CoachNote } from '../engine/cards'
-import { NBSP, NNBSP, num, safeDate, validTime } from '../engine/format'
+import { fr, NBSP, NNBSP, num, safeDate, spellLdV, validTime } from '../engine/format'
 import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
 import { masteryLevel } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
+import { START_REVIEW } from './reviewSession'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -47,20 +49,6 @@ const GRADE_WORD = { 1: 'à revoir', 2: 'difficile', 3: 'exact', 4: 'exact' } as
 /** Pages empilées (tablette, téléphone) : la fiche se lit d'un seul fil, « À retenir » remonte sous la description. */
 const STACKED = '(max-width: 1180px)'
 const PHONE = '(max-width: 759px)'
-
-/** Vrai tant que la fenêtre correspond à la requête (suit les changements de taille). */
-function useMedia(query: string): boolean {
-  const [on, setOn] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(query).matches)
-  useEffect(() => {
-    if (typeof matchMedia === 'undefined') return
-    const mq = matchMedia(query)
-    const sync = () => setOn(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [query])
-  return on
-}
 
 /**
  * Le relevé des preuves de la fiche : une coche à la main (dans la couleur de la preuve) ou un tiret au
@@ -147,6 +135,8 @@ export function GhostPage() {
   const steps = useRef<Footsteps | null>(null)
   const stacked = useMedia(STACKED)
   const nameRef = useRef<HTMLHeadingElement>(null)
+  // les notes de la fiche se modifient et se suppriment comme dans « Mes notes » (même confirmation)
+  const noteActions = useNoteActions()
 
   // téléphone : le nom tient sur sa ligne, à côté de la maîtrise entourée (un nom long rapetisse au lieu de déborder)
   useLayoutEffect(() => {
@@ -285,6 +275,14 @@ export function GhostPage() {
                 {stamp}
               </Stamp>
             )}
+            {/* le tampon s'explique en une ligne : le terme reste, le débutant sait ce qu'il veut dire */}
+            {stamp === 'Preuve forcée' && ghost.forcedEvidence && (
+              <p className="gh-stamp-why">
+                {fr(
+                  `${ghost.name.startsWith('Les ') ? 'Leur' : 'Sa'} preuve ${EVIDENCE[ghost.forcedEvidence].label} fait toujours partie des preuves visibles, même en difficulté Cauchemar ou Démence.`,
+                )}
+              </p>
+            )}
             {ghost.nameEn !== ghost.name && (
               <span className="ghost-alias">
                 «{NNBSP}
@@ -371,7 +369,7 @@ export function GhostPage() {
             <div className="measure">
               <div className="measure-head">
                 <h3>Vitesse en chasse</h3>
-                <span className="val">{ghost.speed.summary}</span>
+                <span className="val">{spellLdV(ghost.speed.summary)}</span>
               </div>
               <SpeedChart ghost={ghost} />
               {ghost.speed.details.map((d, k) => (
@@ -391,7 +389,7 @@ export function GhostPage() {
 
           <div className="ghost-actions">
             <TapeButton to={`/quiz?ghost=${ghost.id}`}>Me tester sur {ghost.name.length > 14 ? 'cette entité' : ghost.name}</TapeButton>
-            <TypedLink to="/revision">
+            <TypedLink to={START_REVIEW}>
               {ghostCards.length === 0
                 ? 'aucune question dans ta révision'
                 : `${ghostCards.length} question${ghostCards.length > 1 ? 's' : ''} dans ta révision`}
@@ -592,9 +590,12 @@ export function GhostPage() {
               </H>
               <div className="ghost-notes">
                 {fromCoach.map((n, k) => (
-                  <Sticky key={n.id} hand="coach" rotate={k % 2 ? 1.6 : -1.8} meta={noteMeta(n)} sign={n.author ? `— ${n.author}` : undefined}>
-                    <NoteText note={n} />
-                  </Sticky>
+                  <div key={n.id} className="gh-note">
+                    <Sticky hand="coach" rotate={k % 2 ? 1.6 : -1.8} meta={noteMeta(n)} sign={n.author ? `— ${n.author}` : undefined}>
+                      <NoteText note={n} />
+                    </Sticky>
+                    <NoteActionLinks note={n} actions={noteActions} className="gh-note-acts" />
+                  </div>
                 ))}
                 {isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}
               </div>
@@ -608,16 +609,18 @@ export function GhostPage() {
               </H>
               <div className="ghost-notes">
                 {mine.map((n, k) => (
-                  <Sticky
-                    key={n.id}
-                    hand="mine"
-                    rotate={k % 2 ? -1.2 : 1.4}
-                    meta={noteMeta(n)}
-                    // une note d'une autre personne garde sa signature
-                    sign={n.author && !isOwnNote(n, state.profile) ? `— ${n.author}` : undefined}
-                  >
-                    <NoteText note={n} />
-                  </Sticky>
+                  <div key={n.id} className="gh-note">
+                    <Sticky
+                      hand="mine"
+                      rotate={k % 2 ? -1.2 : 1.4}
+                      meta={noteMeta(n)}
+                      // une note d'une autre personne garde sa signature
+                      sign={n.author && !isOwnNote(n, state.profile) ? `— ${n.author}` : undefined}
+                    >
+                      <NoteText note={n} />
+                    </Sticky>
+                    <NoteActionLinks note={n} actions={noteActions} className="gh-note-acts" />
+                  </div>
                 ))}
                 {!isCoach && <NoteEditor key={ghost.id} ghostId={ghost.id} compact />}
               </div>
@@ -711,6 +714,7 @@ export function GhostPage() {
           <span className="folio">— {folio + 3} —</span>
         </Page>
       </Notebook>
+      {noteActions.modals}
     </div>
   )
 }

@@ -286,6 +286,13 @@ button { font: inherit; color: inherit; }
   background: linear-gradient(to bottom, rgba(255,255,255,.18), transparent 40%, rgba(0,0,0,.08));
 }
 .tab:hover { transform: translateY(0); filter: none; }
+/* le contour de focus (clavier) : l'intercalaire est découpé en trapèze, un contour extérieur serait rogné ;
+   il se dessine donc à l'intérieur, et l'onglet se soulève comme au survol pour être vu en entier */
+.tab:focus-visible { outline: none; z-index: 4; transform: translateY(0); filter: none; }
+.tab:focus-visible::before {
+  content: ""; position: absolute; inset: 4px 12px; z-index: 2; pointer-events: none;
+  border: 2px dashed var(--red-pen);
+}
 .tab[aria-current="page"] { z-index: 3; transform: translateY(1px); filter: none; padding-bottom: 12px; }
 .tab:nth-child(1) { --c: var(--tab-1); }
 .tab:nth-child(2) { --c: var(--tab-2); }
@@ -629,7 +636,7 @@ html.js .draw [pathLength] { stroke-dasharray: 1; stroke-dashoffset: 1; animatio
   display: grid; grid-auto-flow: column; grid-template-rows: repeat(15, 32px); grid-template-columns: 1fr 1fr; column-gap: 34px;
   border-top: 1px solid var(--rule);
 }
-.registry li { display: grid; grid-template-columns: 28px 1fr 34px; align-items: center; border-bottom: 1px solid var(--rule); min-width: 0; }
+.registry li { display: grid; grid-template-columns: 28px 1fr 44px; align-items: center; border-bottom: 1px solid var(--rule); min-width: 0; }
 .registry .num { font-family: "Courier Prime", monospace; font-size: 12px; color: var(--ink-3); }
 .registry .nm { position: relative; justify-self: stretch; margin-left: 6px; font-size: 16.5px; line-height: 1; text-decoration: none; white-space: nowrap; padding: 3px 0; }
 .registry .nm::before { /* coup de surligneur : largeur = maîtrise */
@@ -646,7 +653,7 @@ html.js .draw [pathLength] { stroke-dasharray: 1; stroke-dashoffset: 1; animatio
 html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) both; animation-delay: calc(.35s + var(--i) * 28ms); }
 @keyframes swipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .registry .nm:hover { color: var(--red-pen); }
-.registry .pct { font-family: "Courier Prime", monospace; font-size: 12.5px; text-align: right; color: var(--ink-2); }
+.registry .pct { font-family: "Courier Prime", monospace; font-size: 12.5px; text-align: right; white-space: nowrap; color: var(--ink-2); }
 .registry li.zero .nm { color: var(--ink-3); }
 .registry li.zero .pct { color: var(--ink-3); }
 .registry li.ok .nm { font-weight: 700; }
@@ -668,6 +675,8 @@ html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) 
 .ghost-name { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 112px; line-height: .86; letter-spacing: -.03em; }
 .ghost-alias { grid-column: 1; margin-top: 10px; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .ghost-head .stamp { align-self: start; margin-top: 14px; --r: 7deg; font-size: 17px; }
+/* ce que veut dire le tampon (« Preuve forcée »), en une ligne sous le nom */
+.ghost-head .gh-stamp-why { grid-column: 1 / -1; margin: 10px 0 0; font-family: "Caslon", serif; font-style: italic; font-size: 16px; line-height: 1.35; color: var(--ink-2); }
 
 .ghost-hero { display: grid; grid-template-columns: 236px 1fr; gap: 28px; align-items: start; }
 .ghost-hero .polaroid { --w: 236px; --r: -2.6deg; padding-bottom: 50px; }
@@ -822,6 +831,8 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .who { display: inline-flex; flex-direction: column; justify-content: center; min-height: 44px; font-size: 10.5px; max-width: 110px; }
   .who b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* l'en-tête du téléphone n'a pas la place : le coaching s'ouvre depuis l'accueil (fiche « Pour ton élève ») et le profil */
+  .who--coaching { display: none; }
   .breaker { padding: 0; gap: 8px; min-height: 44px; }
   .breaker-box { width: 24px; height: 36px; }
   .breaker-box::before { left: 8px; top: 6px; height: 24px; }
@@ -856,6 +867,8 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
     transform: translateY(5px);
   }
   .tab[aria-current="page"], .tab.also-current { transform: translateY(-3px); padding-bottom: 14px; z-index: 3; filter: none; }
+  .tab:focus-visible { transform: translateY(-3px); }
+  .tab:focus-visible::before { inset: 4px 6px; }
   .tab:nth-child(5) { display: none; }
   .tab .long { display: none; }
   .tab .short { display: inline; }
@@ -897,10 +910,19 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .suspects .hint { font-size: 19px; }
 
   .registry { column-gap: 16px; }
-  .registry li { grid-template-columns: 22px 1fr 28px; }
+  /* la maîtrise en % : « 100 % » tient dans sa colonne */
+  .registry li { grid-template-columns: 22px 1fr 34px; }
   .registry .nm { font-size: 15px; }
   .registry .num { font-size: 10.5px; }
   .registry .pct { font-size: 11px; }
+  /* petit téléphone : le numéro d'ordre laisse sa place aux noms longs (« Les Jumeaux ») et à leur pourcentage */
+  @media (max-width: 389px) {
+    .registry { column-gap: 12px; }
+    .registry li { grid-template-columns: minmax(0, 1fr) 30px; }
+    .registry .num { display: none; }
+    .registry .nm { margin-left: 0; }
+    .registry .pct { font-size: 10px; }
+  }
 
   .notes { grid-template-columns: 1fr; }
   .notes .sticky { font-size: 23px; }

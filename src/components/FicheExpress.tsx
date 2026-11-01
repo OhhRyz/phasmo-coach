@@ -1,10 +1,7 @@
 import { getGhost } from '../data'
-import { NNBSP } from '../engine/format'
+import { NNBSP, spellLdV } from '../engine/format'
 import { TapeButton } from './journal/Journal'
 import { GhostEvidence, Modal } from './ui'
-
-/** Les abréviations des fiches, en toutes lettres (« LdV » → « ligne de vue »). */
-const spell = (s: string) => s.replace(/\bLdV\b/g, 'ligne de vue')
 
 /**
  * La fiche express d'une entité, posée sur l'exercice en cours (copie du quiz, carte de révision) : on la lit
@@ -28,14 +25,14 @@ export function FicheExpress({ ghostId, onClose, back, later }: { ghostId: strin
           </p>
           <p className="qz-fiche-line">
             <span className="qz-fiche-k">Vitesse</span>
-            <span>{spell(ghost.speed.summary)}</span>
+            <span>{spellLdV(ghost.speed.summary)}</span>
           </p>
           {ghost.keyTells.length > 0 && (
             <>
               <p className="qz-fiche-k">À retenir</p>
               <ol className="qz-fiche-tells">
                 {ghost.keyTells.slice(0, 2).map((t, k) => (
-                  <li key={k}>{spell(t)}</li>
+                  <li key={k}>{spellLdV(t)}</li>
                 ))}
               </ol>
             </>

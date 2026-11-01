@@ -8,14 +8,8 @@
 .tr-title { margin: 0 0 24px; text-wrap: balance; }
 .tr .tr-memo { max-width: 29em; font-family: "Courier Prime", ui-monospace, monospace; font-size: 16.5px; line-height: 1.6; color: var(--ink); }
 .tr .tr-memo p { margin: 0 0 6px; }
-.tr-go { margin-top: 26px; }
 .tr .tr-memo .tr-memo-obj { font-family: "Elite", monospace; font-size: 15px; letter-spacing: .06em; color: var(--ink-2); }
 .tr-memo-obj b { font-weight: 400; text-transform: uppercase; letter-spacing: .14em; color: var(--ink); }
-.tr .tr-down {
-  display: flex; align-items: flex-end; gap: 4px; width: max-content; max-width: 100%;
-  margin: 30px 0 -26px auto; font-size: 22px; transform: rotate(-2.5deg);
-}
-.tr-down svg { flex: none; color: var(--pencil); overflow: visible; margin-bottom: -20px; }
 
 .tr-libcard { margin-top: 10px; max-width: none; }
 .tr-libcard h2 { margin: 0; font-family: "Elite", monospace; font-weight: 400; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; text-align: center; }
@@ -39,9 +33,6 @@
   .tr-head { grid-template-columns: 1fr; gap: 30px; }
   .tr-title { margin-bottom: 18px; }
   .tr .tr-memo { font-size: 16.5px; }
-  .tr-go { margin-top: 22px; }
-  .tr .tr-down { margin: 18px 0 0 auto; font-size: 20px; }
-  .tr-down svg { width: 38px; height: 44px; margin-bottom: -14px; }
   .tr-libcard { margin: 6px 4px 8px; }
   .tr-libcard .cols, .tr-libcard li { grid-template-columns: 64px minmax(0, 1fr) auto; }
   .tr-shelf { margin-top: 34px; }

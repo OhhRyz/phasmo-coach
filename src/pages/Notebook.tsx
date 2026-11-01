@@ -10,19 +10,22 @@ import {
   Polaroid,
   Sticky,
   Tape,
-  TapeButton,
   TypedLink,
 } from '../components/journal/Journal'
+import { NoteActionLinks, NoteName, useNoteActions } from '../components/NoteActions'
 import { NoteEditor } from '../components/NoteEditor'
 import { useToast } from '../components/Toast'
-import { Empty, Modal } from '../components/ui'
+import { Empty } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
-import { fr, NNBSP, plural, relativeDays, safeDate, validTime } from '../engine/format'
+import { fr, plural, relativeDays, safeDate, validTime } from '../engine/format'
 import { coachNameOf, isCoachNote, isOwnNote, makesCard, sortNotes } from '../engine/notes'
-import { downloadJson, importCounts, importSummary, readNotesPayload, type NotesPayload } from '../engine/share'
+import { downloadJson, importCounts, importSummary, isNotesFile, readNotesPayload, type NotesPayload } from '../engine/share'
 import type { CardState } from '../engine/srs'
+import { notesFileName } from '../engine/transfer'
+import { readBackup } from '../store/schema'
 import { useStore } from '../store/store'
+import { ExportedLine } from '../components/Backup'
 
 export type { NotesPayload } from '../engine/share'
 
@@ -123,6 +126,7 @@ function Carnet() {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const location = useLocation()
+  const [params, setParams] = useSearchParams()
   const [arrived] = useState(() => (location.state as typeof SHOW_NOTES | null)?.carnet === 'notes')
   const profile = state.profile
   const role = profile.role
@@ -132,9 +136,14 @@ function Carnet() {
 
   const [query, setQuery] = useState('')
   const [ghost, setGhost] = useState('')
-  const [editing, setEditing] = useState<CoachNote | null>(null)
-  const [deleting, setDeleting] = useState<CoachNote | null>(null)
+  // modifier, supprimer (avec confirmation) : les mêmes fenêtres que sur la fiche d'une entité
+  const noteActions = useNoteActions()
   const fileRef = useRef<HTMLInputElement>(null)
+  const saveRef = useRef<HTMLElement>(null)
+  const [exported, setExported] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<'backup' | 'empty' | 'unknown' | null>(null)
+  // lien d'une autre page (?sauvegarde=1 : exporter, ?sauvegarde=importer) : on arrive sur le bouton, surligné
+  const [asked, setAsked] = useState<'export' | 'import' | null>(null)
 
   // notes reçues : on descend jusqu'à elles (sur téléphone, elles sont sous l'éditeur) et le focus suit
   useEffect(() => {
@@ -149,19 +158,46 @@ function Carnet() {
     return () => cancelAnimationFrame(raf)
   }, [arrived])
 
+  useEffect(() => {
+    const v = params.get('sauvegarde')
+    if (v !== '1' && v !== 'importer') return
+    setAsked(v === 'importer' ? 'import' : 'export')
+    setParams({}, { replace: true })
+  }, [params]) // seul le paramètre du lien déclenche l'arrivée
+  useEffect(() => {
+    if (!asked) return
+    const raf = requestAnimationFrame(() => {
+      const box = saveRef.current
+      if (!box) return
+      box.scrollIntoView({ block: 'center' })
+      box.querySelector<HTMLElement>('.backup-export')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [asked])
+
   /* ---------- fichier ---------- */
   const filePayload = (): NotesPayload => ({ kind: 'phasmo-coach/notes', from: holder, at: Date.now(), notes: state.notes })
 
+  const exportFile = () => {
+    const name = notesFileName()
+    downloadJson(name, filePayload())
+    setExported(name)
+    toast(fr(`Notes exportées : ${name}, dans tes téléchargements`))
+  }
+
   const importFile = async (file: File) => {
+    let raw: unknown = null
     try {
-      const p = readNotesPayload(JSON.parse(await file.text()))
-      if (!p) throw new Error('format')
-      const { fresh, updated } = importCounts(state.notes, p.notes)
-      dispatch({ type: 'notes:import', notes: p.notes, from: p.from })
-      toast(importSummary(fresh, updated))
+      raw = JSON.parse(await file.text())
     } catch {
-      toast('Fichier non reconnu')
+      /* pas un fichier du carnet */
     }
+    const p = readNotesPayload(raw)
+    if (!p) return setFileError(readBackup(raw) ? 'backup' : isNotesFile(raw) ? 'empty' : 'unknown')
+    setFileError(null)
+    const { fresh, updated } = importCounts(state.notes, p.notes)
+    dispatch({ type: 'notes:import', notes: p.notes, from: p.from })
+    toast(importSummary(fresh, updated))
   }
 
   /* ---------- les notes ---------- */
@@ -194,14 +230,13 @@ function Carnet() {
   }, [shown, profile, isStudent, coach])
 
   const total = state.notes.length
+  // rien à exporter (bouton grisé) : on arrive sur le bouton d'import
+  const landOn = asked === 'export' && !total ? 'import' : asked
   const inReview = state.notes.filter(makesCard).length
   const pinned = state.notes.filter((n) => n.pinned).length
   const filtering = !!query.trim() || !!activeGhost
   const visibleGroups = groups.filter((grp) => grp.notes.length || (!filtering && grp.key === 'coach'))
   const single = visibleGroups.length === 1
-  // côté coach : une note déjà partagée (pas modifiée depuis le dernier envoi) est peut-être chez l'élève
-  const lastShared = validTime(state.settings.lastSharedAt)
-  const sharedAlready = (n: CoachNote) => role === 'coach' && lastShared != null && n.updatedAt <= lastShared && isOwnNote(n, profile)
   const now = Date.now()
   const coachLabel = coach || 'ton coach'
   const lead =
@@ -213,21 +248,12 @@ function Carnet() {
     const i = index++
     const g = n.ghostId ? getGhost(n.ghostId) : undefined
     const hand: Hand = isCoachNote(n, profile) ? 'coach' : 'mine'
-    const canEdit = isOwnNote(n, profile) || !n.author
     const long = isLongNote(n)
     const status = noteStatus(n, state.cards[`n:${n.id}`], now)
     const meta = `${safeDate(SHORT, n.createdAt)} · ${g ? g.name : 'Général'}`
     const sign = n.author ? `— ${n.author}` : undefined
     const rotate = TILT[i % TILT.length]
     const delay = Math.min(0.1 + i * 0.08, 0.6)
-    const named = (
-      <span className="sr-only">
-        {' '}
-        «{NNBSP}
-        {n.title}
-        {NNBSP}»
-      </span>
-    )
     return (
       <li key={n.id} className={`carnet-note ${long ? 'is-torn' : 'is-sticky'}${n.pinned ? ' is-pinned' : ''}${g ? ' has-photo' : ''}`}>
         <div className="carnet-slot">
@@ -253,30 +279,16 @@ function Carnet() {
             {n.pinned && 'épinglée · '}
             {status}
           </span>
-          <span className="carnet-actions">
-            <TypedLink onClick={() => dispatch({ type: 'note:upsert', note: { ...n, pinned: !n.pinned } })}>
-              {n.pinned ? 'Désépingler' : 'Épingler'}
-              {named}
-            </TypedLink>
-            {canEdit && (
-              <>
-                <span className="dot" aria-hidden>
-                  ·
-                </span>
-                <TypedLink onClick={() => setEditing(n)}>
-                  Modifier
-                  {named}
-                </TypedLink>
-              </>
-            )}
-            <span className="dot" aria-hidden>
-              ·
-            </span>
-            <TypedLink onClick={() => setDeleting(n)}>
-              Supprimer
-              {named}
-            </TypedLink>
-          </span>
+          <NoteActionLinks
+            note={n}
+            actions={noteActions}
+            before={
+              <TypedLink onClick={() => dispatch({ type: 'note:upsert', note: { ...n, pinned: !n.pinned } })}>
+                {n.pinned ? 'Désépingler' : 'Épingler'}
+                <NoteName note={n} />
+              </TypedLink>
+            }
+          />
         </div>
       </li>
     )
@@ -327,20 +339,26 @@ function Carnet() {
           </Consigne>
           <NoteEditor autoFocus={!arrived} />
 
-          <section className="carnet-share" aria-labelledby="h-share">
+          <section className={`carnet-share${asked ? ' is-asked' : ''}`} aria-labelledby="h-share" id="sauvegarde" ref={saveRef}>
             <h2 className="carnet-share-h" id="h-share">
-              Sauvegarder
+              <span className="pocket-hl">Sauvegarder mes notes</span>
             </h2>
-            <p>{fr('Un fichier avec toutes tes notes, en copie de sécurité ou pour les passer sur un autre appareil.')}</p>
+            <p>
+              {fr('Un fichier avec tes notes seulement, sans ta progression : en copie de sécurité, ou pour les passer sur un autre appareil. Pour tout le carnet, progression comprise, il y a la')}{' '}
+              <TypedLink to="/profil?sauvegarde=1">sauvegarde complète du profil</TypedLink>.
+            </p>
             <div className="carnet-share-btns">
-              <PaperButton
-                disabled={!total}
-                rotate={0.8}
-                onClick={() => downloadJson(`phasmo-coach-notes-${new Date().toISOString().slice(0, 10)}.json`, filePayload())}
-              >
-                Exporter
+              <PaperButton disabled={!total} rotate={0.8} onClick={exportFile} className={landOn === 'export' ? 'backup-export' : undefined}>
+                Exporter mes notes
               </PaperButton>
-              <PaperButton onClick={() => fileRef.current?.click()} rotate={-0.4}>
+              <PaperButton
+                onClick={() => {
+                  setFileError(null)
+                  fileRef.current?.click()
+                }}
+                rotate={-0.4}
+                className={landOn === 'import' ? 'backup-export' : undefined}
+              >
                 Importer un fichier
               </PaperButton>
               <input
@@ -356,6 +374,25 @@ function Carnet() {
               />
             </div>
             {!total && <p className="pencil-note carnet-export-hint">{fr('rien à exporter : aucune note pour l’instant')}</p>}
+            <ExportedLine name={exported} />
+            {fileError && (
+              <div className="pencil-note backup-error" role="alert">
+                {fileError === 'backup' ? (
+                  <>
+                    <p>{fr('Ce fichier « phasmo-coach-sauvegarde-… » est une sauvegarde complète : elle s’importe depuis le profil, et remplace tout le carnet.')}</p>
+                    <TypedLink to="/profil?sauvegarde=importer">Aller à la sauvegarde complète</TypedLink>
+                  </>
+                ) : fileError === 'empty' ? (
+                  <p>{fr('Ce fichier de notes ne contient aucune note lisible : rien n’a été ajouté.')}</p>
+                ) : (
+                  <p>
+                    {fr(
+                      'Fichier non reconnu. Il faut un fichier « phasmo-coach-notes-… .json » : il se crée avec « Exporter mes notes », ici, dans « Mes notes » (le tien, ou celui de ton coach).',
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
             <p className="carnet-coaching">
               <TypedLink to="/coaching">Partager ou recevoir des notes</TypedLink>
             </p>
@@ -477,38 +514,7 @@ function Carnet() {
         </Page>
       </Book>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Modifier la note">
-        {editing && <NoteEditor note={editing} bare onDone={() => setEditing(null)} />}
-      </Modal>
-
-      <Modal
-        open={!!deleting}
-        onClose={() => setDeleting(null)}
-        title={'Supprimer cette note\u202f?'}
-        actions={
-          <>
-            <TypedLink onClick={() => setDeleting(null)}>Annuler</TypedLink>
-            <TapeButton
-              arrow={false}
-              onClick={() => {
-                if (deleting) dispatch({ type: 'note:delete', id: deleting.id })
-                setDeleting(null)
-                toast('Note supprimée')
-              }}
-            >
-              Supprimer
-            </TapeButton>
-          </>
-        }
-      >
-        <p className="modal-text">
-          «{NNBSP}
-          {deleting?.title}
-          {NNBSP}»{deleting && makesCard(deleting) ? ' et sa carte de révision seront supprimées' : ' sera supprimée'} de cet appareil.
-          {/* une suppression ne part pas avec le partage : l'élève garde la note déjà reçue */}
-          {deleting && sharedAlready(deleting) && ` Si ton élève l’a déjà reçue, elle reste dans son carnet.`}
-        </p>
-      </Modal>
+      {noteActions.modals}
 
     </>
   )

@@ -176,6 +176,15 @@ export function hydrate(raw: unknown): PersistedState {
   }
 }
 
+/**
+ * Une sauvegarde complète (fichier exporté depuis le profil, ou progression copiée-collée), passée par le
+ * même nettoyage que le stockage de l'appareil. null : ce n'est pas une sauvegarde complète.
+ */
+export function readBackup(raw: unknown): PersistedState | null {
+  if (!isObject(raw) || raw.version !== 1 || !isObject(raw.cards)) return null
+  return hydrate(raw)
+}
+
 export interface Loaded {
   state: PersistedState
   /** false si des données existaient mais n'ont pas pu être lues (elles ne doivent pas être écrasées) */

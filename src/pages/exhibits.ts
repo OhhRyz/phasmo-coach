@@ -1,5 +1,6 @@
 import { DEFAULT_NEW_PER_DAY } from '../store/schema'
 import { sessionMinutes } from './reviewPlan'
+import { START_REVIEW } from './reviewSession'
 
 /** Une séance des premiers jours (cartes nouvelles seulement), comptée comme sur la fiche « Révision du jour ». */
 const FIRST_DAYS = sessionMinutes(DEFAULT_NEW_PER_DAY, 0)
@@ -10,7 +11,7 @@ const FIRST_DAYS = sessionMinutes(DEFAULT_NEW_PER_DAY, 0)
  * `action` le geste (écrit comme un lien sur l'enveloppe).
  */
 export const EXHIBITS = {
-  revision: { n: 1, title: 'Révision du jour', to: '/revision', what: 'Réponds aux questions du jour : le carnet te repose ce que tu commences à oublier.', meta: `${FIRST_DAYS} à 25\u00a0min · chaque jour`, action: 'Réviser' },
+  revision: { n: 1, title: 'Révision du jour', to: START_REVIEW, what: 'Réponds aux questions du jour : le carnet te repose ce que tu commences à oublier.', meta: `${FIRST_DAYS} à 25\u00a0min · chaque jour`, action: 'Réviser' },
   situation: { n: 2, title: 'Mise en situation', to: '/enquete', what: 'Lis les rapports d’un contrat simulé et trouve l’entité.', meta: '≈\u00a05\u00a0min · 1 contrat', action: 'Prendre un contrat' },
   quiz: { n: 3, title: 'Quiz', to: '/quiz', what: 'Réponds à des questions à choix multiple sur les entités.', meta: '10 questions · ≈\u00a03\u00a0min', action: 'Commencer le quiz' },
   oreille: { n: 4, title: 'À l’oreille', to: '/oreille', what: 'Écoute des pas en chasse : lents, normaux ou rapides ?', meta: '10 écoutes · ≈\u00a03\u00a0min · avec le son', action: 'Écouter' },
@@ -19,3 +20,8 @@ export const EXHIBITS = {
 } as const
 
 export type ExhibitKey = keyof typeof EXHIBITS
+
+/** Le bouton « Réviser » du tiroir des exercices : « Réviser mes 3 cartes », jamais « mes 1 carte ». */
+export function reviseLabel(due: number): string {
+  return due > 1 ? `Réviser mes ${due} cartes` : 'Réviser la carte du jour'
+}

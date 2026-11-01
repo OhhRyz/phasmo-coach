@@ -8,6 +8,11 @@ export interface TextItem {
 export interface ConfirmationTest {
   text: string
   definitive: boolean
+  /**
+   * Pourquoi le test désigne l'entité, dit simplement avec les faits de la fiche : la correction d'une question
+   * qui le cite (sinon, le résumé de la fiche). Pour un test dont la conclusion ne va pas de soi.
+   */
+  why?: string
   /** test faisable seulement si cette preuve est présente (ex. empreintes UV de l'Obake) : hors révision et hors quiz */
   requires?: EvidenceId
 }
@@ -19,6 +24,8 @@ export interface Observation {
   text: string
   kind: ObservationKind
   strength: ObservationStrength
+  /** pourquoi l'observation désigne l'entité (voir ConfirmationTest.why) */
+  why?: string
   /** observation visible seulement si cette preuve est présente dans la partie (ex. Goryo et D.O.T.S) */
   requires?: EvidenceId
 }

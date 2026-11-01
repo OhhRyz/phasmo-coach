@@ -50,7 +50,8 @@
   "confirmationTests": [
     {
       "text": "Après avoir encensé l'entité une première fois, attends 150 à 170 s puis encense-la de nouveau (ce qui lance un nouveau minuteur d'encens). Si l'entité chasse dans les 60 s qui suivent le second encensement (le plus tôt qu'un Démon pourrait chasser), c'est un Esprit. Attention : ce test peut échouer si l'entité n'a pas vraiment été touchée par l'encens la seconde fois.",
-      "definitive": true
+      "definitive": true,
+      "why": "Le second encensement lance un nouveau minuteur d'encens : après lui, une entité standard ne peut pas rechasser avant 90 s, ni un Démon, le plus rapide, avant 60 s. Une chasse dans les 60 s qui suivent, sans objet maudit, désigne donc l'Esprit."
     },
     {
       "text": "Si l'entité ne rechasse pas pendant 180 s après l'encens, c'est compatible avec un Esprit, mais ça ne prouve rien : n'importe quelle entité peut attendre aussi longtemps, seul l'Esprit y est obligé.",
@@ -116,12 +117,14 @@
     {
       "text": "Tu encenses l'entité, attends entre 150 et 170 s, puis l'encenses de nouveau : sans qu'aucun objet maudit ait été utilisé, une chasse démarre moins d'une minute après ce second encensement.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "definitive",
+      "why": "Le second encensement lance un nouveau minuteur d'encens : après lui, une entité standard ne peut pas rechasser avant 90 s, ni un Démon, le plus rapide, avant 60 s. Une chasse dans les 60 s qui suivent, sans objet maudit, désigne donc l'Esprit."
     },
     {
       "text": "Tu encenses l'entité une première fois, puis une seconde fois environ 2 min 40 plus tard : une chasse démarre une vingtaine de secondes après le second encensement, sans aucun objet maudit.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "definitive",
+      "why": "Le second encensement lance un nouveau minuteur d'encens : après lui, une entité standard ne peut pas rechasser avant 90 s, ni un Démon, le plus rapide, avant 60 s. Une chasse dans les 60 s qui suivent, sans objet maudit, désigne donc l'Esprit."
     },
     {
       "text": "Après que tu l'as encensée, l'entité ne lance aucune chasse pendant au moins 3 minutes, alors que la santé de l'équipe est basse.",

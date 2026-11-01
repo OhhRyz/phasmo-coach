@@ -9,6 +9,7 @@ import {
   MarginNote,
   Notebook,
   Page,
+  PaperButton,
   Polaroid,
   RoughCircle,
   Stamp,
@@ -24,11 +25,15 @@ import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/p
 import { dayKey, fr, NBSP, NNBSP, num, safeDate } from '../engine/format'
 import { coachNameOf, coachNotes, isOwnNote, sortNotes } from '../engine/notes'
 import { shareSummary, shareSummaryLine } from '../engine/share'
-import { currentDevice, installHint, isStandalone, platform } from '../engine/device'
+import { installHint, isStandalone, platform } from '../engine/device'
 import { useAppInstalled } from '../install'
+import { useBackupFile, useCopyProgress, usePasteProgress } from '../components/Backup'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
+import { readContract, RESUME_CONTRACT } from './contractRun'
 import { EXHIBITS } from './exhibits'
+import { START_REVIEW } from './reviewSession'
+import { installLinkText as installLinkFor } from './installGuide'
 import { sessionMinutes } from './reviewPlan'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -92,11 +97,32 @@ const metaLine = (meta: string) =>
 
 /** Sur iPhone, l'app installée ne reprend pas ce qui a été noté dans l'onglet de Safari. */
 const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
-const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord ta sauvegarde, puis importe-la dedans (page profil).'
+const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : copie d’abord ta progression ici, puis colle-la dans l’app.'
 
-/** Le lien vers la page « Installer l'app » : un iPad n'est pas un téléphone. */
+/** Le lien vers la page « Installer l'app » : un iPad ou une tablette Android n'est pas un téléphone. */
 function installLinkText(): string {
-  return `Installer l’app ${currentDevice().ipad ? 'sur ton iPad' : 'sur ton téléphone'}`
+  if (typeof navigator === 'undefined') return installLinkFor('')
+  return installLinkFor(navigator.userAgent, navigator.maxTouchPoints ?? 0)
+}
+
+/**
+ * iPhone, carnet commencé dans Safari : pourquoi installer, et comment emporter sa progression dans l'app
+ * installée (la copier ici, la coller là-bas : l'app a sa propre mémoire).
+ */
+function KeepDataNote({ hint, installLink }: { hint: string; installLink: string }) {
+  const copyProgress = useCopyProgress(
+    'C’est copié. Installe l’app, ouvre-la depuis l’écran d’accueil, puis touche « Coller ma progression » sur sa première page.',
+  )
+  return (
+    <div className="pencil-note install-note">
+      <p>{fr(`${hint} ${IOS_KEEP_DATA}`)}</p>
+      <div className="install-note-links">
+        <TypedLink to="/installer">{installLink}</TypedLink>
+        <TypedLink onClick={copyProgress.copy}>Copier ma progression</TypedLink>
+      </div>
+      {copyProgress.panel}
+    </div>
+  )
 }
 
 function Welcome() {
@@ -105,8 +131,11 @@ function Welcome() {
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
   const installLink = useMemo(installLinkText, [])
-  // l'app installée repart d'une page blanche : ce qui a été commencé dans le navigateur s'importe
+  // l'app installée repart d'une page blanche : ce qui a été commencé dans le navigateur se colle ou s'importe
   const standalone = useMemo(isStandalone, [])
+  const toTop = () => window.scrollTo({ top: 0 })
+  const pasteProgress = usePasteProgress(toTop)
+  const backupFile = useBackupFile(toTop)
   // la durée d'une séance des premiers jours, calculée comme celle du mode d'emploi et de la révision du jour
   const minutes = sessionMinutes(state.settings.newPerDay, 0)
   // notes d'un coach déjà collées (lien ouvert avant le carnet) : elles attendent l'ouverture
@@ -145,11 +174,22 @@ function Welcome() {
         )}
         {standalone && (
           <div className="pencil-note install-note welcome-resume">
-            <p>{fr('Tu avais commencé dans le navigateur ? L’app installée a sa propre mémoire : reprends ta sauvegarde, ou le lien de ton coach.')}</p>
-            <p className="install-note-links">
-              <TypedLink to="/profil">Importer ma sauvegarde</TypedLink>
-              <TypedLink to="/coaching?coller=1">Coller le lien du coach</TypedLink>
+            <p>
+              {fr(
+                'Tu avais commencé dans le navigateur ? L’app installée a sa propre mémoire : colle ici la progression copiée là-bas (« Copier ma progression »), ou le lien de ton coach.',
+              )}
             </p>
+            <div className="welcome-resume-btns">
+              <PaperButton onClick={pasteProgress.paste} disabled={pasteProgress.busy} rotate={-0.8}>
+                Coller ma progression
+              </PaperButton>
+            </div>
+            {pasteProgress.panel}
+            <div className="install-note-links">
+              <TypedLink onClick={backupFile.choose}>Importer un fichier de sauvegarde</TypedLink>
+              <TypedLink to="/coaching?coller=1">Coller le lien du coach</TypedLink>
+            </div>
+            {backupFile.panel}
           </div>
         )}
         {notes > 0 && (
@@ -231,7 +271,7 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
           </li>
         </ol>
         <div className="plan-actions guide-actions">
-          <TapeButton onClick={() => onDone('/revision')}>Commencer par la révision</TapeButton>
+          <TapeButton onClick={() => onDone(START_REVIEW)}>Commencer par la révision</TapeButton>
           <TypedLink onClick={() => onDone()}>J’ai compris, ranger la fiche</TypedLink>
         </div>
         <p className="pencil-note guide-again">{fr('tu la retrouveras en bas de chaque page : « Mode d’emploi »')}</p>
@@ -261,6 +301,10 @@ function CoachCard() {
         <TypedLink to="/coaching?coller=1">Coller un bilan reçu</TypedLink>
       </div>
       <p className="pencil-note">{fr('Un lien de bilan s’ouvre tout seul ; s’il est arrivé en simple texte, colle-le dans la page « Coaching ».')}</p>
+      {/* la page Coaching n'a pas d'onglet : on l'ouvre d'ici (ou de l'en-tête, sur ordinateur) */}
+      <p className="coach-more">
+        <TypedLink to="/coaching">Ouvrir la page Coaching</TypedLink>
+      </p>
     </IndexCard>
   )
 }
@@ -376,25 +420,25 @@ export function Home() {
   const lastQuiz = lastOf('quiz')
   const lastScenario = lastOf('scenario')
   const lastEar = lastOf('ear')
+  // un contrat laissé en route dans cet onglet : l'enveloppe le dit
+  const contract = useMemo(() => readContract(), [])
   const hasData = state.log.length > 0 || state.activity.length > 0 || state.notes.length > 0
 
   if (!state.onboarded) return <Welcome />
 
   // tant que l'app tourne dans un onglet : pourquoi l'installer (téléphone), et le lien vers la marche à suivre
-  const installNote = !appInstalled && (
-    <div className="pencil-note install-note">
-      {hint && (
-        <p>
-          {fr(hint)}
-          {ios && hasData && ` ${fr(IOS_KEEP_DATA)}`}
+  const installNote =
+    !appInstalled &&
+    (ios && hasData && hint ? (
+      <KeepDataNote hint={hint} installLink={installLink} />
+    ) : (
+      <div className="pencil-note install-note">
+        {hint && <p>{fr(hint)}</p>}
+        <p className="install-note-links">
+          <TypedLink to="/installer">{phone ? installLink : 'Installer l’app'}</TypedLink>
         </p>
-      )}
-      <p className="install-note-links">
-        <TypedLink to="/installer">{phone ? installLink : 'Installer l’app'}</TypedLink>
-        {ios && hasData && <TypedLink to="/profil">Exporter ma sauvegarde</TypedLink>}
-      </p>
-    </div>
-  )
+      </div>
+    ))
 
   const notYet = 'pas encore fait'
   const steps = (
@@ -420,14 +464,16 @@ export function Home() {
       </div>
       <div className="envelopes">
         <Envelope
-          to={EXHIBITS.situation.to}
+          to={contract ? RESUME_CONTRACT : EXHIBITS.situation.to}
           piece="Exercice"
           title={EXHIBITS.situation.title}
           text={fr(EXHIBITS.situation.what)}
           meta={metaLine(EXHIBITS.situation.meta)}
-          action={EXHIBITS.situation.action}
+          action={contract ? 'Reprendre le contrat' : EXHIBITS.situation.action}
           hand={
-            lastScenario ? (
+            contract ? (
+              'contrat en cours, à reprendre'
+            ) : lastScenario ? (
               <>
                 dernier contrat{NNBSP}:{' '}
                 <span className="env-score">
@@ -535,9 +581,7 @@ export function Home() {
             {days > 0 && (
               <MarginNote className="tally-note" style={{ left: -104, top: 6, width: 80, '--r': '-4deg' }}>
                 <Tally n={days} />
-                <span>
-                  {days} jour{days > 1 ? 's' : ''}
-                </span>
+                <span>{`série${NNBSP}: ${days}${NBSP}jour${days > 1 ? 's' : ''}`}</span>
               </MarginNote>
             )}
           </div>
@@ -569,7 +613,7 @@ export function Home() {
                     fr(`Au menu : ${onMenu.slice(0, 4).join(', ')}${onMenu.length > 4 ? `… et ${onMenu.length - 4} autre${onMenu.length - 4 > 1 ? 's' : ''}` : ''}.`)}
                 </p>
                 <div className="plan-actions">
-                  <TapeButton to="/revision">Commencer la révision</TapeButton>
+                  <TapeButton to={START_REVIEW}>Commencer la révision</TapeButton>
                   <TypedLink to="/quiz?n=5">ou un quiz rapide (5 questions)</TypedLink>
                 </div>
               </>
@@ -584,8 +628,8 @@ export function Home() {
                   )}
                 </p>
                 <div className="plan-actions">
-                  <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
-                  <TypedLink to="/revision">apprendre de nouvelles cartes</TypedLink>
+                  <TapeButton to={contract ? RESUME_CONTRACT : EXHIBITS.situation.to}>{contract ? 'Reprendre le contrat' : 'Prendre un contrat'}</TapeButton>
+                  <TypedLink to={START_REVIEW}>apprendre de nouvelles cartes</TypedLink>
                 </div>
               </>
             )}
@@ -649,7 +693,9 @@ export function Home() {
                 <TypedLink to="/quiz?pool=weak">
                   {weak.started
                     ? `Quiz sur ${suspects.length === 1 ? 'la moins maîtrisée' : `les ${suspects.length} moins maîtrisées`}`
-                    : `Quiz sur ces ${suspects.length} entités`}
+                    : suspects.length === 1
+                      ? 'Quiz sur cette entité'
+                      : `Quiz sur ces ${suspects.length} entités`}
                 </TypedLink>
               )}
               <TypedLink to="/codex">Ouvrir le codex</TypedLink>
@@ -673,7 +719,7 @@ export function Home() {
             <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
               Les {GHOSTS.length} entités
             </H>
-            <p className="registry-legend">Ta maîtrise est surlignée{NNBSP}; les entités acquises sont entourées.</p>
+            <p className="registry-legend">Ta maîtrise est surlignée et chiffrée en{NBSP}%{NNBSP}; les entités acquises sont entourées.</p>
             <p className="pencil-note registry-tap">
               <span className="on-mouse">clique sur un nom</span>
               <span className="on-touch">touche un nom</span> pour ouvrir sa fiche
@@ -695,7 +741,7 @@ export function Home() {
                         g.name
                       )}
                     </Link>
-                    <span className="pct">{m === 0 ? '–' : Math.round(m * 100)}</span>
+                    <span className="pct">{m === 0 ? '–' : pct(m)}</span>
                   </li>
                 )
               })}

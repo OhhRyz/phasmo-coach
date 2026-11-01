@@ -307,7 +307,7 @@ export function Report() {
           <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
             Les {GHOSTS.length} entités
           </H>
-          <p className="registry-legend">{fr('La maîtrise est surlignée ; les entités acquises sont entourées.')}</p>
+          <p className="registry-legend">{fr('La maîtrise est surlignée et chiffrée en\u00a0% ; les entités acquises sont entourées.')}</p>
           <ol className="registry">
             {GHOSTS.map((g, i) => {
               const m = (data.mastery[g.id] ?? 0) / 100
@@ -325,7 +325,7 @@ export function Report() {
                       g.name
                     )}
                   </Link>
-                  <span className="pct">{m === 0 ? '–' : Math.round(m * 100)}</span>
+                  <span className="pct">{m === 0 ? '–' : `${Math.round(m * 100)}${NBSP}%`}</span>
                 </li>
               )
             })}

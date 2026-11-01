@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { UvPrint } from '../components/journal/Charts'
 import {
@@ -26,7 +26,7 @@ import type { EvidenceId, Ghost, ObservationStrength } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import { de, le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, possibleEvidence, type EvidenceMark, type FilterState } from '../engine/filter'
-import { NBSP, NNBSP, fr, num, safeDate } from '../engine/format'
+import { NBSP, NNBSP, fr, num, safeDate, spellLdV } from '../engine/format'
 import { coachNameOf, coachNotes } from '../engine/notes'
 import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { createRng, weightedPick } from '../engine/random'
@@ -43,6 +43,8 @@ import {
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { NoteText } from './Notebook'
+import { CONTRACT_KEY, readContract, type SavedContract } from './contractRun'
+import { clearRun, saveRun } from './savedRun'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -80,9 +82,6 @@ function rememberDifficulty(d: Difficulty) {
   }
 }
 
-/** Les abréviations des fiches, en toutes lettres dans les rapports. */
-const spell = (s: string) => s.replace(/\bLdV\b/g, 'ligne de vue')
-
 /** Ce qu'un rapport de preuve demande de noter dans le carnet : cochée (trouvée) ou barrée (non trouvée). */
 function expectedMark(c: Clue): EvidenceMark | null {
   if (!c.evidence) return null
@@ -113,6 +112,10 @@ export function Scenario() {
   /** la fiche « Quelle est l'entité ? » propose toutes les entités, et non plus seulement celles du carnet */
   const [guessAll, setGuessAll] = useState(false)
   const [quitOpen, setQuitOpen] = useState(false)
+  /** « Commencer le contrat » alors qu'un contrat attend d'être repris : il se confirme, comme l'abandon */
+  const [replaceOpen, setReplaceOpen] = useState(false)
+  /** un contrat laissé en route dans cet onglet aujourd'hui (détour par le codex, rechargement…) : à reprendre */
+  const [saved, setSaved] = useState(readContract)
   const [playing, setPlaying] = useState(false)
   /** téléphone : le carnet de preuves se replie en volet au-dessus des onglets */
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -164,7 +167,40 @@ export function Scenario() {
   /** les entités les moins maîtrisées (seulement parmi celles déjà travaillées) */
   const weak = useMemo(() => weakestGhosts(GHOSTS.map((g) => g.id), mastery, deck, state, WEAK_COUNT), [mastery, deck, state])
 
+  // le contrat en cours se garde à chaque geste (rapport lu, preuve notée, nom barré, erreur) ; verdict ou abandon l'effacent
+  useEffect(() => {
+    if (!scenario || outcome) return
+    saveRun<SavedContract>(CONTRACT_KEY, { scenario, revealed, filter, struck, wrong })
+  }, [scenario, outcome, revealed, filter, struck, wrong])
+
+  const resume = () => {
+    if (!saved) return
+    steps.current?.stop()
+    autoOpened.current = false
+    setScenario(saved.scenario)
+    setRevealed(saved.revealed)
+    setFilter(saved.filter)
+    setStruck(saved.struck)
+    setWrong(saved.wrong)
+    setOutcome(null)
+    setGuess('')
+    setQuitOpen(false)
+    setReplaceOpen(false)
+    setSaved(null)
+  }
+
+  // « Reprendre le contrat » d'une autre page (RESUME_CONTRACT) : le contrat reprend sans second geste
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('contrat') !== 'reprendre') return
+    setParams({}, { replace: true })
+    resume()
+  }, [params]) // seul le paramètre du lien déclenche la reprise
+
   const start = (difficulty: Difficulty = chosen) => {
+    clearRun(CONTRACT_KEY)
+    setSaved(null)
+    setReplaceOpen(false)
     const rng = createRng((Date.now() ^ 0x5bd1e995) >>> 0)
     const candidates = pool === 'weak' && weak.started ? GHOSTS.filter((g) => weak.ids.includes(g.id)) : GHOSTS
     // en 0 preuve, il faut au moins deux indices forts utilisables sans preuve pour que l'enquête soit jouable
@@ -242,6 +278,7 @@ export function Scenario() {
 
   const finish = (result: 'solved' | 'dead', wrongCount: number) => {
     if (!scenario || !ghost) return
+    clearRun(CONTRACT_KEY)
     setOutcome(result)
     steps.current?.stop()
     const score = scoreScenario(revealed, scenario.clues.length, wrongCount, result === 'solved')
@@ -289,188 +326,217 @@ export function Scenario() {
     const recent = pastContracts.slice(-6).reverse()
     const allLabel = `Au hasard parmi les ${GHOSTS.length}`
     return (
-      <Notebook className="sc sc--setup">
-        <Page side="left" section="4" label="Mise en situation : ordre de mission">
-          <FileHead>
-            <Link to="/entrainement">‹ Exercices</Link>
-            <span>Mise en situation</span>
-            <span>
-              Contrat n° <b>{pad(pastContracts.length + 1)}</b>
-            </span>
-          </FileHead>
-
-          <header className="sc-entry">
-            <h1 className="sc-title">
-              <em>Mise en situation</em>
-              Ordre de mission
-            </h1>
-            <Stamp thunk rotate={-7} delay={0.35}>
-              Confidentiel
-            </Stamp>
-            <p className="sc-lead">
-              Un contrat simulé, raconté rapport par rapport comme en partie. Note les preuves dans ton carnet, écarte des entités, et
-              désigne la bonne au plus vite.
-            </p>
-          </header>
-
-          <fieldset className="sc-field">
-            <legend className="typed-label">
-              <span className="sc-step">1</span>
+      <>
+        <Notebook className="sc sc--setup">
+          <Page side="left" section="4" label="Mise en situation : ordre de mission">
+            <FileHead>
+              <Link to="/entrainement">‹ Exercices</Link>
+              <span>Mise en situation</span>
               <span>
-                Difficulté du contrat <span className="sc-legend-sub">· un seul choix</span>
+                Contrat n° <b>{pad(pastContracts.length + 1)}</b>
               </span>
-            </legend>
-            <div className="sc-diff-grid">
-              <div className="sc-diffs">
-                {DIFFICULTY_ORDER.map((d) => (
-                  <RadioLine
-                    key={d.id}
-                    name="difficulty"
-                    checked={chosen === d.id}
-                    onChange={() => setDifficulty(d.id)}
-                    seed={`sc-diff-${d.id}`}
-                    hint={d.description}
-                    tag={
-                      d.id === 'pro' ? (
-                        <Stamp tone="violet" small rotate={-3} delay={0.5} className="sc-advice">
-                          conseillé pour débuter
-                        </Stamp>
-                      ) : d.id === 'apocalypse' ? (
-                        <span className="pencil-note sc-expert">pour joueurs confirmés</span>
-                      ) : undefined
-                    }
-                  >
-                    {d.label}
-                  </RadioLine>
-                ))}
-              </div>
-              <p className="pencil-note sc-warn">
-                <svg className="draw sc-brace" viewBox="0 0 16 120" preserveAspectRatio="none" aria-hidden>
-                  <path d="M13 3 C 5 6, 9 50, 3 60 C 9 70, 5 114, 13 117" pathLength={1} strokeWidth={1.6} />
-                </svg>
-                <span>
-                  En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
-                  Goryo…) restent visibles dans ces deux modes. En 0 preuve, seuls les orbes du Mimic apparaissent.
-                </span>
+            </FileHead>
+
+            <header className="sc-entry">
+              <h1 className="sc-title">
+                <em>Mise en situation</em>
+                Ordre de mission
+              </h1>
+              <Stamp thunk rotate={-7} delay={0.35}>
+                Confidentiel
+              </Stamp>
+              <p className="sc-lead">
+                Un contrat simulé, raconté rapport par rapport comme en partie. Note les preuves dans ton carnet, écarte des entités, et
+                désigne la bonne au plus vite.
               </p>
-            </div>
-          </fieldset>
-
-          <div className="sc-field">
-            <span className="typed-label" id="sc-pool-label">
-              <span className="sc-step">2</span> Entité du contrat
-            </span>
-            {weak.started ? (
-              <>
-                <Seg
-                  label="Entité du contrat"
-                  value={pool}
-                  onChange={setPool}
-                  options={[
-                    { value: 'all', label: allLabel },
-                    { value: 'weak', label: weak.ids.length === 1 ? 'La moins maîtrisée' : `Les ${weak.ids.length} moins maîtrisées` },
-                  ]}
-                />
-                <p className="pencil-note sc-hint">
-                  {pool === 'weak'
-                    ? weak.ids.map((id) => getGhost(id)?.name).join(', ')
-                    : 'celles que tu maîtrises le moins sortent plus souvent'}
+              {saved && (
+                <p className="sc-resume">
+                  <span className="pencil-note">
+                    {`contrat laissé en route${NNBSP}: ${plural(saved.revealed - 1, 'rapport')} ${saved.revealed - 1 > 1 ? 'lus' : 'lu'} sur ${saved.scenario.clues.length - 1}`}
+                  </span>
+                  <TypedLink onClick={resume}>Reprendre le contrat</TypedLink>
                 </p>
-              </>
-            ) : (
-              <>
-                <p className="sc-pool-only">{allLabel}</p>
-                <p className="pencil-note sc-hint">après ta première révision, tu pourras viser les moins maîtrisées</p>
-              </>
-            )}
-          </div>
+              )}
+            </header>
 
-          <div className="sc-go">
-            <Consigne>
-              choisis une difficulté, puis touche <b>Commencer le contrat</b>. Tu liras les rapports un par un.
-            </Consigne>
-            <TapeButton onClick={() => start()}>Commencer le contrat</TapeButton>
-            <p className="sc-rules-link">
-              <TypedLink onClick={() => document.getElementById('h-rules')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-                Lire les règles d’abord ↓
-              </TypedLink>
-            </p>
-          </div>
-        </Page>
+            <fieldset className="sc-field">
+              <legend className="typed-label">
+                <span className="sc-step">1</span>
+                <span>
+                  Difficulté du contrat <span className="sc-legend-sub">· un seul choix</span>
+                </span>
+              </legend>
+              <div className="sc-diff-grid">
+                <div className="sc-diffs">
+                  {DIFFICULTY_ORDER.map((d) => (
+                    <RadioLine
+                      key={d.id}
+                      name="difficulty"
+                      checked={chosen === d.id}
+                      onChange={() => setDifficulty(d.id)}
+                      seed={`sc-diff-${d.id}`}
+                      hint={d.description}
+                      tag={
+                        d.id === 'pro' ? (
+                          <Stamp tone="violet" small rotate={-3} delay={0.5} className="sc-advice">
+                            conseillé pour débuter
+                          </Stamp>
+                        ) : d.id === 'apocalypse' ? (
+                          <span className="pencil-note sc-expert">pour joueurs confirmés</span>
+                        ) : undefined
+                      }
+                    >
+                      {d.label}
+                    </RadioLine>
+                  ))}
+                </div>
+                <p className="pencil-note sc-warn">
+                  <svg className="draw sc-brace" viewBox="0 0 16 120" preserveAspectRatio="none" aria-hidden>
+                    <path d="M13 3 C 5 6, 9 50, 3 60 C 9 70, 5 114, 13 117" pathLength={1} strokeWidth={1.6} />
+                  </svg>
+                  <span>
+                    En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
+                    Goryo…) restent visibles dans ces deux modes. En 0 preuve, seuls les orbes du Mimic apparaissent.
+                  </span>
+                </p>
+              </div>
+            </fieldset>
 
-        <Page side="right" section="4" label="Règlement et registre des contrats">
-          <UvPrint style={{ right: 6, top: 300, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '210px' }} />
-          <div className="coffee" style={{ right: 40, bottom: 46 }} />
-          <FileHead>
-            <span>Règlement</span>
-            <span>
-              {pastContracts.length === 0 ? (
-                'Registre vide'
+            <div className="sc-field">
+              <span className="typed-label" id="sc-pool-label">
+                <span className="sc-step">2</span> Entité du contrat
+              </span>
+              {weak.started ? (
+                <>
+                  <Seg
+                    label="Entité du contrat"
+                    value={pool}
+                    onChange={setPool}
+                    options={[
+                      { value: 'all', label: allLabel },
+                      { value: 'weak', label: weak.ids.length === 1 ? 'La moins maîtrisée' : `Les ${weak.ids.length} moins maîtrisées` },
+                    ]}
+                  />
+                  <p className="pencil-note sc-hint">
+                    {pool === 'weak'
+                      ? weak.ids.map((id) => getGhost(id)?.name).join(', ')
+                      : 'celles que tu maîtrises le moins sortent plus souvent'}
+                  </p>
+                </>
               ) : (
                 <>
-                  <b>{pastContracts.length}</b> contrat{pastContracts.length > 1 ? 's' : ''} au registre
+                  <p className="sc-pool-only">{allLabel}</p>
+                  <p className="pencil-note sc-hint">après ta première révision, tu pourras viser les moins maîtrisées</p>
                 </>
               )}
-            </span>
-          </FileHead>
+            </div>
 
-          <section aria-labelledby="h-rules">
-            <H id="h-rules">Comment ça se joue</H>
-            <ol className="sc-rules">
-              <li>
-                <span className="n">01</span>
-                <p>Le contrat arrive rapport par rapport : preuves trouvées ou non, comportements, chasses, bruits de pas.</p>
-              </li>
-              <li>
-                <span className="n">02</span>
-                <p>
-                  Reporte chaque preuve dans ton carnet de preuves (un lien sous le rapport le fait pour toi) et barre les entités que tu
-                  écartes. Le carnet ne garde que celles qui restent possibles.
-                </p>
-              </li>
-              <li>
-                <span className="n">03</span>
-                <p>
-                  Quand tu es sûr·e, désigne l’entité. Plus tu tranches tôt, plus tu gagnes de points{NNBSP}: près de {num(1000)} au premier
-                  rapport, 300 au dernier.
-                </p>
-              </li>
-              <li>
-                <span className="n">04</span>
-                <p>Une erreur coûte {WRONG_GUESS_PENALTY} points. À la deuxième, le contrat échoue.</p>
-              </li>
-            </ol>
-          </section>
+            <div className="sc-go">
+              <Consigne>
+                choisis une difficulté, puis <span className="on-mouse">clique sur</span>
+                <span className="on-touch">touche</span> <b>Commencer le contrat</b>. Tu liras les rapports un par un.
+              </Consigne>
+              <TapeButton onClick={() => (saved ? setReplaceOpen(true) : start())}>Commencer le contrat</TapeButton>
+              <p className="sc-rules-link">
+                <TypedLink onClick={() => document.getElementById('h-rules')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                  Lire les règles d’abord ↓
+                </TypedLink>
+              </p>
+            </div>
+          </Page>
 
-          <section aria-labelledby="h-past">
-            <H id="h-past" count={pastContracts.length > recent.length ? `les ${recent.length} derniers sur ${pastContracts.length}` : undefined}>
-              Derniers contrats
-            </H>
-            {recent.length === 0 ? (
-              <p className="sc-empty">Ton premier contrat terminé s’inscrira ici, avec sa date et sa prime.</p>
-            ) : (
-              <div className="libcard sc-libcard settle" style={{ '--r': '1.2deg', '--d': '.4s' } as Style}>
-                <Tape />
-                <h3>Fiche des contrats</h3>
-                <div className="cols">
-                  <span>Date</span>
-                  <span>Entité</span>
-                  <span>Prime</span>
+          <Page side="right" section="4" label="Règlement et registre des contrats">
+            <UvPrint style={{ right: 6, top: 300, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '210px' }} />
+            <div className="coffee" style={{ right: 40, bottom: 46 }} />
+            <FileHead>
+              <span>Règlement</span>
+              <span>
+                {pastContracts.length === 0 ? (
+                  'Registre vide'
+                ) : (
+                  <>
+                    <b>{pastContracts.length}</b> contrat{pastContracts.length > 1 ? 's' : ''} au registre
+                  </>
+                )}
+              </span>
+            </FileHead>
+
+            <section aria-labelledby="h-rules">
+              <H id="h-rules">Comment ça se joue</H>
+              <ol className="sc-rules">
+                <li>
+                  <span className="n">01</span>
+                  <p>Le contrat arrive rapport par rapport : preuves trouvées ou non, comportements, chasses, bruits de pas.</p>
+                </li>
+                <li>
+                  <span className="n">02</span>
+                  <p>
+                    Reporte chaque preuve dans ton carnet de preuves (un lien sous le rapport le fait pour toi) et barre les entités que tu
+                    écartes. Le carnet ne garde que celles qui restent possibles.
+                  </p>
+                </li>
+                <li>
+                  <span className="n">03</span>
+                  <p>
+                    Quand tu es sûr·e, désigne l’entité. Plus tu tranches tôt, plus tu gagnes de points{NNBSP}: près de {num(1000)} au premier
+                    rapport, 300 au dernier.
+                  </p>
+                </li>
+                <li>
+                  <span className="n">04</span>
+                  <p>Une erreur coûte {WRONG_GUESS_PENALTY} points. À la deuxième, le contrat échoue.</p>
+                </li>
+              </ol>
+            </section>
+
+            <section aria-labelledby="h-past">
+              <H id="h-past" count={pastContracts.length > recent.length ? `les ${recent.length} derniers sur ${pastContracts.length}` : undefined}>
+                Derniers contrats
+              </H>
+              {recent.length === 0 ? (
+                <p className="sc-empty">Ton premier contrat terminé s’inscrira ici, avec sa date et sa prime.</p>
+              ) : (
+                <div className="libcard sc-libcard settle" style={{ '--r': '1.2deg', '--d': '.4s' } as Style}>
+                  <Tape />
+                  <h3>Fiche des contrats</h3>
+                  <div className="cols">
+                    <span>Date</span>
+                    <span>Entité</span>
+                    <span>Prime</span>
+                  </div>
+                  <ol>
+                    {recent.map((a, k) => (
+                      <li key={`${a.t}-${k}`} style={{ '--r': `${[-2, 1, -1, 2, -1.5, 1.5][k]}deg` } as Style}>
+                        <span className="d">{safeDate(SHORT, a.t)}</span>
+                        <span className="sc-lib-name">{(a.ghostId && getGhost(a.ghostId)?.name) || a.label.replace(LABEL_PREFIX, '')}</span>
+                        <span className={`res${a.score === 0 ? ' bad' : ''}`}>{a.score === 0 ? 'échec' : pts(a.score)}</span>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
-                <ol>
-                  {recent.map((a, k) => (
-                    <li key={`${a.t}-${k}`} style={{ '--r': `${[-2, 1, -1, 2, -1.5, 1.5][k]}deg` } as Style}>
-                      <span className="d">{safeDate(SHORT, a.t)}</span>
-                      <span className="sc-lib-name">{(a.ghostId && getGhost(a.ghostId)?.name) || a.label.replace(LABEL_PREFIX, '')}</span>
-                      <span className={`res${a.score === 0 ? ' bad' : ''}`}>{a.score === 0 ? 'échec' : pts(a.score)}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-          </section>
-        </Page>
-      </Notebook>
+              )}
+            </section>
+          </Page>
+        </Notebook>
+
+        {saved && (
+          <Modal
+            open={replaceOpen}
+            onClose={() => setReplaceOpen(false)}
+            title={`Abandonner le contrat laissé en route${NNBSP}?`}
+            actions={
+              <>
+                <TypedLink onClick={resume}>Reprendre le contrat</TypedLink>
+                <PaperButton onClick={() => start()}>En commencer un autre</PaperButton>
+              </>
+            }
+          >
+            <p className="sc-quit-body">
+              {`Il ne comptera pas dans tes contrats${NNBSP}: ${saved.revealed - 1 > 1 ? `ses ${saved.revealed - 1} rapports lus` : 'son rapport lu'} et ton carnet de preuves seront effacés.`}
+            </p>
+          </Modal>
+        )}
+      </>
     )
   }
 
@@ -683,10 +749,11 @@ export function Scenario() {
   /** tant que la liste est longue et qu'il reste des rapports, lire la suite est l'action principale */
   const readOn = !allShown && candidates.length > FEW_LEFT
   const firstContract = pastContracts.length === 0
-  /** quelque chose a été fait : abandonner demande confirmation */
+  /** quelque chose a été fait (rapport lu, preuve notée, nom barré, erreur) : la confirmation le rappelle */
   const engaged = revealed > 2 || wrong.length > 0 || struck.length > 0 || Object.values(filter.evidence).some((m) => m && m !== 'unknown')
   const abandon = () => {
     steps.current?.stop()
+    clearRun(CONTRACT_KEY)
     setQuitOpen(false)
     setScenario(null)
   }
@@ -701,7 +768,8 @@ export function Scenario() {
       <Notebook className="sc sc--play">
         <Page side="left" section="4" label="Rapport de terrain">
           <FileHead>
-            <button type="button" className="link-btn sc-quit" onClick={() => (engaged ? setQuitOpen(true) : abandon())}>
+            {/* comme « Quitter la copie » du quiz : abandonner se confirme toujours */}
+            <button type="button" className="link-btn sc-quit" onClick={() => setQuitOpen(true)}>
               ‹ Abandonner
             </button>
             <span>Rapport de terrain</span>
@@ -980,7 +1048,7 @@ export function Scenario() {
                   if (!candidates.some((g) => g.id === guess)) setGuess('')
                 }}
               >
-                revenir aux {candidates.length} entités de mon carnet
+                {candidates.length === 1 ? 'revenir à la seule entité de mon carnet' : `revenir aux ${candidates.length} entités de mon carnet`}
               </TypedLink>
             ) : (
               <TypedLink onClick={() => setGuessAll(true)}>
@@ -1002,7 +1070,13 @@ export function Scenario() {
           </>
         }
       >
-        <p className="sc-quit-body">Il ne comptera pas dans tes contrats{NNBSP}: les rapports lus et ton carnet de preuves seront effacés.</p>
+        <p className="sc-quit-body">
+          {engaged
+            ? `Il ne comptera pas dans tes contrats${NNBSP}: les rapports lus et ton carnet de preuves seront effacés.`
+            : `Il ne comptera pas dans tes contrats.`}{' '}
+          Pour lire une fiche, inutile d’abandonner{NNBSP}: le contrat t’attend, et la page «{NNBSP}Mise en situation{NNBSP}» te proposera de le
+          reprendre.
+        </p>
       </Modal>
     </>
   )
@@ -1135,7 +1209,7 @@ function Report({
           )}
         </span>
       </div>
-      <p className="sc-report-text">{spell(clue.text)}</p>
+      <p className="sc-report-text">{spellLdV(clue.text)}</p>
       {ev && (
         <p className={`sc-ev${found ? ' is-found' : ' is-missing'}`} data-clue={clue.id}>
           <JournalBox state={found ? 'yes' : 'no'} color={ev.color} seed={`sc-${clue.id}-${clue.evidence}`} crossOut delay={isNew ? 0.25 : 0} />

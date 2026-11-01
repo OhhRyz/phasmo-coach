@@ -257,6 +257,8 @@ html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
     position: sticky; z-index: 6; bottom: calc(86px + env(safe-area-inset-bottom));
     margin-top: 20px; scroll-margin-bottom: 16px;
   }
+  /* longue correction : la barre suit la carte, elle ne couvre pas le texte qu'on lit (voir placeCorrection) */
+  .rv-act.rv-act--flow { position: static; }
   .rv-act .btn-wrap { flex: 1 1 auto; }
   .rv-act .btn-tape { width: 100%; justify-content: center; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .5); }
   .rv-self { gap: 10px; max-width: none; }
@@ -278,7 +280,7 @@ html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
   .rv-libstamp { right: 2px; font-size: 16px !important; }
 }
 
-/* petit téléphone : l'en-tête passe sur deux lignes (à gauche d'abord) plutôt que de couper « Entité inconnue » */
+/* petit téléphone : l'en-tête passe sur deux lignes (à gauche d'abord) plutôt que de couper « Entité à trouver » */
 @media (max-width: 389px) {
   .rv-card .ic-head { display: grid; grid-template-columns: minmax(min-content, 1fr) auto; align-items: center; }
   .rv-card .ic-head span:first-child,

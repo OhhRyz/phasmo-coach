@@ -25,7 +25,13 @@ const HOW: Record<Mode, ReactNode> = {
       {NNBSP}: la question en dessous se déplie pour la réponse.
     </>
   ),
-  test: <>les faits sont cachés. Réponds dans ta tête, puis touche la question{NNBSP}: la réponse s’affiche, puis le fait.</>,
+  test: (
+    <>
+      les faits sont cachés. Réponds dans ta tête, puis <span className="on-mouse">clique sur la question</span>
+      <span className="on-touch">touche la question</span>
+      {NNBSP}: la réponse s’affiche, puis le fait.
+    </>
+  ),
 }
 
 /** « 1 fait à retenir », « 12 faits à retenir », « aucun fait à retenir ». */
