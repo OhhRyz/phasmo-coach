@@ -70,11 +70,11 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pose plusieurs objets en ligne sur le sol, là où l'entité devrait passer pendant une chasse. Si tous les objets sont projetés, et loin, c'est un Poltergeist.",
+      "text": "Pendant une chasse, laisse plusieurs objets sur le trajet de l'entité. Si tous les objets sont projetés, et loin, c'est un Poltergeist.",
       "definitive": true
     },
     {
-      "text": "Pose plusieurs objets proches les uns des autres (pas empilés), en « tas », dans la pièce favorite. Si tous les objets, ou une bonne partie, sont projetés en même temps, c'est un Poltergeist.",
+      "text": "Fais un tas d'objets dans sa pièce. Si plusieurs objets sont projetés d'un coup, c'est un Poltergeist. Cette explosion n'arrive pas à chaque fois : si rien ne vole, ça ne prouve rien.",
       "definitive": true
     },
     {
@@ -135,12 +135,12 @@
   ],
   "observations": [
     {
-      "text": "Plusieurs objets que tu avais regroupés côte à côte dans sa pièce sont projetés tous en même temps.",
+      "text": "Plusieurs objets que tu avais mis en tas dans sa pièce sont projetés d'un coup.",
       "kind": "interaction",
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, tous les objets que tu avais alignés au sol sur son passage sont projetés, et loin.",
+      "text": "Pendant la chasse, tous les objets que tu avais laissés sur son passage sont projetés, et loin.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -208,7 +208,7 @@
         "Encenser l'entité et chronométrer sa chasse suivante"
       ],
       "answer": 1,
-      "explain": "L'explosion d'objets est propre au Poltergeist : pose plusieurs objets en tas dans sa pièce et regarde s'ils sont projetés en même temps. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, une chasse impossible avant 180 s après l'encens l'Esprit."
+      "explain": "L'explosion d'objets est propre au Poltergeist : fais un tas d'objets dans sa pièce et regarde s'il en projette plusieurs d'un coup. Cette explosion n'arrive pas à chaque fois : si rien ne vole, ça ne prouve rien. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, une chasse impossible avant 180 s après l'encens l'Esprit."
     },
     {
       "q": "Plusieurs objets que tu avais posés côte à côte dans sa pièce sont projetés d'un coup. Parmi ces entités, laquelle est la bonne ?",
