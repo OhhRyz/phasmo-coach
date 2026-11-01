@@ -167,7 +167,7 @@
     },
     {
       "with": "demon",
-      "why": "Le Démon peut lui aussi chasser très tôt (70 %, et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo."
+      "why": "Le Démon peut lui aussi chasser très tôt, dès 70 % (et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo."
     }
   ],
   "observations": [
@@ -239,13 +239,13 @@
     {
       "q": "Une bougie est posée sur un crucifix de rang 1. Le crucifix brûle alors que la bougie est encore allumée. Que peux-tu en conclure ?",
       "choices": [
-        "C'est forcément un Onryo",
-        "C'est forcément un Démon",
-        "Ce n'est pas un Démon",
-        "Ce n'est pas un Onryo"
+        "Ce n'est pas un Hantu",
+        "Ce n'est pas un Spectre",
+        "Ce n'est pas un Onryo",
+        "Ce n'est pas un Yokai"
       ],
-      "answer": 3,
-      "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo, sans pour autant prouver qu'il s'agit d'un Démon, ni l'écarter."
+      "answer": 2,
+      "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo ; le Hantu, le Spectre ou le Yokai restent possibles."
     },
     {
       "q": "Tu rallumes la bougie que l'entité vient de souffler, et elle la souffle de nouveau quelques secondes plus tard. Qu'en conclus-tu ?",
@@ -262,7 +262,7 @@
       "q": "Que se passe-t-il si tu encenses un Onryo après que son compteur a atteint 3, mais avant qu'il utilise sa capacité ?",
       "choices": [
         "Le compteur repart à zéro, sans chasse",
-        "Sa chasse est retardée, pas annulée",
+        "Sa chasse est retardée sans être annulée",
         "Il chasse aussitôt, malgré l'encens",
         "L'encens n'a aucun effet sur son compteur"
       ],

@@ -190,15 +190,15 @@
       "explain": "La buée apparaît pendant les chasses, dans n'importe quelle pièce, dès que le disjoncteur est éteint ou cassé : c'est l'état du disjoncteur qui compte, pas la température de la pièce."
     },
     {
-      "q": "À quelle vitesse se déplace un Hantu dans une pièce à plus de 15 °C ?",
+      "q": "Comment chasse un Hantu dans une pièce à plus de 15 °C ?",
       "choices": [
-        "1,4 m/s",
-        "1,7 m/s",
-        "2,1 m/s",
-        "2,7 m/s"
+        "1,4 m/s sans aucune accélération en ligne de vue",
+        "1,7 m/s avec accélération standard en ligne de vue",
+        "1,4 m/s avec accélération standard en ligne de vue",
+        "1,7 m/s sans aucune accélération en ligne de vue"
       ],
       "answer": 0,
-      "explain": "Au chaud, le Hantu est plus lent qu'une entité standard (1,4 m/s). 2,1 m/s correspond à 9–12 °C et 2,7 m/s aux pièces sous 0 °C ; 1,7 m/s est la vitesse standard des autres entités."
+      "explain": "Au chaud, le Hantu est plus lent qu'une entité standard : 1,4 m/s au-dessus de 15 °C. Il n'accélère jamais en ligne de vue, quelle que soit la température : seul le froid de la pièce le rend plus rapide. 1,7 m/s avec l'accélération habituelle, c'est une entité standard."
     },
     {
       "q": "Un Hantu te voit au bout d'un long couloir. Que se passe-t-il ?",
@@ -217,21 +217,32 @@
         "1,4 m/s",
         "1,75 m/s",
         "2,7 m/s",
-        "3,0 m/s"
+        "1,0 m/s"
       ],
       "answer": 2,
-      "explain": "Plus la pièce est froide, plus le Hantu est rapide : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, et ainsi de suite jusqu'à 2,7 m/s sous 0 °C. Il n'accélère jamais en ligne de vue."
+      "explain": "Plus la pièce est froide, plus le Hantu est rapide : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, et ainsi de suite jusqu'à 2,7 m/s sous 0 °C. Il n'accélère jamais en ligne de vue. 1,0 m/s, c'est le Revenant tant qu'il ne t'a pas détecté."
     },
     {
       "q": "L'entité vient de rallumer le disjoncteur. Que peux-tu en conclure ?",
       "choices": [
-        "C'est forcément un Hantu",
-        "C'est forcément un Djinn",
         "Ce n'est pas un Djinn",
-        "Ce n'est pas un Hantu"
+        "Ce n'est pas un Hantu",
+        "Ce n'est pas un Raiju",
+        "Ce n'est pas un Yokai"
+      ],
+      "answer": 1,
+      "explain": "Le Hantu ne peut pas rallumer le disjoncteur : tu peux l'éliminer. Le Djinn ne peut pas le couper lui-même, mais rien ne l'empêche de le rallumer ; le Raiju et le Yokai restent possibles aussi."
+    },
+    {
+      "q": "Hors chasse, l'entité coupe elle-même le disjoncteur. Que peux-tu en conclure ?",
+      "choices": [
+        "Ce n'est pas un Hantu",
+        "Ce n'est pas un Onryo",
+        "Ce n'est pas un Poltergeist",
+        "Ce n'est pas un Djinn"
       ],
       "answer": 3,
-      "explain": "Le Hantu ne peut pas rallumer le disjoncteur : tu peux l'éliminer. Ça ne prouve pas pour autant qu'il s'agisse d'un Djinn, et ça ne l'écarte pas non plus : le Djinn ne peut pas couper le disjoncteur, mais rien ne l'empêche de le rallumer."
+      "explain": "Le Djinn ne peut pas couper directement le disjoncteur : s'il est coupé par l'entité, tu l'élimines. Le Hantu, lui, le coupe plus souvent que les autres (sans jamais pouvoir le rallumer) ; l'Onryo et le Poltergeist peuvent le couper aussi."
     }
   ],
   "changes": [

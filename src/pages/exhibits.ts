@@ -4,7 +4,7 @@
  * `action` le geste (écrit comme un lien sur l'enveloppe).
  */
 export const EXHIBITS = {
-  revision: { n: 1, title: 'Révision du jour', to: '/revision', what: 'Réponds aux questions du jour : le carnet te repose ce que tu commences à oublier.', meta: '≈\u00a05\u00a0min · chaque jour', action: 'Réviser' },
+  revision: { n: 1, title: 'Révision du jour', to: '/revision', what: 'Réponds aux questions du jour : le carnet te repose ce que tu commences à oublier.', meta: '≈\u00a010\u00a0min · chaque jour', action: 'Réviser' },
   situation: { n: 2, title: 'Mise en situation', to: '/enquete', what: 'Lis les rapports d’un contrat simulé et trouve l’entité.', meta: '≈\u00a05\u00a0min · 1 contrat', action: 'Prendre un contrat' },
   quiz: { n: 3, title: 'Quiz', to: '/quiz', what: 'Réponds à des questions à choix multiple sur les entités.', meta: '10 questions · ≈\u00a03\u00a0min', action: 'Commencer le quiz' },
   oreille: { n: 4, title: 'À l’oreille', to: '/oreille', what: 'Écoute des pas en chasse : lents, normaux ou rapides ?', meta: '10 écoutes · ≈\u00a03\u00a0min · avec le son', action: 'Écouter' },

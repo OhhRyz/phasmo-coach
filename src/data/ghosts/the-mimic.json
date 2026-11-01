@@ -171,15 +171,15 @@
   ],
   "quiz": [
     {
-      "q": "Peut-on éliminer le Mimic sur sa vitesse de chasse ?",
+      "q": "Le Mimic peut-il changer de vitesse d'une chasse à l'autre ?",
       "choices": [
-        "Non, il prend celle de l'entité imitée",
-        "Oui, il garde la vitesse standard d'une entité",
-        "Oui, il est plus lent qu'une entité standard",
+        "Oui, il prend à chaque fois celle de l'entité imitée",
+        "Non, il garde la vitesse standard d'une entité",
+        "Oui, mais il reste plus lent qu'une entité standard",
         "Non, mais il est un peu plus rapide que la normale"
       ],
       "answer": 0,
-      "explain": "Le Mimic copie la vitesse, le seuil de chasse et les capacités de l'entité qu'il imite : il est capable de n'importe quel schéma de chasse. Ne l'élimine jamais sur sa vitesse."
+      "explain": "Oui : le Mimic copie la vitesse, le seuil de chasse et les capacités de l'entité qu'il imite, et il en change toutes les 30 s à 2 min. D'une chasse à l'autre, il peut passer d'un schéma de chasse à un tout autre : ne l'élimine jamais sur sa vitesse."
     },
     {
       "q": "Partie à 0 preuve : tu vois des orbes dans la pièce favorite. Qu'en conclus-tu ?",
@@ -229,7 +229,7 @@
       "q": "Quelle affirmation sur les orbes du Mimic est vraie ?",
       "choices": [
         "Ils suivent l'entité au lieu de rester dans sa pièce",
-        "Ils restent dans la pièce favorite, comme les autres",
+        "Ils restent dans la pièce favorite de l'entité",
         "Ils sont d'une couleur différente des vrais orbes",
         "Ils n'apparaissent qu'en partie sans preuve"
       ],

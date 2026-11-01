@@ -156,7 +156,7 @@
           "choices": [
             "Oui, une chasse part de la pièce favorite",
             "Non, une entité peut chasser depuis n'importe où",
-            "Non, mais deux chasses de suite de là le prouvent",
+            "Non, sauf si deux chasses de suite partent de là",
             "Oui, si la chasse part d'un autre étage"
           ],
           "answer": 1
@@ -190,13 +190,13 @@
         {
           "id": "chasses-15",
           "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à ta position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
-          "q": "Utiliser la radio globale en chasse révèle-t-il la position des autres joueurs ?",
-          "a": "Non, seulement la tienne (c'est un appareil électronique tenu).",
+          "q": "Utiliser la radio globale en chasse révèle-t-il ta position ?",
+          "a": "Oui, mais seulement la tienne (c'est un appareil électronique tenu en main).",
           "choices": [
-            "Oui, celle de toute l'équipe",
-            "Non, la radio ne révèle que la tienne",
+            "Oui, la tienne et celle de toute l'équipe",
+            "Oui, la tienne et pas celle des autres",
             "Non, la radio ne révèle aucune position",
-            "Oui, celle des joueurs qui t'entendent"
+            "Non, sauf si tu cries dans le micro"
           ],
           "answer": 1
         }
@@ -228,7 +228,7 @@
           "choices": [
             "La garde jusqu'à ta dernière position, puis ralentit peu à peu",
             "La perd d'un coup et revient aussitôt à sa vitesse de base",
-            "La garde jusqu'à la fin de la chasse, même sans te revoir",
+            "La garde jusqu'à la fin de la chasse, quoi qu'il arrive",
             "Accélère encore pour te retrouver plus vite qu'avant"
           ],
           "answer": 0
@@ -294,7 +294,7 @@
             "1,4 m/s",
             "2,5 m/s",
             "2,7 m/s",
-            "3,0 m/s"
+            "1,0 m/s"
           ],
           "answer": 2
         },
@@ -398,7 +398,7 @@
             "1,36 m/s",
             "1,7 m/s",
             "1,96 m/s",
-            "2,5 m/s"
+            "1,53 m/s"
           ],
           "answer": 2
         }
@@ -431,7 +431,7 @@
             "3 s",
             "5 s",
             "7 s",
-            "12 s"
+            "4 s"
           ],
           "answer": 2
         },
@@ -491,9 +491,9 @@
           "id": "encens-07",
           "text": "N'importe quel rang de sel peut déclencher la capacité du Gallu. Le ralentissement causé par le sel de rang 3 est un mécanisme totalement différent, sans lien avec cette capacité.",
           "q": "Quel rang de sel faut-il pour déclencher la capacité du Gallu ?",
-          "a": "N'importe quel rang.",
+          "a": "N'importe quel rang de sel.",
           "choices": [
-            "N'importe quel rang",
+            "Le sel de n'importe quel rang",
             "Le rang maximal seulement",
             "Les rangs supérieurs seulement",
             "Aucun, le sel ne l'affecte pas"
@@ -569,12 +569,12 @@
           "id": "encens-13",
           "text": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée. S'il est encensé après que le compteur a atteint 3 mais avant d'utiliser sa capacité, celle-ci est retardée et non réinitialisée, ce qui permet de la repousser de plusieurs minutes.",
           "q": "Que se passe-t-il si on encense un Onryo juste après sa 3e flamme soufflée ?",
-          "a": "Sa chasse liée à la capacité est retardée, pas annulée.",
+          "a": "Sa chasse liée à la capacité est retardée, pas annulée : le compteur ne repart pas de zéro.",
           "choices": [
-            "Sa chasse est annulée et le compteur repart de zéro",
+            "Le compteur repart de zéro et il ne chasse pas",
             "Il chasse aussitôt, l'encens n'a aucun effet",
             "Sa capacité est perdue pour le reste de la partie",
-            "Sa chasse est retardée, pas annulée"
+            "Sa chasse est repoussée, son compteur ne bouge pas"
           ],
           "answer": 3
         },
@@ -684,13 +684,7 @@
           "text": "Les orbes fantomatiques se voient en vision nocturne, à travers l'écran de la caméra vidéo ou via la vidéosurveillance du camion. Le bouton utiliser bascule entre vision normale et nocturne.",
           "q": "Comment repère-t-on des orbes fantomatiques ?",
           "a": "En vision nocturne, via l'écran de la caméra vidéo ou la vidéosurveillance du camion.",
-          "choices": [
-            "À l'œil nu, en éteignant toutes les lumières de la pièce",
-            "Au lecteur EMF, en balayant lentement la pièce favorite",
-            "Au micro parabolique, qui capte leur faible bourdonnement",
-            "En vision nocturne, à la caméra vidéo ou en vidéosurveillance"
-          ],
-          "answer": 3
+          "evidence": true
         },
         {
           "id": "equipement-11",
@@ -746,6 +740,13 @@
           "evidence": true
         },
         {
+          "id": "preuves-16",
+          "text": "Pas besoin d'attendre que le thermomètre passe sous 0 °C : dès qu'il affiche 0,quelque chose dans la pièce favorite (par exemple 0,6 °C), tu peux déjà compter les températures glaciales.",
+          "q": "À partir de quelle température au thermomètre peux-tu compter les températures glaciales ?",
+          "a": "Dès 0,quelque chose (par exemple 0,6 °C), sans attendre de passer sous 0 °C.",
+          "evidence": true
+        },
+        {
           "id": "preuves-02",
           "text": "Depuis la v0.9.0.0, une entité ne peut plus lancer le livre après avoir écrit dedans. Seule une entité qui n'a pas l'écriture comme preuve, ou qui la cache, peut lancer le livre.",
           "q": "Une entité qui a écrit dans le livre peut-elle ensuite le lancer ?",
@@ -756,11 +757,11 @@
           "id": "preuves-03",
           "text": "Dans une partie à 0 preuve, aucune preuve n'apparaît, même les preuves garanties. La seule exception est les orbes du Mimic, car ce sont une capacité et non une vraie preuve.",
           "q": "Quelle preuve peut quand même apparaître dans une partie à 0 preuve ?",
-          "a": "Les orbes du Mimic, car c'est une capacité.",
+          "a": "Les faux orbes du Mimic : c'est une capacité, pas une vraie preuve.",
           "choices": [
-            "La preuve garantie de l'entité, s'il y en a une",
+            "La preuve garantie d'un Goryo ou d'un Obake",
             "Une preuve au hasard parmi celles de l'entité",
-            "Les orbes du Mimic, car c'est une capacité",
+            "Les faux orbes du Mimic, même sans preuve",
             "Aucune, pas même une fausse preuve"
           ],
           "answer": 2
@@ -775,13 +776,13 @@
         {
           "id": "preuves-05",
           "text": "Les orbes du Mimic se comportent exactement comme ceux des autres entités : ils restent dans la pièce favorite et n'ont aucune différence visuelle.",
-          "q": "Les orbes du Mimic suivent-ils l'entité hors de sa pièce favorite ?",
-          "a": "Non, ils restent dans la pièce favorite comme des orbes normaux.",
+          "q": "Les orbes du Mimic restent-ils dans sa pièce favorite ?",
+          "a": "Oui, ils y restent comme ceux de n'importe quelle entité, sans différence visuelle.",
           "choices": [
-            "Oui, ils suivent l'entité partout",
-            "Non, ils n'apparaissent que pendant les chasses",
-            "Non, ils restent dans cette pièce",
-            "Oui, et ils brillent plus que des orbes normaux"
+            "Non, ils suivent l'entité dans toute la maison",
+            "Oui, sauf pendant les chasses où ils la suivent",
+            "Oui, ils y restent comme ceux des autres entités",
+            "Non, ils se déplacent avec le joueur le plus proche"
           ],
           "answer": 2
         },
@@ -791,8 +792,8 @@
           "q": "Comment confirmer de façon fiable qu'une entité a changé de pièce favorite ?",
           "a": "Orbes dans une autre pièce, ou miroir hanté montrant une nouvelle pièce.",
           "choices": [
-            "Des orbes ailleurs, ou le miroir qui montre une autre pièce",
-            "Une baisse de température qui apparaît dans une autre pièce",
+            "Des orbes ailleurs ou le miroir qui montre une autre pièce",
+            "Une baisse de température ou des bruits dans une autre pièce",
             "Une chasse qui démarre depuis une autre pièce de la maison",
             "La pièce que la planche Ouija donne comme sa position"
           ],
@@ -815,13 +816,13 @@
         {
           "id": "preuves-09",
           "text": "Le Hantu ne refroidit pas une pièce plus vite et n'atteint pas une température plus basse que les autres entités. Seule sa vitesse en chasse dépend du froid.",
-          "q": "Le Hantu refroidit-il les pièces plus vite que les autres entités ?",
-          "a": "Non, seule sa vitesse en chasse dépend du froid.",
+          "q": "Le Hantu refroidit-il les pièces comme les autres entités ?",
+          "a": "Oui, au même rythme et pas plus bas : seule sa vitesse en chasse dépend du froid.",
           "choices": [
-            "Oui, il refroidit les pièces deux fois plus vite",
-            "Non, il réchauffe au contraire sa pièce",
-            "Non, seule sa vitesse en chasse dépend du froid",
-            "Oui, et il descend plus bas que les autres"
+            "Non, il les refroidit plus vite et plus bas",
+            "Oui, sauf qu'il les fait descendre plus bas",
+            "Oui, au même rythme et pas plus bas qu'elles",
+            "Non, il réchauffe au contraire sa pièce favorite"
           ],
           "answer": 2
         },
@@ -834,7 +835,7 @@
             "Sur toutes les photos où il apparaît",
             "Sur les photos prises pendant une chasse",
             "Sur les photos prises de très près",
-            "Sur les photos comptées comme photos de l'entité"
+            "Sur les photos qui comptent pour l'entité"
           ],
           "answer": 3
         },
@@ -847,7 +848,7 @@
         },
         {
           "id": "preuves-12",
-          "text": "Un souffle (hiss) entendu lors d'un événement ne prouve pas une bulle d'air ou un brouillard fantomatique : l'apparition en marche peut produire le même son. Il faut avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni.",
+          "text": "Un souffle entendu lors d'un événement ne prouve pas une bulle d'air ou un brouillard fantomatique : l'apparition en marche peut produire le même son. Il faut avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni.",
           "q": "Un souffle entendu pendant un événement suffit-il pour écarter l'Oni ?",
           "a": "Non, il faut avoir vu la bulle d'air ou le brouillard.",
           "choices": [
@@ -959,13 +960,13 @@
         {
           "id": "portees-05",
           "text": "Les Jumeaux sont une seule entité dotée de deux portées d'interaction, une grande et une petite.",
-          "q": "Les Jumeaux sont-ils deux entités distinctes ?",
-          "a": "Non, une seule entité avec deux portées d'interaction.",
+          "q": "Les Jumeaux ne sont-ils qu'une seule entité ?",
+          "a": "Oui, une seule entité avec deux portées d'interaction.",
           "choices": [
-            "Non, une seule entité avec une seule portée",
-            "Non, une seule entité avec deux portées",
-            "Oui, deux entités avec une portée chacune",
-            "Oui, deux entités qui partagent une portée"
+            "Oui, une seule entité avec une seule portée",
+            "Oui, une seule entité avec deux portées",
+            "Non, deux entités avec une portée chacune",
+            "Non, deux entités qui partagent une portée"
           ],
           "answer": 1
         },
@@ -1040,7 +1041,7 @@
           "q": "Une Ombre peut-elle chasser quand elle est dans la même pièce qu'un joueur ?",
           "a": "Non, mais elle peut chasser depuis une pièce adjacente.",
           "choices": [
-            "Oui, comme n'importe quelle autre entité du jeu",
+            "Oui, elle chasse comme n'importe quelle autre entité",
             "Non, jamais tant qu'il reste un joueur dedans",
             "Oui, mais seulement quand la santé est basse",
             "Non, mais depuis une pièce voisine, c'est possible"
@@ -1165,7 +1166,7 @@
           "a": "5 bougies rouges.",
           "choices": [
             "3 bougies rouges",
-            "4 bougies rouges",
+            "6 bougies rouges",
             "5 bougies rouges",
             "7 bougies rouges"
           ],
@@ -1187,13 +1188,13 @@
         {
           "id": "maudits-11",
           "text": "Sur la patte de singe, le nombre de doigts tendus indique les vœux restants. Chaque vœu n'est utilisable qu'une fois par contrat ; répéter un vœu fait juste remuer les doigts.",
-          "q": "Peut-on faire deux fois le même vœu à la patte de singe dans un contrat ?",
-          "a": "Non, les doigts remuent et le vœu n'est pas exaucé.",
+          "q": "Refaire un vœu déjà exaucé à la patte de singe échoue-t-il ?",
+          "a": "Oui, les doigts remuent et le vœu n'est pas exaucé.",
           "choices": [
-            "Oui, tant qu'il reste des doigts tendus",
-            "Non, et la patte lance aussitôt une chasse",
-            "Oui, mais il coûte alors deux doigts d'un coup",
-            "Non, les doigts remuent sans exaucer le vœu"
+            "Non, tant qu'il reste des doigts tendus",
+            "Oui, et la patte lance aussitôt une chasse",
+            "Non, il coûte alors deux doigts d'un coup",
+            "Oui, les doigts remuent sans exaucer le vœu"
           ],
           "answer": 3
         },
@@ -1204,7 +1205,7 @@
           "a": "Oui, il déverrouille toutes les sorties (avec 5 s de lenteur et de vision obscurcie).",
           "choices": [
             "Oui, il déverrouille toutes les sorties",
-            "Oui, mais il ne déverrouille que la porte d'entrée",
+            "Oui, il ne déverrouille que la porte d'entrée",
             "Non, il échoue tant que la chasse dure",
             "Non, le vœu attend la fin de la chasse"
           ],
@@ -1228,13 +1229,7 @@
           "text": "« Je souhaite avoir de l'information » retire 1 preuve incorrecte du journal et barre les entités associées. En contrepartie, une chasse démarre près du joueur, dont la vision et l'ouïe restent réduites jusqu'à sa mort ou la fin de la partie.",
           "q": "Quel est l'avantage du vœu « Je souhaite avoir de l'information » ?",
           "a": "Il retire 1 preuve incorrecte du journal.",
-          "choices": [
-            "Il retire 1 preuve incorrecte du journal",
-            "Il ajoute 1 bonne preuve au journal",
-            "Il révèle le nom de l'entité dans le journal",
-            "Il montre la pièce favorite de l'entité"
-          ],
-          "answer": 0
+          "evidence": true
         },
         {
           "id": "maudits-15",
@@ -1265,7 +1260,7 @@
             "La moyenne de toute l'équipe",
             "Celle de sa cible, où qu'elle soit",
             "La plus basse de toute l'équipe",
-            "Celle du joueur le plus proche d'elle"
+            "Celle de l'hôte de la partie, où qu'il soit"
           ],
           "answer": 1
         },
@@ -1275,7 +1270,7 @@
           "q": "Quand la cible de la Banshee change-t-elle ?",
           "a": "Quand un joueur meurt ou quand la cible quitte la partie.",
           "choices": [
-            "À chaque nouvelle chasse, même si personne ne meurt",
+            "À chaque nouvelle chasse, que quelqu'un meure ou non",
             "De temps en temps, au hasard parmi les vivants",
             "Quand la cible sort de la maison ou se cache",
             "À la mort d'un joueur ou au départ de sa cible"
@@ -1289,8 +1284,8 @@
           "a": "Elle reste la cible et la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas.",
           "choices": [
             "La cible passe aussitôt au joueur suivant",
-            "La cible reste la même, et les chasses cessent",
-            "Une chasse démarre aussitôt contre toute l'équipe",
+            "La cible reste inchangée et les chasses cessent",
+            "Les chasses reprennent et visent le joueur le plus proche",
             "Une nouvelle cible est tirée au hasard"
           ],
           "answer": 1
@@ -1523,7 +1518,7 @@
     },
     {
       "id": "tf-14",
-      "claim": "Un souffle (hiss) entendu pendant un événement prouve que c'était une bulle d'air ou un brouillard fantomatique.",
+      "claim": "Un souffle entendu pendant un événement prouve que c'était une bulle d'air ou un brouillard fantomatique.",
       "answer": false,
       "explain": "L'apparition en marche peut produire le même son. Il faut voir la bulle d'air ou le brouillard avant d'écarter l'Oni."
     },

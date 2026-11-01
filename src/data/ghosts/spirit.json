@@ -159,13 +159,13 @@
     {
       "q": "Tu encenses l'entité et elle chasse 150 s plus tard. Que peux-tu en conclure ?",
       "choices": [
-        "C'est forcément un Démon",
+        "Ce n'est pas un Yurei",
         "Ce n'est pas un Esprit",
-        "C'est forcément un Esprit",
+        "Ce n'est pas un Onryo",
         "Ce n'est pas un Démon"
       ],
       "answer": 1,
-      "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Elle ne désigne pas pour autant un Démon et ne l'écarte pas non plus : un Démon peut rechasser dès 60 s, une entité standard dès 90 s."
+      "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Les autres restent possibles : une entité standard comme le Yurei ou l'Onryo peut rechasser dès 90 s, le Démon dès 60 s."
     },
     {
       "q": "À quelle vitesse chasse un Esprit ?",
@@ -193,12 +193,12 @@
       "q": "À quel seuil de santé mentale moyenne un Esprit peut-il chasser ?",
       "choices": [
         "50 %",
-        "35 %",
+        "75 %",
         "60 %",
         "70 %"
       ],
       "answer": 0,
-      "explain": "L'Esprit a le seuil standard de 50 %. 35 % correspond à l'Ombre, 60 % à l'Onryo (ou au Cauchemar dans le noir), 70 % au seuil habituel du Démon."
+      "explain": "L'Esprit a le seuil standard de 50 %. 75 % correspond au Thayé à son plus jeune âge, 60 % à l'Onryo (ou au Cauchemar dans le noir), 70 % au seuil habituel du Démon."
     },
     {
       "q": "Pour le test du double encensement, quand fais-tu le second encensement ?",
@@ -210,6 +210,17 @@
       ],
       "answer": 1,
       "explain": "On encense une deuxième fois 150 à 170 s après le premier, puis on regarde si l'entité chasse dans les 60 s qui suivent : si oui, c'est un Esprit."
+    },
+    {
+      "q": "Le tas de sel que tu as posé dans la pièce de l'entité a été piétiné. Que peux-tu en conclure ?",
+      "choices": [
+        "Ce n'est pas un Esprit",
+        "Ce n'est pas un Poltergeist",
+        "Ce n'est pas un Spectre",
+        "Ce n'est pas un Obake"
+      ],
+      "answer": 2,
+      "explain": "Le Spectre ne touche jamais au sel : du sel piétiné l'élimine. L'Esprit, le Poltergeist et l'Obake marchent dans le sel comme les autres entités : ils restent possibles."
     }
   ],
   "changes": [

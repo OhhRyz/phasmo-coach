@@ -107,7 +107,7 @@
     },
     {
       "with": "yokai",
-      "why": "Spirit Box + orbes en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce : une chasse précoce ne vient pas forcément de l'obscurité. En chasse, il ne te détecte qu'à 2,5 m. 3e preuve : D.O.T.S vs écriture."
+      "why": "Spirit Box + orbes en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce ; en chasse, il n'entend ta voix et ton électronique qu'à 2,5 m. 3e preuve : D.O.T.S vs écriture."
     },
     {
       "with": "revenant",
@@ -127,7 +127,7 @@
     },
     {
       "with": "hantu",
-      "why": "Le Hantu coupe volontiers le disjoncteur (et ne peut pas le rallumer) ; le Cauchemar, lui, éteint interrupteurs et lampes un par un. Une seule preuve en commun (orbes)."
+      "why": "Le Hantu coupe le disjoncteur plus souvent que les autres et ne peut jamais le rallumer ; le Cauchemar, lui, éteint interrupteurs et lampes un par un. Une seule preuve en commun (orbes)."
     },
     {
       "with": "dayan",
@@ -186,10 +186,10 @@
         "40 %",
         "60 %",
         "50 %",
-        "35 %"
+        "45 %"
       ],
       "answer": 0,
-      "explain": "Lumière allumée : il attend 40 %. Interrupteur éteint ou ampoules cassées : il chasse dès 60 %."
+      "explain": "Lumière allumée : il attend 40 %. Interrupteur éteint ou ampoules cassées : il chasse dès 60 %. 50 % est le seuil standard."
     },
     {
       "q": "Quel élément détermine le seuil de chasse du Cauchemar ?",
@@ -236,15 +236,15 @@
       "explain": "Le Cauchemar peut éteindre aussitôt une lumière qu'un joueur vient d'allumer à moins de 4 m de lui, même pendant un événement : c'est la seule entité qui actionne un interrupteur pendant un événement. Allumer les interrupteurs près de lui en plein événement est son test de confirmation."
     },
     {
-      "q": "Vrai ou faux : le Cauchemar se dirige exprès vers les pièces sombres.",
+      "q": "Vrai ou faux : le Cauchemar quitte plus souvent la pièce où il se trouve quand la lumière y est allumée.",
       "choices": [
-        "Vrai, il rejoint la pièce la plus sombre",
-        "Faux, une lumière allumée le fait errer davantage",
-        "Vrai, mais il lui faut le disjoncteur coupé",
-        "Faux, il fuit au contraire les pièces sombres"
+        "Vrai, l'éclairage le pousse à errer davantage",
+        "Vrai, à condition qu'un joueur soit dans la pièce",
+        "Faux, il rejoint la pièce la plus sombre de la maison",
+        "Faux, l'éclairage ne change rien à ses déplacements"
       ],
-      "answer": 1,
-      "explain": "C'est une idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité, et il ne la fuit pas non plus."
+      "answer": 0,
+      "explain": "Vrai : une lumière allumée dans la pièce où il se trouve le fait errer davantage, et il en sort donc plus souvent, qu'un joueur y soit ou non. Il ne recherche pas pour autant l'obscurité, et ne la fuit pas non plus."
     }
   ],
   "changes": [

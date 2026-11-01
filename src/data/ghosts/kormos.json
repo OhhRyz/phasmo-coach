@@ -210,7 +210,7 @@
       "q": "Quel est le seuil de chasse du Kormos si un joueur sprinte dans sa pièce ?",
       "choices": [
         "50 %",
-        "80 %",
+        "40 %",
         "70 %",
         "60 %"
       ],
@@ -223,7 +223,7 @@
         "Tu sprintes pour mettre de la distance",
         "Tu te caches et tu préviens l'équipe au micro",
         "Tu allumes ta lampe torche pour l'aveugler",
-        "Tu t'immobilises en silence, tout éteint"
+        "Tu t'immobilises en silence et tu éteins tout"
       ],
       "answer": 3,
       "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux : arrête-toi, coupe ton micro et éteins ton électronique."

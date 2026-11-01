@@ -212,11 +212,11 @@
       "choices": [
         "7 s",
         "5 s",
-        "12 s",
+        "4 s",
         "3 s"
       ],
       "answer": 0,
-      "explain": "7 s au lieu des 5 s standard (les notes de patch annonçaient 7,5 s, mais le jeu applique 7 s)."
+      "explain": "7 s au lieu des 5 s standard (les notes de patch annonçaient 7,5 s, mais le jeu applique 7 s). 4 s, c'est un Gallu enragé."
     },
     {
       "q": "Comment un joueur se fait-il maudire par un Moroi ?",
@@ -243,7 +243,7 @@
     {
       "q": "Pendant une chasse, tu encenses (rang 1) un Moroi lancé à pleine vitesse. Que devient sa vitesse ?",
       "choices": [
-        "Il garde sa vitesse maximale, comme si de rien n'était",
+        "Il garde sa vitesse maximale, l'encens ne change rien",
         "Il perd tout son bonus de ligne de vue jusqu'à la fin de la chasse",
         "Il ralentit au minimum jusqu'à la fin de la chasse",
         "Il retombe à sa vitesse de base, puis reprend son bonus"

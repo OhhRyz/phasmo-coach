@@ -103,13 +103,13 @@
   "quiz": [
     {
       "q": "Pendant une chasse, l'entité t'a repéré ; tu te caches dans un placard et elle t'y tue. Que peux-tu en conclure ?",
-      "choices": ["C'est forcément un Aswang", "Ce n'est pas un Kormos", "Ce n'est pas un Aswang", "C'est forcément un Kormos"],
+      "choices": ["Ce n'est pas un Kormos", "Ce n'est pas un Deogen", "Ce n'est pas un Aswang", "Ce n'est pas un Gallu"],
       "answer": 2,
-      "explain": "Quand un Aswang rejoint dans une cachette officielle (placard, casier…) le joueur qu'il a détecté, sa chasse s'arrête net, sans mort. Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang. Cette faiblesse ne vaut pas dans une cachette non officielle, et aucune autre entité ne l'a : le Kormos, par exemple, reste possible."
+      "explain": "Quand un Aswang rejoint dans une cachette officielle (placard, casier…) le joueur qu'il a détecté, sa chasse s'arrête net, sans mort. Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang. Cette faiblesse ne vaut pas dans une cachette non officielle, et aucune autre entité ne l'a : le Kormos, le Deogen ou le Gallu restent possibles."
     },
     {
       "q": "Que se passe-t-il si l'Aswang rejoint, dans une cachette officielle, le joueur qu'il a détecté ?",
-      "choices": ["Il tue le joueur instantanément", "Il fait demi-tour, mais la chasse continue", "Il bloque la cachette jusqu'à la fin de la chasse", "Il met fin à la chasse, sans tuer personne"],
+      "choices": ["Il tue le joueur instantanément", "Il fait demi-tour et la chasse continue", "Il bloque la cachette jusqu'à la fin de la chasse", "Il met fin à la chasse sans tuer personne"],
       "answer": 3,
       "explain": "Si l'Aswang rejoint le joueur qu'il a détecté dans une cachette officielle disponible, la chasse se termine aussitôt, sans mort."
     },
@@ -126,10 +126,10 @@
       "explain": "L'Aswang démarre à 1,53 m/s. 1,7 m/s est la vitesse standard, 1,4 m/s celle du Hantu au chaud et 1,96 m/s celle de l'Obambo agressif ou du Gallu enragé."
     },
     {
-      "q": "Vrai ou faux : la chasse d'un Aswang s'arrête dès qu'il te voit entrer dans une cachette.",
-      "choices": ["Vrai, quelle que soit la cachette choisie", "Vrai, à condition que ce soit un placard", "Faux, il doit d'abord rejoindre ta cachette", "Faux, sa chasse va jusqu'au bout malgré tout"],
-      "answer": 2,
-      "explain": "C'est une idée reçue : l'Aswang doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête. Une fois qu'il y est, elle s'arrête net, sans mort."
+      "q": "Vrai ou faux : la chasse d'un Aswang s'arrête quand il te rejoint dans une cachette officielle.",
+      "choices": ["Faux, il te tue dans ta cachette comme les autres", "Vrai, s'il t'a détecté avant que tu te caches", "Vrai, à condition que ce soit un placard", "Faux, sa chasse va jusqu'au bout malgré tout"],
+      "answer": 1,
+      "explain": "Vrai, s'il t'a détecté : quand l'Aswang rejoint dans une cachette officielle disponible (placard, casier…) le joueur qu'il a repéré, sa chasse s'arrête net, sans mort. Te voir entrer dans ta cachette ne suffit pas : il doit l'atteindre ou y entrer. Ça ne marche pas dans une cachette non officielle."
     },
     {
       "q": "L'Aswang t'a trouvé caché à la chasse précédente. À quoi dois-tu t'attendre à la suivante ?",

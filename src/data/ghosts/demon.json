@@ -86,7 +86,7 @@
     },
     {
       "with": "obambo",
-      "why": "Mêmes UV et écriture. L'Obambo peut chasser tôt (65 %) en état agressif, mais jamais au-dessus, et sa vitesse alterne entre environ 1,45 et 1,96 m/s ; le Démon reste à 1,7 m/s."
+      "why": "Mêmes UV et écriture. L'Obambo peut chasser dès 65 % en état agressif, mais jamais au-dessus, et sa vitesse alterne entre environ 1,45 et 1,96 m/s ; le Démon reste à 1,7 m/s."
     },
     {
       "with": "hantu",
@@ -194,7 +194,7 @@
         "20 s",
         "25 s",
         "60 s",
-        "10 s"
+        "30 s"
       ],
       "answer": 0,
       "explain": "Le Démon peut rechasser 20 s après la fin d'une chasse (ou après avoir utilisé un crucifix), contre 25 s pour les autres entités."
@@ -211,15 +211,15 @@
       "explain": "La portée est augmentée de 50 % à chaque niveau : 4,5 m (niveau 1), 6 m (niveau 2), 7,5 m (niveau 3). 4 m est la portée standard d'un crucifix de niveau 2."
     },
     {
-      "q": "Une entité chasse à 85 % de santé mentale moyenne, sans objet maudit. Aucun joueur n'est sous 50 % et aucune bougie n'a été allumée. De quelle entité s'agit-il ?",
+      "q": "Une entité chasse à 85 % de santé mentale moyenne, sans objet maudit. Parmi ces entités, laquelle est-ce ?",
       "choices": [
         "Un Yokai",
-        "Une Banshee",
+        "Un Raiju",
         "Un Démon",
-        "Un Onryo"
+        "Un Thayé"
       ],
       "answer": 2,
-      "explain": "Le Yokai plafonne à 80 % (et seulement si l'on parle dans sa pièce), la Banshee a besoin d'une cible à 50 % ou moins, l'Onryo a besoin d'éteindre des flammes. Reste le Démon, qui peut chasser à toute santé mentale."
+      "explain": "Le Démon peut chasser à n'importe quel niveau de santé mentale grâce à sa capacité. Le Yokai ne dépasse pas 80 % (si l'on parle dans sa pièce), le Raiju 65 % (près de l'électronique) et le Thayé 75 % (au plus jeune âge)."
     },
     {
       "q": "Quel est le seuil de chasse normal du Démon ?",

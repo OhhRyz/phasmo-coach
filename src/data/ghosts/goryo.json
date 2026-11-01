@@ -87,9 +87,9 @@
     },
     {
       "q": "Sans patte de singe utilisée, l'entité a changé de pièce favorite en cours de partie. Laquelle peux-tu éliminer ?",
-      "choices": ["Le Myling", "Le Djinn", "Le Goryo", "Le Raiju"],
+      "choices": ["Le Myling", "Le Djinn", "Le Goryo", "Le Mimic"],
       "answer": 2,
-      "explain": "Le Goryo ne peut pas changer de lui-même de pièce favorite (seul le vœu « Je souhaite être sain d'esprit » de la patte de singe peut la déplacer). Les trois autres le peuvent."
+      "explain": "Le Goryo ne peut pas changer de lui-même de pièce favorite (seul le vœu « Je souhaite être sain d'esprit » de la patte de singe peut la déplacer). Le Myling et le Djinn le peuvent. Le Mimic, qui copie d'autres entités, ne s'élimine pas ainsi."
     },
     {
       "q": "Les capteurs de mouvement placés dans les couloirs autour de la pièce de l'entité ne se déclenchent presque jamais hors chasse, alors que la pièce est très active. Quelle entité cela évoque-t-il ?",
@@ -104,10 +104,10 @@
       "explain": "Le Goryo a le seuil de chasse standard de 50 %, sans condition particulière. Ce ne sont pas ses chasses qui le trahissent, mais son attachement à sa pièce favorite, qu'il ne quitte presque jamais."
     },
     {
-      "q": "Quelle est la vitesse de chasse du Goryo ?",
-      "choices": ["1,7 m/s sans aucune accélération en ligne de vue", "1,7 m/s avec accélération standard en ligne de vue", "1,4 m/s avec accélération standard en ligne de vue", "1,4 m/s sans aucune accélération en ligne de vue"],
+      "q": "Laquelle de ces entités chasse à 1,7 m/s avec l'accélération standard en ligne de vue ?",
+      "choices": ["Le Deogen", "Le Goryo", "Les Jumeaux", "Le Deildegast"],
       "answer": 1,
-      "explain": "Le Goryo a une vitesse tout à fait standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue. 1,4 m/s, c'est le Hantu dans une pièce chaude."
+      "explain": "Le Goryo a une vitesse tout à fait standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue. Le Deogen (3,0 → 0,4 m/s à l'approche) et le Deildegast (3,0 → 0,4 m/s selon les objets) n'accélèrent pas en ligne de vue ; les Jumeaux chassent à 1,5 ou 1,9 m/s."
     }
   ],
   "changes": [

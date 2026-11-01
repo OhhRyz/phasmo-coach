@@ -163,13 +163,13 @@
     {
       "q": "Hors chasse, l'entité touche une porte et la laisse entrouverte, à mi-course. Que peux-tu en conclure ?",
       "choices": [
+        "Ce n'est pas un Spectre",
+        "Ce n'est pas un Hantu",
         "Ce n'est pas un Yurei",
-        "C'est forcément un Yurei",
-        "C'est forcément un Démon",
-        "Ce n'est pas un Démon"
+        "Ce n'est pas un Goryo"
       ],
-      "answer": 0,
-      "explain": "Hors chasse, le Yurei ouvre ou ferme toujours une porte jusqu'au bout. Une porte laissée à mi-course l'élimine (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement). Les autres entités, Démon compris, peuvent laisser une porte à mi-course."
+      "answer": 2,
+      "explain": "Hors chasse, le Yurei ouvre ou ferme toujours une porte jusqu'au bout. Une porte laissée à mi-course l'élimine (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement). Les autres entités, Spectre, Hantu ou Goryo compris, peuvent laisser une porte à mi-course."
     },
     {
       "q": "De combien le pouvoir du Yurei fait-il chuter la santé mentale des joueurs proches ?",
@@ -196,13 +196,13 @@
     {
       "q": "Tu encenses l'entité ; 40 s plus tard, un capteur de mouvement placé à la porte de sa pièce se déclenche, sans aucun événement en cours. Qu'en conclus-tu ?",
       "choices": [
-        "C'est forcément un Yurei",
-        "C'est forcément un Démon",
-        "Ce n'est pas un Démon",
+        "Ce n'est pas un Esprit",
+        "Ce n'est pas un Onryo",
+        "Ce n'est pas un Oni",
         "Ce n'est pas un Yurei"
       ],
       "answer": 3,
-      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Le Démon ne se déduit pas de ce test et ne s'écarte pas non plus ; 180 s est le délai d'encens de l'Esprit."
+      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Ce test ne dit rien des autres : l'Esprit, l'Onryo ou l'Oni peuvent quitter leur pièce juste après l'encens."
     },
     {
       "q": "Laquelle de ces observations est un signe quasi certain de Yurei ?",

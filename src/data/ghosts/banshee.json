@@ -226,7 +226,7 @@
         "Celle de sa cible, où qu'elle soit",
         "La moyenne de toute l'équipe",
         "La moyenne des joueurs à l'intérieur",
-        "Celle du joueur le plus proche d'elle"
+        "Celle de l'hôte de la partie, où qu'il soit"
       ],
       "answer": 0,
       "explain": "La Banshee chasse quand sa cible est à 50 % ou moins, même si cette cible est dehors. En moyenne d'équipe, ça peut aller de 12 % à 87 %."

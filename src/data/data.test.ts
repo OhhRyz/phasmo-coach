@@ -191,9 +191,15 @@ describe('mécaniques', () => {
     const flagged = items.filter((x) => x.evidence !== undefined)
     for (const x of flagged) expect(typeof x.evidence, x.id).toBe('boolean')
     expect(flagged.some((x) => x.evidence === true)).toBe(true)
-    // ce qui sert encore sans preuve n'est jamais marqué : chasses, vitesses, encens, portées, objets maudits, santé
+    // ce qui sert encore sans preuve n'est jamais marqué : chasses, vitesses, encens, portées, objets maudits, santé ;
+    // sauf un fait qui ne parle que des preuves du journal (le vœu « Je souhaite avoir de l'information », qui en retire une)
     for (const t of MECHANICS.topics.filter((t) => t.id !== 'equipement' && t.id !== 'preuves')) {
-      for (const f of t.facts as Flagged[]) expect(f.evidence, f.id).toBeUndefined()
+      for (const f of t.facts.filter((x) => x.evidence)) expect(plain(f.a), f.id).toMatch(/\bpreuves?\b/i)
+    }
+    // jamais posé en question (ni révisé, ni au quiz) : un fait « bon à savoir » n'a pas de QCM
+    for (const f of MECHANICS.topics.flatMap((t) => t.facts).filter((x) => x.evidence)) {
+      expect(f.choices, f.id).toBeUndefined()
+      expect(f.answer, f.id).toBeUndefined()
     }
   })
 
@@ -306,6 +312,8 @@ describe('QCM rédigés : des réponses de même forme', () => {
   const NO_LOS = /n'accélère (?:pas|jamais|plus)|sans (?:aucune |la moindre |jamais )?accél[ée]r|aucune accélération/iu
   const POLARITY = /^(Oui|Non|Vrai|Faux)\b/
   const NEGATION = /^Ce n'est pas\b/
+  /** « X, mais Y », « X, même Y », « X, car Y », « X, pas Y », « même sans… » : une réponse en deux temps, qui nuance */
+  const CONCESSION = /,\s*(?:mais|même|comme|car|pas)(?![\p{L}])|(?<![\p{L}])même (?:sans|en|si)(?![\p{L}])/iu
   /** Ce qui se voit d'un coup d'œil : la seule réponse qui l'a (ou la seule qui ne l'a pas) se remarque. */
   const MARKS: [string, RegExp][] = [
     ['parenthèse', /\(/],
@@ -319,7 +327,13 @@ describe('QCM rédigés : des réponses de même forme', () => {
     ['nuance', HEDGE],
     ['ligne de vue', NO_LOS],
     ['« Ce n’est pas »', NEGATION],
+    // une réponse nuancée en deux temps (« Il disparaît, mais… », « …, même sans te voir ») parmi des réponses d'un seul tenant
+    ['nuance en deux temps', CONCESSION],
+    // « Ce n'est pas une Dayan » parmi trois « Ce n'est pas un … »
+    ['« une » (féminin)', /^(?:Ce n'est pas|C'est forcément|C'est sûrement) une\b/],
   ]
+  /** une virgule de phrase (pas celle de « 1,7 ») : deux propositions là où les autres réponses n'en ont qu'une */
+  const COMMA = /,(?!\d)/
   const uniqueLongest = (q: Mcq) => {
     const lengths = q.choices.map(size)
     const max = Math.max(...lengths)
@@ -444,9 +458,191 @@ describe('QCM rédigés : des réponses de même forme', () => {
     }
   })
 
+  it('ne fait pas de la bonne réponse, d’une question à l’autre, la seule en deux propositions', () => {
+    // la seule réponse avec une virgule (ou la seule sans) : la bonne une fois sur quatre au hasard, pas plus de trois fois sur dix
+    let odd = 0
+    const right: string[] = []
+    for (const q of all) {
+      if (q.choices.every(isValue)) continue
+      const choices = q.choices.map(plain)
+      const n = choices.length
+      const k = choices.filter((c) => COMMA.test(c)).length
+      if (k !== 1 && !(n > 2 && k === n - 1)) continue
+      odd++
+      if (COMMA.test(choices[q.answer]) === (k === 1)) right.push(q.id)
+    }
+    expect(right.length, `${right.length} sur ${odd} : ${right.join(', ')}`).toBeLessThanOrEqual(Math.max(2, odd * 0.3))
+  })
+
   it('place la bonne réponse à tous les rangs', () => {
     for (const set of [fromGhosts, fromFacts]) {
       for (let i = 0; i < 4; i++) expect(set.filter((q) => q.answer === i).length, `rang ${i}`).toBeGreaterThanOrEqual(set.length / 6)
     }
+  })
+})
+
+/**
+ * D'une question à l'autre : une stratégie qui ignore le jeu (« prends toujours le Non », « prends l'élimination
+ * de l'entité de la fiche », « prends 1,7 m/s avec accélération ») ne gagne pas plus souvent qu'au hasard.
+ */
+describe('QCM rédigés : aucun motif d’une question à l’autre', () => {
+  const POSITIVE = /^(?:Oui|Vrai)\b/
+  const NEGATIVE = /^(?:Non|Faux)\b/
+  /** autant de « oui » que de « non » parmi les bonnes réponses, à 15 points près */
+  const balanced = (yes: number, n: number, what: string) => {
+    expect(n, what).toBeGreaterThanOrEqual(6)
+    expect(yes / n, `${what} : ${yes} positives sur ${n}`).toBeGreaterThanOrEqual(0.35)
+    expect(yes / n, `${what} : ${yes} positives sur ${n}`).toBeLessThanOrEqual(0.65)
+  }
+  const authored = GHOSTS.flatMap((g) => g.quiz.map((q, i) => ({ g, id: `${g.id}#${i}`, ...q })))
+
+  it('ne répond pas presque toujours « Non » ou « Faux » aux questions fermées des fiches', () => {
+    const polar = authored.filter((q) => q.choices.every((c) => POSITIVE.test(plain(c)) || NEGATIVE.test(plain(c))))
+    balanced(polar.filter((q) => POSITIVE.test(plain(q.choices[q.answer]))).length, polar.length, 'questions des fiches')
+  })
+
+  it('ne répond pas presque toujours « Non » aux faits posés en question fermée', () => {
+    const polar = MECHANICS.topics.flatMap((t) => t.facts).filter((f) => !f.evidence && /^(?:Oui|Non)\b/.test(plain(f.a)))
+    balanced(polar.filter((f) => /^Oui\b/.test(plain(f.a))).length, polar.length, 'faits des mécaniques')
+  })
+
+  it('ne donne pas presque toujours « faux » aux affirmations des mécaniques', () => {
+    const claims = MECHANICS.trueFalse.filter((x) => !x.evidence)
+    balanced(claims.filter((x) => x.answer).length, claims.length, 'vrai ou faux')
+  })
+
+  /** « Ce n'est pas un Esprit », « C'est forcément un Démon » → l'entité nommée (son identifiant), ou le libellé s'il n'en nomme aucune */
+  const bare = (s: string) => plain(s).replace(/^(?:Les |Le |La |L')/u, '')
+  const VERDICT = /^(?:Ce n'est pas|C'est (?:forcément|sûrement)) (?:une? |le |la |les |l')(.+)$/u
+  const named = (c: string) => {
+    const name = VERDICT.exec(plain(c))?.[1] ?? c
+    return GHOSTS.find((g) => bare(g.name) === name)?.id ?? name
+  }
+  const grids = authored.filter((q) => q.choices.every((c) => VERDICT.test(plain(c))))
+
+  it('n’écarte pas toujours l’entité de la fiche dans les grilles « Ce n’est pas un … »', () => {
+    expect(grids.length).toBeGreaterThanOrEqual(6)
+    for (const q of grids) for (const c of q.choices) expect(GHOST_ORDER, `${q.id} → ${c}`).toContain(named(c))
+    // « prends l'élimination de l'entité de la fiche » ne gagne pas partout : d'autres grilles écartent l'entité qu'on confond avec elle
+    const own = grids.filter((q) => /^Ce n'est pas\b/u.test(plain(q.choices[q.answer])) && named(q.choices[q.answer]) === q.g.id)
+    expect(own.length / grids.length, `${own.length} sur ${grids.length} : ${own.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(0.7)
+    // ni une entité « bouche-trou » : mauvaise réponse de trois grilles ou plus, elle est la bonne d'au moins une
+    const wrongIn = new Map<string, string[]>()
+    const rightIn = new Set<string>()
+    for (const q of grids) {
+      q.choices.forEach((c, i) => {
+        const e = named(c)
+        if (i === q.answer) rightIn.add(e)
+        else wrongIn.set(e, [...(wrongIn.get(e) ?? []), q.id])
+      })
+    }
+    for (const [e, ids] of wrongIn) {
+      if (ids.length >= 3) expect(rightIn.has(e), `${e}, mauvaise réponse de ${ids.join(', ')}, n'est jamais la bonne`).toBe(true)
+    }
+  })
+
+  it('ne fait pas toujours gagner la même vitesse, ni « avec accélération », dans les grilles de vitesse', () => {
+    // « 1,7 m/s avec accélération standard en ligne de vue » | « 1,5 m/s sans aucune accélération… » | …
+    const GRID = /^(\d+(?:,\d+)?) m\/s (avec|sans)\b/u
+    const facts = MECHANICS.topics.flatMap((t) => t.facts).filter((f) => !f.evidence && Array.isArray(f.choices))
+    const qs = [...authored, ...facts.map((f) => ({ choices: f.choices as string[], answer: f.answer as number }))].filter(
+      (q) => q.choices.length >= 4 && q.choices.every((c) => GRID.test(plain(c))),
+    )
+    expect(qs.length).toBeGreaterThanOrEqual(2)
+    const answers = qs.map((q) => GRID.exec(plain(q.choices[q.answer]))!)
+    expect(new Set(answers.map((m) => m[2])).size, 'avec / sans').toBe(2)
+    expect(new Set(answers.map((m) => m[1])).size, 'vitesse').toBeGreaterThan(1)
+  })
+
+  type Mcq = { id: string; q: string; choices: string[]; answer: number }
+  const retainedFacts: Mcq[] = MECHANICS.topics
+    .flatMap((t) => t.facts)
+    .filter((f) => !f.evidence && Array.isArray(f.choices) && typeof f.answer === 'number')
+    .map((f) => ({ id: f.id, q: f.q, choices: f.choices as string[], answer: f.answer as number }))
+  const sets: [string, Mcq[]][] = [
+    ['questions des fiches', authored],
+    ['faits des mécaniques', retainedFacts],
+  ]
+
+  it('ne place pas toujours la bonne valeur au même rang, du plus petit au plus grand', () => {
+    // « 40 % | 50 % | 60 % | 75 % », « À moins de 5 m | … » : une seule valeur par réponse, la même forme autour.
+    // « Évite les extrêmes » ou « prends la deuxième plus grande » ne gagne pas plus souvent qu'au hasard :
+    // une fois rangées, la bonne valeur est la plus petite, la deuxième, la troisième ou la plus grande de 15 à 35 % du temps
+    const shape = (s: string) => plain(s).replace(/\d+(?:,\d+)?/g, '#')
+    for (const [what, set] of sets) {
+      const ranks = [0, 0, 0, 0]
+      for (const q of set) {
+        if (q.choices.length !== 4 || new Set(q.choices.map(shape)).size !== 1) continue
+        const found = q.choices.map((c) => plain(c).match(/\d+(?:,\d+)?/g) ?? [])
+        if (!found.every((v) => v.length === 1)) continue
+        const values = found.map((v) => Number(v[0].replace(',', '.')))
+        if (new Set(values).size !== 4) continue
+        ranks[[...values].sort((a, b) => a - b).indexOf(values[q.answer])]++
+      }
+      const n = ranks.reduce((a, b) => a + b, 0)
+      expect(n, what).toBeGreaterThanOrEqual(20)
+      for (let i = 0; i < 4; i++) {
+        expect(ranks[i] / n, `${what} : rang ${i + 1} sur 4 (${ranks.join('/')})`).toBeGreaterThanOrEqual(0.15)
+        expect(ranks[i] / n, `${what} : rang ${i + 1} sur 4 (${ranks.join('/')})`).toBeLessThanOrEqual(0.35)
+      }
+    }
+  })
+
+  it('ne met pas la bonne réponse, plus souvent qu’au hasard, dans la paire de réponses presque identiques', () => {
+    // « Il reste visible plus longtemps… » à côté de « Il reste invisible plus longtemps… » : quand deux réponses se
+    // ressemblent nettement plus que les deux autres, « prends l'une des deux » ne doit gagner qu'une fois sur deux
+    const tokens = (s: string) =>
+      new Set(
+        plain(s)
+          .toLowerCase()
+          .replace(/'/g, ' ')
+          .replace(/[«»(),·:;.?!]/g, ' ')
+          .split(/\s+/)
+          .filter((w) => w.length > 1),
+      )
+    const overlap = (a: string, b: string) => {
+      const [x, y] = [tokens(a), tokens(b)]
+      const common = [...x].filter((w) => y.has(w)).length
+      return common / (x.size + y.size - common)
+    }
+    const bare = /^\d+(?:,\d+)?\s?\S*$/
+    for (const [what, set] of sets) {
+      const twins: string[] = []
+      const right: string[] = []
+      for (const q of set) {
+        const c = q.choices.map(plain)
+        if (c.length !== 4 || c.every((x) => bare.test(x))) continue
+        const pairs: [number, number, number][] = []
+        for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) pairs.push([overlap(c[a], c[b]), a, b])
+        pairs.sort((x, y) => y[0] - x[0])
+        const [[top, a, b], [second]] = pairs
+        const [k, l] = [0, 1, 2, 3].filter((i) => i !== a && i !== b)
+        if (top < 0.4 || top - overlap(c[k], c[l]) < 0.2 || top - second < 0.1) continue
+        twins.push(q.id)
+        if (a === q.answer || b === q.answer) right.push(q.id)
+      }
+      expect(right.length, `${what} : ${right.length} sur ${twins.length} (${right.join(', ')})`).toBeLessThanOrEqual(Math.max(2, twins.length * 0.6))
+    }
+  })
+
+  it('cite aussi en mauvaise réponse toute entité qui sert de bonne réponse', () => {
+    // le Mimic seulement en bonne réponse (« C'est un Mimic », « Le Mimic ») : le nommer suffisait à gagner
+    const NAMES = GHOSTS.map((g) => {
+      const names = [g.name, g.name.replace(/^(?:Les |Le |La |L['’])/u, '')].map((n) => plain(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      return { id: g.id, re: new RegExp(`(?<![\\p{L}])(?:${names.join('|')})(?![\\p{L}])`, 'u') }
+    })
+    const rightIn = new Map<string, string[]>()
+    const wrongIn = new Set<string>()
+    // les questions posées au quiz : ni la question ni la bonne réponse ne parlent de preuve
+    for (const q of authored.filter((x) => !evidenceNames(x.q) && !evidenceNames(x.choices[x.answer]))) {
+      q.choices.forEach((c, i) => {
+        const cited = NAMES.filter((n) => n.re.test(plain(c)))
+        if (cited.length !== 1) return
+        if (i === q.answer) rightIn.set(cited[0].id, [...(rightIn.get(cited[0].id) ?? []), q.id])
+        else wrongIn.add(cited[0].id)
+      })
+    }
+    expect(rightIn.size).toBeGreaterThanOrEqual(GHOSTS.length / 2)
+    for (const [id, ids] of rightIn) expect(wrongIn.has(id), `${id}, bonne réponse de ${ids.join(', ')}, n'est jamais une mauvaise réponse`).toBe(true)
   })
 })

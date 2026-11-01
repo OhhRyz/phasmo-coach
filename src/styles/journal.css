@@ -300,6 +300,11 @@ button { font: inherit; color: inherit; }
 .tab .count svg { color: var(--pencil); stroke: var(--pencil); }
 .tab .count svg { position: absolute; inset: -6px -7px; width: calc(100% + 14px); height: calc(100% + 12px); overflow: visible; }
 .tab .short { display: none; }
+/* carnet à une seule page (accueil d'un nouveau carnet, Exercices, 404…) : les intercalaires suivent la page,
+   pas la double page ; sous 1180 px, carnet et onglets ont déjà la même largeur */
+@media (min-width: 1181px) {
+  body:has(.notebook--single):not(:has(.notebook:not(.notebook--single))) .tabs { max-width: 900px; padding-left: 96px; }
+}
 
 /* ==========================================================================
    Le carnet

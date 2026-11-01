@@ -177,7 +177,7 @@
       "choices": [
         "2,5 m",
         "5 m",
-        "1,5 m",
+        "7,5 m",
         "10 m"
       ],
       "answer": 0,
@@ -208,13 +208,13 @@
     {
       "q": "Pendant une chasse, tu parles à 5 m de l'entité, hors de sa vue, et elle vient droit sur toi. Qu'en conclus-tu ?",
       "choices": [
-        "C'est forcément un Yokai",
-        "C'est forcément un Kormos",
         "Ce n'est pas un Kormos",
+        "Ce n'est pas un Myling",
+        "Ce n'est pas un Raiju",
         "Ce n'est pas un Yokai"
       ],
       "answer": 3,
-      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Le Kormos, qui chasse à l'oreille, n'est ni prouvé ni écarté par ce test."
+      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Le Kormos, qui chasse à l'oreille, le Myling et le Raiju entendent ta voix à cette distance : ils restent possibles."
     },
     {
       "q": "Pendant une chasse, comment le Yokai te repère-t-il ?",
@@ -230,13 +230,24 @@
     {
       "q": "Quand un Yokai est-il plus actif ?",
       "choices": [
-        "Quand plusieurs joueurs sont près de lui",
-        "Quand quelqu'un parle près de lui",
+        "Quand plusieurs joueurs sont dans sa pièce",
+        "Quand quelqu'un parle dans sa pièce",
         "Quand le disjoncteur est coupé",
         "Quand une bougie brûle dans sa pièce"
       ],
       "answer": 1,
       "explain": "Le Yokai est attiré par la voix : il est plus actif quand on parle près de lui et peut chasser jusqu'à 80 % si l'on parle dans sa pièce. C'est l'Oni qui s'agite quand plusieurs joueurs sont à proximité."
+    },
+    {
+      "q": "Pendant une chasse, tu es déjà immobile et silencieux, sans électronique allumée, à 8 m de l'entité, quand elle te repère et fonce sur toi. Que peux-tu en conclure ?",
+      "choices": [
+        "Ce n'est pas un Yokai",
+        "Ce n'est pas un Kormos",
+        "Ce n'est pas un Fantôme",
+        "Ce n'est pas un Aswang"
+      ],
+      "answer": 1,
+      "explain": "Le Kormos est presque aveugle : il ne voit un joueur que s'il bouge à moins de 5 m, et ne détecte pas un joueur immobile et silencieux. S'il te repère dans ces conditions, ce n'est pas un Kormos. Le Yokai voit normalement (seule son ouïe est réduite) : il reste possible, comme le Fantôme ou l'Aswang."
     }
   ],
   "changes": [

@@ -21,17 +21,14 @@ import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { platform } from '../engine/device'
 import { NBSP, NNBSP, fr, num } from '../engine/format'
 import { ignoreKey } from '../engine/keys'
-import { createRng, pick, shuffle, type Rng } from '../engine/random'
+import { createRng } from '../engine/random'
 import { useStore } from '../store/store'
+import { allSpeeds, BASE_SPEED, classOf, EAR_ROUNDS, makeRounds, type EarMode, type EarRound } from './earRounds'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
-type Mode = 'class' | 'exact'
-
-interface Round {
-  speed: number
-  choices: number[]
-}
+type Mode = EarMode
+type Round = EarRound
 
 /** Une écoute de la série, pour le relevé de fin. */
 interface Heard {
@@ -40,14 +37,8 @@ interface Heard {
   ok: boolean
 }
 
-const ROUNDS = 10
-const BASE = 1.7
-
-function classOf(v: number): 'slow' | 'normal' | 'fast' {
-  if (v < BASE - 0.05) return 'slow'
-  if (v > BASE + 0.05) return 'fast'
-  return 'normal'
-}
+const ROUNDS = EAR_ROUNDS
+const BASE = BASE_SPEED
 
 const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: `Normale (1,7${NBSP}m/s)`, fast: 'Plus rapide que la normale' }
 const MODE_LABEL: Record<Mode, string> = { class: 'Lente, normale ou rapide', exact: 'Vitesse exacte' }
@@ -59,34 +50,11 @@ const CLASS_PLURAL = { slow: 'Plus lentes', normal: `Normales (1,7${NBSP}m/s)`, 
 const ms = (v: number) => `${num(v)}${NBSP}m/s`
 const IOS_HINT = `Pas de son${NNBSP}? Vérifie que le bouton silencieux est désactivé.`
 
-/** Toutes les vitesses distinctes présentes dans les fiches. */
-function allSpeeds(): number[] {
-  const set = new Set<number>()
-  for (const g of GHOSTS) {
-    for (const v of [g.speed.min, g.speed.max, g.speed.alt]) if (v != null && v > 0.3) set.add(Math.round(v * 100) / 100)
-  }
-  set.add(BASE)
-  return [...set].sort((a, b) => a - b)
-}
-
 function ghostsAt(v: number): string[] {
   return GHOSTS.filter((g) =>
     [g.speed.min, g.speed.max, g.speed.alt].some((s) => s != null && Math.abs(s - v) < 0.01) ||
     (g.speed.isRange && g.speed.max != null && v >= g.speed.min && v <= g.speed.max),
   ).map((g) => g.name)
-}
-
-function makeRounds(mode: Mode, rng: Rng): Round[] {
-  const speeds = allSpeeds()
-  return Array.from({ length: ROUNDS }, () => {
-    const speed = pick(rng, speeds)
-    if (mode === 'class') return { speed, choices: [] }
-    const others = shuffle(
-      rng,
-      speeds.filter((s) => Math.abs(s - speed) >= 0.2),
-    ).slice(0, 3)
-    return { speed, choices: shuffle(rng, [speed, ...others]).sort((a, b) => a - b) }
-  })
 }
 
 /* ------------------------------------------------------------------ la bande de papier */
@@ -311,7 +279,7 @@ export function Ear() {
   const [refHeard, setRefHeard] = useState(false)
   const steps = useRef<Footsteps | null>(null)
   const ios = useMemo(() => platform() === 'ios', [])
-  const speeds = useMemo(allSpeeds, [])
+  const speeds = useMemo(() => allSpeeds(GHOSTS), [])
   /** dernière écoute imprimée sur la bande (affichage seulement) */
   const [trail, setTrail] = useState<{ v: number; which: 'q' | 'ref'; id: number; at: number } | null>(null)
 
@@ -338,7 +306,7 @@ export function Ear() {
     steps.current?.stop()
     setMode(m)
     setTrail(null)
-    setRounds(makeRounds(m, createRng(Date.now() >>> 0)))
+    setRounds(makeRounds(m, createRng(Date.now() >>> 0), speeds))
     setI(0)
     setScore(0)
     setAnswer(null)

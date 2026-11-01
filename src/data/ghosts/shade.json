@@ -263,12 +263,12 @@
       "q": "La santé mentale moyenne est encore à 100 % et un événement se produit. Qu'en conclus-tu ?",
       "choices": [
         "Ce n'est pas une Ombre",
-        "C'est sûrement une Ombre",
-        "C'est forcément un Démon",
-        "Ce n'est pas un Démon"
+        "Ce n'est pas une Banshee",
+        "Ce n'est pas un Fantôme",
+        "Ce n'est pas un Yurei"
       ],
       "answer": 0,
-      "explain": "L'Ombre ne peut pas faire d'événement à 100 % de santé mentale moyenne : l'événement l'élimine. Il ne désigne pas pour autant une entité précise, et n'écarte pas le Démon."
+      "explain": "L'Ombre ne fait aucun événement tant que la santé mentale moyenne est à 100 % : l'événement l'élimine. Il ne désigne pas pour autant une entité précise : la Banshee, le Fantôme ou le Yurei restent possibles."
     },
     {
       "q": "Pourquoi l'idée « une Ombre ne chasse pas si tu es dans sa pièce favorite » est-elle incomplète ?",

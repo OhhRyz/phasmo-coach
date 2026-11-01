@@ -73,6 +73,10 @@
 .cx-reg-section .h { margin-bottom: 4px; }
 .cx-reg-section .empty-note { padding: 6px 0 22px; }
 .cx-reg-section .empty-note .h { font-size: 26px; margin-bottom: 6px; }
+.cx-reg-section .empty-note p { max-width: 34em; margin: 0 0 8px; }
+.cx-reg-section .empty-note .link-btn { font-size: inherit; }
+.cx-reg-section .empty-note .cx-empty-act { margin: 10px 0 0; }
+.cx-reg-section .empty-note .cx-empty-act .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 .cx-count {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 20px;

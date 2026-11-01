@@ -182,9 +182,9 @@
       "q": "Que se passe-t-il quand tu prends un Fantôme en photo pendant un événement ?",
       "choices": [
         "Il disparaît, mais les sons de l'événement continuent",
-        "Il interrompt l'événement et lance une chasse",
-        "Il reste visible et apparaît bien plus net sur la photo",
-        "L'événement s'arrête et il retourne dans sa pièce"
+        "Il reste visible, mais n'apparaît pas sur la photo",
+        "Il s'arrête net, mais l'événement se change en chasse",
+        "L'événement s'arrête, mais il reste dans la pièce"
       ],
       "answer": 0,
       "explain": "Une photo fait disparaître le Fantôme, et il n'apparaît pas sur la photo d'entité du journal, alors que les sons de l'événement continuent."
@@ -192,24 +192,24 @@
     {
       "q": "Quelle photo prouve que ce n'est PAS un Fantôme ?",
       "choices": [
-        "Une photo d'eau sale prise dans un évier de la maison",
-        "Une photo de l'entité, nette et bien visible",
+        "Une photo de l'entité où elle n'apparaît pas",
+        "Une photo de l'entité où elle est bien visible",
         "Une photo d'un crucifix brûlé par l'entité",
         "Une photo d'os trouvés près de sa pièce"
       ],
       "answer": 1,
-      "explain": "Le Fantôme n'apparaît jamais sur une photo d'entité (étiquetée « Fantôme ») : si l'entité y est visible, ce n'en est pas un. Une photo d'eau sale, de crucifix brûlé ou d'os ne permet pas de l'exclure."
+      "explain": "Le Fantôme n'apparaît jamais sur une photo d'entité (étiquetée « Fantôme ») : si l'entité y est bien visible, ce n'en est pas un. Une photo d'entité où elle n'apparaît pas va au contraire dans son sens, sans le prouver ; une photo de crucifix brûlé ou d'os ne permet pas de l'exclure."
     },
     {
       "q": "Comment reconnaître un Fantôme pendant une chasse ?",
       "choices": [
-        "Il reste visible plus longtemps entre deux clignotements",
+        "Il clignote plus vite que les autres entités",
         "Il change de modèle le temps d'un clignotement",
         "Il reste invisible plus longtemps entre deux clignotements",
         "Il souffle une buée glacée visible pendant toute la chasse"
       ],
       "answer": 2,
-      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements : il est presque invisible en chasse. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
+      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements : il est presque invisible en chasse, et ne clignote donc pas plus vite que les autres. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
     },
     {
       "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Fantôme ou Spectre : qu'est-ce qui les distingue ?",

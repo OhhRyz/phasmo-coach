@@ -38,7 +38,7 @@
   "summary": "Entité qui vieillit au contact des joueurs : très active, précoce et rapide au début, elle s'affaiblit et ralentit au fil de la partie.",
   "keyTells": [
     "N'accélère jamais en LdV ; plus lent à chaque chasse (2,75 → 1,0 m/s)",
-    "Au Ouija, l'âge annoncé augmente au fil de la partie (90 ans ou plus : c'est forcément lui)",
+    "Au Ouija, l'âge annoncé augmente au fil de la partie (90 ans ou plus : signe certain)",
     "Chasse dès 75 % quand il est jeune, de plus en plus tard en vieillissant",
     "Très actif au début, de plus en plus calme quand tu restes près de lui"
   ],
@@ -187,10 +187,10 @@
         "70 %",
         "50 %",
         "75 %",
-        "80 %"
+        "60 %"
       ],
       "answer": 2,
-      "explain": "75 % jeune, puis −6 points par vieillissement jusqu'à 15 %. 70 % est le seuil du Démon, 80 % celui du Yokai qu'on fait parler."
+      "explain": "75 % jeune, puis −6 points par vieillissement jusqu'à 15 %. 70 % est le seuil du Démon, 60 % celui du Cauchemar lumière éteinte."
     },
     {
       "q": "Quelle description correspond à la vitesse de chasse du Thayé ?",
@@ -239,7 +239,7 @@
     {
       "q": "Combien de fois un Thayé peut-il vieillir avant d'atteindre sa vitesse et son seuil minimum ?",
       "choices": [
-        "5 fois",
+        "12 fois",
         "20 fois",
         "15 fois",
         "10 fois"

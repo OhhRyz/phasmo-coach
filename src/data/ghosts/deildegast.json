@@ -231,9 +231,9 @@
       "q": "Que devient la vitesse du Deildegast après une chasse ?",
       "choices": [
         "Elle reste au niveau qu'elle avait atteint",
-        "Elle baisse encore de 0,1 m/s par chasse",
-        "Elle repart de 3,0 m/s, compteur remis à zéro",
-        "Elle revient à la vitesse standard des autres"
+        "Elle baisse encore de 0,1 m/s à chaque chasse",
+        "Elle remonte à 3,0 m/s et tout est à refaire",
+        "Elle revient à la vitesse standard et y reste"
       ],
       "answer": 2,
       "explain": "Après chaque chasse ou tentative de chasse, le compteur repart de zéro : 3,0 m/s, et tu peux réutiliser les mêmes objets."

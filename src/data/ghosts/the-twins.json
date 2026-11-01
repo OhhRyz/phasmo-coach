@@ -60,7 +60,7 @@
     { "with": "shade", "why": "Même EMF 5 + glaciales, mais l'Ombre a l'écriture au lieu de la Spirit Box ; elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
     { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il est plus visible en chasse (il reste visible plus longtemps à chaque clignotement) et ne fait jamais l'événement « brouillard fantomatique »." },
     { "with": "onryo", "why": "Même Spirit Box + glaciales, mais l'Onryo a les orbes au lieu de l'EMF ; il chasse dès 60 % et tente une chasse après chaque 3e flamme soufflée." },
-    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors avoir une vitesse proche de celle du jumeau rapide." },
+    { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors dépasser 1,9 m/s." },
     { "with": "the-mimic", "why": "Le Mimic a Spirit Box + glaciales (+ UV et de faux orbes) et copie la vitesse de l'entité qu'il imite : trouver de l'UV ou des orbes exclut les Jumeaux." },
     { "with": "obambo", "why": "L'Obambo (écriture, UV, D.O.T.S) a un duo de vitesses qui ressemble beaucoup à celui des Jumeaux en 0 preuve. L'Obambo alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif) selon un minuteur, parfois en pleine chasse, et chasse à 10 % (calme) ou 65 % (agressif)." },
     { "with": "aswang", "why": "L'Aswang (D.O.T.S, écriture, glaciales) chasse toujours à 1,53 m/s, comme un jumeau lent, mais sa vitesse de base ne change jamais d'une chasse à l'autre et il accélère bien plus vite en LdV." },
@@ -82,16 +82,16 @@
       "explain": "Les Jumeaux chassent à ±0,2 m/s autour des 1,7 m/s standard. 1,7/2,5 m/s évoque le Raiju ou le Djinn, 1,45/1,96 m/s l'Obambo et 1,0/3,0 m/s le Revenant."
     },
     {
-      "q": "Une chasse se déroule entièrement à 1,7 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
-      "choices": ["Non, ils chassent tous deux à 2,5 m/s", "Oui, si c'est le jumeau principal qui chasse", "Oui, si c'est le jumeau errant qui chasse", "Non, ils chassent à 1,5 ou 1,9 m/s"],
-      "answer": 3,
-      "explain": "Les Jumeaux chassent à environ 1,5 m/s (jumeau principal) ou 1,9 m/s (jumeau errant), jamais à la vitesse standard : une vitesse de base de 1,7 m/s les élimine. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
+      "q": "Une chasse se déroule à environ 1,9 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
+      "choices": ["Non, ils chassent tous deux à 2,5 m/s", "Oui, si c'est le jumeau principal qui chasse", "Oui, si c'est le jumeau errant qui chasse", "Non, ils chassent tous deux à 1,7 m/s"],
+      "answer": 2,
+      "explain": "Oui : à environ 1,9 m/s, c'est le jumeau errant, le plus rapide, qui chasse ; le jumeau principal chasse à environ 1,5 m/s. Les Jumeaux ne chassent jamais à la vitesse standard de 1,7 m/s, qui les éliminerait. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
     },
     {
-      "q": "Vrai ou faux : les Jumeaux sont deux entités distinctes.",
-      "choices": ["Faux : une seule entité qui agit sur deux portées", "Vrai : deux entités qui chassent chacune leur tour", "Vrai : deux entités qui peuvent chasser en même temps", "Faux : une entité qui se téléporte à chaque interaction"],
-      "answer": 0,
-      "explain": "C'est une seule entité qui peut interagir dans une petite et une grande portée. Les capteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
+      "q": "Vrai ou faux : les Jumeaux ne forment en réalité qu'une entité.",
+      "choices": ["Faux : deux entités qui chassent chacune leur tour", "Vrai : une entité qui se téléporte à chaque interaction", "Faux : deux entités qui peuvent chasser en même temps", "Vrai : une seule entité qui agit sur deux portées"],
+      "answer": 3,
+      "explain": "Vrai : c'est une seule entité, qui peut interagir dans une petite et une grande portée, parfois presque en même temps. Les capteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
     },
     {
       "q": "Avec les Jumeaux, où les capteurs de mouvement se déclenchent-ils et où le sel est-il perturbé ?",
@@ -107,7 +107,7 @@
     },
     {
       "q": "Une courbe « Twinteraction » sur le tableau d'activité prouve-t-elle qu'il s'agit des Jumeaux ?",
-      "choices": ["Oui, c'est une preuve définitive", "Oui, mais seulement sur les grandes cartes", "Non, ce motif n'apparaît jamais sur le tableau", "Non, toute entité peut la produire"],
+      "choices": ["Oui, c'est une preuve définitive", "Oui, seulement sur les grandes cartes", "Non, ce motif n'apparaît jamais sur le tableau", "Non, toute entité peut la produire"],
       "answer": 3,
       "explain": "Les Jumeaux produisent plus souvent ce motif grâce à leur capacité, mais toute entité peut le créer en enchaînant plusieurs interactions rapidement."
     }

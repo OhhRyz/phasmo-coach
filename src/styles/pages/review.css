@@ -3,13 +3,20 @@
 .rv .h { margin-bottom: 14px; }
 
 /* ---------- où en est la séance ---------- */
-.rv-progress { display: flex; align-items: center; gap: 16px; max-width: 640px; margin: 0 0 22px; }
+/* le numéro de la question sur sa ligne, puis le trait et les cartes terminées */
+.rv-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; max-width: 640px; margin: 0 0 22px; }
 .rv-step {
-  margin: 0 !important; white-space: nowrap;
+  flex: 1 0 100%; margin: 0 !important; white-space: nowrap;
   font-family: "Courier Prime", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2);
 }
 .rv-step b { font-size: 16px; color: var(--ink); }
 .rv-again { color: var(--ink-3); }
+/* les cartes terminées : ce qui reste à faire, sans jamais reculer */
+.rv-settled {
+  margin: 0 !important; white-space: nowrap;
+  font-family: "Courier Prime", monospace; font-size: 13.5px; letter-spacing: .04em; color: var(--ink-2);
+}
+.rv-settled b { font-size: 15px; color: var(--ink); }
 
 /* la première séance : ce que fait la révision espacée, au crayon (sur la page de droite, à côté de la fiche) */
 .rv-help--top { display: none !important; }
@@ -219,9 +226,11 @@ html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
 /* ---------- téléphone ---------- */
 @media (max-width: 759px) {
   .rv .h { margin-bottom: 10px; }
-  .rv-progress { gap: 12px; margin-bottom: 16px; }
+  .rv-progress { gap: 6px 12px; margin-bottom: 16px; }
   .rv-step { font-size: 12.5px; }
   .rv-step b { font-size: 14.5px; }
+  .rv-settled { font-size: 12.5px; }
+  .rv-settled b { font-size: 14px; }
   .rv-help--top { display: flex !important; }
   .rv-help--side { display: none; }
   .rv-help { margin-bottom: 16px; padding-left: 10px; }

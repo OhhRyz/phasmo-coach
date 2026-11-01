@@ -66,7 +66,7 @@
     { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu de l'EMF. Lui aussi réagit à tes déplacements : quasi aveugle, il te repère à tes pas (jusqu'à 30 m en sprint) et accélère quand il te détecte au-delà de 5 m. Immobile et silencieux, tu deviens indétectable pour lui, mais il ne ralentit pas à 1,2 m/s." },
     { "with": "the-mimic", "why": "Le Mimic affiche de faux orbes, en plus de la Spirit Box, de l'UV et des glaciales : Spirit Box + orbes peut venir d'un Mimic. L'EMF 5 l'exclut." },
     { "with": "banshee", "why": "La Banshee est elle aussi toujours féminine depuis Winter's Jest (décembre 2025) : une entité féminine ne confirme donc pas la Dayan. La Banshee a UV, orbes et D.O.T.S." },
-    { "with": "deogen", "why": "Le Deogen ralentit lui aussi près des joueurs (jusqu'à 0,4 m/s), mais quoi que tu fasses, et il fonce à 3,0 m/s de loin ; il ne partage que la Spirit Box." },
+    { "with": "deogen", "why": "Le Deogen ralentit lui aussi près des joueurs (jusqu'à 0,4 m/s), quoi que tu fasses, et fonce à 3,0 m/s de loin ; il ne partage que la Spirit Box." },
     { "with": "jinn", "why": "Le Djinn change aussi de vitesse d'un coup selon la distance : disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m, que tu bouges ou non. Une seule preuve en commun (EMF 5)." },
     { "with": "revenant", "why": "Le Revenant change aussi de vitesse d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, que tu bouges ou non. Une seule preuve en commun (orbes)." }
   ],
@@ -105,9 +105,9 @@
   "quiz": [
     {
       "q": "En chasse, l'entité est à moins de 10 m de toi. Tu restes immobile, mais elle garde une vitesse normale puis accélère en te voyant. Que peux-tu en conclure ?",
-      "choices": ["Ce n'est pas une Dayan", "C'est forcément une Dayan", "Ce n'est pas un Oni", "C'est forcément un Oni"],
+      "choices": ["Ce n'est pas une Dayan", "Ce n'est pas une Banshee", "Ce n'est pas un Oni", "Ce n'est pas un Obake"],
       "answer": 0,
-      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en ligne de vue ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan. Un Oni, à vitesse standard avec l'accélération habituelle, correspond au contraire à ce que tu observes, sans être le seul possible."
+      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en ligne de vue ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan. La Banshee, l'Oni ou l'Obake, à vitesse standard avec l'accélération habituelle, correspondent au contraire à ce que tu observes."
     },
     {
       "q": "En chasse, à moins de 10 m de toi, à quelle vitesse va une Dayan si tu restes immobile ?",
@@ -117,9 +117,9 @@
     },
     {
       "q": "Quel est le seuil de chasse de la Dayan si le joueur le plus proche bouge à moins de 10 m d'elle ?",
-      "choices": ["50 %", "45 %", "65 %", "80 %"],
+      "choices": ["50 %", "45 %", "65 %", "40 %"],
       "answer": 2,
-      "explain": "Bouger près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % sans joueur à moins de 10 m, et à 45 % si le joueur le plus proche reste immobile. 80 % concerne le Yokai."
+      "explain": "Bouger près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % sans joueur à moins de 10 m, et à 45 % si le joueur le plus proche reste immobile. 40 % est le seuil du Deogen."
     },
     {
       "q": "L'entité porte un nom masculin. Que peux-tu éliminer ?",
@@ -135,7 +135,7 @@
     },
     {
       "q": "Pourquoi l'accélération en LdV semble-t-elle disparaître quand la Dayan est à moins de 10 m de toi ?",
-      "choices": ["Elle perd définitivement toute accélération en ligne de vue", "Elle a une vitesse fixe, mais la ligne de vue compte encore", "Elle devient aveugle tant qu'elle est tout près de toi", "Elle ne peut pas te voir tant que tu bouges près d'elle"],
+      "choices": ["Elle perd définitivement toute accélération en ligne de vue", "Sa vitesse est fixée tant qu'elle est tout près de toi", "Elle devient aveugle tant qu'elle est tout près de toi", "Elle ne peut pas te voir tant que tu bouges près d'elle"],
       "answer": 1,
       "explain": "Dans le rayon de 10 m, seule compte ta façon de bouger (2,25 ou 1,2 m/s) : sa vitesse y est fixe. L'accélération en ligne de vue continue pourtant de s'accumuler en arrière-plan et s'applique dès qu'elle ressort des 10 m."
     }

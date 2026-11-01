@@ -235,6 +235,7 @@ export function Quiz() {
         ...x,
         prompt: spell(x.prompt),
         quote: x.quote && spell(x.quote),
+        note: x.note && spell(x.note),
         explain: spell(x.explain),
         choices: x.choices.map((c) => ({ ...c, label: spell(c.label) })),
       })),
@@ -612,16 +613,18 @@ export function Quiz() {
 
           <EndActions className="qz-end-actions">
             <TapeButton onClick={() => start()}>Recommencer un quiz</TapeButton>
+            {/* venu d'une fiche (« Me tester sur… ») : on y retourne, pas vers des exercices jamais ouverts */}
+            {one && <TypedLink to={`/codex/${one.id}`}>Retour à la fiche {de(one.name)}</TypedLink>}
             <TypedLink onClick={() => setQuestions(null)}>Changer les réglages</TypedLink>
-            <TypedLink to="/entrainement">Retour aux exercices</TypedLink>
+            {!one && <TypedLink to="/entrainement">Retour aux exercices</TypedLink>}
             {requeued > 0 ? (
               <TypedLink to="/revision">
-                Revoir {requeued > 1 ? `mes ${requeued} erreurs` : 'mon erreur'} dans la révision →
+                Revoir {requeued > 1 ? `mes ${requeued} erreurs` : 'mon erreur'} dans la révision{NBSP}→
               </TypedLink>
             ) : mistakes.length > 0 && weakest ? (
-              <TypedLink onClick={() => start([weakest.t.id])}>Refaire un quiz sur {weakest.t.label.toLowerCase()} →</TypedLink>
+              <TypedLink onClick={() => start([weakest.t.id])}>Refaire un quiz sur {weakest.t.label.toLowerCase()}{NBSP}→</TypedLink>
             ) : !topics.includes('expert') ? (
-              <TypedLink onClick={() => start(['expert'])}>Essayer les questions expertes →</TypedLink>
+              <TypedLink onClick={() => start(['expert'])}>Essayer les questions expertes{NBSP}→</TypedLink>
             ) : null}
           </EndActions>
           </div>
@@ -664,6 +667,7 @@ export function Quiz() {
                       </p>
                       <p className="qz-fix-q">{a.q.prompt}</p>
                       {a.q.quote && <blockquote className="qz-quote">{a.q.quote}</blockquote>}
+                      {a.q.note && <p className="pencil-note">{a.q.note}</p>}
                       <p className="qz-fix-line">
                         <span className="qz-fix-k">Ta réponse</span>
                         <MyAnswer a={a} />
@@ -753,6 +757,7 @@ export function Quiz() {
               {q.prompt}
             </h2>
             {q.quote && <blockquote className="qz-quote">{q.quote}</blockquote>}
+            {q.note && <p className="pencil-note">{q.note}</p>}
           </div>
 
           <Consigne className="qz-consigne">

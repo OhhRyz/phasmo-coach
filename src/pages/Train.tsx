@@ -78,7 +78,7 @@ export function Train() {
             <div className="tr-go">
               {due > 0 ? (
                 <TapeButton to={EXHIBITS.revision.to}>
-                  Réviser mes {due} question{due > 1 ? 's' : ''}
+                  Réviser mes {due} carte{due > 1 ? 's' : ''}
                 </TapeButton>
               ) : (
                 <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
@@ -141,7 +141,7 @@ export function Train() {
                     <RoughCircle seed="tr-due" padX={0.2} padY={0.08} delay={0.9}>
                       {due}
                     </RoughCircle>{' '}
-                    question{due > 1 ? 's' : ''} aujourd’hui
+                    carte{due > 1 ? 's' : ''} aujourd’hui
                   </>
                 ) : (
                   'à jour pour aujourd’hui'

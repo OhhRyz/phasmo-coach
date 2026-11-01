@@ -162,8 +162,8 @@
       "q": "Caché hors de sa vue, tu parles à voix haute pendant une chasse : les pas du Revenant, jusque-là très lents, deviennent aussitôt très rapides. Pourquoi ?",
       "choices": [
         "Il a entendu ta voix et gagne son bonus de ligne de vue",
-        "Il change de vitesse à la moitié de la chasse",
-        "Il t'a détecté à la voix, même sans te voir",
+        "Il change de rythme à la moitié de la chasse",
+        "Il t'a détecté à ta voix et passe à pleine vitesse",
         "Il réagit au disjoncteur qu'on vient de rallumer"
       ],
       "answer": 2,
@@ -173,12 +173,12 @@
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
       "choices": [
         "1,7 m/s",
-        "0,4 m/s",
+        "1,4 m/s",
         "2,5 m/s",
         "1,0 m/s"
       ],
       "answer": 3,
-      "explain": "Il rampe à 1,0 m/s. 1,7 m/s est la vitesse standard, 0,4 m/s celle d'un Deogen tout près de toi, 2,5 m/s celle d'un Djinn ou d'un Raiju quand ils accélèrent."
+      "explain": "Il rampe à 1,0 m/s. 1,7 m/s est la vitesse standard, 1,4 m/s celle d'un Hantu dans une pièce à plus de 15 °C, 2,5 m/s celle d'un Djinn ou d'un Raiju quand ils accélèrent."
     },
     {
       "q": "Que fait un Revenant au moment où il détecte un joueur ?",
@@ -205,13 +205,13 @@
     {
       "q": "Pendant toute une chasse, l'entité se déplace à une vitesse constante d'environ 1,7 m/s sans t'avoir détecté. Qu'en conclus-tu ?",
       "choices": [
-        "C'est forcément un Revenant",
-        "C'est forcément un Esprit",
+        "Ce n'est pas un Esprit",
+        "Ce n'est pas un Spectre",
         "Ce n'est pas un Revenant",
-        "Ce n'est pas un Esprit"
+        "Ce n'est pas un Myling"
       ],
       "answer": 2,
-      "explain": "Un Revenant qui ne te détecte pas est à 1,0 m/s ; une vitesse stable à 1,7 m/s ne correspond ni à 1,0 ni à 3,0 m/s, donc ce n'est pas un Revenant. Un Esprit, qui chasse à 1,7 m/s, reste possible, mais beaucoup d'autres entités chassent aussi à cette vitesse."
+      "explain": "Un Revenant qui ne te détecte pas est à 1,0 m/s ; une vitesse stable à 1,7 m/s ne correspond ni à 1,0 ni à 3,0 m/s, donc ce n'est pas un Revenant. L'Esprit, le Spectre et le Myling, qui chassent à 1,7 m/s, restent possibles, comme beaucoup d'autres entités."
     },
     {
       "q": "Dans quel groupe AUCUNE entité n'a l'accélération standard en ligne de vue ?",
@@ -223,6 +223,17 @@
       ],
       "answer": 3,
       "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
+    },
+    {
+      "q": "Pendant toute une chasse, l'entité avance à environ 1,0 m/s sans t'avoir détecté (vitesse des entités à 100 %). Qu'en conclus-tu ?",
+      "choices": [
+        "Ce n'est pas un Revenant",
+        "Ce n'est pas un Thayé",
+        "Ce n'est pas un Deildegast",
+        "Ce n'est pas un Esprit"
+      ],
+      "answer": 3,
+      "explain": "Une entité standard comme l'Esprit chasse à 1,7 m/s : une chasse entière à 1,0 m/s l'élimine. Le Revenant qui ne t'a pas détecté avance justement à 1,0 m/s, le Thayé y descend en vieillissant et le Deildegast quand une vingtaine d'objets ont été utilisés : tous trois restent possibles."
     }
   ],
   "changes": [],

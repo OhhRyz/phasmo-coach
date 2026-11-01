@@ -143,7 +143,7 @@ function CountCircle({ n }: { n: number }) {
   const w = 12 + label.length * 9
   const d = roughEllipse(w, 20, roughRng('count'), 0.05, 0.1)
   return (
-    <b className="count" aria-label={`${n} question${n > 1 ? 's' : ''} à réviser`}>
+    <b className="count" aria-label={`${n} carte${n > 1 ? 's' : ''} à réviser`}>
       {label}
       <svg className="draw" viewBox={`0 0 ${w + 14} 32`} aria-hidden>
         <path d={d} transform="translate(7 6)" pathLength={1} strokeWidth={1.6} style={{ ['--d' as string]: '1.2s' }} />

@@ -15,7 +15,7 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "3,0 m/s de loin → 0,4 m/s tout près · n'accélère pas en LdV",
+    "summary": "3,0 m/s loin → 0,4 m/s près · n'accélère pas en LdV",
     "details": [
       "Pas d'accélération en LdV : il sait en permanence où se trouve sa cible.",
       "Il fonce à 3,0 m/s tant qu'il est loin du joueur ciblé, puis ralentit jusqu'à 0,4 m/s quand il arrive tout près de lui.",
@@ -82,7 +82,7 @@
   "confusions": [
     {
       "with": "revenant",
-      "why": "Le Revenant alterne aussi lent et rapide (1,0 ↔ 3,0 m/s), mais à l'inverse : il est rapide quand il te détecte et lent sinon. Le Deogen, lui, ralentit justement quand il est sur toi."
+      "why": "Le Revenant passe d'un coup de 1,0 à 3,0 m/s quand il te détecte et reste lent sinon. Le Deogen, lui, ralentit justement quand il est sur toi."
     },
     {
       "with": "deildegast",
@@ -176,11 +176,11 @@
       "choices": [
         "40 %",
         "50 %",
-        "35 %",
+        "60 %",
         "75 %"
       ],
       "answer": 0,
-      "explain": "Le Deogen ne chasse pas avant 40 % de santé moyenne. 35 % est le seuil de l'Ombre, 75 % celui du Thayé jeune."
+      "explain": "Le Deogen ne chasse pas avant 40 % de santé moyenne. 50 % est le seuil standard, 60 % celui de l'Onryo, 75 % celui du Thayé jeune."
     },
     {
       "q": "Comment se comporte la vitesse du Deogen pendant une chasse ?",
@@ -216,26 +216,26 @@
       "explain": "Il te trouve toujours, donc te cacher ou rester immobile ne sert à rien, et de loin il fonce à 3,0 m/s. Tout près, il tombe à 0,4 m/s : en tournant autour d'un obstacle, tu le tiens à distance."
     },
     {
-      "q": "Pendant la chasse, l'entité te garde en vue dans un long couloir et accélère peu à peu. Peut-il s'agir d'un Deogen ?",
+      "q": "Pendant la chasse, l'entité fonce sur toi de loin, puis avance presque au ralenti une fois arrivée sur toi. Peut-il s'agir d'un Deogen ?",
       "choices": [
-        "Non, sa vitesse ne dépend pas de ta ligne de vue",
-        "Non, il ralentit au contraire dès qu'il te voit",
-        "Oui, c'est ainsi qu'il rattrape sa cible au loin",
-        "Oui, quand la santé moyenne de l'équipe est basse"
+        "Non, sa vitesse ne change pas pendant la chasse",
+        "Oui, s'il chasse dans une pièce très froide",
+        "Non, il ralentit au contraire quand il est loin",
+        "Oui, il ralentit nettement près de sa cible"
       ],
-      "answer": 0,
-      "explain": "Le Deogen n'a pas l'accélération en ligne de vue : il sait toujours où est sa cible, fonce à 3,0 m/s de loin puis ralentit jusqu'à 0,4 m/s une fois tout près. Une entité qui accélère peu à peu en te voyant n'est pas un Deogen."
+      "answer": 3,
+      "explain": "Oui : le Deogen sait toujours où est sa cible. Il fonce à 3,0 m/s tant qu'il en est loin, puis ralentit jusqu'à 0,4 m/s une fois tout près. Il n'a pas l'accélération en ligne de vue, et la température de la pièce ne change rien à sa vitesse (c'est le Hantu qui accélère au froid)."
     },
     {
-      "q": "L'entité tente une chasse alors que la santé moyenne de l'équipe est à 45 % (sans objet maudit). Qu'en déduis-tu ?",
+      "q": "L'entité tente une chasse alors que la santé moyenne de l'équipe est à 38 % (sans objet maudit). Qu'en déduis-tu ?",
       "choices": [
-        "C'est forcément un Deogen",
         "Ce n'est pas un Deogen",
-        "C'est forcément un Démon",
-        "Ce n'est pas un Démon"
+        "Ce n'est pas une Ombre",
+        "Ce n'est pas une Dayan",
+        "Ce n'est pas un Cauchemar"
       ],
       "answer": 1,
-      "explain": "Le Deogen ne chasse qu'en dessous de 40 % : une tentative à 45 % l'élimine (l'Ombre, à 35 %, est exclue aussi). Le Démon, qui peut chasser à toute santé mentale, reste possible, sans être le seul."
+      "explain": "L'Ombre ne chasse pas avant 35 % : une tentative à 38 % l'élimine. Le Deogen, qui chasse sous 40 %, reste possible, comme la Dayan (45 % si le joueur le plus proche reste immobile) et le Cauchemar (40 % lumière allumée). Au-dessus de 40 %, tu aurais aussi écarté le Deogen."
     }
   ],
   "changes": [],

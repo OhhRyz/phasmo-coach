@@ -170,7 +170,7 @@
       "q": "Comment le Spectre réagit-il au sel ?",
       "choices": [
         "Il l'évite et fait demi-tour devant",
-        "Il le perturbe dès qu'il passe dessus",
+        "Il le perturbe comme n'importe quelle entité",
         "Il passe dessus sans le perturber",
         "Il est ralenti plus longtemps que les autres"
       ],
@@ -222,15 +222,15 @@
       "explain": "C'est une mauvaise interprétation du texte du journal : le Spectre traque et se déplace comme toutes les autres entités. Sa téléportation près d'un joueur se produit hors des chasses ; pendant une chasse, il marche."
     },
     {
-      "q": "À quelle vitesse chasse un Spectre ?",
+      "q": "Laquelle de ces entités chasse à 1,7 m/s avec l'accélération standard en ligne de vue ?",
       "choices": [
-        "1,7 m/s sans aucune accélération en ligne de vue",
-        "2,5 m/s avec accélération standard en ligne de vue",
-        "2,5 m/s sans aucune accélération en ligne de vue",
-        "1,7 m/s avec accélération standard en ligne de vue"
+        "Le Revenant",
+        "Le Hantu",
+        "Le Thayé",
+        "Le Spectre"
       ],
       "answer": 3,
-      "explain": "Le Spectre a une vitesse standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue. 2,5 m/s, c'est le Raiju près de l'électronique allumée ou le Djinn disjoncteur allumé."
+      "explain": "Le Spectre a une vitesse standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue. Le Revenant chasse à 1,0 puis 3,0 m/s, le Hantu de 1,4 à 2,7 m/s selon le froid, le Thayé de 2,75 à 1,0 m/s selon son âge, et aucun des trois n'accélère en ligne de vue."
     }
   ],
   "changes": [

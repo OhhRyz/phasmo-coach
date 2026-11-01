@@ -92,13 +92,13 @@
     },
     {
       "q": "À quelle distance le Raiju perturbe-t-il tes appareils électroniques pendant une chasse ?",
-      "choices": ["10 m", "20 m", "15 m", "5 m"],
+      "choices": ["10 m", "7,5 m", "15 m", "5 m"],
       "answer": 2,
-      "explain": "Le Raiju perturbe l'électronique à 15 m au lieu des 10 m standard. 20 m est la portée d'audition normale des pas."
+      "explain": "Le Raiju perturbe l'électronique à 15 m au lieu des 10 m standard."
     },
     {
       "q": "Depuis Chronicle (v0.13, juin 2025), quel équipement déclenche l'accélération du Raiju ?",
-      "choices": ["Les appareils posés au sol, pas ceux en main", "Les appareils allumés près de sa pièce favorite", "Les lumières et interrupteurs de la maison", "Les appareils posés comme ceux tenus en main"],
+      "choices": ["Les appareils posés au sol et non ceux en main", "Les appareils allumés près de sa pièce favorite", "Les lumières et interrupteurs de la maison", "Les appareils posés comme ceux tenus en main"],
       "answer": 3,
       "explain": "Chronicle a corrigé un bug qui empêchait le Raiju d'accélérer près de l'électronique tenue en main. Désormais, tout équipement électronique actif du joueur, posé ou tenu, compte."
     },

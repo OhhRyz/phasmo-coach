@@ -171,9 +171,9 @@
     {
       "q": "Une chasse entière se déroule à 1,7 m/s sans ligne de vue (vitesse des entités à 100 %, pas de Lune de sang). Peut-il s'agir d'un Obambo ?",
       "choices": [
-        "Non, il chasse à plus de 2 m/s dans ses deux états",
+        "Non, il chasse à 2,25 ou 2,75 m/s selon son état",
         "Oui, s'il est en état calme pendant la chasse",
-        "Non, il chasse à 1,45 ou 1,96 m/s",
+        "Non, il chasse à 1,45 ou 1,96 m/s selon son état",
         "Oui, s'il est en état agressif pendant la chasse"
       ],
       "answer": 2,

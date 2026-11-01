@@ -78,7 +78,7 @@
   "confusions": [
     {
       "with": "deogen",
-      "why": "Le Deogen est aussi plus visible en chasse, mais il fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi."
+      "why": "Le Deogen est lui aussi plus visible en chasse ; il fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi."
     },
     {
       "with": "phantom",
@@ -174,11 +174,11 @@
       "choices": [
         "10 %",
         "15 %",
-        "25 %",
+        "5 %",
         "20 %"
       ],
       "answer": 3,
-      "explain": "20 %, soit le double des 10 % standard. 15 % correspond au pouvoir du Yurei, 25 % à celui du Djinn."
+      "explain": "20 %, soit le double des 10 % standard. 15 % correspond au pouvoir du Yurei."
     },
     {
       "q": "Quel type d'événement un Oni ne fait-il jamais ?",

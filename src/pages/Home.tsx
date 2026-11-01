@@ -28,6 +28,7 @@ import { installHint, platform } from '../engine/device'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { EXHIBITS } from './exhibits'
+import { sessionMinutes } from './reviewPlan'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -116,7 +117,7 @@ function Welcome() {
           </Stamp>
           <p className="entry-line">
             {fr(
-              `Réviser les ${GHOSTS.length} entités en 5 minutes par jour, t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
+              `Réviser les ${GHOSTS.length} entités en une dizaine de minutes par jour, t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
             )}
           </p>
         </div>
@@ -302,7 +303,8 @@ export function Home() {
 
   const dueCount = queue.filter((c) => state.cards[c.id]).length
   const newCount = queue.length - dueCount
-  const minutes = Math.max(1, Math.round(queue.length * 0.4))
+  // les cartes nouvelles repassent dans la séance : on compte les réponses attendues, pas les cartes
+  const minutes = sessionMinutes(newCount, dueCount)
   const onMenu = [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].map((id) => getGhost(id)?.name).filter(Boolean)
   const acquired = GHOSTS.filter((g) => (mastery[g.id] ?? 0) >= 0.85).length
   const untouched = GHOSTS.filter((g) => (mastery[g.id] ?? 0) === 0).length
@@ -484,7 +486,7 @@ export function Home() {
               <>
                 <div className="plan-n">
                   <b>{queue.length}</b>
-                  <span>question{queue.length > 1 ? 's' : ''}</span>
+                  <span>carte{queue.length > 1 ? 's' : ''}</span>
                   <small>
                     environ {minutes}
                     {NBSP}min
@@ -507,16 +509,16 @@ export function Home() {
             ) : (
               <>
                 <div className="plan-n plan-n--none">
-                  <span>Aucune question à revoir</span>
+                  <span>Aucune carte à revoir</span>
                 </div>
                 <p>
                   {fr(
-                    'Tout est révisé pour aujourd’hui : les questions reviendront d’elles-mêmes au bon moment. En attendant, entraîne-toi sur une mise en situation.',
+                    'Tout est révisé pour aujourd’hui : les cartes reviendront d’elles-mêmes au bon moment. En attendant, entraîne-toi sur une mise en situation.',
                   )}
                 </p>
                 <div className="plan-actions">
                   <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
-                  <TypedLink to="/revision">apprendre de nouvelles questions</TypedLink>
+                  <TypedLink to="/revision">apprendre de nouvelles cartes</TypedLink>
                 </div>
               </>
             )}

@@ -18,7 +18,7 @@ import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { namesGhost, type Card, type CardKind, type CoachNote } from '../engine/cards'
 import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate } from '../engine/format'
 import { isCoachNote, isOwnNote } from '../engine/notes'
-import { buildReviewQueue, unseenCards } from '../engine/progress'
+import { buildReviewQueue, sessionGhosts, unseenCards } from '../engine/progress'
 import { questionForCard, type Question } from '../engine/quiz'
 import { humanDuration, isDue, schedule, type CardState, type Grade } from '../engine/srs'
 import { ignoreKey } from '../engine/keys'
@@ -240,6 +240,9 @@ function ChoiceRow({
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
   const [queue, setQueue] = useState<Card[]>(() => buildReviewQueue(state, deck, Date.now()))
+  // les entités de la séance, fixées au départ : les mauvaises réponses des QCM les prennent d'abord,
+  // pour que la bonne ne soit pas « l'entité de la carte d'avant »
+  const [peers, setPeers] = useState<string[]>(() => sessionGhosts(queue))
   const [done, setDone] = useState(0)
   const [good, setGood] = useState(0)
   const [finished, setFinished] = useState(false)
@@ -253,9 +256,8 @@ export function Review() {
   // passages de chaque carte dans la séance : une carte qui revient change l'ordre de ses choix
   const [passes, setPasses] = useState<Record<string, number>>({})
   const [helpOpen, setHelpOpen] = useState(() => !readHelpDismissed())
-  // « Carte 3 sur 12 » : les cartes distinctes de la séance (une carte qui repasse ne l'allonge pas)
+  // « 4 cartes terminées sur 12 » : les cartes distinctes de la séance (une carte qui repasse ne l'allonge pas)
   const [total, setTotal] = useState(queue.length)
-  const [ordinals, setOrdinals] = useState<Record<string, number>>({})
   // cartes terminées pour la séance (leur dernière réponse ne les fait pas repasser) : le trait d'avancement
   const [settled, setSettled] = useState(0)
 
@@ -275,8 +277,8 @@ export function Review() {
   const day = useMemo(() => dayKey(since), [since])
   const pass = card ? (passes[card.id] ?? 0) : 0
   const question = useMemo(
-    () => (card ? questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: state.notes, day: pass ? `${day}#${pass}` : day }) : null),
-    [card, day, pass, state.notes],
+    () => (card ? questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: state.notes, day: pass ? `${day}#${pass}` : day, peers }) : null),
+    [card, day, pass, state.notes, peers],
   )
   // l'état de la carte quand elle arrive : « Nouvelle » ne disparaît pas sous les yeux une fois la réponse notée
   const cardKey = card ? `${card.id}#${pass}` : ''
@@ -328,7 +330,6 @@ export function Review() {
       setDone(reviewed)
       setGood(correct)
       const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: next.due - at < REQUEUE_WITHIN, next, at }
-      setOrdinals((m) => (m[card.id] ? m : { ...m, [card.id]: Object.keys(m).length + 1 }))
       if (!o.again) setSettled((n) => n + 1)
       if (choice === undefined) {
         const when = comesBack(next, at)
@@ -433,8 +434,8 @@ export function Review() {
   const restart = (extraNew: number) => {
     const fresh = buildReviewQueue(state, deck, Date.now(), extraNew)
     setQueue(fresh)
+    setPeers(sessionGhosts(fresh))
     setTotal(fresh.length)
-    setOrdinals({})
     setSettled(0)
     setDone(0)
     setGood(0)
@@ -639,8 +640,9 @@ export function Review() {
   const headLeft = isNote ? noteLabel(note, state.profile) : hides && !shown ? 'Entité inconnue' : deckLabel(card)
   const headRight = isNote ? (shown ? (ghost?.name ?? '') : '') : KIND_LABEL[card.kind]
 
-  // rang de la carte parmi les cartes distinctes de la séance ; une carte qui repasse garde le sien
-  const position = Math.min(total, ordinals[card.id] ?? Object.keys(ordinals).length + 1)
+  // le compteur ne recule jamais : le numéro de la question dans la séance (une carte qui repasse en est une
+  // nouvelle), et les cartes terminées, celles qui ne repasseront plus aujourd'hui
+  const asked = done + (outcome ? 0 : 1)
   const last = queue.length === 1 && !outcome?.again
   const left = queue.length - 1
 
@@ -663,7 +665,8 @@ export function Review() {
       <aside className={`rv-help ${where}`} aria-label="La révision espacée">
         <p className="pencil-note">
           La révision espacée te repose chaque carte juste avant que tu l’oublies. Bonne réponse{NNBSP}: elle revient plus tard, demain
-          puis de plus en plus loin. Erreur{NNBSP}: elle repasse dans quelques minutes.
+          puis de plus en plus loin. Erreur{NNBSP}: elle repasse dans quelques minutes. Une carte nouvelle repasse aussi une fois dans la
+          séance, même juste, pour bien s’ancrer.
         </p>
         <TypedLink onClick={closeHelp}>Compris</TypedLink>
       </aside>
@@ -702,10 +705,13 @@ export function Review() {
 
         <div className="rv-progress">
           <p className="rv-step" aria-live="polite">
-            Carte <b>{position}</b> sur {total}
-            {pass > 0 && <span className="rv-again"> · à nouveau</span>}
+            Question <b>{asked}</b>
+            {pass > 0 && <span className="rv-again"> · carte déjà vue</span>}
           </p>
           <ProgressBar value={total ? settled / total : 0} label="Cartes terminées pour cette séance" />
+          <p className="rv-settled">
+            <b>{settled}</b> {settled > 1 ? 'cartes terminées' : 'carte terminée'} sur {total}
+          </p>
         </div>
 
         {help('rv-help--top')}
@@ -737,6 +743,7 @@ export function Review() {
               {prompt}
             </h2>
             {quote && <blockquote className="rv-quote">{quote}</blockquote>}
+            {question?.note && <p className="pencil-note">{question.note}</p>}
 
             {question ? (
               <>

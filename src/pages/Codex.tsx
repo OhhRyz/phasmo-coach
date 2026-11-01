@@ -6,8 +6,10 @@ import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLi
 import { Empty, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { EVIDENCE_IDS } from '../data/evidence'
-import { EMPTY_FILTER, filterGhosts, marked, possibleEvidence, type FilterState } from '../engine/filter'
-import { NNBSP, type SpeedClass } from '../engine/format'
+import type { Ghost } from '../data/types'
+import { le } from '../engine/cards'
+import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, type FilterState } from '../engine/filter'
+import { fr, NNBSP, type SpeedClass } from '../engine/format'
 import { useMastery } from '../store/hooks'
 
 const SPEEDS: { value: SpeedClass; label: string }[] = [
@@ -67,6 +69,29 @@ function Toggle<T extends string>({ items, value, onChange, label }: { items: { 
 
 const s = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
 
+/** « le Mimic », « l’Esprit et le Spectre », « la Banshee, le Démon, l’Oni et 4 autres » */
+function nameList(ghosts: readonly Ghost[], max = 3): string {
+  const names = ghosts.map((g) => le(g.name))
+  if (names.length <= max) return names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? '')
+  const rest = names.length - max
+  return `${names.slice(0, max).join(', ')} et ${rest} autre${rest > 1 ? 's' : ''}`
+}
+
+/** Ce qui écarte des entités : les preuves cochées, les autres critères (vitesse, seuil, ligne de vue), ou les deux. */
+function excludedBy(ghosts: readonly Ghost[], filter: FilterState): string {
+  const count = filter.evidenceCount === 3 ? '' : ` (partie à ${s(filter.evidenceCount, 'preuve')})`
+  if (ghosts.every((g) => !matchesEvidence(g, filter))) return `Tes preuves cochées${count}`
+  if (ghosts.some((g) => !matchesEvidence(g, filter))) return `Tes preuves cochées${count} et tes critères de vitesse, de seuil ou de ligne de vue`
+  return 'Tes critères de vitesse, de seuil ou de ligne de vue'
+}
+
+/** Que faire quand plus rien ne colle avec le carnet. */
+function noneHint(ticked: boolean, moreCount: number): string {
+  if (ticked && moreCount > 0) return 'vérifie tes preuves cochées et le nombre de preuves de la partie, ou retire un critère de vitesse, de seuil ou de ligne de vue'
+  if (moreCount > 0) return 'retire un critère de vitesse, de seuil ou de ligne de vue'
+  return 'vérifie le nombre de preuves de la partie, ou décoche une preuve'
+}
+
 const PHONE = '(max-width: 759px)'
 
 /** Vrai tant que la fenêtre correspond à la requête (suit les changements de taille). */
@@ -123,8 +148,12 @@ export function Codex() {
     return { matching: m, out: byQuery.filter((g) => !m.includes(g)) }
   }, [filter, query])
 
-  const possible = useMemo(() => possibleEvidence(filterGhosts(GHOSTS, filter), filter), [filter])
-  const showOut = outPref ?? (phone ? false : matching.length > 3)
+  // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
+  const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
+  const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
+  // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
+  const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
+  const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
 
   // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées
   const rows = useMemo(() => {
@@ -157,7 +186,7 @@ export function Codex() {
   // la réponse du carnet, lisible juste sous le titre (sur téléphone le registre est loin en dessous)
   const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'absente')].filter(Boolean)
   const headCount = marks.length
-    ? `${marks.join(' · ')} · ${matching.length === 0 ? 'aucune possible' : s(matching.length, 'possible')}`
+    ? `${marks.join(' · ')} · ${pool.length === 0 ? 'aucune possible' : s(pool.length, 'possible')}`
     : 'rien de coché'
   const ticked = found + excluded > 0
   // une preuve encore non testée mais impossible avec les entités qui restent : grisée dans le carnet
@@ -226,11 +255,7 @@ export function Codex() {
           </div>
 
           {/* la conclusion arrive là où l'œil se trouve : juste sous les preuves */}
-          {active && matching.length === 0 && (
-            <p className="pencil-note cx-none">
-              aucune entité ne colle : vérifie le nombre de preuves de la partie ou retire un filtre
-            </p>
-          )}
+          {active && pool.length === 0 && <p className="pencil-note cx-none">{fr(`aucune entité ne colle : ${noneHint(ticked, moreCount)}`)}</p>}
           {only && (
             <div className="cx-actions cx-actions--verdict">
               <p className="cx-verdict">
@@ -339,10 +364,41 @@ export function Codex() {
             {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
           </div>
 
-          {matching.length === 0 && (
-            <Empty title="Aucune entité ne correspond">
-              <p>Vérifie le nombre de preuves de la partie, ou retire un filtre.</p>
+          {searchedOut ? (
+            <Empty title={out.length === 1 ? 'Entité écartée par ton carnet' : 'Entités écartées par ton carnet'}>
+              <p>
+                {excludedBy(out, filter)} écartent {nameList(out)}
+                {showOut ? (
+                  <>. {out.length === 1 ? 'Sa ligne reste barrée' : 'Leurs lignes restent barrées'} ci-dessous.</>
+                ) : (
+                  <>
+                    {NNBSP}:{' '}
+                    <button type="button" className="link link-btn" onClick={() => setOutPref(true)}>
+                      {out.length === 1 ? 'revoir sa ligne barrée' : 'revoir leurs lignes barrées'}
+                    </button>
+                  </>
+                )}
+              </p>
+              <p className="cx-empty-act">
+                <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>
+              </p>
             </Empty>
+          ) : (
+            matching.length === 0 &&
+            (query.trim() && out.length === 0 ? (
+              <Empty title="Aucune entité ne correspond à ta recherche">
+                <p>Essaie un autre mot{NNBSP}: un nom ou un comportement.</p>
+              </Empty>
+            ) : (
+              <Empty title="Aucune entité ne correspond">
+                <p>{fr(`${noneHint(ticked, moreCount).replace(/^./, (c) => c.toUpperCase())}.`)}</p>
+                {active && (
+                  <p className="cx-empty-act">
+                    <TypedLink onClick={() => setFilter(EMPTY_FILTER)}>Tout effacer</TypedLink>
+                  </p>
+                )}
+              </Empty>
+            ))
           )}
 
           {rows.length > 0 && (
