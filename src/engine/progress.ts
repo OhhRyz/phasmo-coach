@@ -18,6 +18,17 @@ export function newCardsIntroducedToday(log: ReviewEntry[], now: number): number
   return ids.size
 }
 
+/**
+ * Les cartes déjà répondues aujourd'hui : leur question (askKey) est déjà posée dans la journée, même si elles
+ * ne sont plus dues (« Apprendre 10 cartes » après une première séance).
+ */
+function answeredToday(deck: readonly Card[], log: readonly ReviewEntry[], now: number): Card[] {
+  const start = startOfDay(now)
+  const ids = new Set<string>()
+  for (let i = log.length - 1; i >= 0 && log[i].t >= start; i--) ids.add(log[i].id)
+  return ids.size ? deck.filter((c) => ids.has(c.id)) : []
+}
+
 /** Une carte tirée d'une note écrite par le coach (et non par la personne qui tient le carnet). */
 export function isCoachCard(c: Card, profile: Profile | undefined): boolean {
   const coach = profile ? coachNameOf(profile) : ''
@@ -47,8 +58,13 @@ export function askKey(c: Card): string | null {
   return c.kind === 'sanity' || c.kind === 'speed' ? `${c.kind}|${c.back}` : null
 }
 
-/** Les nouvelles cartes d'une journée viennent d'au moins autant d'entités (trois cartes chacune pour 12 cartes). */
-export const NEW_GHOSTS_PER_DAY = 4
+/**
+ * Les nouvelles cartes d'une journée viennent d'au moins autant d'entités (deux cartes chacune pour 12 cartes) :
+ * les QCM d'une séance ne tournent pas autour des trois ou quatre mêmes noms.
+ */
+export const NEW_GHOSTS_PER_DAY = 6
+/** Au plus autant de nouvelles cartes par entité dans une journée, quand il y a assez d'entités à découvrir. */
+const NEW_PER_GHOST = 2
 
 /**
  * Les n premières nouvelles cartes à découvrir, dans l'ordre pédagogique, mais réparties entre plusieurs
@@ -56,7 +72,7 @@ export const NEW_GHOSTS_PER_DAY = 4
  * davantage si la limite du jour est haute). Les notes passent d'abord, telles quelles. Sans cela, les cartes
  * d'une même entité arriveraient d'un bloc : sa carte de signes, puis son seuil, sa vitesse, ses tests…,
  * chacune ayant pour réponse l'entité de la carte précédente. Une même question (askKey) ne se pose qu'une
- * fois par jour : `taken`, celles des cartes dues de la séance.
+ * fois par jour : `taken`, celles des cartes dues de la séance et des cartes déjà répondues aujourd'hui.
  */
 export function pickNewCards(unseen: Card[], n: number, taken: Iterable<string> = []): Card[] {
   const out = unseen.filter((c) => c.deck === 'coach').slice(0, n)
@@ -76,7 +92,7 @@ export function pickNewCards(unseen: Card[], n: number, taken: Iterable<string> 
   // vitesse) : sinon la journée aligne seuils et vitesses, presque toujours la même question pour une entité
   // standard (« Laquelle de ces entités chasse à 50 %, comme une entité standard ? »)
   for (const group of groups) group.splice(0, group.length, ...byKindTurns(group))
-  const width = Math.max(NEW_GHOSTS_PER_DAY, Math.ceil((n - out.length) / 3))
+  const width = Math.max(NEW_GHOSTS_PER_DAY, Math.ceil((n - out.length) / NEW_PER_GHOST))
   const active = groups.splice(0, width)
   // une question déjà posée dans la journée ne revient pas pour une autre entité : jamais deux fois parmi les
   // nouvelles cartes, et celle d'une carte due seulement s'il ne reste rien d'autre à découvrir
@@ -133,6 +149,8 @@ function byKindTurns(cards: readonly Card[]): Card[] {
 export const SAME_GHOST_GAP = 3
 /** Combien de cartes au moins séparent deux cartes qui posent la même question (askKey), quand c'est possible. */
 export const SAME_ASK_GAP = 5
+/** Jusqu'où chercher une carte d'une autre sorte pour séparer deux cartes de la même sorte (voir separateKinds). */
+const KIND_WINDOW = 8
 
 /**
  * La séance dans un ordre tiré pour la journée, où deux cartes d'une même entité ne se suivent pas de moins
@@ -152,6 +170,56 @@ export function spreadByGhost(cards: readonly Card[], rng: Rng, before: readonly
   while (i < spread.length || j < loose.length) {
     const fromLoose = j < loose.length && (i >= spread.length || rng() * (loose.length - j + spread.length - i) < loose.length - j)
     out.push(fromLoose ? loose[j++] : spread[i++])
+  }
+  return separateKinds([...before, ...out], before.length).slice(before.length)
+}
+
+/** Combien de paires de cartes trop proches : même entité à moins de SAME_GHOST_GAP, même question à moins de SAME_ASK_GAP. */
+function crowding(cards: readonly Card[]): number {
+  let n = 0
+  for (let k = 0; k < cards.length; k++) {
+    const g = cards[k].ghostId
+    const a = askKey(cards[k])
+    for (let m = Math.max(0, k - Math.max(SAME_GHOST_GAP, SAME_ASK_GAP)); m < k; m++) {
+      if (g && k - m <= SAME_GHOST_GAP && cards[m].ghostId === g) n++
+      if (a && k - m <= SAME_ASK_GAP && askKey(cards[m]) === a) n++
+    }
+  }
+  return n
+}
+
+/** Combien de cartes suivent une carte de la même sorte (deux signes, deux tests, deux faits de suite…), à partir de `from`. */
+function sameKindPairs(cards: readonly Card[], from: number): number {
+  let n = 0
+  for (let k = Math.max(1, from); k < cards.length; k++) if (cards[k].kind === cards[k - 1].kind) n++
+  return n
+}
+
+/**
+ * Deux cartes de la même sorte ne se suivent pas quand on peut l'éviter (règle souple, comme SAME_ASK_GAP) :
+ * deux tests, puis deux tests encore, se liraient comme une seule série de la même question. Une carte qui
+ * suit une carte de sa sorte change de place avec l'une des KIND_WINDOW suivantes, si l'échange sépare plus
+ * de paires qu'il n'en crée et ne rapproche ni deux cartes d'une même entité, ni deux cartes d'une même
+ * question. Les `fixed` premières cartes (les notes du coach placées devant) ne bougent pas.
+ */
+function separateKinds(cards: readonly Card[], fixed: number): Card[] {
+  const out = [...cards]
+  let crowded = crowding(out)
+  let pairs = sameKindPairs(out, fixed)
+  for (let i = Math.max(1, fixed); i < out.length && pairs > 0; i++) {
+    if (out[i].kind !== out[i - 1].kind) continue
+    for (let j = i + 1; j < Math.min(out.length, i + 1 + KIND_WINDOW); j++) {
+      if (out[j].kind === out[i - 1].kind) continue
+      ;[out[i], out[j]] = [out[j], out[i]]
+      const c = crowding(out)
+      const p = sameKindPairs(out, fixed)
+      if (c <= crowded && p < pairs) {
+        crowded = c
+        pairs = p
+        break
+      }
+      ;[out[i], out[j]] = [out[j], out[i]]
+    }
   }
   return out
 }
@@ -209,7 +277,7 @@ export function buildReviewQueue(state: PersistedState, deck: Card[], now: numbe
   const all = pickNewCards(
     unseenCards(deck, state.cards, state.settings, state.profile),
     remainingNew,
-    due.map(askKey).filter((k): k is string => !!k),
+    [...due, ...answeredToday(deck, state.log, now)].map(askKey).filter((k): k is string => !!k),
   )
   const coach = all.filter((c) => isCoachCard(c, state.profile))
   const fresh = all.filter((c) => !isCoachCard(c, state.profile))
@@ -218,8 +286,8 @@ export function buildReviewQueue(state: PersistedState, deck: Card[], now: numbe
 }
 
 /**
- * Les entités d'une séance, à passer à questionForCard (peers) : ses QCM prennent d'abord leurs mauvaises
- * réponses parmi elles.
+ * Les entités d'une séance, à passer à questionForCard (peers) : ses QCM prennent une ou deux de leurs
+ * mauvaises réponses parmi elles, les autres parmi toutes les entités.
  */
 export function sessionGhosts(queue: readonly Card[]): string[] {
   return [...new Set(queue.map((c) => c.ghostId).filter((id): id is string => !!id))].sort()

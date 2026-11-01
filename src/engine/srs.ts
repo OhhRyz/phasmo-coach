@@ -23,7 +23,13 @@ export interface CardState {
 const MIN = 60_000
 const DAY = 86_400_000
 
-export const LEARNING_STEPS = [1 * MIN, 10 * MIN]
+/**
+ * Une seule étape : une carte nouvelle juste du premier coup passe à demain, sans repasser dans la séance ;
+ * ratée, elle repasse une fois plus loin dans la séance, puis passe à demain si elle est juste. Une carte
+ * restée à l'étape 1 de l'ancien calendrier (1 min, 10 min) passe aussi à demain sur « Bien ».
+ */
+export const LEARNING_STEPS = [1 * MIN]
+/** Une carte apprise puis ratée repasse dans la séance (l'étape tombe avant REQUEUE_WITHIN, voir reviewSession). */
 export const RELEARNING_STEPS = [10 * MIN]
 export const START_EASE = 2.5
 export const MIN_EASE = 1.3

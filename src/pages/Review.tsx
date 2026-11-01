@@ -24,15 +24,13 @@ import { humanDuration, isDue, schedule, type CardState, type Grade } from '../e
 import { ignoreKey } from '../engine/keys'
 import type { Profile } from '../store/schema'
 import { useStore } from '../store/store'
-import { LEARN_MORE, nextSession, stillToAsk } from './reviewSession'
+import { comesBackInSession, LEARN_MORE, nextSession, passesBefore, requeue, requeueGap, stillToAsk } from './reviewSession'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
 /** Juste : la carte s'espace (« Bien ») ; faux ou « Je ne sais pas » : elle revient vite (« À revoir »). */
 const RIGHT: Grade = 3
 const WRONG: Grade = 1
-
-const REQUEUE_WITHIN = 20 * 60_000
 /** L'explication de la répétition espacée, montrée pendant la première séance, jusqu'à ce qu'on la ferme. */
 const HELP_KEY = 'phasmo-coach/aide-revision'
 
@@ -65,7 +63,7 @@ const word = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
 /** « 10 min », « 4 j » : le nombre ne quitte pas son unité. */
 const dur = (ms: number) => humanDuration(ms).replace(' ', NBSP)
 
-/** Quand la carte revient : « dans 10 min » en apprentissage, « demain », « dans 3 jours » ensuite. */
+/** Quand la carte revient : « dans 1 min » en apprentissage (hors séance), « demain », « dans 3 jours » ensuite. */
 function comesBack(s: CardState, now: number): string {
   if (s.phase === 'review') return relativeDays(s.due, now).replace(/(\d) /u, `$1${NBSP}`)
   return s.due <= now ? 'tout de suite' : `dans ${dur(s.due - now)}`
@@ -244,8 +242,8 @@ function ChoiceRow({
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
   const [queue, setQueue] = useState<Card[]>(() => buildReviewQueue(state, deck, Date.now()))
-  // les entités de la séance, fixées au départ : les mauvaises réponses des QCM les prennent d'abord,
-  // pour que la bonne ne soit pas « l'entité de la carte d'avant »
+  // les entités de la séance, fixées au départ : une ou deux d'entre elles parmi les mauvaises réponses des
+  // QCM, pour que la bonne ne soit pas « l'entité de la carte d'avant »
   const [peers, setPeers] = useState<string[]>(() => sessionGhosts(queue))
   const [done, setDone] = useState(0)
   const [good, setGood] = useState(0)
@@ -257,7 +255,7 @@ export function Review() {
   const [revealed, setRevealed] = useState(false)
   // carte sans choix, déjà notée : quand elle revient (dit sur la carte suivante)
   const [previous, setPrevious] = useState<string | null>(null)
-  // passages de chaque carte dans la séance : une carte qui revient change l'ordre de ses choix
+  // passages de chaque carte dans la séance : une carte qui revient se pose autrement (voir questionForCard)
   const [passes, setPasses] = useState<Record<string, number>>({})
   const [helpOpen, setHelpOpen] = useState(() => !readHelpDismissed())
   // « 4 cartes terminées sur 12 » : les cartes distinctes de la séance (une carte qui repasse ne l'allonge pas)
@@ -279,9 +277,11 @@ export function Review() {
   const firstSession = useMemo(() => !state.log.some((l) => l.t < since), [state.log, since])
 
   const day = useMemo(() => dayKey(since), [since])
-  const pass = card ? (passes[card.id] ?? 0) : 0
+  // une carte déjà répondue plus tôt dans la journée (séance précédente) compte ces passages-là aussi
+  const earlier = useMemo(() => passesBefore(state.log, since), [since])
+  const pass = card ? (earlier[card.id] ?? 0) + (passes[card.id] ?? 0) : 0
   const question = useMemo(
-    () => (card ? questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: state.notes, day: pass ? `${day}#${pass}` : day, peers }) : null),
+    () => (card ? questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: state.notes, day, pass, peers }) : null),
     [card, day, pass, state.notes, peers],
   )
   // l'état de la carte quand elle arrive : « Nouvelle » ne disparaît pas sous les yeux une fois la réponse notée
@@ -301,14 +301,12 @@ export function Review() {
     [dispatch],
   )
 
-  /** Carte suivante ; une carte à revoir dans la séance repart plus loin dans la pile. */
+  /** Carte suivante ; une carte ratée repart plus loin dans la pile (au moins REQUEUE_GAP cartes, voir requeue). */
   const advance = useCallback(
     (o: Outcome, reviewed: number, correct: number) => {
-      const rest = queue.slice(1)
+      let rest = queue.slice(1)
       if (o.again && queue[0]) {
-        // d'autant plus loin que son échéance est lointaine
-        const gap = Math.max(3, Math.round((o.next.due - o.at) / 60_000))
-        rest.splice(Math.min(rest.length, gap), 0, queue[0])
+        rest = requeue(rest, queue[0], requeueGap(o.next, o.at))
         setPasses((p) => ({ ...p, [o.cardId]: (p[o.cardId] ?? 0) + 1 }))
       }
       setOutcome(null)
@@ -333,11 +331,10 @@ export function Review() {
       const correct = good + (g >= 3 ? 1 : 0)
       setDone(reviewed)
       setGood(correct)
-      const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: next.due - at < REQUEUE_WITHIN, next, at }
+      const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: comesBackInSession(next, at), next, at }
       if (!o.again) setSettled((n) => n + 1)
       if (choice === undefined) {
-        const when = comesBack(next, at)
-        setPrevious(`la carte précédente ${o.again ? `repasse ${when}, plus loin dans cette séance` : `revient ${when}`}`)
+        setPrevious(`la carte précédente ${o.again ? 'repasse plus loin dans cette séance' : `revient ${comesBack(next, at)}`}`)
         advance(o, reviewed, correct)
       } else {
         setPrevious(null)
@@ -667,8 +664,8 @@ export function Review() {
       <aside className={`rv-help ${where}`} aria-label="La révision espacée">
         <p className="pencil-note">
           La révision espacée te repose chaque carte juste avant que tu l’oublies. Bonne réponse{NNBSP}: elle revient plus tard, demain
-          puis de plus en plus loin. Erreur{NNBSP}: elle repasse dans quelques minutes. Une carte nouvelle repasse aussi une fois dans la
-          séance, même juste, pour bien s’ancrer.
+          puis de plus en plus loin. Erreur{NNBSP}: elle repasse quelques cartes plus loin dans la séance, posée autrement, puis revient
+          dès le lendemain.
         </p>
         <TypedLink onClick={closeHelp}>Compris</TypedLink>
       </aside>
@@ -782,9 +779,9 @@ export function Review() {
                     </Stamp>
                     <p className="pencil-note rv-return">
                       {!outcome.ok
-                        ? `la bonne réponse est entourée · elle repasse ${comesBack(outcome.next, outcome.at)}, plus loin dans cette séance`
+                        ? 'la bonne réponse est entourée · elle repasse plus loin dans cette séance'
                         : outcome.again
-                          ? `elle repasse ${comesBack(outcome.next, outcome.at)} pour bien s’ancrer, plus loin dans cette séance`
+                          ? 'elle repasse plus loin dans cette séance'
                           : `elle revient ${comesBack(outcome.next, outcome.at)}`}
                     </p>
                   </div>

@@ -1,7 +1,73 @@
 import type { Card } from '../engine/cards'
+import { startOfDay } from '../engine/format'
+import { askKey, SAME_ASK_GAP, SAME_GHOST_GAP } from '../engine/progress'
+import type { CardState } from '../engine/srs'
+import type { ReviewEntry } from '../store/schema'
 
 /** Cartes nouvelles proposées d'un coup après la séance (« Apprendre 10 cartes »). */
 export const LEARN_MORE = 10
+
+/**
+ * Une carte dont l'échéance tombe avant repasse dans la séance : une carte ratée (nouvelle : 1 min ; déjà
+ * apprise : 10 min). Juste, une carte passe au lendemain ou plus loin, et ne repasse pas.
+ */
+export const REQUEUE_WITHIN = 20 * 60_000
+
+/** Une carte ratée repasse au moins autant de cartes plus loin (en dernier s'il en reste moins). */
+export const REQUEUE_GAP = 5
+
+export function comesBackInSession(next: CardState, at: number): boolean {
+  return next.due - at < REQUEUE_WITHIN
+}
+
+/** Combien de cartes au moins avant son retour : d'autant plus que son échéance est lointaine (une par minute). */
+export function requeueGap(next: CardState, at: number): number {
+  return Math.max(REQUEUE_GAP, Math.round((next.due - at) / 60_000))
+}
+
+/**
+ * La file après une carte ratée : `rest`, les cartes qui suivent, et `card` remise au moins `gap` cartes plus
+ * loin (en dernier s'il en reste moins). Parmi les places possibles, la première où elle n'a aucune carte de
+ * la même entité à moins de SAME_GHOST_GAP cartes, ni la même question (askKey) à moins de SAME_ASK_GAP
+ * cartes, ni une carte de la même sorte juste avant ou juste après ; sinon la première sans voisine de la même
+ * entité ni de la même question, puis sans voisine de la même entité ; sinon la première place possible.
+ * Insérer une carte ne rapproche jamais deux autres cartes.
+ */
+export function requeue(rest: readonly Card[], card: Card, gap = REQUEUE_GAP): Card[] {
+  const from = Math.min(rest.length, Math.max(0, gap))
+  // la carte qu'on vient de répondre est juste avant rest[0] : c'est elle-même
+  const at = (i: number) => (i < 0 ? card : rest[i])
+  const near = (p: number, span: number, same: (c: Card) => boolean) => {
+    for (let i = p - span; i < p + span; i++) if (i < rest.length && same(at(i))) return true
+    return false
+  }
+  const ask = askKey(card)
+  const ghostOk = (p: number) => !card.ghostId || !near(p, SAME_GHOST_GAP, (c) => c.ghostId === card.ghostId)
+  const askOk = (p: number) => !ask || !near(p, SAME_ASK_GAP, (c) => askKey(c) === ask)
+  const kindOk = (p: number) => at(p - 1).kind !== card.kind && (p >= rest.length || rest[p].kind !== card.kind)
+  const rules: ((p: number) => boolean)[][] = [[ghostOk, askOk, kindOk], [ghostOk, askOk], [ghostOk]]
+  let place = from
+  search: for (const rule of rules) {
+    for (let p = from; p <= rest.length; p++) {
+      if (rule.every((ok) => ok(p))) {
+        place = p
+        break search
+      }
+    }
+  }
+  return [...rest.slice(0, place), card, ...rest.slice(place)]
+}
+
+/**
+ * Combien de fois chaque carte a déjà été répondue aujourd'hui avant `since` (le début de la séance) : une
+ * carte ratée dans une séance précédente du jour revient posée autrement, comme dans la même séance.
+ */
+export function passesBefore(log: readonly ReviewEntry[], since: number): Record<string, number> {
+  const start = startOfDay(since)
+  const out: Record<string, number> = {}
+  for (let i = log.length - 1; i >= 0 && log[i].t >= start; i--) if (log[i].t < since) out[log[i].id] = (out[log[i].id] ?? 0) + 1
+  return out
+}
 
 /**
  * Les cartes qui passeront encore dans la séance : toute la file, sauf la carte en cours une fois répondue
