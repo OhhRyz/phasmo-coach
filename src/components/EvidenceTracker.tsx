@@ -17,18 +17,30 @@ const NEXT_ACTION: Record<EvidenceMark, string> = {
   excluded: 'touche pour l’effacer',
 }
 
-const HOW_STEPS = ['touche 1\u00a0fois\u202f: trouvée', '2\u00a0fois\u202f: absente (barrée)', '3\u00a0fois\u202f: effacée']
+const HOW_STEPS = ['1\u00a0fois\u202f: trouvée', '2\u00a0fois\u202f: absente (barrée)', '3\u00a0fois\u202f: effacée']
 
-/** La consigne du carnet de preuves, la même partout où il apparaît (texte brut, pour les étiquettes). */
+/** La consigne du carnet de preuves, la même partout où il apparaît (texte brut, pour les étiquettes : sans verbe). */
 export const TRACKER_HOW = HOW_STEPS.join(' · ')
 
-/** La même consigne à afficher : chaque étape reste d'un seul tenant quand la ligne se coupe. */
+/**
+ * La même consigne à afficher : chaque étape reste d'un seul tenant quand la ligne se coupe, et le verbe suit
+ * l'appareil (« clique » à la souris, « touche » au doigt), comme le reste de la mise en situation.
+ */
 export function TrackerHow() {
   return (
     <>
       {HOW_STEPS.map((step, k) => (
         <span key={k}>
-          <span style={{ whiteSpace: 'nowrap' }}>{step}</span>
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {k === 0 && (
+              <>
+                <span className="on-mouse">clique</span>
+                <span className="on-touch">touche</span>
+                {'\u00a0'}
+              </>
+            )}
+            {step}
+          </span>
           {k < HOW_STEPS.length - 1 && '\u00a0· '}
         </span>
       ))}

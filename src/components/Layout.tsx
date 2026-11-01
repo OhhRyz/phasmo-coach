@@ -1,12 +1,44 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { getGhost } from '../data'
 import { buildReviewQueue } from '../engine/progress'
+import { useAppInstalled } from '../install'
 import { useStore } from '../store/store'
 import { useIsDark, useTheme } from '../theme'
 import { InkFilter } from './journal/Journal'
 import { roughEllipse, roughRng } from './journal/rough'
 
 const TRAIN_PATHS = ['/entrainement', '/quiz', '/enquete', '/oreille']
+
+const APP = 'Phasmo Coach'
+const PAGE_TITLES: Record<string, string> = {
+  '/revision': 'Révision du jour',
+  '/codex': 'Codex',
+  '/entrainement': 'Exercices',
+  '/quiz': 'Quiz',
+  '/enquete': 'Mise en situation',
+  '/oreille': 'À l’oreille',
+  '/mecaniques': 'Mécaniques',
+  '/carnet': 'Mes notes',
+  '/coaching': 'Coaching',
+  '/profil': 'Profil et réglages',
+  '/rapport': 'Bilan reçu',
+  '/importer': 'Notes reçues',
+  '/installer': 'Installer l’app',
+  '/a-propos': 'À propos',
+}
+
+/** Le titre de l'onglet : « Spectre · Codex · Phasmo Coach », « Mes notes · Phasmo Coach »… (l'historique se lit). */
+export function pageTitle(pathname: string): string {
+  if (pathname === '/') return APP
+  const ghost = /^\/codex\/([^/]+)/.exec(pathname)
+  if (ghost) {
+    const g = getGhost(decodeURIComponent(ghost[1]))
+    return `${g ? g.name : 'Fiche introuvable'} · Codex · ${APP}`
+  }
+  const page = PAGE_TITLES[pathname.replace(/\/+$/, '')]
+  return `${page ?? 'Page introuvable'} · ${APP}`
+}
 
 function reducedMotion() {
   return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -155,7 +187,12 @@ function CountCircle({ n }: { n: number }) {
 export function Layout({ children }: { children: ReactNode }) {
   const { state, deck, saveFailed } = useStore()
   const { pathname } = useLocation()
+  const appInstalled = useAppInstalled()
   useTheme() // garde le thème synchronisé (choix « comme l'appareil »)
+  // un titre d'onglet par page (le bilan le précise ensuite avec le prénom de l'élève)
+  useEffect(() => {
+    document.title = pageTitle(pathname)
+  }, [pathname])
   // avant l'ouverture du carnet, aucun compteur : rien n'invite à partir ailleurs que sur l'accueil
   const due = useMemo(() => (state.onboarded ? buildReviewQueue(state, deck, Date.now()).length : 0), [state, deck])
   const trainActive = TRAIN_PATHS.some((p) => pathname.startsWith(p))
@@ -226,6 +263,12 @@ export function Layout({ children }: { children: ReactNode }) {
         <span className="desk-foot-links">
           {/* rouvre la fiche « Mode d'emploi » de l'accueil, rangée après la première lecture */}
           <Link to="/?guide=1">Mode d’emploi</Link>
+          {/* une fois l'app installée, le lien n'a plus lieu d'être */}
+          {!appInstalled && (
+            <Link to="/installer" aria-current={current(pathname.startsWith('/installer'))}>
+              Installer l’app
+            </Link>
+          )}
           <Link to="/coaching" aria-current={current(pathname.startsWith('/coaching'))}>
             Coaching
           </Link>

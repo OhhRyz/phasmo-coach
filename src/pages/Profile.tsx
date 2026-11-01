@@ -9,6 +9,7 @@ import { downloadJson } from '../engine/share'
 import { hydrate } from '../store/schema'
 import { useStore } from '../store/store'
 import { useTheme } from '../theme'
+import { sessionMinutes } from './reviewPlan'
 
 export type { ReportPayload } from '../engine/share'
 
@@ -136,6 +137,9 @@ export function Profile() {
                 )}
               </span>
             </p>
+            <p className="idcard-progress">
+              <TypedLink to="/?progression=1">Voir ma progression</TypedLink>
+            </p>
           </article>
 
           <section className="pocket settle" style={{ '--r': '.6deg', '--d': '.2s' } as Style} aria-labelledby="h-pocket">
@@ -216,7 +220,7 @@ export function Profile() {
                   <span aria-hidden>+</span>
                   <span className="sr-only">Une question de plus</span>
                 </PaperButton>
-                <span className="pace-unit">nouvelles questions chaque jour</span>
+                <span className="pace-unit">par jour</span>
               </div>
               {(perDay <= NEW_MIN || perDay >= NEW_MAX) && (
                 <p className="pencil-note settings-hint pace-limit" role="note">
@@ -234,7 +238,7 @@ export function Profile() {
                 value={perDay}
                 onChange={(e) => dispatch({ type: 'settings', settings: { newPerDay: Number(e.target.value) } })}
               />
-              <p className="pencil-note settings-hint">{fr('entre 8 et 15, c’est un bon rythme : 5 min par jour au début, puis 15 à 25 min, révisions comprises')}</p>
+              <p className="pencil-note settings-hint">{fr(`entre 8 et 15, c’est un bon rythme : à ${perDay}, environ ${sessionMinutes(perDay, 0)} min par jour au début, puis 15 à 25 min, révisions comprises`)}</p>
             </div>
 
             <CheckLine

@@ -13,7 +13,15 @@
 .home .install-note { max-width: 31em; margin: -6px 0 30px; font-size: 21.5px; line-height: 1.12; }
 .home .install-note p { margin: 0; }
 .home .install-note .link { display: inline-block; margin-top: 8px; }
+.home .install-note-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 22px; }
+.home .install-note p + .install-note-links { margin-top: 2px; }
 .notebook--single.home .install-note { margin: -4px 0 32px; }
+/* une seule colonne : la note passe sous la révision du jour (le bouton reste dans le premier écran) */
+.home .plan + .install-note { margin: 30px 0 0; }
+.home .plan + .install-note + section { margin-top: 56px; }
+/* app installée, carnet neuf : reprendre ce qui a été commencé dans le navigateur */
+.notebook--single.home .welcome-resume { margin: -4px 0 32px; }
+.page .welcome-notes { margin: -8px 0 28px; max-width: 26em; font-size: 21px; line-height: 1.1; }
 
 /* carte du coach (au-dessus de sa révision) */
 .home .coach-card { margin: 34px 0 0; }

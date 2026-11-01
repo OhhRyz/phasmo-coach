@@ -55,6 +55,9 @@ export function NoteEditor({
   // trois lignes « Mauvaise réponse », toujours là (les vides ne sont pas enregistrées)
   const [wrong, setWrong] = useState<string[]>(() => [0, 1, 2].map((i) => note?.wrong?.[i] ?? ''))
   const addRef = useRef<HTMLParagraphElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+  // côté coach, la case part avec le partage : elle décide si l'élève reçoit la note en carte de révision
+  const coach = state.profile.role === 'coach'
   const uid = useId()
   const refocus = useRef(false)
 
@@ -77,6 +80,7 @@ export function NoteEditor({
     setAnswer('')
     setWrong(['', '', ''])
     setAsCard(true)
+    setCustom(false)
     setGhost(ghostId)
   }
 
@@ -107,6 +111,8 @@ export function NoteEditor({
     toast(note ? 'Note mise à jour' : makesCard(n) ? 'Note ajoutée à la révision' : 'Note enregistrée')
     if (!note) reset()
     if (compact && !note) fold()
+    // note suivante : le curseur repart dans le titre du formulaire vidé (le bouton, lui, se désactive)
+    else if (!note) titleRef.current?.focus()
     onDone?.()
   }
 
@@ -136,6 +142,7 @@ export function NoteEditor({
       <label className="field">
         <span>Titre (facultatif)</span>
         <input
+          ref={titleRef}
           className="input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -167,8 +174,17 @@ export function NoteEditor({
         />
       </label>
       <div className="note-card-check">
-        <CheckLine checked={asCard} onChange={setAsCard} seed={`asCard-${note?.id ?? 'new'}`} hint="Elle te sera reposée d’elle-même, juste avant que tu l’oublies.">
-          Me la reposer en révision
+        <CheckLine
+          checked={asCard}
+          onChange={setAsCard}
+          seed={`asCard-${note?.id ?? 'new'}`}
+          hint={
+            coach
+              ? 'Ton élève la recevra comme une carte quand tu partageras tes notes (et elle te sera reposée aussi).'
+              : 'Elle te sera reposée d’elle-même, juste avant que tu l’oublies.'
+          }
+        >
+          {coach ? 'En faire une question de révision' : 'Me la reposer en révision'}
         </CheckLine>
         {asCard && noBack && !!title.trim() && <p className="pencil-note note-card-hint">écris un texte ou une réponse pour en faire une carte</p>}
       </div>

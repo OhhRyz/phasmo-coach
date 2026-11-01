@@ -34,14 +34,14 @@
   },
   "summary": "Une entité à deux humeurs, qui alterne toutes les 2 minutes entre un état calme (lente, ne chasse qu'à 10 %) et un état agressif (rapide, chasse dès 65 %).",
   "keyTells": [
-    "Calme/agressif : bascule 1 min après l'ouverture de la porte, puis toutes les 2 min",
+    "Calme/agressif : bascule 1 min après l'ouverture de la porte d'entrée, puis toutes les 2 min",
     "Calme : ≈1,45 m/s, chasse à 10 % · Agressif : ≈1,96 m/s, chasse à 65 %",
     "Peut changer d'état en pleine chasse : la vitesse saute d'un coup",
     "Chasse lancée en état agressif : 20 % plus courte"
   ],
   "tells": [
     {
-      "text": "Commence la partie en état calme, passe en état agressif 1 minute après la première ouverture d'une porte de sortie, puis change d'état toutes les 2 minutes.",
+      "text": "Commence la partie en état calme, passe en état agressif 1 minute après la première ouverture de la porte d'entrée, puis change d'état toutes les 2 minutes.",
       "zeroEvidence": true
     },
     {
@@ -70,7 +70,7 @@
       "definitive": false
     },
     {
-      "text": "Suis le temps à la montre du jeu, qui part à l'ouverture de la porte d'entrée : l'entité est calme (lente) de 0:00 à 1:00, puis alterne toutes les 2 minutes. Les phases agressives vont de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00, etc. Si toutes les chasses au-dessus de 10 % tombent dans ces fenêtres, c'est un fort indice d'Obambo.",
+      "text": "Suis le temps à la montre du jeu, qui part à la première ouverture de la porte d'entrée : l'entité est calme (lente) de 0:00 à 1:00, puis alterne toutes les 2 minutes. Les phases agressives vont de 1:00 à 3:00, de 5:00 à 7:00, de 9:00 à 11:00, etc. Si toutes les chasses au-dessus de 10 % tombent dans ces fenêtres, c'est un fort indice d'Obambo.",
       "definitive": false
     }
   ],
@@ -79,7 +79,7 @@
       "text": "Si l'entité tente une chasse naturelle (sans objet maudit) au-dessus de 65 % de santé mentale moyenne, ce n'est pas un Obambo."
     },
     {
-      "text": "Si l'entité tente une chasse naturelle au-dessus de 10 % pendant une phase calme (avant 1:00, ou entre 3:00 et 5:00 après l'ouverture de la porte, etc. — garde quelques secondes de marge autour des bascules), ce n'est pas un Obambo."
+      "text": "Si l'entité tente une chasse naturelle au-dessus de 10 % pendant une phase calme (avant 1:00, ou entre 3:00 et 5:00 après la première ouverture de la porte d'entrée, etc. — garde quelques secondes de marge autour des bascules), ce n'est pas un Obambo."
     },
     {
       "text": "Si toute une chasse se déroule à la vitesse standard de 1,7 m/s sans ligne de vue (mesurée au BPM), ce n'est pas un Obambo. Ne fais pas ce test par Lune de sang : un Obambo calme y avance à environ 1,66 m/s, presque la vitesse standard."
@@ -193,13 +193,13 @@
     {
       "q": "Quand l'Obambo passe-t-il pour la première fois en état agressif ?",
       "choices": [
-        "1 min après l'ouverture d'une porte de sortie",
+        "1 min après l'ouverture de la porte d'entrée",
         "5 min après le début de la partie",
         "1 min après la fin de sa première chasse",
         "1 min après qu'on l'a encensé pour la première fois"
       ],
       "answer": 0,
-      "explain": "Il commence calme et bascule 1 minute après la première ouverture d'une porte de sortie, puis toutes les 2 minutes. Le sel et l'encens déclenchent les changements d'état du Gallu, pas de l'Obambo."
+      "explain": "Il commence calme et bascule 1 minute après la première ouverture de la porte d'entrée, puis toutes les 2 minutes. Le sel et l'encens déclenchent les changements d'état du Gallu, pas de l'Obambo."
     },
     {
       "q": "Que se passe-t-il pour une chasse lancée alors que l'Obambo est agressif ?",
@@ -257,7 +257,7 @@
     "Vitesses exactes : 1,445 / 1,955 m/s pour les sources les plus précises, arrondies à 1,45 / 1,96 ailleurs.",
     "Activité hors chasse : plus calme ou plus active en état agressif ? Les sources divergent.",
     "Vitesse maximale en LdV : non publiée.",
-    "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes de sortie : non vérifiés.",
+    "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes d'entrée : non vérifiés.",
     "Les deux tests de vitesse (saut en pleine chasse, alternance d'une chasse à l'autre) sont les plus sûrs ; le test du chronomètre et les tests d'élimination viennent de sources secondaires."
   ]
 }

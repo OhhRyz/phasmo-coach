@@ -21,6 +21,7 @@ import { roughLine, roughRng, tickPath } from '../components/journal/rough'
 import { NoteEditor } from '../components/NoteEditor'
 import { NoteText } from './Notebook'
 import { Empty } from '../components/ui'
+import { SOURCE_REPO_URL } from '../config'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
@@ -88,6 +89,11 @@ function jumpTo(id: string) {
   el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
   el.focus({ preventScroll: true })
 }
+/** Une nouvelle demande de correction sur le dépôt du projet, titrée au nom de la fiche. */
+function reportUrl(name: string): string {
+  return `${SOURCE_REPO_URL}/issues/new?title=${encodeURIComponent(`Fiche ${name}`)}`
+}
+
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -338,7 +344,7 @@ export function GhostPage() {
                         </span>
                         {has && (
                           <span className="side">
-                            {ghost.forcedEvidence === e ? 'toujours visible, même en Cauchemar' : ev.side}
+                            {ghost.forcedEvidence === e ? 'toujours visible, même en difficulté Cauchemar' : ev.side}
                           </span>
                         )}
                         {fake && <span className="side">fausse preuve, toujours présente</span>}
@@ -404,7 +410,16 @@ export function GhostPage() {
           {!stacked && tells}
 
           <section aria-labelledby="h-zero" tabIndex={-1}>
-            <H id="h-zero" count={definitive ? `${definitive} test${definitive > 1 ? 's' : ''} définitif${definitive > 1 ? 's' : ''}` : undefined}>
+            <H
+              id="h-zero"
+              count={
+                definitive
+                  ? `${definitive} test${definitive > 1 ? 's' : ''} définitif${definitive > 1 ? 's' : ''}`
+                  : ghost.confirmationTests.length
+                    ? 'aucun test définitif'
+                    : undefined
+              }
+            >
               Sans preuve
             </H>
             <p className="zero-intro">Ce qui {ghost.name.startsWith('Les ') ? 'les trahit' : 'la trahit'} même quand ton journal est vide.</p>
@@ -682,6 +697,12 @@ export function GhostPage() {
             {ghost.sources.length === 0
               ? 'Aucune source listée'
               : `${ghost.sources.length} source${ghost.sources.length > 1 ? 's' : ''} consultée${ghost.sources.length > 1 ? 's' : ''}`}
+          </p>
+          {/* une erreur repérée : le dépôt du projet (jamais celui d'origine des données) */}
+          <p className="gh-report">
+            <a className="link" href={reportUrl(ghost.name)} target="_blank" rel="noreferrer">
+              Signaler une erreur sur cette fiche
+            </a>
           </p>
           <nav className="pager" aria-label="Fiches voisines">
             <TypedLink to={`/codex/${prev.id}`}>‹ {prev.name}</TypedLink>

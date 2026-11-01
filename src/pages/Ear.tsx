@@ -23,6 +23,7 @@ import { NBSP, NNBSP, fr, num } from '../engine/format'
 import { ignoreKey } from '../engine/keys'
 import { createRng } from '../engine/random'
 import { useStore } from '../store/store'
+import { clearRun, readRun, saveRun } from './savedRun'
 import { allSpeeds, BASE_SPEED, classOf, EAR_ROUNDS, makeRounds, type EarMode, type EarRound } from './earRounds'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -38,6 +39,25 @@ interface Heard {
 }
 
 const ROUNDS = EAR_ROUNDS
+
+/** La série en cours (voir savedRun) : reprise depuis la page de l'exercice après un détour. */
+const SERIES_KEY = 'phasmo-coach/serie-oreille'
+interface SavedSeries {
+  mode: Mode
+  rounds: Round[]
+  i: number
+  answer: string | null
+  score: number
+  heard: Heard[]
+}
+const validSeries = (r: SavedSeries) =>
+  (r.mode === 'class' || r.mode === 'exact') &&
+  Array.isArray(r.rounds) &&
+  Array.isArray(r.heard) &&
+  r.heard.length > 0 &&
+  typeof r.i === 'number' &&
+  r.i >= 0 &&
+  r.i < r.rounds.length
 const BASE = BASE_SPEED
 
 const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: `Normale (1,7${NBSP}m/s)`, fast: 'Plus rapide que la normale' }
@@ -277,6 +297,8 @@ export function Ear() {
   const [quitOpen, setQuitOpen] = useState(false)
   /** la référence a été écoutée sur la page d'accueil de l'exercice */
   const [refHeard, setRefHeard] = useState(false)
+  // une série laissée en route dans cet onglet (autre onglet, retour, rechargement) : proposée à la reprise
+  const [saved, setSaved] = useState(() => readRun<SavedSeries>(SERIES_KEY, validSeries))
   const steps = useRef<Footsteps | null>(null)
   const ios = useMemo(() => platform() === 'ios', [])
   const speeds = useMemo(() => allSpeeds(GHOSTS), [])
@@ -303,6 +325,8 @@ export function Ear() {
   }
 
   const start = (m: Mode = mode) => {
+    clearRun(SERIES_KEY)
+    setSaved(null)
     steps.current?.stop()
     setMode(m)
     setTrail(null)
@@ -316,6 +340,7 @@ export function Ear() {
   }
 
   const quit = () => {
+    clearRun(SERIES_KEY)
     steps.current?.stop()
     setQuitOpen(false)
     setRounds(null)
@@ -337,6 +362,7 @@ export function Ear() {
     // la réécoute de l'écoute précédente ne doit pas déborder sur la suivante
     steps.current?.stop()
     if (i + 1 >= rounds.length) {
+      clearRun(SERIES_KEY)
       dispatch({ type: 'activity', activity: { t: Date.now(), kind: 'ear', score, total: rounds.length, label: 'À l’oreille' } })
       setI(rounds.length)
       return
@@ -344,6 +370,28 @@ export function Ear() {
     setI(i + 1)
     setAnswer(null)
     setListened(false)
+  }
+
+  // la série en cours se garde à chaque réponse (terminée ou quittée, elle s'efface)
+  useEffect(() => {
+    if (!rounds || i >= rounds.length || heard.length === 0) return
+    saveRun<SavedSeries>(SERIES_KEY, { mode, rounds, i, answer, score, heard })
+  }, [mode, rounds, i, answer, score, heard])
+
+  const resume = () => {
+    if (!saved) return
+    steps.current?.stop()
+    setTrail(null)
+    setMode(saved.mode)
+    setRounds(saved.rounds)
+    setI(saved.i)
+    setAnswer(saved.answer)
+    setScore(saved.score)
+    setHeard(saved.heard)
+    // l'écoute en cours, si elle n'a pas encore de réponse, se réécoute avant de répondre
+    setListened(saved.answer != null)
+    setQuitOpen(false)
+    setSaved(null)
   }
 
   /* affichage : la bande garde l'empreinte de la dernière écoute de cet écran */
@@ -417,9 +465,9 @@ export function Ear() {
                 runId={shown?.id ?? 0}
                 caption={stripStatus === 'run' ? 'à l’écoute…' : shown ? `${ms(BASE)} · référence` : 'en attente'}
               />
-              <SpeedRuler max={max} dots={speeds} label={fr(`Règle de 0 à ${max} m/s : référence à 1,7 m/s, ${speeds.length} vitesses relevées dans les fiches`)} />
+              <SpeedRuler max={max} dots={speeds} label={fr(`Règle de 0 à ${max} m/s : référence à 1,7 m/s, les ${speeds.length} principales vitesses des fiches`)} />
               <p className="ear-legend">
-                Points au crayon{NNBSP}: les vitesses présentes dans les fiches, {speeds.map((s) => num(s)).join(' · ')}
+                Points au crayon{NNBSP}: les principales vitesses des fiches, {speeds.map((s) => num(s)).join(' · ')}
                 {NBSP}m/s.
               </p>
               <div className="ear-listen">
@@ -450,6 +498,14 @@ export function Ear() {
                   ? fr('3 réponses possibles : plus lente que la référence, normale, ou plus rapide.')
                   : fr('4 vitesses possibles, placées sur la règle : retrouve la bonne au rythme des pas.')}
               </p>
+              {saved && (
+                <p className="ear-resume">
+                  <span className="pencil-note">
+                    {`série laissée en route${NNBSP}: ${saved.heard.length} ${saved.heard.length > 1 ? 'écoutes' : 'écoute'} sur ${saved.rounds.length}`}
+                  </span>
+                  <TypedLink onClick={resume}>Reprendre la série</TypedLink>
+                </p>
+              )}
               <div className="ear-go">
                 <TapeButton onClick={() => start()}>Commencer ({ROUNDS} écoutes)</TapeButton>
                 {!refHeard && <p className="pencil-note ear-first">conseil{NNBSP}: écoute d’abord la référence ↑</p>}

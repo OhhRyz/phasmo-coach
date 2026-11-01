@@ -17,7 +17,7 @@ export function fr(text: string): string {
     .replace(/(\p{L})'(?=\p{L})/gu, '$1’')
     .replace(/[ \u00a0]+([?!;:»])/g, `${NNBSP}$1`)
     .replace(/«[ \u00a0]+/g, `«${NNBSP}`)
-    .replace(/(\d)[ ](%|m\/s|°C|min|s|j|h|pts|m)(?![\p{L}\d])/gu, `$1${NBSP}$2`)
+    .replace(/(\d)[ ](%|m\/s|°C|minutes?|secondes?|mètres?|heures?|jours?|min|s|j|h|pts|m)(?![\p{L}\d])/gu, `$1${NBSP}$2`)
 }
 
 export function num(n: number): string {

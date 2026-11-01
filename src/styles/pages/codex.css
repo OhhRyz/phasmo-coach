@@ -13,6 +13,7 @@
 .cx-count-field .opts { gap: 2px 4px; }
 .cx-count-field .opt { min-width: 40px; font-size: 16px; }
 .cx-count-hint { flex-basis: 100%; font-size: 19px; }
+.cx-book .cx-zero { margin: 8px 0 18px; max-width: 28em; font-size: 19px; line-height: 1.15; }
 
 .cx-tracker { position: relative; margin-bottom: 24px; }
 .cx-tracker .tracker { column-gap: 20px; }
@@ -188,6 +189,7 @@
   .cx-book .cx-intro { font-size: 16.5px; margin-bottom: 18px; }
   .cx-count-field { gap: 0 10px; margin-bottom: 12px; }
   .cx-count-hint { font-size: 18px; }
+  .cx-book .cx-zero { font-size: 18px; }
 
   .cx-tracker { margin-bottom: 20px; }
   .cx-tracker .tracker { column-gap: 14px; }

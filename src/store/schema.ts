@@ -63,6 +63,9 @@ export interface PersistedState {
   notes: CoachNote[]
 }
 
+/** Nouvelles questions par jour d'un carnet neuf (réglable dans le profil). */
+export const DEFAULT_NEW_PER_DAY = 12
+
 export const STORAGE_KEY = 'phasmo-coach/v1'
 export const MAX_LOG = 6000
 export const MAX_ACTIVITY = 400
@@ -72,13 +75,26 @@ export function initialState(now = Date.now()): PersistedState {
     version: 1,
     onboarded: false,
     profile: { name: '', coachName: '', role: 'solo', createdAt: now },
-    settings: { newPerDay: 12, focus: null, includeMechanics: true },
+    settings: { newPerDay: DEFAULT_NEW_PER_DAY, focus: null, includeMechanics: true },
     cards: {},
     log: [],
     answers: {},
     activity: [],
     notes: [],
   }
+}
+
+/**
+ * Ajoute une activité au registre, ou remplace celle de la même séance (même début, même exercice) : une
+ * révision s'y inscrit dès la première réponse, puis se met à jour à chaque réponse. Une séance laissée en
+ * route reste ainsi au registre, au bilan et au profil.
+ */
+export function upsertActivity(list: readonly Activity[], a: Activity): Activity[] {
+  const i = list.findIndex((x) => x.t === a.t && x.kind === a.kind)
+  if (i < 0) return [...list, a].slice(-MAX_ACTIVITY)
+  const out = list.slice()
+  out[i] = a
+  return out
 }
 
 function isObject(v: unknown): v is Record<string, unknown> {

@@ -32,7 +32,7 @@
     "summary": "50 %",
     "details": [
       "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
-      "Sa capacité (-25 % de santé à un joueur proche, disjoncteur allumé) peut faire baisser la moyenne très vite et avancer ses chasses."
+      "Sa capacité (−25 % de santé à un joueur proche, disjoncteur allumé) peut faire baisser la moyenne très vite et avancer ses chasses."
     ]
   },
   "summary": "Entité liée au disjoncteur : tant que le courant est allumé, le Djinn fonce vers toi quand il te voit de loin et peut te faire perdre 25 % de santé mentale d'un coup.",
@@ -40,7 +40,7 @@
     "Disjoncteur allumé : fonce à 2,5 m/s quand il te voit à plus de 3 m",
     "Reprend une vitesse normale une fois à moins de 3 m de toi",
     "Ne coupe jamais le disjoncteur lui-même",
-    "Capacité : -25 % de santé à un joueur proche, avec EMF au disjoncteur"
+    "Capacité : −25 % de santé à un joueur proche, avec EMF au disjoncteur"
   ],
   "tells": [
     {

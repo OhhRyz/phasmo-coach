@@ -119,8 +119,9 @@ export function Codex() {
   const [outPref, setOutPref] = useState<boolean | null>(null)
   const phone = useMedia(PHONE)
   const regRef = useRef<HTMLElement>(null)
+  // partie sans preuve : seuls la vitesse, le seuil et la ligne de vue trient, ils sont dépliés d'office
   const [showMore, setShowMore] = useState(
-    initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null,
+    initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null || initial.filter.evidenceCount === 0,
   )
 
   // les filtres survivent à l'ouverture d'une fiche puis au retour
@@ -219,8 +220,9 @@ export function Codex() {
             Mon carnet de preuves
           </H>
           <p className="cx-intro">
-            Pendant une partie, coche ici les preuves que tu trouves{NNBSP}: le registre barre les entités qui ne collent plus. Touche un
-            nom pour lire sa fiche.
+            Pendant une partie, coche ici les preuves que tu trouves{NNBSP}: le registre barre les entités qui ne collent plus.{' '}
+            <span className="on-mouse">Clique sur un nom</span>
+            <span className="on-touch">Touche un nom</span> pour lire sa fiche.
           </p>
 
           <div className="cx-count-field">
@@ -230,7 +232,10 @@ export function Codex() {
             <Seg
               label="Nombre de preuves de la partie"
               value={filter.evidenceCount}
-              onChange={(v) => setFilter({ ...filter, evidenceCount: v })}
+              onChange={(v) => {
+                setFilter({ ...filter, evidenceCount: v })
+                if (v === 0) setShowMore(true)
+              }}
               options={[
                 { value: 3, label: '3' },
                 { value: 2, label: '2' },
@@ -238,8 +243,13 @@ export function Codex() {
                 { value: 0, label: '0' },
               ]}
             />
-            <span className="pencil-note cx-count-hint">Cauchemar : 2 · Démence : 1</span>
+            <span className="pencil-note cx-count-hint">{fr('difficulté Cauchemar : 2 · Démence : 1')}</span>
           </div>
+          {filter.evidenceCount === 0 && (
+            <p className="pencil-note cx-zero">
+              {fr('partie sans preuve : seul le Mimic montre encore des orbes, les autres cases sont grisées exprès. Trie avec la vitesse, le seuil et la ligne de vue (plus bas), puis lis les tests « Sans preuve » de chaque fiche.')}
+            </p>
+          )}
 
           <div className="cx-tracker">
             <Consigne className="cx-how">
@@ -259,7 +269,8 @@ export function Codex() {
           {only && (
             <div className="cx-actions cx-actions--verdict">
               <p className="cx-verdict">
-                <span className="typed-label">Il ne reste que</span>
+                {/* une recherche par le nom n'élimine rien : elle trouve */}
+                <span className="typed-label">{pool.length === 1 ? 'Il ne reste que' : 'Résultat'}</span>
                 <RoughCircle seed={`only-${only.id}`} padX={0.08} padY={0.22} delay={0.2}>
                   <span className="cx-verdict-name">{only.name}</span>
                 </RoughCircle>

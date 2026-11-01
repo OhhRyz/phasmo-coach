@@ -64,7 +64,7 @@ import {
   shareSummaryLine,
 } from './share'
 import { adoptCoach, coachNameOf, isCoachNote, onboardProfile } from './notes'
-import { hydrate, initialState, sanitizeNotes } from '../store/schema'
+import { hydrate, initialState, MAX_ACTIVITY, sanitizeNotes, upsertActivity, type Activity } from '../store/schema'
 import { cardMastery, isDue, LEARN_AHEAD, schedule, type CardState } from './srs'
 import { comesBackInSession, requeue, requeueGap } from '../pages/reviewSession'
 import { speedToBpm, bpmToSpeed } from './audio'
@@ -2252,5 +2252,49 @@ describe('révision : une carte qui revient (dans la séance ou un autre jour) n
     // une carte en révision reste due au jour prévu, pas avant
     const learned = schedule(undefined, 3, T0)
     expect(isDue(learned, T0)).toBe(false)
+  })
+})
+
+describe('Typographie : un nombre ne quitte pas son unité, même écrite en toutes lettres', () => {
+  it('« 2 minutes », « 1 minute », « 5 secondes », « 4 mètres » : espace insécable', () => {
+    expect(fr('toutes les 2 minutes')).toBe('toutes les 2\u00a0minutes')
+    expect(fr('passe 1 minute après')).toBe('passe 1\u00a0minute après')
+    expect(fr('plus de 5 secondes, à 4 mètres, 3 heures, 2 jours')).toBe('plus de 5\u00a0secondes, à 4\u00a0mètres, 3\u00a0heures, 2\u00a0jours')
+    // les abréviations restent liées, et un mot qui commence comme une unité n'est pas touché
+    expect(fr('60 s et 2 min')).toBe('60\u00a0s et 2\u00a0min')
+    expect(fr('les 2 minuteurs')).toBe('les 2 minuteurs')
+  })
+})
+
+describe('Registre : une séance s’y inscrit dès la première réponse', () => {
+  const rev = (t: number, total: number, score = total): Activity => ({ t, kind: 'review', score, total, label: 'Révision' })
+
+  it('la même séance (même début) se met à jour au lieu de s’ajouter', () => {
+    let list: Activity[] = []
+    list = upsertActivity(list, rev(1000, 1))
+    list = upsertActivity(list, { t: 2000, kind: 'quiz', score: 3, total: 5, label: 'Quiz' })
+    list = upsertActivity(list, rev(1000, 2, 1))
+    expect(list).toEqual([rev(1000, 2, 1), { t: 2000, kind: 'quiz', score: 3, total: 5, label: 'Quiz' }])
+    // une autre séance s'ajoute à la suite
+    list = upsertActivity(list, rev(3000, 1))
+    expect(list.map((a) => a.t)).toEqual([1000, 2000, 3000])
+  })
+
+  it('le registre reste borné', () => {
+    let list: Activity[] = []
+    for (let t = 1; t <= MAX_ACTIVITY + 5; t++) list = upsertActivity(list, rev(t, 1))
+    expect(list).toHaveLength(MAX_ACTIVITY)
+    expect(list[0].t).toBe(6)
+  })
+})
+
+describe('Quiz : un même signe ne revient pas sous deux formes dans la copie', () => {
+  it('signe clé, observation ou test sans preuve : un seul par entité dans une copie sur plusieurs entités', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const qs = buildQuiz({ topics: ['behavior', 'speed', 'sanity', 'zero'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 20, rng: createRng(seed) })
+      expect(qs.length).toBe(20)
+      const signs = qs.filter((q) => /^q:(tell|obs|zero):/.test(q.id)).map((q) => q.ghostId)
+      expect(new Set(signs).size, `graine ${seed} : ${signs.join(', ')}`).toBe(signs.length)
+    }
   })
 })

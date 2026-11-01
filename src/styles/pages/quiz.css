@@ -74,6 +74,10 @@
 .qz-lead { margin: 14px 0 0 !important; max-width: 31em; font-style: italic; font-size: 18px; line-height: 1.5; }
 /* commencer tout de suite, avec les réglages par défaut : le bouton juste sous l'intro */
 .qz-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 22px; }
+/* une copie laissée en route : on la reprend, ou on en commence une autre */
+.qz-resume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 18px; margin: 18px 0 -6px; }
+.qz-resume .pencil-note { font-size: 21px; }
+.qz-resume .link { display: inline-flex; align-items: center; min-height: 40px; }
 .qz-quick .btn-hint { flex-basis: 100%; margin-top: 0; }
 .qz-or { margin: 0 !important; font-size: 21px; transform: rotate(-1.5deg); }
 

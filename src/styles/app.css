@@ -12,6 +12,10 @@
   .notebook--single > .page--left { padding-right: 16px; }
 }
 
+/* une même consigne, le bon verbe : « clique » à la souris, « touche » au doigt */
+.on-touch { display: none; }
+@media (hover: none), (pointer: coarse), (max-width: 759px) { .on-mouse { display: none; } .on-touch { display: inline; } }
+
 .desk-foot {
   max-width: 1320px; margin: 0 auto; padding: 0 28px 34px;
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 22px;

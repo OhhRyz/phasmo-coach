@@ -35,7 +35,7 @@
   "summary": "Entité obsédée par les objets : elle en lance beaucoup, plus vite et plus loin, et peut en projeter plusieurs d'un coup.",
   "keyTells": [
     "En chasse, lance un objet toutes les 0,5 s, avec plus de force",
-    "« Explosion » : projette plusieurs objets d'un coup (-2 % de santé par objet)",
+    "« Explosion » : projette plusieurs objets d'un coup (−2 % de santé par objet)",
     "Lance les objets plus vite et plus loin, et interagit plus souvent"
   ],
   "tells": [

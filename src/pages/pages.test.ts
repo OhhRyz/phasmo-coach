@@ -20,8 +20,11 @@ import {
   REQUEUE_GAP,
   REQUEUE_WITHIN,
   requeueGap,
+  resumeSession,
   stillToAsk,
+  type SavedSession,
 } from './reviewSession'
+import { pageTitle } from '../components/Layout'
 
 const speeds = allSpeeds(GHOSTS)
 const SERIES = 2000
@@ -485,5 +488,61 @@ describe('révision : une séance de quelques minutes ne tourne pas sur les mêm
       const kinds = queue.map((c) => c.kind)
       for (let i = 1; i < kinds.length; i++) expect(kinds[i], `jour ${d} : ${kinds.join(' ')}`).not.toBe(kinds[i - 1])
     }
+  })
+})
+
+describe('Révision : une séance laissée en route reprend où elle en était', () => {
+  const deck = buildDeck(GHOSTS, MECHANICS, [])
+  const now = new Date(2026, 10, 1, 18, 0).getTime()
+  const since = now - 10 * 60_000
+  const ids = deck.slice(0, 6).map((c) => c.id)
+  const log = [0, 1, 2].map((k) => ({ id: ids[k], t: since + (k + 1) * 60_000, g: 3 as Grade, isNew: true }))
+  const saved: SavedSession<{ cardId: string }> = {
+    day: dayKey(now),
+    since,
+    queue: ids.slice(3),
+    peers: ['spirit'],
+    known: [],
+    done: 3,
+    good: 3,
+    passes: {},
+    total: 6,
+    settled: 3,
+    outcome: { cardId: ids[3] },
+    revealed: false,
+    previous: null,
+  }
+
+  it('même jour, réponses au journal : la file, les compteurs et la correction en cours reviennent', () => {
+    const r = resumeSession(saved, deck, log, now)
+    expect(r?.queue.map((c) => c.id)).toEqual(ids.slice(3))
+    expect(r).toMatchObject({ since, done: 3, good: 3, total: 6, settled: 3, outcome: { cardId: ids[3] } })
+  })
+
+  it('le lendemain, sans réponse, après une remise à zéro ou sans cartes : on repart sur une séance neuve', () => {
+    expect(resumeSession({ ...saved, day: '2026-10-31' }, deck, log, now)).toBeNull()
+    expect(resumeSession({ ...saved, done: 0 }, deck, log, now)).toBeNull()
+    expect(resumeSession(saved, deck, [], now)).toBeNull()
+    expect(resumeSession({ ...saved, queue: ['n:supprimee'] }, deck, log, now)).toBeNull()
+    expect(resumeSession('illisible', deck, log, now)).toBeNull()
+    expect(resumeSession(null, deck, log, now)).toBeNull()
+  })
+
+  it('une carte sortie du paquet quitte la file ; la correction gardée ne vaut que pour la carte en tête', () => {
+    const r = resumeSession({ ...saved, queue: ['n:supprimee', ...ids.slice(3)] }, deck, log, now)
+    expect(r?.queue.map((c) => c.id)).toEqual(ids.slice(3))
+    const other = resumeSession({ ...saved, outcome: { cardId: ids[5] } }, deck, log, now)
+    expect(other?.outcome).toBeNull()
+  })
+})
+
+describe('Titre de l’onglet : une page, un titre', () => {
+  it('nomme la page, et l’entité sur sa fiche', () => {
+    expect(pageTitle('/')).toBe('Phasmo Coach')
+    expect(pageTitle('/installer')).toBe('Installer l’app · Phasmo Coach')
+    expect(pageTitle('/carnet')).toBe('Mes notes · Phasmo Coach')
+    expect(pageTitle('/codex')).toBe('Codex · Phasmo Coach')
+    expect(pageTitle('/codex/wraith')).toBe(`${getGhost('wraith')!.name} · Codex · Phasmo Coach`)
+    expect(pageTitle('/nulle-part')).toBe('Page introuvable · Phasmo Coach')
   })
 })

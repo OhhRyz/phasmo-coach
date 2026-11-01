@@ -13,6 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
+        // short_name : le nom proposé sous l'icône de l'écran d'accueil (modifiable sur iPhone avant d'ajouter)
+        id: './',
         name: 'Phasmo Coach',
         short_name: 'Phasmo Coach',
         description: "Entraînement hors-jeu pour Phasmophobia : codex, révision espacée, quiz et mises en situation.",

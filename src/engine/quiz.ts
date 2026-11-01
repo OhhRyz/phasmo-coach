@@ -1767,6 +1767,9 @@ function trueFalseQuestions(m: Mechanics, rng: Rng): Question[] {
   }))
 }
 
+/** Les questions qui reposent sur un signe de terrain de l'entité (signe clé, observation, test sans preuve). */
+const SIGN_FAMILY = /^q:(tell|obs|zero):/
+
 /**
  * Construit une série de questions variées, en privilégiant les entités les moins maîtrisées. Une série sur
  * une partie des entités (« les moins maîtrisées ») prend ses mauvaises réponses d'abord parmi elles : la
@@ -1781,6 +1784,9 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   const seen = new Set<string>()
   // une seule entité : les questions à choix de noms ne la donnent pas toujours pour réponse
   const solo = opts.ghosts.length === 1
+  // un signe de terrain ne revient pas sous deux formes dans la copie (un test, puis la même chose en rapport de
+  // terrain) : signe, observation ou test sans preuve, un seul par entité (une série sur une seule entité n'en a pas d'autre)
+  const signed = new Set<string>()
   const tally = { named: 0, self: 0 }
   const pool = !solo && opts.ghosts.length > 1 && opts.ghosts.length < opts.allGhosts.length ? new Set(opts.ghosts.map((g) => g.id)) : null
   const ctx: Ctx = solo
@@ -1824,6 +1830,10 @@ export function buildQuiz(opts: QuizOptions): Question[] {
       }
     }
     if (!q || seen.has(q.id)) continue
+    if (!solo && q.ghostId && SIGN_FAMILY.test(q.id)) {
+      if (signed.has(q.ghostId)) continue
+      signed.add(q.ghostId)
+    }
     seen.add(q.id)
     misses = 0
     if (solo && named(q)) {

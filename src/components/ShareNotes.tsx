@@ -119,7 +119,7 @@ function ShareNotesDialog({ onClose }: { onClose: () => void }) {
   const sinceLabel = since != null ? safeDate(LONG, since, '') : ''
 
   return (
-    <Modal open onClose={onClose} title="Envoyer mes notes" actions={<LinkActions link={link} ready={!!share} onClose={onClose} />}>
+    <Modal open onClose={onClose} title="Partager mes notes" actions={<LinkActions link={link} ready={!!share} onClose={onClose} />}>
       {own.length === 0 ? (
         <p className="modal-text">{fr('Tu n’as encore écrit aucune note : le lien emporte seulement les notes que tu as écrites.')}</p>
       ) : (

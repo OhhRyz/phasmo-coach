@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty, Seg } from '../components/ui'
 import { MECHANICS } from '../data'
@@ -33,12 +34,27 @@ const toRetain = (n: number) => (n === 0 ? 'aucun fait à retenir' : `${n} ${n >
 export function MechanicsPage() {
   const { state } = useStore()
   const topics = MECHANICS.topics
-  const [active, setActive] = useState(topics[0]?.id ?? '')
+  // le chapitre et le mode sont dans l'adresse (?chapitre=…&mode=tester) : un lien mène au bon chapitre, et un
+  // rechargement y reste
+  const [params, setParams] = useSearchParams()
+  const asked = params.get('chapitre')
+  const active = topics.some((t) => t.id === asked) ? (asked as string) : (topics[0]?.id ?? '')
   const [shown, setShown] = useState<Record<string, boolean>>({})
   // « Lire » : le fait, puis sa question ; « Me tester » : seulement les questions, le fait arrive avec la réponse
-  const [mode, setMode] = useState<Mode>('read')
+  const mode: Mode = params.get('mode') === 'tester' ? 'test' : 'read'
+  const setParam = (key: string, value: string | null) =>
+    setParams(
+      (p) => {
+        const n = new URLSearchParams(p)
+        if (value == null) n.delete(key)
+        else n.set(key, value)
+        return n
+      },
+      { replace: true },
+    )
+  const setActive = (id: string) => setParam('chapitre', id)
   const changeMode = (m: Mode) => {
-    setMode(m)
+    setParam('mode', m === 'test' ? 'tester' : null)
     setShown({})
   }
   const topic = topics.find((t) => t.id === active)

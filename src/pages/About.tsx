@@ -5,6 +5,7 @@ import { Modal } from '../components/ui'
 import { DATA_INFO } from '../data'
 import { SOURCE_REPO_URL, UPSTREAM_REPO_URL } from '../config'
 import { fr, NNBSP } from '../engine/format'
+import { useAppInstalled } from '../install'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -91,6 +92,7 @@ function useLicence() {
 
 export function About() {
   const licence = useLicence()
+  const appInstalled = useAppInstalled()
   return (
     <>
     <Notebook className="apropos">
@@ -137,20 +139,17 @@ export function About() {
               'Installé sur l’écran d’accueil, le carnet s’ouvre comme une app et marche hors ligne. Dans un simple onglet, le navigateur peut effacer ce qu’il contient : sur iPhone, Safari le fait après 7 jours sans visite.',
             )}
           </p>
-          <dl className="install">
-            <div>
-              <dt>iPhone</dt>
-              <dd>
-                {fr(
-                  'Ouvre le carnet dans Safari, touche le bouton Partager, puis « Sur l’écran d’accueil ». L’app installée a sa propre mémoire, séparée de Safari : un lien reçu s’ouvre dans Safari, copie-le et colle-le dans l’app, page « Coaching » (le lien en bas de chaque page).',
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Android</dt>
-              <dd>{fr('Dans Chrome, ouvre le menu (les trois points), puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».')}</dd>
-            </div>
-          </dl>
+          <p className="prose">
+            {fr(
+              'Sur iPhone, l’app installée a sa propre mémoire, séparée du navigateur : un lien reçu s’ouvre dans Safari, copie-le et colle-le dans l’app, page « Coaching » (le lien en bas de chaque page).',
+            )}
+          </p>
+          {/* la marche à suivre, adaptée à l'appareil, est sur sa propre page */}
+          {!appInstalled && (
+            <p className="install-go-link">
+              <TypedLink to="/installer">Installer l’app sur cet appareil</TypedLink>
+            </p>
+          )}
         </section>
       </Page>
 
@@ -173,7 +172,7 @@ export function About() {
           </p>
           <p className="prose">
             {fr(
-              'Le jeu évolue : si un détail ne correspond plus à ce que tu vois en partie, c’est le jeu qui a raison. Les points à confirmer sont signalés en bas de chaque fiche.',
+              'Le jeu évolue : si un détail ne correspond plus à ce que tu vois en partie, c’est le jeu qui a raison. Les points à confirmer sont signalés en bas de chaque fiche, avec un lien « Signaler une erreur sur cette fiche ».',
             )}
           </p>
         </section>

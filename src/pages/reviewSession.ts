@@ -1,5 +1,5 @@
 import type { Card } from '../engine/cards'
-import { startOfDay } from '../engine/format'
+import { dayKey, startOfDay } from '../engine/format'
 import { askKey, SAME_ASK_GAP, SAME_GHOST_GAP } from '../engine/progress'
 import { LEARN_AHEAD, type CardState } from '../engine/srs'
 import type { ReviewEntry } from '../store/schema'
@@ -118,4 +118,73 @@ export function nextSession(pending: number, learnable: number, interrupted: boo
   if (pending > 0) return { label: interrupted ? 'Reprendre la séance' : `Continuer avec ${cards(pending)}`, extraNew: 0 }
   if (learnable > 0) return { label: `Apprendre ${cards(learnable)}`, extraNew: LEARN_MORE }
   return null
+}
+
+/** La séance en cours, gardée pour l'onglet : un détour (fiche, autre onglet, retour, rechargement) n'y fait rien perdre. */
+export const SAVED_SESSION_KEY = 'phasmo-coach/seance-revision'
+
+/** Ce qu'il faut pour reprendre une séance là où on l'a laissée (les cartes par leur identifiant). */
+export interface SavedSession<O = unknown> {
+  /** le jour de la séance : le lendemain, on repart sur les cartes du jour */
+  day: string
+  since: number
+  queue: string[]
+  peers: string[]
+  known: string[]
+  done: number
+  good: number
+  passes: Record<string, number>
+  total: number
+  settled: number
+  /** la réponse donnée à la carte en tête de file, dont on lisait la correction */
+  outcome: O | null
+  revealed: boolean
+  previous: string | null
+}
+
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
+const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0)
+
+/**
+ * La séance gardée, si elle se reprend : du même jour, avec au moins une réponse et encore des cartes, et dont
+ * les réponses sont bien au journal (une remise à zéro ou une sauvegarde importée entre-temps la rend caduque).
+ * Les cartes sorties du paquet (note supprimée…) sont retirées de la file.
+ */
+export function resumeSession<O extends { cardId: string }>(
+  raw: unknown,
+  deck: readonly Card[],
+  log: readonly ReviewEntry[],
+  now: number,
+): (Omit<SavedSession<O>, 'queue'> & { queue: Card[] }) | null {
+  if (!raw || typeof raw !== 'object') return null
+  const s = raw as Partial<SavedSession<O>>
+  if (s.day !== dayKey(now) || typeof s.since !== 'number' || s.since > now) return null
+  const done = count(s.done)
+  if (done === 0) return null
+  const byId = new Map(deck.map((c) => [c.id, c]))
+  const queue = strings(s.queue)
+    .map((id) => byId.get(id))
+    .filter((c): c is Card => !!c)
+  if (!queue.length) return null
+  const since = s.since
+  if (log.filter((l) => l.t >= since).length < done) return null
+  const passes: Record<string, number> = {}
+  if (s.passes && typeof s.passes === 'object') for (const [id, n] of Object.entries(s.passes)) passes[id] = count(n)
+  // la correction gardée ne vaut que pour la carte en tête de file
+  const outcome = s.outcome && typeof s.outcome === 'object' && s.outcome.cardId === queue[0].id ? s.outcome : null
+  return {
+    day: s.day,
+    since,
+    queue,
+    peers: strings(s.peers),
+    known: strings(s.known),
+    done,
+    good: Math.min(count(s.good), done),
+    passes,
+    total: Math.max(count(s.total), queue.length),
+    settled: count(s.settled),
+    outcome,
+    revealed: s.revealed === true && !outcome,
+    previous: typeof s.previous === 'string' ? s.previous : null,
+  }
 }

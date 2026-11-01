@@ -146,6 +146,11 @@ export function Report() {
     }
   }, [params])
 
+  // l'onglet porte le prénom de l'élève : un coach qui suit plusieurs élèves s'y retrouve
+  useEffect(() => {
+    if (data?.name) document.title = `Bilan de ${data.name} · Phasmo Coach`
+  }, [data])
+
   if (error) {
     return (
       <Notebook single className="bulletin">
@@ -258,7 +263,8 @@ export function Report() {
         {data.notes && <NotesBlock notes={data.notes} name={name} />}
 
         <p className="rp-action">
-          <TapeButton to="/carnet">{data.name ? `Écrire une note à ${data.name}` : 'Écrire une note'}</TapeButton>
+          {/* les notes partent à chaque partage, vers tous ceux qui reçoivent le lien : pas de note « à » une seule personne */}
+          <TapeButton to="/carnet">Écrire une note</TapeButton>
         </p>
 
         <div className="libcard sessions settle" style={{ '--r': '1deg', '--d': '.5s' } as Style}>

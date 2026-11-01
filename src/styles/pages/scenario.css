@@ -10,10 +10,10 @@
 .sc-lead { margin: 0; max-width: 31em; font-style: italic; font-size: 19px; line-height: 1.5; color: var(--ink); }
 .sc .pencil-note { font-size: 21px; }
 
-/* une même phrase, deux mises en page : « à droite » sur ordinateur, « en bas » sur téléphone ;
-   « clique » à la souris, « touche » au doigt */
-.sc-on-phone, .sc-on-touch { display: none; }
-@media (hover: none), (pointer: coarse), (max-width: 759px) { .sc-on-mouse { display: none; } .sc-on-touch { display: inline; } }
+/* une même phrase, trois mises en page : « à droite » sur ordinateur (deux pages), « plus bas » sur une seule
+   page, « en bas » sur téléphone (« clique » ou « touche » : .on-mouse et .on-touch, app.css) */
+.sc-on-phone, .sc-on-stacked { display: none; }
+@media (min-width: 760px) and (max-width: 1180px) { .sc-on-desk { display: none; } .sc-on-stacked { display: inline; } }
 
 /* ==========================================================================
    Ordre de mission (configuration)
@@ -377,4 +377,10 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
   .sc-notes-row { grid-template-columns: 1fr; }
   .sc-notes-row .sticky:nth-child(2) { margin-left: 18px; }
   .sc-report-head { flex-wrap: wrap; }
+}
+
+/* ordinateur, deux pages : le carnet de preuves reste sous la main pendant qu'on lit les rapports (plus haut que
+   l'écran, il se cale par le bas : --stick-top est alors négatif, voir Scenario.tsx) */
+@media (min-width: 1181px) {
+  .sc-board .sc-board-body { position: sticky; top: var(--stick-top, 16px); }
 }

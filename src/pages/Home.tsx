@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CircledNumber,
@@ -24,7 +24,8 @@ import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/p
 import { dayKey, fr, NBSP, NNBSP, num, safeDate } from '../engine/format'
 import { coachNameOf, coachNotes, isOwnNote, sortNotes } from '../engine/notes'
 import { shareSummary, shareSummaryLine } from '../engine/share'
-import { installHint, platform } from '../engine/device'
+import { currentDevice, installHint, isStandalone, platform } from '../engine/device'
+import { useAppInstalled } from '../install'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { EXHIBITS } from './exhibits'
@@ -93,11 +94,23 @@ const metaLine = (meta: string) =>
 const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
 const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord ta sauvegarde, puis importe-la dedans (page profil).'
 
+/** Le lien vers la page « Installer l'app » : un iPad n'est pas un téléphone. */
+function installLinkText(): string {
+  return `Installer l’app ${currentDevice().ipad ? 'sur ton iPad' : 'sur ton téléphone'}`
+}
+
 function Welcome() {
-  const { dispatch } = useStore()
+  const { state, dispatch } = useStore()
   const [name, setName] = useState('')
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
+  const installLink = useMemo(installLinkText, [])
+  // l'app installée repart d'une page blanche : ce qui a été commencé dans le navigateur s'importe
+  const standalone = useMemo(isStandalone, [])
+  // la durée d'une séance des premiers jours, calculée comme celle du mode d'emploi et de la révision du jour
+  const minutes = sessionMinutes(state.settings.newPerDay, 0)
+  // notes d'un coach déjà collées (lien ouvert avant le carnet) : elles attendent l'ouverture
+  const notes = state.notes.length
   return (
     <Notebook single className="home">
       <Page section="1" label="Nouveau carnet">
@@ -117,7 +130,7 @@ function Welcome() {
           </Stamp>
           <p className="entry-line">
             {fr(
-              `Réviser les ${GHOSTS.length} entités chaque jour (5${NBSP}min au début, 15 à 25${NBSP}min ensuite, révisions comprises), t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
+              `Réviser les ${GHOSTS.length} entités chaque jour (${minutes}${NBSP}min au début, 15 à 25${NBSP}min ensuite, révisions comprises), t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
             )}
           </p>
         </div>
@@ -127,7 +140,22 @@ function Welcome() {
               {fr(hint)}
               {ios && ` ${fr(IOS_FRESH_START)}`}
             </p>
+            <TypedLink to="/installer">{installLink}</TypedLink>
           </div>
+        )}
+        {standalone && (
+          <div className="pencil-note install-note welcome-resume">
+            <p>{fr('Tu avais commencé dans le navigateur ? L’app installée a sa propre mémoire : reprends ta sauvegarde, ou le lien de ton coach.')}</p>
+            <p className="install-note-links">
+              <TypedLink to="/profil">Importer ma sauvegarde</TypedLink>
+              <TypedLink to="/coaching?coller=1">Coller le lien du coach</TypedLink>
+            </p>
+          </div>
+        )}
+        {notes > 0 && (
+          <p className="pencil-note welcome-notes">
+            {fr(`${notes > 1 ? `Tes ${notes} notes sont rangées` : 'Ta note est rangée'} : écris ton prénom pour ouvrir le carnet.`)}
+          </p>
         )}
         <form
           className="stack welcome-form"
@@ -187,8 +215,10 @@ function Guide({ stacked, minutes, onDone }: { stacked: boolean; minutes: number
               <b className="guide-k">Exercices</b> <span className="guide-when">les enveloppes kraft</span>
               <p>
                 {fr(
-                  `Quiz, contrat simulé, bruits de pas : ${stacked ? 'les enveloppes sont plus bas, après « Les suspects »' : 'les enveloppes sont en bas de la page'}. Touche une enveloppe pour l'ouvrir.`,
-                )}
+                  `Quiz, contrat simulé, bruits de pas : ${stacked ? 'les enveloppes sont plus bas, après « Les suspects »' : 'les enveloppes sont en bas de la page'}.`,
+                )}{' '}
+                <span className="on-mouse">Clique sur une enveloppe</span>
+                <span className="on-touch">Touche une enveloppe</span> pour l’ouvrir.
               </p>
             </div>
           </li>
@@ -242,12 +272,36 @@ export function Home() {
   const queue = useMemo(() => buildReviewQueue(state, deck, now), [state, deck, now])
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
+  const phone = useMemo(() => platform() !== 'other', [])
+  const installLink = useMemo(installLinkText, [])
+  const appInstalled = useAppInstalled()
   const stacked = useStacked()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const asked = params.get('guide') === '1'
+  // « Voir ma progression » (page profil) : on descend jusqu'au registre des entités
+  const toProgress = params.get('progression') === '1'
   const [guideSeen, setGuideSeen] = useState(readGuideSeen)
   const showGuide = state.onboarded && (asked || !guideSeen)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const wasOnboarded = useRef(state.onboarded)
+
+  // le carnet vient de s'ouvrir (formulaire du prénom) : le focus va au titre du jour, pas au bas de la page
+  useEffect(() => {
+    if (state.onboarded && !wasOnboarded.current) titleRef.current?.focus({ preventScroll: true })
+    wasOnboarded.current = state.onboarded
+  }, [state.onboarded])
+
+  useEffect(() => {
+    if (!toProgress || !state.onboarded) return
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById('progression')
+      if (!el) return
+      el.scrollIntoView({ block: 'start' })
+      el.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [toProgress, state.onboarded])
 
   // rouverte depuis le pied de page : on descend jusqu'à la fiche (le focus suit, pour le clavier)
   useEffect(() => {
@@ -326,6 +380,22 @@ export function Home() {
 
   if (!state.onboarded) return <Welcome />
 
+  // tant que l'app tourne dans un onglet : pourquoi l'installer (téléphone), et le lien vers la marche à suivre
+  const installNote = !appInstalled && (
+    <div className="pencil-note install-note">
+      {hint && (
+        <p>
+          {fr(hint)}
+          {ios && hasData && ` ${fr(IOS_KEEP_DATA)}`}
+        </p>
+      )}
+      <p className="install-note-links">
+        <TypedLink to="/installer">{phone ? installLink : 'Installer l’app'}</TypedLink>
+        {ios && hasData && <TypedLink to="/profil">Exporter ma sauvegarde</TypedLink>}
+      </p>
+    </div>
+  )
+
   const notYet = 'pas encore fait'
   const steps = (
     <svg viewBox="0 0 170 22" className="steps-doodle" aria-hidden>
@@ -343,7 +413,10 @@ export function Home() {
         <h2 className="shelf-label" id="h-shelf">
           Exercices · pièces à conviction
         </h2>
-        <p className="pencil-note home-shelf-hint">touche une enveloppe pour l’ouvrir</p>
+        <p className="pencil-note home-shelf-hint">
+          <span className="on-mouse">clique sur une enveloppe</span>
+          <span className="on-touch">touche une enveloppe</span> pour l’ouvrir
+        </p>
       </div>
       <div className="envelopes">
         <Envelope
@@ -450,7 +523,7 @@ export function Home() {
           </FileHead>
 
           <div className="entry">
-            <h1 className="entry-date">
+            <h1 className="entry-date" ref={titleRef} tabIndex={-1}>
               <em>{cap(WEEKDAY.format(now))}</em>
               {DAY_MONTH.format(now)}
             </h1>
@@ -469,15 +542,7 @@ export function Home() {
             )}
           </div>
 
-          {hint && (
-            <div className="pencil-note install-note">
-              <p>
-                {fr(hint)}
-                {ios && hasData && ` ${fr(IOS_KEEP_DATA)}`}
-              </p>
-              {ios && hasData && <TypedLink to="/profil">Exporter ma sauvegarde</TypedLink>}
-            </div>
-          )}
+          {!stacked && installNote}
 
           {showGuide && <Guide stacked={stacked} minutes={sessionMinutes(state.settings.newPerDay, 0)} onDone={closeGuide} />}
 
@@ -526,6 +591,9 @@ export function Home() {
             )}
           </IndexCard>
 
+          {/* une seule colonne (téléphone) : sous la révision du jour, qui reste dans le premier écran */}
+          {stacked && installNote}
+
           {!stacked && (
             <p className="pencil-note home-down" aria-hidden>
               les exercices sont en bas de page
@@ -539,7 +607,10 @@ export function Home() {
             </H>
             {suspects.length > 0 ? (
               <>
-                <p className="pencil-note suspects-legend">{fr('les entités à travailler en priorité · touche une photo pour lire sa fiche')}</p>
+                <p className="pencil-note suspects-legend">
+                  les entités à travailler en priorité · <span className="on-mouse">clique sur une photo</span>
+                  <span className="on-touch">touche une photo</span> pour lire sa fiche
+                </p>
                 <div className="polaroids">
                   {shown.map((g, i) => (
                     <div className="suspect" key={g.id}>
@@ -598,12 +669,15 @@ export function Home() {
             <span>Mis à jour le {SHORT.format(now)}</span>
           </FileHead>
 
-          <section aria-labelledby="h-reg">
+          <section aria-labelledby="h-reg" id="progression" tabIndex={-1}>
             <H id="h-reg" count={`${acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''}` : 'aucune acquise'} sur ${GHOSTS.length}`}>
               Les {GHOSTS.length} entités
             </H>
             <p className="registry-legend">Ta maîtrise est surlignée{NNBSP}; les entités acquises sont entourées.</p>
-            <p className="pencil-note registry-tap">touche un nom pour ouvrir sa fiche</p>
+            <p className="pencil-note registry-tap">
+              <span className="on-mouse">clique sur un nom</span>
+              <span className="on-touch">touche un nom</span> pour ouvrir sa fiche
+            </p>
             <ol className="registry">
               {GHOSTS.map((g, i) => {
                 const m = mastery[g.id] ?? 0

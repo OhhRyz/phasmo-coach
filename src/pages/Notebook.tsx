@@ -197,6 +197,11 @@ function Carnet() {
   const inReview = state.notes.filter(makesCard).length
   const pinned = state.notes.filter((n) => n.pinned).length
   const filtering = !!query.trim() || !!activeGhost
+  const visibleGroups = groups.filter((grp) => grp.notes.length || (!filtering && grp.key === 'coach'))
+  const single = visibleGroups.length === 1
+  // côté coach : une note déjà partagée (pas modifiée depuis le dernier envoi) est peut-être chez l'élève
+  const lastShared = validTime(state.settings.lastSharedAt)
+  const sharedAlready = (n: CoachNote) => role === 'coach' && lastShared != null && n.updatedAt <= lastShared && isOwnNote(n, profile)
   const now = Date.now()
   const coachLabel = coach || 'ton coach'
   const lead =
@@ -314,7 +319,11 @@ function Carnet() {
           </div>
 
           <Consigne className="carnet-consigne">
-            {fr('écris une astuce ou une erreur à ne plus refaire, puis enregistre-la ; avec la case de révision cochée, elle te sera reposée d’elle-même')}
+            {fr(
+              role === 'coach'
+                ? 'écris une astuce ou une erreur à ne plus refaire, puis enregistre-la ; avec la case de révision cochée, ton élève la recevra comme une carte quand tu partageras tes notes'
+                : 'écris une astuce ou une erreur à ne plus refaire, puis enregistre-la ; avec la case de révision cochée, elle te sera reposée d’elle-même',
+            )}
           </Consigne>
           <NoteEditor autoFocus={!arrived} />
 
@@ -426,14 +435,15 @@ function Carnet() {
                 </p>
               </Empty>
             ) : (
-              groups
-                .filter((grp) => grp.notes.length || (!filtering && grp.key === 'coach'))
-                .map((grp) => (
-                  <section key={grp.key} className="carnet-group" aria-labelledby={`h-${grp.key}`}>
-                    <h3 className="carnet-group-h" id={`h-${grp.key}`} tabIndex={-1}>
-                      <span>{grp.title}</span>
-                      <span className="h-count">{grp.notes.length ? plural(grp.notes.length, 'note', 'notes') : 'aucune note'}</span>
-                    </h3>
+              visibleGroups.map((grp) => (
+                  <section key={grp.key} className="carnet-group" aria-labelledby={single ? undefined : `h-${grp.key}`}>
+                    {/* un seul groupe : le titre « Les notes » et son compte suffisent */}
+                    {!single && (
+                      <h3 className="carnet-group-h" id={`h-${grp.key}`} tabIndex={-1}>
+                        <span>{grp.title}</span>
+                        <span className="h-count">{grp.notes.length ? plural(grp.notes.length, 'note', 'notes') : 'aucune note'}</span>
+                      </h3>
+                    )}
                     {grp.author && role !== 'coach' && (
                       <p className="pencil-note carnet-group-coach">
                         {fr(
@@ -495,6 +505,8 @@ function Carnet() {
           «{NNBSP}
           {deleting?.title}
           {NNBSP}»{deleting && makesCard(deleting) ? ' et sa carte de révision seront supprimées' : ' sera supprimée'} de cet appareil.
+          {/* une suppression ne part pas avec le partage : l'élève garde la note déjà reçue */}
+          {deleting && sharedAlready(deleting) && ` Si ton élève l’a déjà reçue, elle reste dans son carnet.`}
         </p>
       </Modal>
 

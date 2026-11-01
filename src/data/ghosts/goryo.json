@@ -48,7 +48,7 @@
   "eliminationTests": [
     { "text": "Si l'entité change de pièce favorite (sans que personne ait fait le vœu « Je souhaite être sain d'esprit » à la patte de singe), ce n'est pas un Goryo." },
     { "text": "Si tu vois la silhouette D.O.T.S à l'œil nu, sans passer par une caméra, ce n'est pas un Goryo." },
-    { "text": "En Cauchemar ou en Démence, si tu as exclu le D.O.T.S, ce n'est pas un Goryo." }
+    { "text": "En difficulté Cauchemar ou Démence, si tu as exclu le D.O.T.S, ce n'est pas un Goryo." }
   ],
   "confusions": [
     { "with": "jinn", "why": "Même EMF 5 + UV, mais le Djinn a des températures glaciales au lieu du D.O.T.S ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m et peut faire chuter ta santé mentale de 25 %." },

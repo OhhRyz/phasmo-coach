@@ -56,7 +56,7 @@
     { "text": "Si l'entité chasse à une vitesse de base de 1,7 m/s ou plus (sans LdV), ce n'est pas un Aswang." }
   ],
   "confusions": [
-    { "with": "yurei", "why": "Même D.O.T.S + glaciales, mais le Yurei a les orbes au lieu de l'écriture ; il peut claquer une porte (-15 % de santé mentale) et l'encens le piège dans sa pièce pendant 90 s." },
+    { "with": "yurei", "why": "Même D.O.T.S + glaciales, mais le Yurei a les orbes au lieu de l'écriture ; il peut claquer une porte (−15 % de santé mentale) et l'encens le piège dans sa pièce pendant 90 s." },
     { "with": "oni", "why": "Même D.O.T.S + glaciales, mais l'Oni a l'EMF 5 au lieu de l'écriture ; vitesse standard de 1,7 m/s, plus visible en chasse, jamais d'événement « brouillard fantomatique »." },
     { "with": "deogen", "why": "Même D.O.T.S + écriture, mais le Deogen a la Spirit Box au lieu des glaciales ; il te voit toujours en chasse (impossible de te cacher), fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi." },
     { "with": "thaye", "why": "Même D.O.T.S + écriture, mais le Thayé a les orbes au lieu des glaciales ; il n'accélère jamais en LdV et ralentit en vieillissant." },
@@ -156,7 +156,7 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Preuve garantie en Cauchemar et Démence : aucune, selon la seule source qui en parle.",
+    "Preuve garantie en difficulté Cauchemar et Démence : aucune, selon la seule source qui en parle.",
     "À la chasse suivante, fonce-t-il vers ta position dès la période de grâce ou juste après ? Les sources divergent.",
     "Cas non vérifiés : plusieurs joueurs cachés en même temps, ou joueur caché qui n'était pas celui qu'il avait détecté."
   ]

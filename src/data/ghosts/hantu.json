@@ -85,7 +85,7 @@
       "text": "Si l'entité accélère en LdV, ce n'est pas un Hantu."
     },
     {
-      "text": "En Cauchemar ou en Démence, si tu as exclu les températures glaciales, ce n'est pas un Hantu."
+      "text": "En difficulté Cauchemar ou Démence, si tu as exclu les températures glaciales, ce n'est pas un Hantu."
     }
   ],
   "confusions": [
@@ -247,7 +247,7 @@
   ],
   "changes": [
     "Chronicle v0.13 (24 juin 2025) : correction d'un bug où la buée du Hantu restait visible après la mort du joueur quand l'option « les morts prolongent la chasse » était activée (sans effet sur l'identification).",
-    "Le test « changements de vitesse aléatoires » n'est plus définitif : l'Obambo (décembre 2025) peut lui aussi changer de vitesse en pleine chasse."
+    "Des changements de vitesse « au hasard » ne suffisent plus à reconnaître le Hantu : l'Obambo (décembre 2025) peut lui aussi changer de vitesse en pleine chasse. Le test sans preuve regarde donc si la vitesse suit la température des pièces traversées."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",

@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { GhostEvidence, Modal, Seg } from '../components/ui'
+import { FicheExpress } from '../components/FicheExpress'
+import { Modal, Seg } from '../components/ui'
 import {
   CheckLine,
   Consigne,
@@ -28,6 +29,7 @@ import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
+import { clearRun, readRun, saveRun } from './savedRun'
 
 type Pool = 'all' | 'weak' | 'one'
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -63,6 +65,24 @@ function Digits({ text }: { text: string }) {
     </>
   )
 }
+
+/** La copie en cours (voir savedRun) : reprise depuis la page du quiz après un détour. */
+const COPY_KEY = 'phasmo-coach/copie-quiz'
+interface SavedCopy {
+  questions: Question[]
+  index: number
+  answers: Answer[]
+  selected: string[]
+  checked: boolean
+}
+const validCopy = (c: SavedCopy) =>
+  Array.isArray(c.questions) &&
+  Array.isArray(c.answers) &&
+  Array.isArray(c.selected) &&
+  c.answers.length > 0 &&
+  typeof c.index === 'number' &&
+  c.index >= 0 &&
+  c.index < c.questions.length
 
 /** Au-delà, une réponse court sur plusieurs lignes : on entoure sa lettre, ou on la souligne, plutôt que tout le bloc. */
 const SHORT_ANSWER = 22
@@ -196,6 +216,8 @@ export function Quiz() {
   /** fiche express ouverte depuis la correction (sans quitter la copie) */
   const [fiche, setFiche] = useState<string | null>(null)
   const [quitOpen, setQuitOpen] = useState(false)
+  // une copie laissée en route dans cet onglet (autre onglet, retour, rechargement) : proposée à la reprise
+  const [saved, setSaved] = useState(() => readRun<SavedCopy>(COPY_KEY, validCopy))
   const nextRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
   const autoStarted = useRef(false)
@@ -211,6 +233,8 @@ export function Quiz() {
   const one = focusGhost ? getGhost(focusGhost) : undefined
 
   const start = (only?: QuizTopic[]) => {
+    clearRun(COPY_KEY)
+    setSaved(null)
     const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : GHOSTS
     if (only) setTopics(only)
     const qs = buildQuiz({
@@ -258,6 +282,23 @@ export function Quiz() {
 
   const q = questions?.[index]
 
+  // la copie en cours se garde à chaque réponse (rendue ou abandonnée, elle s'efface)
+  useEffect(() => {
+    if (!questions || index >= questions.length || answers.length === 0) return
+    saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked })
+  }, [questions, index, answers, selected, checked])
+
+  const resume = () => {
+    if (!saved) return
+    setEmpty(false)
+    setQuestions(saved.questions)
+    setIndex(saved.index)
+    setAnswers(saved.answers)
+    setSelected(saved.selected)
+    setChecked(saved.checked)
+    setSaved(null)
+  }
+
   const check = useCallback(
     (sel: string[]) => {
       if (!q || checked) return
@@ -277,6 +318,7 @@ export function Quiz() {
   const next = useCallback(() => {
     if (!questions) return
     if (index + 1 >= questions.length) {
+      clearRun(COPY_KEY)
       const score = answers.filter((a) => a.correct).length
       dispatch({
         type: 'activity',
@@ -352,7 +394,8 @@ export function Quiz() {
       : `${n} ${plural(n, 'entité')} à découvrir`
     const poolLabel = pool === 'one' && one ? one.name : pool === 'weak' ? weakLabel : `les ${GHOSTS.length} entités`
     const history = quizzes.slice(-5).reverse()
-    const startLabel = `Commencer${NNBSP}: ${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''}`
+    // un seul libellé pour les deux boutons qui lancent la même copie
+    const startLabel = `Commencer le quiz (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
     return (
       <form
         className="qz qz-setup"
@@ -381,6 +424,14 @@ export function Quiz() {
                 chasse, tests. Les questions visent plus souvent les entités que tu maîtrises le moins{NNBSP}; une erreur sur une carte
                 déjà apprise la remet dans ta révision du jour.
               </p>
+              {saved && (
+                <p className="qz-resume">
+                  <span className="pencil-note">
+                    {`copie laissée en route${NNBSP}: ${saved.answers.length} ${plural(saved.answers.length, 'réponse')} sur ${saved.questions.length}`}
+                  </span>
+                  <TypedLink onClick={resume}>Reprendre la copie</TypedLink>
+                </p>
+              )}
               <div className="qz-quick">
                 <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème ↓">
                   {startLabel}
@@ -505,7 +556,7 @@ export function Quiz() {
             )}
             <div className="qz-go">
               <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème dans la liste">
-                Commencer le quiz ({count} questions)
+                {startLabel}
               </TapeButton>
             </div>
 
@@ -709,8 +760,8 @@ export function Quiz() {
   /* ---------- question ---------- */
   const ok = checked && isCorrect(q, selected)
   const last = index + 1 >= questions.length
-  const ficheGhost = fiche ? getGhost(fiche) : undefined
   const quit = () => {
+    clearRun(COPY_KEY)
     setQuitOpen(false)
     setQuestions(null)
   }
@@ -846,7 +897,7 @@ export function Quiz() {
           <div className="qz-actions">
             {!checked && (
               <p className="qz-keys" aria-hidden>
-                touches A à {LETTERS[q.choices.length - 1]}
+                touches 1 à {q.choices.length}, ou A à {LETTERS[q.choices.length - 1]}
                 {q.multi && ', puis Entrée'}
               </p>
             )}
@@ -874,37 +925,7 @@ export function Quiz() {
       </Page>
     </Notebook>
 
-    <Modal
-      open={!!ficheGhost}
-      onClose={() => setFiche(null)}
-      title={ficheGhost ? `Fiche express · ${ficheGhost.name}` : 'Fiche express'}
-      actions={<TapeButton onClick={() => setFiche(null)}>Retour à la copie</TapeButton>}
-    >
-      {ficheGhost && (
-        <div className="qz-fiche">
-          <p className="qz-fiche-sum">{ficheGhost.summary}</p>
-          <p className="qz-fiche-line">
-            <span className="qz-fiche-k">Preuves</span>
-            <GhostEvidence ghost={ficheGhost} />
-          </p>
-          <p className="qz-fiche-line">
-            <span className="qz-fiche-k">Vitesse</span>
-            <span>{spell(ficheGhost.speed.summary)}</span>
-          </p>
-          {ficheGhost.keyTells.length > 0 && (
-            <>
-              <p className="qz-fiche-k">À retenir</p>
-              <ol className="qz-fiche-tells">
-                {ficheGhost.keyTells.slice(0, 2).map((t, k) => (
-                  <li key={k}>{spell(t)}</li>
-                ))}
-              </ol>
-            </>
-          )}
-          <p className="pencil-note qz-fiche-more">la fiche complète est dans le Codex{NNBSP}: tu pourras la relire après la copie</p>
-        </div>
-      )}
-    </Modal>
+    <FicheExpress ghostId={fiche} onClose={() => setFiche(null)} back="Retour à la copie" later="après la copie" />
 
     <Modal
       open={quitOpen}

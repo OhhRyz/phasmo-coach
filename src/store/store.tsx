@@ -10,7 +10,7 @@ import {
   initialState,
   load,
   sanitizeNotes,
-  MAX_ACTIVITY,
+  upsertActivity,
   MAX_LOG,
   save,
   STORAGE_KEY,
@@ -57,7 +57,7 @@ function reducer(state: PersistedState, action: Action): PersistedState {
       return { ...state, answers, cards }
     }
     case 'activity':
-      return { ...state, activity: [...state.activity, action.activity].slice(-MAX_ACTIVITY) }
+      return { ...state, activity: upsertActivity(state.activity, action.activity) }
     case 'profile': {
       const profile = { ...state.profile, ...action.profile }
       // le prénom change : les notes écrites sous l'ancien prénom (ou sans prénom) restent les siennes

@@ -18,7 +18,7 @@ const TILT = [1.6, -1.3, 0.8, -1.8, 1.1, -0.6]
 /**
  * Sur iPhone, un lien touché dans Discord ou Messages s'ouvre dans Safari : l'app installée sur l'écran
  * d'accueil a sa propre mémoire et ne verrait jamais ces notes. On propose de copier le lien pour le
- * coller dans l'app, page « Coaching ».
+ * coller dans l'app, page « Coaching » ; et à qui va l'installer, de le faire d'abord.
  */
 function IosTabHint() {
   const toast = useToast()
@@ -27,7 +27,7 @@ function IosTabHint() {
   return (
     <div className="pli-ios">
       <p className="pencil-note">
-        {fr('Si tu as installé le carnet sur l’écran d’accueil, copie ce lien et colle-le dans l’app, page « Coaching » (le lien en bas de chaque page) : l’app installée a sa propre mémoire.')}
+        {fr('Tu vas installer le carnet sur l’écran d’accueil ? Fais-le d’abord, puis colle ce lien dans l’app, page « Coaching » (le lien en bas de chaque page) : l’app installée a sa propre mémoire. Déjà installé ? Copie ce lien et colle-le au même endroit.')}
       </p>
       <PaperButton
         rotate={-0.8}
@@ -133,6 +133,8 @@ export function ImportNotes() {
   const inBrowserTab = platform() === 'ios' && !isStandalone()
   // qui s'entraînait seul·e reconnaîtra l'expéditeur comme son coach : ses notes sont déjà au stylo rouge
   const after = adoptCoach(state.profile, from)
+  // carnet pas encore ouvert : les notes rangées, on passe au prénom (seul l'accueil le demande)
+  const home = state.onboarded ? '/carnet' : '/'
 
   return (
     <Notebook className="courrier">
@@ -184,19 +186,20 @@ export function ImportNotes() {
 
         <div className="pli-actions">
           {nothingNew ? (
-            <TapeButton to="/carnet">Ouvrir mon carnet</TapeButton>
+            <TapeButton to={home}>Ouvrir mon carnet</TapeButton>
           ) : (
             <>
               <TapeButton
                 onClick={() => {
                   dispatch({ type: 'notes:import', notes: data.notes, from: data.from })
                   toast(importSummary(fresh, updated))
-                  navigate('/carnet', { state: SHOW_NOTES })
+                  if (state.onboarded) navigate('/carnet', { state: SHOW_NOTES })
+                  else navigate('/')
                 }}
               >
-                Coller dans mon carnet
+                Ajouter à mes notes
               </TapeButton>
-              <TypedLink to="/carnet">Annuler</TypedLink>
+              <TypedLink to={home}>Annuler</TypedLink>
             </>
           )}
         </div>

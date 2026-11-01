@@ -11,6 +11,7 @@ import { Ear } from './pages/Ear'
 import { GhostPage } from './pages/GhostPage'
 import { Home } from './pages/Home'
 import { ImportNotes } from './pages/ImportNotes'
+import { InstallPage } from './pages/Install'
 import { MechanicsPage } from './pages/Mechanics'
 import { Notebook } from './pages/Notebook'
 import { NotFound } from './pages/NotFound'
@@ -63,6 +64,7 @@ export function App() {
               <Route path="/profil" element={<Profile />} />
               <Route path="/rapport" element={<Report />} />
               <Route path="/importer" element={<ImportNotes />} />
+              <Route path="/installer" element={<InstallPage />} />
               <Route path="/a-propos" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

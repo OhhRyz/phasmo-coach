@@ -13,6 +13,7 @@ import {
   TapeButton,
   TypedLink,
 } from '../components/journal/Journal'
+import { FicheExpress } from '../components/FicheExpress'
 import { ProgressBar } from '../components/ui'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { namesGhost, type Card, type CardKind, type CoachNote } from '../engine/cards'
@@ -24,7 +25,19 @@ import { humanDuration, isDue, schedule, type CardState, type Grade } from '../e
 import { ignoreKey } from '../engine/keys'
 import type { Profile } from '../store/schema'
 import { useStore } from '../store/store'
-import { answersBefore, comesBackInSession, LEARN_MORE, nextSession, passesBefore, requeue, requeueGap, stillToAsk } from './reviewSession'
+import {
+  answersBefore,
+  comesBackInSession,
+  LEARN_MORE,
+  nextSession,
+  passesBefore,
+  requeue,
+  requeueGap,
+  resumeSession,
+  SAVED_SESSION_KEY,
+  stillToAsk,
+  type SavedSession,
+} from './reviewSession'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -78,6 +91,16 @@ function returnLine(o: { ok: boolean; again: boolean; next: CardState; at: numbe
   // ratée encore après son retour : elle attend la séance suivante (MAX_RETURNS)
   if (!o.ok) return 'reviendra à ta prochaine séance'
   return `revient ${comesBack(o.next, o.at)}`
+}
+
+/** La séance gardée pour cet onglet (voir resumeSession), ou null. */
+function readSaved(): unknown {
+  try {
+    const raw = sessionStorage.getItem(SAVED_SESSION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
 }
 
 function readHelpDismissed(): boolean {
@@ -252,29 +275,61 @@ function ChoiceRow({
 
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
-  const [queue, setQueue] = useState<Card[]>(() => buildReviewQueue(state, deck, Date.now()))
+  // une séance laissée en route dans cet onglet (fiche ouverte, autre onglet, retour, rechargement) reprend où elle en était
+  const [resumed] = useState(() => resumeSession<Outcome>(readSaved(), deck, state.log, Date.now()))
+  const [queue, setQueue] = useState<Card[]>(() => resumed?.queue ?? buildReviewQueue(state, deck, Date.now()))
   // les entités de la séance, fixées au départ : une ou deux d'entre elles parmi les mauvaises réponses des
   // QCM, pour que la bonne ne soit pas « l'entité de la carte d'avant »
-  const [peers, setPeers] = useState<string[]>(() => sessionGhosts(queue))
+  const [peers, setPeers] = useState<string[]>(() => resumed?.peers ?? sessionGhosts(queue))
   // les entités déjà étudiées au début de la séance : hors de la séance, les autres mauvaises réponses
-  const [known, setKnown] = useState<string[]>(() => studiedGhosts(deck, state.cards))
-  const [done, setDone] = useState(0)
-  const [good, setGood] = useState(0)
+  const [known, setKnown] = useState<string[]>(() => resumed?.known ?? studiedGhosts(deck, state.cards))
+  const [done, setDone] = useState(resumed?.done ?? 0)
+  const [good, setGood] = useState(resumed?.good ?? 0)
   const [finished, setFinished] = useState(false)
   // début de séance : relit dans le journal les réponses données depuis, et fixe le jour des choix
-  const [since, setSince] = useState(() => Date.now())
-  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const [since, setSince] = useState(() => resumed?.since ?? Date.now())
+  const [outcome, setOutcome] = useState<Outcome | null>(resumed?.outcome ?? null)
   // carte sans choix : la réponse est retournée, on dit si on savait
-  const [revealed, setRevealed] = useState(false)
+  const [revealed, setRevealed] = useState(resumed?.revealed ?? false)
   // carte sans choix, déjà notée : quand elle revient (dit sur la carte suivante)
-  const [previous, setPrevious] = useState<string | null>(null)
+  const [previous, setPrevious] = useState<string | null>(resumed?.previous ?? null)
   // passages de chaque carte dans la séance : une carte qui revient se pose autrement (voir questionForCard)
-  const [passes, setPasses] = useState<Record<string, number>>({})
+  const [passes, setPasses] = useState<Record<string, number>>(resumed?.passes ?? {})
   const [helpOpen, setHelpOpen] = useState(() => !readHelpDismissed())
   // « 4 cartes terminées sur 12 » : les cartes distinctes de la séance (une carte qui repasse ne l'allonge pas)
-  const [total, setTotal] = useState(queue.length)
+  const [total, setTotal] = useState(resumed?.total ?? queue.length)
   // cartes terminées pour la séance (leur dernière réponse ne les fait pas repasser) : le trait d'avancement
-  const [settled, setSettled] = useState(0)
+  const [settled, setSettled] = useState(resumed?.settled ?? 0)
+  // fiche express ouverte depuis la correction : on la lit sans quitter la carte
+  const [fiche, setFiche] = useState<string | null>(null)
+
+  // la séance en cours est gardée pour l'onglet à chaque réponse ; terminée (ou pas commencée), elle s'efface
+  useEffect(() => {
+    try {
+      if (finished || done === 0) {
+        sessionStorage.removeItem(SAVED_SESSION_KEY)
+        return
+      }
+      const saved: SavedSession<Outcome> = {
+        day: dayKey(since),
+        since,
+        queue: queue.map((c) => c.id),
+        peers,
+        known,
+        done,
+        good,
+        passes,
+        total,
+        settled,
+        outcome,
+        revealed,
+        previous,
+      }
+      sessionStorage.setItem(SAVED_SESSION_KEY, JSON.stringify(saved))
+    } catch {
+      /* stockage indisponible : la séance ne survivra pas à un rechargement, sans gêner */
+    }
+  }, [finished, since, queue, peers, known, done, good, passes, total, settled, outcome, revealed, previous])
 
   const card = queue[0]
   const now = Date.now()
@@ -304,22 +359,12 @@ export function Review() {
   const cardKey = card ? `${card.id}#${pass}` : ''
   const arrival = useMemo(() => (card ? state.cards[card.id] : undefined), [cardKey])
 
-  const finish = useCallback(
-    (reviewed: number, correct: number) => {
-      setFinished(true)
-      if (reviewed > 0) {
-        dispatch({
-          type: 'activity',
-          activity: { t: Date.now(), kind: 'review', score: correct, total: reviewed, label: 'Révision' },
-        })
-      }
-    },
-    [dispatch],
-  )
+  // la séance est déjà au registre (inscrite dès la première réponse, voir record) : terminer ne fait que la clore
+  const finish = useCallback(() => setFinished(true), [])
 
   /** Carte suivante ; une carte ratée repart plus loin dans la pile (au moins REQUEUE_GAP cartes, voir requeue). */
   const advance = useCallback(
-    (o: Outcome, reviewed: number, correct: number) => {
+    (o: Outcome) => {
       let rest = queue.slice(1)
       if (o.again && queue[0]) {
         rest = requeue(rest, queue[0], requeueGap(o.next, o.at))
@@ -328,7 +373,7 @@ export function Review() {
       setOutcome(null)
       setRevealed(false)
       setQueue(rest)
-      if (rest.length === 0) finish(reviewed, correct)
+      if (rest.length === 0) finish()
     },
     [queue, finish],
   )
@@ -347,17 +392,20 @@ export function Review() {
       const correct = good + (g >= 3 ? 1 : 0)
       setDone(reviewed)
       setGood(correct)
+      // la séance s'inscrit au registre dès la première réponse, et se met à jour à chacune : laissée en route,
+      // elle compte quand même (registre, profil, bilan du coach)
+      dispatch({ type: 'activity', activity: { t: since, kind: 'review', score: correct, total: reviewed, label: 'Révision' } })
       const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: comesBackInSession(next, at, passes[card.id] ?? 0), next, at }
       if (!o.again) setSettled((n) => n + 1)
       if (choice === undefined) {
         setPrevious(`la carte précédente ${returnLine(o)}`)
-        advance(o, reviewed, correct)
+        advance(o)
       } else {
         setPrevious(null)
         setOutcome(o)
       }
     },
-    [card, finished, outcome, state.cards, review, done, good, advance, passes],
+    [card, finished, outcome, state.cards, review, done, good, advance, passes, dispatch, since],
   )
 
   const pick = useCallback(
@@ -368,15 +416,16 @@ export function Review() {
     [question, record],
   )
   const goOn = useCallback(() => {
-    if (outcome) advance(outcome, done, good)
-  }, [outcome, advance, done, good])
+    if (outcome) advance(outcome)
+  }, [outcome, advance])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // sur un choix ou « Je ne sais pas », les chiffres et lettres restent actifs ; Entrée et Espace y gardent leur rôle
       if (ignoreKey(e, (el) => !!el.closest('.rv-card') && e.key !== 'Enter' && e.key !== ' ')) return
-      // fin de séance : la carte suivante est encore en tête de file, mais hors de l'écran
-      if (!card || finished) return
+      // fin de séance : la carte suivante est encore en tête de file, mais hors de l'écran ; fiche express
+      // posée sur la carte : les touches sont à elle
+      if (!card || finished || fiche) return
       const key = e.key.toLowerCase()
       if (question) {
         if (outcome) {
@@ -402,7 +451,7 @@ export function Review() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [card, finished, question, outcome, revealed, goOn, pick, record])
+  }, [card, finished, question, outcome, revealed, goOn, pick, record, fiche])
 
   const pileRef = useRef<HTMLDivElement>(null)
   const promptRef = useRef<HTMLHeadingElement>(null)
@@ -477,7 +526,7 @@ export function Review() {
   /* ---------- fin de séance, ou rien à revoir ---------- */
   if (!card || finished) {
     const ended = finished && done > 0
-    const title = finished ? 'Séance terminée' : 'Tout est à jour'
+    const title = finished ? (done > 0 ? 'Séance terminée' : 'Séance close') : 'Tout est à jour'
     const sessions = state.activity.filter((a) => a.kind === 'review').slice(-5)
     // cartes encore dues (séance interrompue, ou questions laissées pour une autre séance) : on propose de
     // continuer plutôt que d'en apprendre d'autres ; le bouton annonce la séance que le clic lancera
@@ -512,6 +561,9 @@ export function Review() {
       returns.sort((a, b) => a.due - b.due)
     }
     const missed = done - good
+    // une séance close sans réponse : les réponses d'une séance laissée plus tôt dans la journée sont déjà au registre
+    const today = dayKey(now)
+    const answeredToday = finished && done === 0 ? state.log.filter((l) => dayKey(l.t) === today).length : 0
     // les cartes de la séance encore à revoir (ratées deux fois : déjà dues pour la séance suivante)
     const again = returns.filter((r) => r.when === 'à ta prochaine séance').reduce((n, r) => n + r.n, 0)
     return (
@@ -557,6 +609,12 @@ export function Review() {
                 </section>
               )}
             </>
+          ) : finished && answeredToday > 0 ? (
+            <p className="rv-lead">
+              Pas de nouvelle réponse dans cette séance{NNBSP}: {answeredToday === 1 ? 'ta réponse' : `tes ${answeredToday} réponses`} d’aujourd’hui
+              {answeredToday === 1 ? ' est' : ' sont'} déjà au registre.
+              {pending > 0 && ` Les cartes du jour t’attendent toujours.`}
+            </p>
           ) : finished && pending > 0 ? (
             <p className="rv-lead">Séance interrompue avant la première réponse{NNBSP}: les cartes du jour t’attendent toujours.</p>
           ) : (
@@ -674,7 +732,7 @@ export function Review() {
   const instruction = question
     ? answered
       ? 'Lis la correction, puis passe à la carte suivante.'
-      : 'Touche la bonne réponse.'
+      : 'Choisis la bonne réponse.'
     : revealed
       ? `Dis honnêtement si tu savais${NNBSP}: la carte reviendra plus tôt sinon.`
       : `Cherche la réponse de tête, puis touche «${NNBSP}Voir la réponse${NNBSP}».`
@@ -707,7 +765,7 @@ export function Review() {
       {isNote && note?.author && <p className="rv-sign hand">— {note.author}</p>}
       {ghost && (
         <p className="rv-more">
-          <TypedLink to={`/codex/${ghost.id}`}>Relire la fiche {ghost.name}</TypedLink>
+          <TypedLink onClick={() => setFiche(ghost.id)}>Relire la fiche {ghost.name}</TypedLink>
         </p>
       )}
     </>
@@ -872,9 +930,11 @@ export function Review() {
         </section>
 
         <div className="rv-foot">
-          <TypedLink onClick={() => finish(done, good)}>Terminer la séance</TypedLink>
+          <TypedLink onClick={finish}>Terminer la séance</TypedLink>
         </div>
       </Page>
+
+      <FicheExpress ghostId={fiche} onClose={() => setFiche(null)} back="Retour à la carte" later="après la séance" />
     </Notebook>
   )
 }

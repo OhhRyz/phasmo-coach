@@ -191,7 +191,7 @@ export function Coaching() {
 
           <section className="cg-role" aria-labelledby="h-role">
             <H id="h-role">Sur cet appareil</H>
-            <Consigne>{fr('touche ton rôle sur cet appareil ; seul·e, il n’y a rien d’autre à régler')}</Consigne>
+            <Consigne>{fr('choisis ton rôle sur cet appareil ; seul·e, il n’y a rien d’autre à régler')}</Consigne>
             <Seg
               label="Rôle sur cet appareil"
               value={role}

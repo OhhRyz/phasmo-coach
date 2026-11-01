@@ -1,3 +1,5 @@
+// en premier : l'invitation à installer du navigateur arrive tôt, avant l'affichage de la page qui s'en sert
+import './install'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/journal.css'
@@ -14,6 +16,7 @@ import './styles/pages/notebook.css'
 import './styles/pages/coaching.css'
 import './styles/pages/mechanics.css'
 import './styles/pages/misc.css'
+import './styles/pages/install.css'
 import { App } from './App'
 import { GHOSTS } from './data'
 import { warmQuiz } from './engine/quiz'

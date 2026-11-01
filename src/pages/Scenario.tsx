@@ -120,6 +120,23 @@ export function Scenario() {
   const autoOpened = useRef(false)
   const steps = useRef<Footsteps | null>(null)
   const nextArea = useRef<HTMLDivElement | null>(null)
+  // ordinateur, deux pages : le carnet de preuves reste à l'écran pendant qu'on lit les rapports. Plus haut que
+  // l'écran, il s'arrête quand son bas (« Encore possibles ») arrive en bas de l'écran : jamais de défilement
+  // dans sa propre boîte
+  const [board, setBoard] = useState<HTMLDivElement | null>(null)
+  const [stickTop, setStickTop] = useState(16)
+  useEffect(() => {
+    if (!board || typeof ResizeObserver === 'undefined') return
+    const measure = () => setStickTop(Math.min(16, window.innerHeight - board.offsetHeight - 16))
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(board)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [board])
 
   useEffect(() => {
     steps.current = createFootsteps(() => setPlaying(false))
@@ -726,6 +743,7 @@ export function Scenario() {
                     Reporte sa preuve dans ton carnet de preuves{' '}
                     <span className="sc-howto-where">
                       (<span className="sc-on-desk">à droite</span>
+                      <span className="sc-on-stacked">plus bas, après les rapports</span>
                       <span className="sc-on-phone">en bas de l’écran</span>, ou avec le lien sous le rapport)
                     </span>
                     .
@@ -780,6 +798,7 @@ export function Scenario() {
           <div className="sc-next" ref={nextArea}>
             <Consigne>
               reporte chaque preuve dans ton carnet de preuves (<span className="sc-on-desk">à droite</span>
+              <span className="sc-on-stacked">plus bas</span>
               <span className="sc-on-phone">en bas</span>), barre les entités écartées, puis lis le rapport suivant. Désigne l’entité quand tu
               es sûr·e.
             </Consigne>
@@ -829,7 +848,7 @@ export function Scenario() {
             </span>
             <span className="sc-sheet-act">{sheetOpen ? 'fermer' : 'ouvrir'}</span>
           </button>
-          <div className="sc-board-body" id="sc-board-body">
+          <div className="sc-board-body" id="sc-board-body" ref={setBoard} style={{ '--stick-top': `${stickTop}px` } as Style}>
             <FileHead>
               <span>Pièces du dossier</span>
               <span>
@@ -851,8 +870,8 @@ export function Scenario() {
                         <span className="sc-on-desk">{EVIDENCE[p.id].label}</span>
                         <span className="sc-on-phone">{EVIDENCE[p.id].short}</span>
                       </b>{' '}
-                      {p.mark === 'found' ? 'trouvée' : 'non trouvée'} (<span className="sc-on-mouse">clique</span>
-                      <span className="sc-on-touch">touche</span> {p.mark === 'found' ? '1 fois' : '2 fois'} sa case)
+                      {p.mark === 'found' ? 'trouvée' : 'non trouvée'} (<span className="on-mouse">clique</span>
+                      <span className="on-touch">touche</span> {p.mark === 'found' ? '1 fois' : '2 fois'} sa case)
                     </span>
                   ))}
                 </p>
@@ -900,8 +919,8 @@ export function Scenario() {
                 })}
               </ul>
               <p className="pencil-note sc-how">
-                <span className="sc-on-mouse">clique sur un nom pour le barrer</span>
-                <span className="sc-on-touch">touche un nom pour le barrer</span>
+                <span className="on-mouse">clique sur un nom pour le barrer</span>
+                <span className="on-touch">touche un nom pour le barrer</span>
                 {eliminated > 0 && ` · ${eliminated} écartée${eliminated > 1 ? 's' : ''} par tes preuves`}
               </p>
             </section>
