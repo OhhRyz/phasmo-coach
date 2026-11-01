@@ -186,23 +186,23 @@
     {
       "q": "Avant de toucher à la moindre porte, tu fais le tour de la carte : il y a moins de portes ouvertes que prévu pour la difficulté choisie. Quelle entité cela peut-il trahir ?",
       "choices": [
-        "Le Deildegast",
         "Le Yurei",
         "Le Thayé",
+        "Le Deildegast",
         "Le Poltergeist"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Avec un Deildegast, le réglage « portes ouvertes au départ » est appliqué un cran plus bas que celui choisi (élevé → moyen, moyen → faible, faible → aucune). C'est un indice, pas une certitude : confirme-le avec sa vitesse de chasse."
     },
     {
       "q": "Quelles sont la vitesse de départ et la vitesse minimale du Deildegast ?",
       "choices": [
-        "1,7 m/s, jusqu'à 0,4 m/s",
+        "2,75 m/s, jusqu'à 0,4 m/s",
         "3,0 m/s, jusqu'à 1,0 m/s",
-        "3,0 m/s, jusqu'à 0,4 m/s",
-        "2,75 m/s, jusqu'à 1,0 m/s"
+        "2,75 m/s, jusqu'à 1,0 m/s",
+        "3,0 m/s, jusqu'à 0,4 m/s"
       ],
-      "answer": 2,
+      "answer": 3,
       "explain": "Il part de 3,0 m/s et perd 0,1 m/s par action, jusqu'à 0,4 m/s après 26 actions. 2,75 → 1,0 m/s, c'est le Thayé."
     },
     {
@@ -219,34 +219,34 @@
     {
       "q": "Laquelle de ces situations ne ralentit PAS le Deildegast ?",
       "choices": [
-        "Actionner un interrupteur",
-        "Ouvrir un robinet",
-        "Un joueur mort qui ramasse un objet",
-        "Un objet lancé par l'entité elle-même"
+        "Un interrupteur actionné par toi",
+        "Un objet projeté par l'entité",
+        "Un robinet ouvert par un coéquipier",
+        "Un objet ramassé par un joueur mort"
       ],
-      "answer": 3,
+      "answer": 1,
       "explain": "Seuls les objets manipulés par les joueurs (vivants ou morts) comptent ; ce que l'entité lance elle-même ne change pas sa vitesse."
     },
     {
       "q": "Que devient la vitesse du Deildegast après une chasse ?",
       "choices": [
-        "Elle reste au niveau atteint",
-        "Elle revient à 3,0 m/s et les mêmes objets peuvent recompter",
-        "Elle baisse encore de 0,1 m/s",
-        "Elle revient à 1,7 m/s"
+        "Elle reste au niveau qu'elle avait atteint",
+        "Elle baisse encore de 0,1 m/s par chasse",
+        "Elle repart de 3,0 m/s, compteur remis à zéro",
+        "Elle revient à la vitesse standard des autres"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Après chaque chasse ou tentative de chasse, le compteur repart de zéro : 3,0 m/s, et tu peux réutiliser les mêmes objets."
     },
     {
       "q": "Combien d'objets différents faut-il utiliser pour ramener le Deildegast à la vitesse standard de 1,7 m/s ?",
       "choices": [
         "9",
-        "13",
         "17",
-        "26"
+        "26",
+        "13"
       ],
-      "answer": 1,
+      "answer": 3,
       "explain": "3,0 − 13 × 0,1 = 1,7 m/s. Avec 9 objets il est à 2,1 m/s, avec 26 il atteint son minimum de 0,4 m/s."
     }
   ],

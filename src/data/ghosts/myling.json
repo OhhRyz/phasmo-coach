@@ -74,38 +74,38 @@
   "quiz": [
     {
       "q": "À quelle distance maximale entends-tu les pas d'un Myling en chasse ?",
-      "choices": ["12 m", "20 m", "10 m", "2,5 m"],
-      "answer": 0,
+      "choices": ["20 m", "10 m", "12 m", "2,5 m"],
+      "answer": 2,
       "explain": "Le Myling n'est audible qu'à 12 m en chasse, contre 20 m pour une entité normale. 10 m est la portée standard des perturbations électroniques, et 2,5 m la portée de détection du Yokai."
     },
     {
       "q": "Au micro parabolique, l'entité émet deux sons paranormaux à moins de 80 s d'intervalle. Qu'en conclus-tu ?",
-      "choices": ["C'est un Myling", "C'est une Banshee", "Rien : toute entité peut le faire", "C'est un Moroi"],
-      "answer": 0,
-      "explain": "Le Myling produit davantage de sons paranormaux que les autres : deux sons au micro parabolique ou à l'enregistreur de son en moins de 80 s, c'est un Myling. Le cri de la Banshee est un son unique et différent ; le Moroi, lui, maudit celui qui l'entend."
+      "choices": ["C'est une Banshee", "C'est un Yokai", "C'est un Moroi", "C'est un Myling"],
+      "answer": 3,
+      "explain": "Le Myling produit davantage de sons paranormaux que les autres : deux sons au micro parabolique ou à l'enregistreur de son en moins de 80 s, c'est un Myling. Le cri de la Banshee est un son unique et différent ; le Moroi, lui, maudit celui qui l'entend, et le Yokai n'émet pas plus de sons qu'une autre entité."
     },
     {
       "q": "Vrai ou faux : le Myling n'émet aucun son vocal pendant une chasse.",
-      "choices": ["Faux : il en émet, mais on ne l'entend qu'à 12 m", "Vrai : il est totalement muet en chasse", "Vrai, sauf au micro parabolique", "Faux : il est même plus bruyant que les autres"],
+      "choices": ["Faux, il en fait, mais on les entend de moins loin", "Vrai, il reste totalement muet en chasse", "Vrai, sauf si tu tiens le micro parabolique", "Faux, il est même plus bruyant que les autres en chasse"],
       "answer": 0,
       "explain": "C'est une idée reçue : le Myling fait des sons vocaux comme les autres, mais sa portée d'audition réduite à 12 m le rend plus discret."
     },
     {
       "q": "Pendant une chasse, tu entends clairement l'entité marcher à 16 m de toi. Laquelle peux-tu éliminer ?",
-      "choices": ["Le Myling", "L'Esprit", "L'Ombre", "Le Poltergeist"],
-      "answer": 0,
+      "choices": ["L'Esprit", "Le Myling", "L'Ombre", "Le Poltergeist"],
+      "answer": 1,
       "explain": "Au-delà de 12 m, un Myling est inaudible. L'entendre à 16 m l'élimine ; les trois autres s'entendent normalement jusqu'à 20 m."
     },
     {
       "q": "Avec quel équipement entends-tu plus de sons quand l'entité est un Myling ?",
-      "choices": ["Le micro parabolique", "La Spirit Box", "Le lecteur EMF", "Le projecteur D.O.T.S"],
-      "answer": 0,
-      "explain": "Le Myling produit davantage de sons paranormaux au micro parabolique et à l'enregistreur de son. La Spirit Box, le lecteur EMF et le projecteur D.O.T.S ne captent pas ces sons."
+      "choices": ["La caméra frontale", "Le thermomètre", "Le micro parabolique", "Le projecteur D.O.T.S"],
+      "answer": 2,
+      "explain": "Le Myling produit davantage de sons paranormaux au micro parabolique et à l'enregistreur de son. La caméra frontale, le thermomètre et le projecteur D.O.T.S ne captent pas ces sons."
     },
     {
       "q": "Avec un enregistreur de son de rang 1, à quelle distance d'un son paranormal de Myling le grésillement commence-t-il ?",
-      "choices": ["5 m", "4 m", "7,5 m", "2,5 m"],
-      "answer": 0,
+      "choices": ["4 m", "7,5 m", "2,5 m", "5 m"],
+      "answer": 3,
       "explain": "Avec un Myling, le grésillement de l'enregistreur commence 1 m plus loin que la normale : 5 m, 6,5 m et 7,5 m (rangs 1, 2 et 3) au lieu de 4 m, 5,5 m et 6,5 m."
     }
   ],

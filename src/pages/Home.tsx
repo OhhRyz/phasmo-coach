@@ -1,7 +1,7 @@
-import { useMemo, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  CheckLine,
+  CircledNumber,
   Envelope,
   FileHead,
   H,
@@ -14,13 +14,14 @@ import {
   Stamp,
   Sticky,
   Tally,
+  Tape,
   TapeButton,
   TypedLink,
 } from '../components/journal/Journal'
 import { UvPrint } from '../components/journal/Charts'
 import { GHOSTS, getGhost } from '../data'
 import { buildReviewQueue, streak, WEAK_COUNT, weakestGhosts } from '../engine/progress'
-import { dayKey, fr, NBSP, NNBSP, num, plural, safeDate } from '../engine/format'
+import { dayKey, fr, NBSP, NNBSP, num, safeDate } from '../engine/format'
 import { coachNameOf, coachNotes, isOwnNote, sortNotes } from '../engine/notes'
 import { shareSummary, shareSummaryLine } from '../engine/share'
 import { installHint, platform } from '../engine/device'
@@ -38,7 +39,54 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const pct = (m: number) => `${Math.round(m * 100)}${NBSP}%`
 /** Noms longs (« Les Jumeaux », « Poltergeist »…) : écrits un peu plus petit sous le polaroïd. */
 const longName = (name: string) => name.length > 8
-const piece = (n: number) => `Pièce n°${NBSP}${n}`
+
+/** La fiche « Mode d'emploi » a été rangée (une fois lue) : elle ne revient que par le lien du pied de page. */
+const GUIDE_KEY = 'phasmo-coach/guide'
+function readGuideSeen(): boolean {
+  try {
+    return localStorage.getItem(GUIDE_KEY) != null
+  } catch {
+    return false
+  }
+}
+function storeGuideSeen() {
+  try {
+    localStorage.setItem(GUIDE_KEY, String(Date.now()))
+  } catch {
+    /* stockage bloqué : la fiche reviendra au prochain lancement, sans gêner */
+  }
+}
+
+/** Le carnet est-il sur une seule colonne (téléphone, tablette) ? Les exercices passent alors sous « Les suspects ». */
+const STACKED = '(max-width: 1180px)'
+function useStacked(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      if (typeof matchMedia === 'undefined') return () => {}
+      const mq = matchMedia(STACKED)
+      mq.addEventListener('change', cb)
+      return () => mq.removeEventListener('change', cb)
+    },
+    () => typeof matchMedia !== 'undefined' && matchMedia(STACKED).matches,
+  )
+}
+
+/** Flèche au crayon vers le bas (« les exercices sont en bas de page »). */
+function PencilArrowDown() {
+  return (
+    <svg className="draw" width="40" height="46" viewBox="0 0 46 52" aria-hidden>
+      <path d="M10 2 C 2 18, 8 34, 30 46" strokeWidth="2" pathLength={1} style={{ '--d': '.9s' } as Style} />
+      <path d="M19 47 L31 47 L27 36" strokeWidth="2" pathLength={1} style={{ '--d': '1.5s', '--dur': '.3s' } as Style} />
+    </svg>
+  )
+}
+
+/** « 10 questions · ≈ 3 min » : chaque morceau reste d'un bloc, la ligne ne se coupe qu'après un « · ». */
+const metaLine = (meta: string) =>
+  meta
+    .split(' · ')
+    .map((seg) => seg.replace(/ /g, NBSP))
+    .join(`${NBSP}· `)
 
 /** Sur iPhone, l'app installée ne reprend pas ce qui a été noté dans l'onglet de Safari. */
 const IOS_FRESH_START = 'Fais-le avant de commencer : le carnet installé repart d’une page blanche.'
@@ -47,7 +95,6 @@ const IOS_KEEP_DATA = 'Le carnet installé repart de zéro : exporte d’abord t
 function Welcome() {
   const { dispatch } = useStore()
   const [name, setName] = useState('')
-  const [ok, setOk] = useState(true)
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
   return (
@@ -60,16 +107,17 @@ function Welcome() {
             <b>1</b>
           </span>
         </FileHead>
-        <div className="entry">
+        <div className="entry welcome-entry">
           <h1 className="entry-date">
-            <em>Un carnet pour</em>apprendre les entités
+            <em>Un carnet pour</em>apprendre les entités de Phasmophobia
           </h1>
           <Stamp thunk rotate={-6} tone="violet">
             Confidentiel
           </Stamp>
           <p className="entry-line">
-            Le codex des {GHOSTS.length} entités, des quiz, des mises en situation et une révision espacée qui ne te redemande que ce qui
-            commence à s’effacer. Tout reste sur cet appareil.
+            {fr(
+              `Réviser les ${GHOSTS.length} entités en 5 minutes par jour, t'entraîner sur des quiz et des contrats simulés, et garder le codex sous la main pendant tes parties.`,
+            )}
           </p>
         </div>
         {hint && (
@@ -82,7 +130,7 @@ function Welcome() {
         )}
         <form
           className="stack welcome-form"
-          style={{ '--gap': '26px' } as Style}
+          style={{ '--gap': '22px' } as Style}
           onSubmit={(e) => {
             e.preventDefault()
             if (!name.trim()) return
@@ -97,25 +145,65 @@ function Welcome() {
             <span>Ton prénom</span>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Prénom ou pseudo" autoFocus required maxLength={40} />
           </label>
-          <CheckLine
-            checked={ok}
-            onChange={setOk}
-            seed="welcome-ok"
-            hint={fr('Aucun compte, aucun serveur : tu peux exporter ta progression depuis le profil.')}
-          >
-            J’ai compris que tout est enregistré sur cet appareil.
-          </CheckLine>
-          <div>
-            <TapeButton type="submit" disabled={!ok || !name.trim()}>
+          <p className="pencil-note welcome-local">{fr('aucun compte : tout reste sur cet appareil (sauvegarde possible depuis le profil)')}</p>
+          <div className="welcome-go">
+            <TapeButton type="submit" disabled={!name.trim()} disabledHint={fr('écris ton prénom (ou un pseudo) pour ouvrir le carnet')}>
               Ouvrir le carnet
             </TapeButton>
           </div>
+          <p className="pencil-note welcome-next">{fr('à l’ouverture, un mode d’emploi en trois étapes te montre par où commencer')}</p>
           <p className="pencil-note welcome-coaching">
             {fr('être coaché·e, ou coacher quelqu’un : ça se règle plus tard, depuis le lien « Coaching » en bas de chaque page')}
           </p>
         </form>
       </Page>
     </Notebook>
+  )
+}
+
+/**
+ * Mode d'emploi, une seule fois après l'ouverture du carnet (puis par le lien du pied de page) : les trois
+ * usages de l'app, dans l'ordre où on s'en sert, avec les noms des onglets.
+ */
+function Guide({ stacked, onDone }: { stacked: boolean; onDone: (to?: string) => void }) {
+  return (
+    <section className="guide settle" id="mode-d-emploi" aria-labelledby="h-guide" style={{ '--r': '-.4deg', '--d': '.15s' } as Style}>
+      <IndexCard head={<span id="h-guide">Mode d’emploi</span>} right="à lire une fois" rotate={0}>
+        <Tape />
+        <ol className="guide-steps">
+          <li>
+            <CircledNumber n={1} delay={0.5} />
+            <div>
+              <b className="guide-k">Réviser</b> <span className="guide-when">chaque jour, ≈{NBSP}5{NBSP}min</span>
+              <p>{fr('Des questions à choix multiple sur les entités ; le carnet te repose ce que tu commences à oublier.')}</p>
+            </div>
+          </li>
+          <li>
+            <CircledNumber n={2} delay={0.7} />
+            <div>
+              <b className="guide-k">Exercices</b> <span className="guide-when">les enveloppes kraft</span>
+              <p>
+                {fr(
+                  `Quiz, contrat simulé, bruits de pas : ${stacked ? 'les enveloppes sont plus bas, après « Les suspects »' : 'les enveloppes sont en bas de la page'}. Touche une enveloppe pour l'ouvrir.`,
+                )}
+              </p>
+            </div>
+          </li>
+          <li>
+            <CircledNumber n={3} delay={0.9} />
+            <div>
+              <b className="guide-k">Codex</b> <span className="guide-when">pendant une partie</span>
+              <p>{fr(`Les ${GHOSTS.length} fiches. En jeu, coche tes preuves dans le carnet de preuves : il barre les entités qui ne collent plus.`)}</p>
+            </div>
+          </li>
+        </ol>
+        <div className="plan-actions guide-actions">
+          <TapeButton onClick={() => onDone('/revision')}>Commencer par la révision</TapeButton>
+          <TypedLink onClick={() => onDone()}>J’ai compris, ranger la fiche</TypedLink>
+        </div>
+        <p className="pencil-note guide-again">{fr('tu la retrouveras en bas de chaque page : « Mode d’emploi »')}</p>
+      </IndexCard>
+    </section>
   )
 }
 
@@ -132,7 +220,7 @@ function CoachCard() {
     >
       <p className="coach-sum">{shareSummaryLine(s)}</p>
       <p>
-        {fr('Ce que tu lui expliques, note-le dans le carnet puis partage-le : une note ajoutée à la révision revient d’elle-même dans ses séances.')}
+        {fr('Ce que tu lui expliques, note-le dans « Mes notes », puis partage-le : une note ajoutée à la révision revient d’elle-même dans ses séances.')}
       </p>
       <div className="plan-actions">
         <TapeButton to="/carnet">Écrire une note</TapeButton>
@@ -151,6 +239,36 @@ export function Home() {
   const queue = useMemo(() => buildReviewQueue(state, deck, now), [state, deck, now])
   const hint = useMemo(() => installHint(), [])
   const ios = useMemo(() => platform() === 'ios', [])
+  const stacked = useStacked()
+  const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const asked = params.get('guide') === '1'
+  const [guideSeen, setGuideSeen] = useState(readGuideSeen)
+  const showGuide = state.onboarded && (asked || !guideSeen)
+
+  // rouverte depuis le pied de page : on descend jusqu'à la fiche (le focus suit, pour le clavier)
+  useEffect(() => {
+    if (!asked || !state.onboarded) return
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById('mode-d-emploi')
+      if (!el) return
+      el.scrollIntoView({ block: 'start' })
+      el.querySelector<HTMLElement>('.btn-tape')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [asked, state.onboarded])
+
+  const closeGuide = (to?: string) => {
+    storeGuideSeen()
+    setGuideSeen(true)
+    if (to) {
+      navigate(to)
+      return
+    }
+    if (asked) setParams({}, { replace: true })
+    // la fiche disparaît : le focus passe à l'action suivante, la révision du jour
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('.home .plan .btn-tape')?.focus())
+  }
 
   const days = streak(state, now)
   const { activeDays, today } = useMemo(() => {
@@ -203,6 +321,106 @@ export function Home() {
   const hasData = state.log.length > 0 || state.activity.length > 0 || state.notes.length > 0
 
   if (!state.onboarded) return <Welcome />
+
+  const notYet = 'pas encore fait'
+  const steps = (
+    <svg viewBox="0 0 170 22" className="steps-doodle" aria-hidden>
+      <g fill="currentColor">
+        {[8, 30, 52, 74, 91, 106, 119, 131, 142, 152, 162].map((x, i) => (
+          <ellipse key={x} cx={x} cy={i % 2 ? 7 : 15} rx="4.5" ry="2.6" />
+        ))}
+      </g>
+    </svg>
+  )
+  // ===================== les exercices (enveloppes) : sur le bureau, ou dans la page sur une colonne =====================
+  const shelf = (
+    <section className={`desk-shelf home-shelf${stacked ? ' home-shelf--in-page' : ''}`} aria-labelledby="h-shelf">
+      <div className="home-shelf-head">
+        <h2 className="shelf-label" id="h-shelf">
+          Exercices · pièces à conviction
+        </h2>
+        <p className="pencil-note home-shelf-hint">touche une enveloppe pour l’ouvrir</p>
+      </div>
+      <div className="envelopes">
+        <Envelope
+          to={EXHIBITS.situation.to}
+          piece="Exercice"
+          title={EXHIBITS.situation.title}
+          text={fr(EXHIBITS.situation.what)}
+          meta={metaLine(EXHIBITS.situation.meta)}
+          action={EXHIBITS.situation.action}
+          hand={
+            lastScenario ? (
+              <>
+                dernier contrat{NNBSP}:{' '}
+                <span className="env-score">
+                  {num(lastScenario.score)}
+                  {NBSP}pts
+                </span>
+              </>
+            ) : (
+              notYet
+            )
+          }
+          rotate={-1.5}
+          delay={0.2}
+        />
+        <Envelope
+          to={EXHIBITS.quiz.to}
+          piece="Exercice"
+          title={EXHIBITS.quiz.title}
+          text={fr(EXHIBITS.quiz.what)}
+          meta={metaLine(EXHIBITS.quiz.meta)}
+          action={EXHIBITS.quiz.action}
+          hand={
+            lastQuiz ? (
+              <>
+                dernier{NNBSP}: <span className="env-score">{`${lastQuiz.score}/${lastQuiz.total}`}</span>
+              </>
+            ) : (
+              notYet
+            )
+          }
+          rotate={1.2}
+          labelRotate={-0.8}
+          delay={0.3}
+        />
+        <Envelope
+          to={EXHIBITS.oreille.to}
+          piece="Exercice"
+          title={EXHIBITS.oreille.title}
+          text={fr(EXHIBITS.oreille.what)}
+          meta={metaLine(EXHIBITS.oreille.meta)}
+          action={EXHIBITS.oreille.action}
+          hand={
+            lastEar ? (
+              <>
+                dernière{NNBSP}: <span className="env-score">{`${lastEar.score}/${lastEar.total}`}</span>
+              </>
+            ) : (
+              notYet
+            )
+          }
+          rotate={-0.8}
+          delay={0.4}
+        >
+          {steps}
+        </Envelope>
+        <Envelope
+          to={EXHIBITS.codex.to}
+          piece="À lire"
+          title={EXHIBITS.codex.title}
+          text={fr(EXHIBITS.codex.what)}
+          meta={metaLine(EXHIBITS.codex.meta)}
+          action={EXHIBITS.codex.action}
+          hand={acquired ? `${acquired} acquise${acquired > 1 ? 's' : ''} sur ${GHOSTS.length}` : undefined}
+          rotate={1.8}
+          labelRotate={0.4}
+          delay={0.5}
+        />
+      </div>
+    </section>
+  )
 
   return (
     <>
@@ -257,6 +475,8 @@ export function Home() {
             </div>
           )}
 
+          {showGuide && <Guide stacked={stacked} onDone={closeGuide} />}
+
           {isCoach && <CoachCard />}
 
           <IndexCard className="plan settle" head="Révision du jour" right={SHORT.format(now)} clip rotate={-0.6}>
@@ -264,7 +484,7 @@ export function Home() {
               <>
                 <div className="plan-n">
                   <b>{queue.length}</b>
-                  <span>carte{queue.length > 1 ? 's' : ''}</span>
+                  <span>question{queue.length > 1 ? 's' : ''}</span>
                   <small>
                     environ {minutes}
                     {NBSP}min
@@ -280,27 +500,34 @@ export function Home() {
                     fr(`Au menu : ${onMenu.slice(0, 4).join(', ')}${onMenu.length > 4 ? `… et ${onMenu.length - 4} autre${onMenu.length - 4 > 1 ? 's' : ''}` : ''}.`)}
                 </p>
                 <div className="plan-actions">
-                  <TapeButton to="/revision">Ouvrir la séance</TapeButton>
-                  <TypedLink to="/quiz">ou un quiz éclair</TypedLink>
+                  <TapeButton to="/revision">Commencer la révision</TapeButton>
+                  <TypedLink to="/quiz?n=5">ou un quiz rapide (5 questions)</TypedLink>
                 </div>
               </>
             ) : (
               <>
                 <div className="plan-n plan-n--none">
-                  <span>Aucune carte à revoir</span>
+                  <span>Aucune question à revoir</span>
                 </div>
                 <p>
                   {fr(
-                    'Tout est révisé pour aujourd’hui : les cartes reviendront d’elles-mêmes au bon moment. En attendant, entraîne-toi sur une mise en situation.',
+                    'Tout est révisé pour aujourd’hui : les questions reviendront d’elles-mêmes au bon moment. En attendant, entraîne-toi sur une mise en situation.',
                   )}
                 </p>
                 <div className="plan-actions">
                   <TapeButton to={EXHIBITS.situation.to}>Prendre un contrat</TapeButton>
-                  <TypedLink to="/revision">apprendre de nouvelles cartes</TypedLink>
+                  <TypedLink to="/revision">apprendre de nouvelles questions</TypedLink>
                 </div>
               </>
             )}
           </IndexCard>
+
+          {!stacked && (
+            <p className="pencil-note home-down" aria-hidden>
+              les exercices sont en bas de page
+              <PencilArrowDown />
+            </p>
+          )}
 
           <section className="suspects" aria-labelledby="h-suspects">
             <H id="h-suspects" count={suspects.length ? weakCount : 'toutes acquises'}>
@@ -308,6 +535,7 @@ export function Home() {
             </H>
             {suspects.length > 0 ? (
               <>
+                <p className="pencil-note suspects-legend">{fr('les entités à travailler en priorité · touche une photo pour lire sa fiche')}</p>
                 <div className="polaroids">
                   {shown.map((g, i) => (
                     <div className="suspect" key={g.id}>
@@ -352,6 +580,9 @@ export function Home() {
               <TypedLink to="/codex">Ouvrir le codex</TypedLink>
             </div>
           </section>
+
+          {/* une seule colonne : les exercices juste après les suspects, avant le registre */}
+          {stacked && shelf}
         </Page>
 
         {/* ===================== page de droite : le registre ===================== */}
@@ -368,6 +599,7 @@ export function Home() {
               Les {GHOSTS.length} entités
             </H>
             <p className="registry-legend">Ta maîtrise est surlignée{NNBSP}; les entités acquises sont entourées.</p>
+            <p className="pencil-note registry-tap">touche un nom pour ouvrir sa fiche</p>
             <ol className="registry">
               {GHOSTS.map((g, i) => {
                 const m = mastery[g.id] ?? 0
@@ -450,95 +682,14 @@ export function Home() {
             )}
             {state.notes.length > 0 && (
               <div className="notes-foot">
-                <TypedLink to="/carnet">Tout le carnet ({plural(state.notes.length, 'note', 'notes')})</TypedLink>
+                <TypedLink to="/carnet">Toutes mes notes ({state.notes.length})</TypedLink>
               </div>
             )}
           </section>
         </Page>
       </Notebook>
 
-      {/* ===================== sur le bureau : les exercices ===================== */}
-      <section className="desk-shelf home-shelf" aria-labelledby="h-shelf">
-        <h2 className="shelf-label" id="h-shelf">
-          Pièces à conviction
-        </h2>
-        <div className="envelopes">
-          <Envelope
-            to={EXHIBITS.situation.to}
-            piece={piece(EXHIBITS.situation.n)}
-            title={EXHIBITS.situation.title}
-            text="Un contrat raconté minute par minute. À toi de trancher."
-            hand={
-              lastScenario ? (
-                <>
-                  dernier contrat{NNBSP}:{' '}
-                  <span className="env-score">
-                    {num(lastScenario.score)}
-                    {NBSP}pts
-                  </span>
-                </>
-              ) : (
-                'aucun contrat'
-              )
-            }
-            rotate={-1.5}
-            delay={0.2}
-          />
-          <Envelope
-            to={EXHIBITS.quiz.to}
-            piece={piece(EXHIBITS.quiz.n)}
-            title={EXHIBITS.quiz.title}
-            text="Comportements, vitesses, seuils de chasse et tests sans preuve."
-            hand={
-              lastQuiz ? (
-                <>
-                  dernier{NNBSP}: <span className="env-score">{`${lastQuiz.score}/${lastQuiz.total}`}</span>
-                </>
-              ) : (
-                'jamais ouverte'
-              )
-            }
-            rotate={1.2}
-            labelRotate={-0.8}
-            delay={0.3}
-          />
-          <Envelope
-            to={EXHIBITS.oreille.to}
-            piece={piece(EXHIBITS.oreille.n)}
-            title={EXHIBITS.oreille.title}
-            text="Reconnaître la vitesse d’une entité au rythme de ses pas."
-            hand={
-              lastEar ? (
-                <>
-                  dernière{NNBSP}: <span className="env-score">{`${lastEar.score}/${lastEar.total}`}</span>
-                </>
-              ) : (
-                'jamais ouverte'
-              )
-            }
-            rotate={-0.8}
-            delay={0.4}
-          >
-            <svg viewBox="0 0 170 22" className="steps-doodle" aria-hidden>
-              <g fill="currentColor">
-                {[8, 30, 52, 74, 91, 106, 119, 131, 142, 152, 162].map((x, i) => (
-                  <ellipse key={x} cx={x} cy={i % 2 ? 7 : 15} rx="4.5" ry="2.6" />
-                ))}
-              </g>
-            </svg>
-          </Envelope>
-          <Envelope
-            to={EXHIBITS.codex.to}
-            piece={piece(EXHIBITS.codex.n)}
-            title={EXHIBITS.codex.title}
-            text="Preuves, vitesses, seuils et tests sans preuve, entité par entité."
-            hand={`${GHOSTS.length} fiches`}
-            rotate={1.8}
-            labelRotate={0.4}
-            delay={0.5}
-          />
-        </div>
-      </section>
+      {!stacked && shelf}
     </>
   )
 }

@@ -35,7 +35,7 @@
   "summary": "Une entité liée au feu : chaque 3e flamme soufflée déclenche une tentative de chasse, et une flamme allumée près d'elle bloque ses chasses comme un crucifix.",
   "keyTells": [
     "Tente de chasser à n'importe quelle santé mentale après chaque 3e flamme éteinte",
-    "Une flamme à moins de 4 m agit comme un crucifix : elle la souffle au lieu de chasser",
+    "Une flamme à moins de 4 m agit comme un crucifix : il la souffle au lieu de chasser",
     "Utilise les flammes en priorité sur les crucifix pour empêcher ses chasses",
     "Seuil de chasse normal à 60 %, mais pas avant 40 % près de lumières à feu allumées",
     "Seule entité capable d'éteindre deux fois la même flamme en moins de 20 s"
@@ -206,54 +206,54 @@
     {
       "q": "Après combien de flammes éteintes l'Onryo tente-t-il une chasse grâce à sa capacité ?",
       "choices": [
-        "Après chaque 3e flamme",
-        "Après chaque flamme",
-        "Une seule fois, après les 3 premières",
-        "Après 5 flammes"
+        "Après chaque 3e flamme éteinte",
+        "Après chaque 5e flamme éteinte",
+        "Une seule fois, après la 3e flamme éteinte",
+        "Une seule fois, après la 5e flamme éteinte"
       ],
       "answer": 0,
-      "explain": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée, puis le compteur repart. Ce n'est ni à chaque flamme ni une seule fois dans la partie."
+      "explain": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée, puis le compteur repart. Ce n'est ni toutes les 5 flammes ni une seule fois dans la partie."
     },
     {
       "q": "Quel est le seuil de chasse normal de l'Onryo ?",
       "choices": [
-        "60 %",
         "50 %",
+        "60 %",
         "70 %",
         "35 %"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "L'Onryo chasse normalement dès 60 %. 50 % est le seuil standard, 70 % celui du Démon et 35 % celui de l'Ombre."
     },
     {
       "q": "Que fait un Onryo qui tente de chasser à moins de 4 m d'une flamme allumée ?",
       "choices": [
-        "Il souffle la flamme au lieu de chasser",
         "Il s'éloigne de la flamme pour chasser ailleurs",
-        "Il chasse quand même, mais plus lentement",
+        "Il chasse quand même, sans toucher à la flamme",
+        "Il éteint la flamme au lieu de chasser",
         "Il brûle d'abord le crucifix, puis souffle la flamme"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Pour l'Onryo, une flamme agit comme un crucifix, et il l'utilise en priorité. Il n'évite pas activement les flammes : c'est une idée reçue tirée du journal."
     },
     {
       "q": "Une bougie est posée sur un crucifix de rang 1. Le crucifix brûle alors que la bougie est encore allumée. Que peux-tu en conclure ?",
       "choices": [
-        "Ce n'est pas un Onryo",
-        "C'est un Onryo",
+        "C'est forcément un Onryo",
         "C'est forcément un Démon",
-        "Le test ne prouve rien"
+        "Ce n'est pas un Démon",
+        "Ce n'est pas un Onryo"
       ],
-      "answer": 0,
-      "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo, sans pour autant prouver qu'il s'agit d'un Démon."
+      "answer": 3,
+      "explain": "Un Onryo soufflerait la bougie avant d'utiliser le crucifix. Si le crucifix brûle alors que la flamme est allumée, tu élimines l'Onryo, sans pour autant prouver qu'il s'agit d'un Démon, ni l'écarter."
     },
     {
       "q": "Tu rallumes la bougie que l'entité vient de souffler, et elle la souffle de nouveau quelques secondes plus tard. Qu'en conclus-tu ?",
       "choices": [
-        "C'est un Onryo",
-        "Ce n'est pas un Onryo",
-        "C'est un Cauchemar",
-        "Rien : toute entité peut le faire"
+        "C'est forcément un Onryo",
+        "C'est forcément un Démon",
+        "C'est forcément un Cauchemar",
+        "C'est forcément un Esprit"
       ],
       "answer": 0,
       "explain": "Après chaque rallumage, une lumière à feu est protégée de 20 à 80 s. Seul l'Onryo peut éteindre deux fois la même flamme en moins de 20 s : c'est son test définitif."
@@ -261,12 +261,12 @@
     {
       "q": "Que se passe-t-il si tu encenses un Onryo après que son compteur a atteint 3, mais avant qu'il utilise sa capacité ?",
       "choices": [
-        "La capacité est retardée, pas réinitialisée",
-        "Le compteur repart à zéro",
-        "Il chasse immédiatement",
-        "Rien : l'encens n'a aucun effet sur lui"
+        "Le compteur repart à zéro, sans chasse",
+        "Sa chasse est retardée, pas annulée",
+        "Il chasse aussitôt, malgré l'encens",
+        "L'encens n'a aucun effet sur son compteur"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "L'encens repousse la chasse de la capacité sans remettre le compteur à zéro ; en encensant à répétition, tu peux la retarder de plusieurs minutes."
     }
   ],

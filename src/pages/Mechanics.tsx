@@ -1,6 +1,6 @@
-import { useRef, useState, type CSSProperties } from 'react'
-import { FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
-import { Empty } from '../components/ui'
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
+import { Empty, Seg } from '../components/ui'
 import { MECHANICS } from '../data'
 import { isRetained } from '../engine/cards'
 import { NNBSP } from '../engine/format'
@@ -12,6 +12,21 @@ type Style = CSSProperties & Record<`--${string}`, string | number>
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV']
 const SLIP_TILT = [-0.6, 0.45, -0.25, 0.7, -0.45, 0.3]
 
+type Mode = 'read' | 'test'
+const MODES: { value: Mode; label: string }[] = [
+  { value: 'read', label: 'Lire' },
+  { value: 'test', label: 'Me tester' },
+]
+const HOW: Record<Mode, ReactNode> = {
+  read: (
+    <>
+      lis le fait, puis <span className="nowrap">vérifie-toi</span>
+      {NNBSP}: la question en dessous se déplie pour la réponse.
+    </>
+  ),
+  test: <>les faits sont cachés. Réponds dans ta tête, puis touche la question{NNBSP}: la réponse s’affiche, puis le fait.</>,
+}
+
 /** « 1 fait à retenir », « 12 faits à retenir », « aucun fait à retenir ». */
 const toRetain = (n: number) => (n === 0 ? 'aucun fait à retenir' : `${n} ${n > 1 ? 'faits' : 'fait'} à retenir`)
 
@@ -20,6 +35,12 @@ export function MechanicsPage() {
   const topics = MECHANICS.topics
   const [active, setActive] = useState(topics[0]?.id ?? '')
   const [shown, setShown] = useState<Record<string, boolean>>({})
+  // « Lire » : le fait, puis sa question ; « Me tester » : seulement les questions, le fait arrive avec la réponse
+  const [mode, setMode] = useState<Mode>('read')
+  const changeMode = (m: Mode) => {
+    setMode(m)
+    setShown({})
+  }
   const topic = topics.find((t) => t.id === active)
   const factsRef = useRef<HTMLElement>(null)
 
@@ -72,10 +93,10 @@ export function MechanicsPage() {
           <span>
             {totalLearned ? (
               <>
-                <b>{totalLearned}</b> / {totalFacts} {totalLearned > 1 ? 'faits retenus' : 'fait retenu'}
+                <b>{totalLearned}</b> / {totalFacts} {totalLearned > 1 ? 'faits réussis' : 'fait réussi'}
               </>
             ) : (
-              <>aucun fait retenu sur {totalFacts}</>
+              <>aucun fait réussi sur {totalFacts}</>
             )}
           </span>
         </FileHead>
@@ -101,7 +122,7 @@ export function MechanicsPage() {
               Sommaire
             </H>
             <p className="mech-toc-legend">
-              <span className="pencil-note">au crayon</span> : les faits déjà retenus en révision
+              <span className="pencil-note">au crayon</span>{NNBSP}: les faits que tu as réussis dans Réviser
             </p>
             <ol>
               {topics.map((t, k) => {
@@ -126,7 +147,7 @@ export function MechanicsPage() {
                         {total > 0 ? (
                           <>
                             {n}/{total}
-                            <span className="sr-only"> retenus</span>
+                            <span className="sr-only"> réussis dans Réviser</span>
                           </>
                         ) : (
                           'bon à savoir'
@@ -141,7 +162,9 @@ export function MechanicsPage() {
 
           {trueFalse > 0 && (
             <div className="mech-quiz">
-              <TapeButton to="/quiz?topic=mechanics">Vrai ou faux ({trueFalse})</TapeButton>
+              <TapeButton to="/quiz?topic=mechanics">
+                Quiz vrai ou faux · {trueFalse} question{trueFalse > 1 ? 's' : ''}
+              </TapeButton>
             </div>
           )}
         </div>
@@ -163,61 +186,78 @@ export function MechanicsPage() {
             count={
               topic && topicRetained
                 ? learned
-                  ? `${learned} retenu${learned > 1 ? 's' : ''} sur ${topicRetained}`
-                  : `aucun retenu sur ${topicRetained}`
+                  ? `${learned} réussi${learned > 1 ? 's' : ''} sur ${topicRetained}`
+                  : `aucun réussi sur ${topicRetained}`
                 : undefined
             }
           >
             {topic?.title}
           </H>
-          <p className="mech-hint pencil-note">
-            Sous chaque fait, sa question{NNBSP}: déplie le papier pour la réponse.
-            {topicAsides > 0 && <> «{NNBSP}Bon à savoir{NNBSP}»{NNBSP}: sert à relever les preuves, pas à retenir par cœur.</>}
-          </p>
-          <ol className="mech-facts">
-            {topic?.facts.map((f, k) => (
-              <li key={f.id}>
-                <span className="mech-fact-n" aria-hidden>
-                  § {k + 1}
-                </span>
-                <div className="mech-fact-body">
-                  <p className="mech-fact">
-                    {f.text}
-                    {!isRetained(f) && (
-                      <>
-                        {' '}
-                        <span className="pencil-note mech-aside">bon à savoir</span>
-                      </>
-                    )}
-                  </p>
-                  <div className={`slip${shown[f.id] ? ' is-open' : ''}`} style={{ '--r': `${SLIP_TILT[k % SLIP_TILT.length]}deg` } as Style}>
-                    <button
-                      type="button"
-                      className="slip-q"
-                      onClick={() => setShown((s) => ({ ...s, [f.id]: !s[f.id] }))}
-                      aria-expanded={!!shown[f.id]}
-                      aria-controls={shown[f.id] ? `slip-a-${f.id}` : undefined}
-                    >
-                      <span className="slip-tag" aria-hidden>
-                        Q.
-                      </span>
-                      <span className="slip-text">{f.q}</span>
-                      <span className="slip-fold" aria-hidden>
-                        {shown[f.id] ? 'replier' : 'déplier'}
-                      </span>
-                    </button>
-                    {shown[f.id] && (
-                      <p className="slip-a" id={`slip-a-${f.id}`}>
+          <div className="mech-mode">
+            <Seg label="Lire les faits ou me tester" value={mode} onChange={changeMode} options={MODES} />
+          </div>
+          <Consigne className="mech-how">{HOW[mode]}</Consigne>
+          {topicAsides > 0 && (
+            <p className="mech-hint pencil-note">
+              «{NNBSP}bon à savoir{NNBSP}»{NNBSP}: sert à relever les preuves, pas à retenir par cœur.
+            </p>
+          )}
+          <ol className={`mech-facts${mode === 'test' ? ' is-test' : ''}`}>
+            {topic?.facts.map((f, k) => {
+              const open = !!shown[f.id]
+              const fact = (
+                <p className="mech-fact" id={`mech-f-${f.id}`}>
+                  {f.text}
+                  {!isRetained(f) && (
+                    <>
+                      {' '}
+                      <span className="pencil-note mech-aside">bon à savoir</span>
+                    </>
+                  )}
+                </p>
+              )
+              return (
+                <li key={f.id}>
+                  <span className="mech-fact-n" aria-hidden>
+                    § {k + 1}
+                  </span>
+                  <div className="mech-fact-body">
+                    {mode === 'read' && fact}
+                    <div className={`slip${open ? ' is-open' : ''}`} style={{ '--r': `${SLIP_TILT[k % SLIP_TILT.length]}deg` } as Style}>
+                      <button
+                        type="button"
+                        className="slip-q"
+                        onClick={() => setShown((s) => ({ ...s, [f.id]: !s[f.id] }))}
+                        aria-expanded={open}
+                        aria-controls={open ? `slip-a-${f.id}${mode === 'test' ? ` mech-f-${f.id}` : ''}` : undefined}
+                      >
                         <span className="slip-tag" aria-hidden>
-                          R.
+                          Q.
                         </span>
-                        <span>{f.a}</span>
-                      </p>
-                    )}
+                        <span className="slip-text">{f.q}</span>
+                        <span className="slip-fold" aria-hidden>
+                          {open ? 'cacher la réponse' : 'voir la réponse'}
+                        </span>
+                      </button>
+                      {open && (
+                        <p className="slip-a" id={`slip-a-${f.id}`}>
+                          <span className="slip-tag" aria-hidden>
+                            R.
+                          </span>
+                          <span>{f.a}</span>
+                        </p>
+                      )}
+                    </div>
+                    {mode === 'test' &&
+                      (open ? (
+                        <div className="mech-fact-after">{fact}</div>
+                      ) : (
+                        <p className="pencil-note mech-hidden">fait caché</p>
+                      ))}
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              )
+            })}
           </ol>
         </section>
 

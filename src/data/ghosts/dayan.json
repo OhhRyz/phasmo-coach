@@ -105,39 +105,39 @@
   "quiz": [
     {
       "q": "En chasse, l'entité est à moins de 10 m de toi. Tu restes immobile, mais elle garde une vitesse normale puis accélère en te voyant. Que peux-tu en conclure ?",
-      "choices": ["Ce n'est pas une Dayan", "C'est forcément une Dayan", "C'est une Dayan qui ne t'a pas encore vu", "Rien : la Dayan ne réagit qu'aux joueurs qui courent"],
+      "choices": ["Ce n'est pas une Dayan", "C'est forcément une Dayan", "Ce n'est pas un Oni", "C'est forcément un Oni"],
       "answer": 0,
-      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en LdV ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan."
+      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en ligne de vue ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan. Un Oni, à vitesse standard avec l'accélération habituelle, correspond au contraire à ce que tu observes, sans être le seul possible."
     },
     {
       "q": "En chasse, à moins de 10 m de toi, à quelle vitesse va une Dayan si tu restes immobile ?",
-      "choices": ["1,2 m/s", "1,7 m/s", "2,25 m/s", "0,4 m/s"],
-      "answer": 0,
+      "choices": ["1,7 m/s", "1,2 m/s", "2,25 m/s", "0,4 m/s"],
+      "answer": 1,
       "explain": "Immobile, tu la ralentis à 1,2 m/s ; en bougeant, elle passe à 2,25 m/s. 1,7 m/s est sa vitesse au-delà de 10 m, et 0,4 m/s la vitesse minimale du Deogen."
     },
     {
       "q": "Quel est le seuil de chasse de la Dayan si le joueur le plus proche bouge à moins de 10 m d'elle ?",
-      "choices": ["65 %", "50 %", "45 %", "80 %"],
-      "answer": 0,
+      "choices": ["50 %", "45 %", "65 %", "80 %"],
+      "answer": 2,
       "explain": "Bouger près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % sans joueur à moins de 10 m, et à 45 % si le joueur le plus proche reste immobile. 80 % concerne le Yokai."
     },
     {
       "q": "L'entité porte un nom masculin. Que peux-tu éliminer ?",
-      "choices": ["La Dayan (et la Banshee)", "Le Raiju", "L'Onryo", "Aucune entité"],
-      "answer": 0,
-      "explain": "La Dayan est toujours féminine, et la Banshee aussi depuis décembre 2025. Le Raiju et l'Onryo, eux, peuvent être masculins ou féminins."
+      "choices": ["Raiju et Onryo", "Yurei et Yokai", "Hantu et Goryo", "Dayan et Banshee"],
+      "answer": 3,
+      "explain": "La Dayan est toujours féminine, et la Banshee aussi depuis décembre 2025 : un nom masculin élimine les deux. Les autres entités, comme le Raiju, l'Onryo, le Yurei, le Yokai, le Hantu ou le Goryo, peuvent être masculines ou féminines."
     },
     {
       "q": "Avec quelle mise à jour la Dayan a-t-elle été ajoutée ?",
-      "choices": ["Winter's Jest v0.15.1.0 (décembre 2025)", "Chronicle v0.13 (juin 2025)", "Phasmophobia by Alan Wake v0.17.1.0 (mai 2026)", "Willow Rework v0.18.0 (juillet 2026)"],
+      "choices": ["Winter's Jest (décembre 2025)", "Chronicle (juin 2025)", "Alan Wake (mai 2026)", "Willow Rework (juillet 2026)"],
       "answer": 0,
-      "explain": "La Dayan est arrivée avec Winter's Jest le 16 décembre 2025, avec le Gallu et l'Obambo. L'Aswang et le Kormos sont arrivés en mai 2026, le Deildegast en juillet 2026."
+      "explain": "La Dayan est arrivée avec Winter's Jest (v0.15.1.0) le 16 décembre 2025, avec le Gallu et l'Obambo. L'Aswang et le Kormos sont arrivés en mai 2026 avec Phasmophobia by Alan Wake (v0.17.1.0), le Deildegast en juillet 2026 avec le Willow Rework (v0.18.0)."
     },
     {
       "q": "Pourquoi l'accélération en LdV semble-t-elle disparaître quand la Dayan est à moins de 10 m de toi ?",
-      "choices": ["Sa vitesse y devient fixe, mais la LdV continue de s'accumuler et s'applique dès qu'elle ressort des 10 m", "Elle perd définitivement toute accélération en LdV", "Elle devient aveugle à moins de 10 m", "Elle ne peut pas te voir si tu bouges"],
-      "answer": 0,
-      "explain": "Dans le rayon de 10 m, seule compte ta façon de bouger (2,25 ou 1,2 m/s). L'accélération en LdV continue de s'accumuler en arrière-plan et réapparaît dès qu'elle s'éloigne."
+      "choices": ["Elle perd définitivement toute accélération en ligne de vue", "Elle a une vitesse fixe, mais la ligne de vue compte encore", "Elle devient aveugle tant qu'elle est tout près de toi", "Elle ne peut pas te voir tant que tu bouges près d'elle"],
+      "answer": 1,
+      "explain": "Dans le rayon de 10 m, seule compte ta façon de bouger (2,25 ou 1,2 m/s) : sa vitesse y est fixe. L'accélération en ligne de vue continue pourtant de s'accumuler en arrière-plan et s'applique dès qu'elle ressort des 10 m."
     }
   ],
   "changes": [

@@ -177,7 +177,7 @@
       "choices": [
         "2,5 m",
         "5 m",
-        "1 m",
+        "1,5 m",
         "10 m"
       ],
       "answer": 0,
@@ -197,45 +197,45 @@
     {
       "q": "Pendant une chasse, à quelle distance un Yokai entend-il ta voix ?",
       "choices": [
+        "12 m ou moins",
+        "5 m ou moins",
         "2,5 m ou moins",
-        "12 m",
-        "5 m",
-        "À la distance normale"
+        "10 m ou moins"
       ],
-      "answer": 0,
-      "explain": "Sa distance d'écoute et de détection des appareils électroniques tombe à 2,5 m ou moins. 12 m est la distance à laquelle on entend les pas d'un Myling, 5 m la portée de vue du Kormos."
+      "answer": 2,
+      "explain": "Sa distance d'écoute et de détection des appareils électroniques tombe à 2,5 m ou moins. 12 m est la distance à laquelle on entend les pas d'un Myling, 5 m la portée de vue du Kormos, 10 m la portée standard des perturbations électroniques."
     },
     {
       "q": "Pendant une chasse, tu parles à 5 m de l'entité, hors de sa vue, et elle vient droit sur toi. Qu'en conclus-tu ?",
       "choices": [
-        "C'est un Yokai",
+        "C'est forcément un Yokai",
         "C'est forcément un Kormos",
-        "Ce test ne marche qu'avec le chat global",
+        "Ce n'est pas un Kormos",
         "Ce n'est pas un Yokai"
       ],
       "answer": 3,
-      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Rien ne prouve pour autant que ce soit un Kormos, et parler en jeu fonctionne aussi bien que le chat global."
+      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Le Kormos, qui chasse à l'oreille, n'est ni prouvé ni écarté par ce test."
     },
     {
       "q": "Pendant une chasse, comment le Yokai te repère-t-il ?",
       "choices": [
-        "Il est presque aveugle et ne te voit qu'à 5 m",
-        "Il te voit normalement ; seules son ouïe et sa détection d'électronique sont réduites",
+        "Il te voit normalement, mais t'entend mal",
+        "Il est presque aveugle et ne te voit que de près",
         "Il ne repère que les joueurs qui bougent",
-        "Il connaît toujours ta position"
+        "Il sait où tu es, même caché et silencieux"
       ],
-      "answer": 1,
-      "explain": "Le Yokai voit normalement : s'il te voit, il te poursuit. C'est le Kormos qui est presque aveugle et repère les joueurs qui bougent."
+      "answer": 0,
+      "explain": "Le Yokai voit normalement : s'il te voit, il te poursuit. Seules son ouïe et sa détection des appareils électroniques sont réduites (2,5 m). C'est le Kormos qui est presque aveugle et repère les joueurs qui bougent."
     },
     {
       "q": "Quand un Yokai est-il plus actif ?",
       "choices": [
-        "Quand on parle près de lui",
-        "Quand plusieurs joueurs sont à proximité, même en silence",
+        "Quand plusieurs joueurs sont près de lui",
+        "Quand quelqu'un parle près de lui",
         "Quand le disjoncteur est coupé",
-        "Quand une bougie est allumée dans sa pièce"
+        "Quand une bougie brûle dans sa pièce"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Le Yokai est attiré par la voix : il est plus actif quand on parle près de lui et peut chasser jusqu'à 80 % si l'on parle dans sa pièce. C'est l'Oni qui s'agite quand plusieurs joueurs sont à proximité."
     }
   ],

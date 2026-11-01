@@ -183,34 +183,34 @@
     {
       "q": "À quel seuil chasse le Cauchemar si l'interrupteur de la pièce où il se trouve est allumé ?",
       "choices": [
-        "60 %",
         "40 %",
+        "60 %",
         "50 %",
         "35 %"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "Lumière allumée : il attend 40 %. Interrupteur éteint ou ampoules cassées : il chasse dès 60 %."
     },
     {
       "q": "Quel élément détermine le seuil de chasse du Cauchemar ?",
       "choices": [
-        "L'état du disjoncteur",
+        "L'état du disjoncteur de la maison",
+        "La lumière de la pièce où il se trouve",
         "La lumière de la pièce où tu te trouves",
-        "Le nombre de lampes allumées dans toute la maison",
-        "La position de l'interrupteur de la pièce où il se trouve (ou des ampoules cassées)"
+        "Le nombre de lampes allumées dans la maison"
       ],
-      "answer": 3,
+      "answer": 1,
       "explain": "Seule compte la pièce où se trouve l'entité : interrupteur allumé = 40 %, éteint ou ampoules cassées = 60 %, quel que soit l'état du disjoncteur."
     },
     {
       "q": "Que peut faire le Cauchemar si tu allumes une lumière à moins de 4 m de lui ?",
       "choices": [
-        "L'éteindre immédiatement",
         "Lancer une chasse sur-le-champ",
-        "Faire éclater l'ampoule à coup sûr",
-        "Quitter définitivement sa pièce favorite"
+        "Faire éclater l'ampoule à chaque fois",
+        "Éteindre aussitôt cette lumière",
+        "Changer aussitôt de pièce favorite"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "C'est sa capacité : il éteint aussitôt un interrupteur ou une lampe qu'un joueur vient d'allumer à moins de 4 m de lui (pas dans une pièce aux ampoules cassées)."
     },
     {
@@ -218,11 +218,11 @@
       "choices": [
         "L'entité éteint une lampe",
         "L'entité fait éclater une ampoule",
-        "L'entité allume un interrupteur",
-        "L'entité chasse à 60 %"
+        "L'entité chasse dans une pièce sombre",
+        "L'entité allume un interrupteur"
       ],
-      "answer": 2,
-      "explain": "Le Cauchemar ne peut pas allumer les lumières : si l'entité allume un interrupteur, ce n'en est pas un. Éteindre, faire éclater et chasser à 60 % lui correspondent."
+      "answer": 3,
+      "explain": "Le Cauchemar ne peut pas allumer les lumières : si l'entité allume un interrupteur, ce n'en est pas un. Éteindre une lampe, faire éclater une ampoule ou chasser dans une pièce sombre lui correspondent."
     },
     {
       "q": "Quelle entité est la seule capable d'actionner un interrupteur pendant un événement ?",
@@ -238,13 +238,13 @@
     {
       "q": "Vrai ou faux : le Cauchemar se dirige exprès vers les pièces sombres.",
       "choices": [
-        "Vrai : il rejoint toujours la pièce la plus sombre",
-        "Faux : il reste toujours dans sa pièce favorite",
-        "Vrai, mais seulement disjoncteur coupé",
-        "Faux : il erre simplement plus quand sa pièce est éclairée, sans préférence pour le noir"
+        "Vrai, il rejoint la pièce la plus sombre",
+        "Faux, une lumière allumée le fait errer davantage",
+        "Vrai, mais il lui faut le disjoncteur coupé",
+        "Faux, il fuit au contraire les pièces sombres"
       ],
-      "answer": 3,
-      "explain": "C'est une idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité."
+      "answer": 1,
+      "explain": "C'est une idée reçue : une lumière allumée le pousse à sortir plus souvent, mais il ne cherche pas particulièrement l'obscurité, et il ne la fuit pas non plus."
     }
   ],
   "changes": [

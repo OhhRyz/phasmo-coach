@@ -1,5 +1,6 @@
 /* Page : Mécaniques — un manuel de terrain : le sommaire à gauche, le chapitre à droite.
-   Sous chaque fait, la question de révision est un papier plié qui se déplie sur la réponse. */
+   Sous chaque fait, la question de révision est un papier plié qui se déplie sur la réponse.
+   « Me tester » cache les faits : il ne reste que les papiers pliés, le fait revient avec la réponse. */
 
 .mech-entry { margin-bottom: 36px; }
 .mech-title { margin: 0 0 14px; }
@@ -31,7 +32,12 @@
 
 /* ---------- le chapitre ---------- */
 .mech-chapter { scroll-margin-top: 16px; }
-.mech .mech-hint { margin: -6px 0 22px; font-size: 21px; max-width: 26em; }
+.mech .mech-mode { margin: -2px 0 8px; }
+.mech .mech-mode .opts { margin-left: -10px; }
+.mech .mech-mode .opt { min-height: 40px; }
+.mech .mech-how { margin: 0 0 20px; max-width: 34em; }
+.mech .mech-how .nowrap { white-space: nowrap; }
+.mech .mech-hint { margin: -8px 0 22px; font-size: 21px; max-width: 26em; }
 .mech-facts { list-style: none; margin: 0; padding: 0; }
 .mech-facts > li {
   display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 0 4px;
@@ -71,14 +77,22 @@
 .slip-tag { font-family: "Elite", monospace; font-size: 15px; color: var(--ink-3); }
 .slip-text { min-width: 0; }
 .slip-fold {
-  align-self: end; padding-right: 14px;
-  font-family: "Courier Prime", monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+  align-self: end; padding-right: 14px; white-space: nowrap;
+  font-family: "Courier Prime", monospace; font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--ink-2);
+  text-decoration: underline; text-decoration-color: var(--pencil); text-decoration-thickness: 1.5px; text-underline-offset: 4px;
 }
 @media (hover: hover) {
   /* le papier ouvert reste à l'encre : le rouge est réservé au coach et à la correction */
   .slip-q:hover .slip-text { text-decoration: underline; text-decoration-color: var(--pencil); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
   .slip-q:hover .slip-fold { color: var(--ink); }
 }
+
+/* « Me tester » : le fait est caché sous la question, il revient une fois la réponse vue */
+.mech .mech-hidden { margin: 10px 0 0 4px; font-size: 20px; }
+.mech .mech-fact-after { margin-top: 16px; }
+.mech .mech-fact-after .mech-fact { margin: 0; }
+html.js .mech-fact-after { animation: fact-in .45s ease-out .2s both; }
+@keyframes fact-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .slip-q:focus-visible { outline-offset: 2px; }
 
 .slip.is-open .slip-q { clip-path: none; color: var(--ink); }
@@ -114,6 +128,7 @@ html.js .slip-a { animation: slip-unfold .55s cubic-bezier(.2, .8, .3, 1) both; 
   .mech-toc-t { font-size: 16.5px; }
   .mech-toc-c { font-size: 21px; }
   .mech .mech-hint { font-size: 20px; }
+  .mech .mech-mode .opts { margin-left: -6px; }
   .mech-facts > li { grid-template-columns: 34px minmax(0, 1fr); padding: 16px 0 20px; }
   .mech-fact-n { font-size: 18px; }
   .mech .mech-fact { font-size: 16.5px; }

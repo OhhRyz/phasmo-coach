@@ -166,21 +166,21 @@
     {
       "q": "Dans quelles conditions le Djinn passe-t-il à 2,5 m/s ?",
       "choices": [
-        "Près d'un équipement électronique allumé",
-        "Disjoncteur allumé, joueur en LdV et à plus de 3 m",
-        "Quand la santé moyenne est sous 25 %",
-        "Disjoncteur coupé et joueur à moins de 3 m"
+        "Disjoncteur coupé, ligne de vue et moins de 3 m",
+        "Disjoncteur allumé, hors de vue et moins de 3 m",
+        "Disjoncteur allumé, ligne de vue et plus de 3 m",
+        "Disjoncteur coupé, hors de vue et plus de 3 m"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Il faut les trois conditions : disjoncteur allumé, LdV et plus de 3 m. 2,5 m/s près de l'électronique allumée, c'est le Raiju."
     },
     {
       "q": "Que ne fait jamais un Djinn ?",
       "choices": [
-        "Allumer une lumière",
-        "Lancer un objet",
-        "Changer de pièce favorite",
-        "Couper lui-même le disjoncteur"
+        "Allumer une lumière de sa pièce",
+        "Lancer un objet à travers la pièce",
+        "Changer de pièce favorite en partie",
+        "Couper le disjoncteur lui-même"
       ],
       "answer": 3,
       "explain": "Le Djinn ne peut pas couper directement le disjoncteur. S'il le coupe, ce n'est pas un Djinn."
@@ -199,34 +199,34 @@
     {
       "q": "Où apparaît l'EMF quand le Djinn utilise sa capacité ?",
       "choices": [
-        "À l'endroit où se trouve le joueur",
-        "Dans sa pièce favorite",
-        "Au disjoncteur",
-        "Sur la porte d'entrée"
+        "Sur le joueur le plus proche",
+        "Au boîtier du disjoncteur",
+        "Au centre de sa pièce favorite",
+        "Sur la porte d'entrée du lieu"
       ],
-      "answer": 2,
+      "answer": 1,
       "explain": "La capacité laisse un EMF 2 (ou 5) au disjoncteur, pas là où se trouve l'entité ou le joueur."
     },
     {
       "q": "Disjoncteur coupé, comment chasse un Djinn ?",
       "choices": [
-        "Comme une entité standard : 1,7 m/s avec accélération en LdV",
-        "À 2,5 m/s dès qu'il te voit",
-        "À 1,0 m/s tant qu'il ne te détecte pas",
-        "Il ne peut pas chasser tant que le courant est coupé"
+        "1,7 m/s sans aucune accélération en ligne de vue",
+        "2,5 m/s avec accélération standard en ligne de vue",
+        "1,7 m/s avec accélération standard en ligne de vue",
+        "2,5 m/s sans aucune accélération en ligne de vue"
       ],
-      "answer": 0,
-      "explain": "Disjoncteur coupé, le Djinn chasse comme une entité standard : son passage à 2,5 m/s et son drain de 25 % ne se produisent que disjoncteur allumé. Pour le tester, rallume le courant."
+      "answer": 2,
+      "explain": "Disjoncteur coupé, le Djinn chasse comme une entité standard : 1,7 m/s avec l'accélération habituelle en ligne de vue. Son passage à 2,5 m/s et son drain de 25 % ne se produisent que disjoncteur allumé. Pour le tester, rallume le courant."
     },
     {
       "q": "Pendant le test de vitesse du Djinn, que dois-tu éviter pour ne pas le confondre avec un Raiju ?",
       "choices": [
-        "D'avoir de l'électronique allumée près de l'entité",
-        "De laisser le disjoncteur allumé",
-        "De te tenir à plus de 3 m",
-        "De rester dans sa ligne de vue"
+        "De laisser le disjoncteur de la maison allumé",
+        "De te tenir à bonne distance de l'entité",
+        "De rester dans la ligne de vue de l'entité",
+        "D'allumer de l'électronique près de l'entité"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "Le Raiju accélère près de l'électronique allumée. Le disjoncteur allumé, la distance de plus de 3 m et la LdV sont justement nécessaires pour déclencher l'accélération du Djinn."
     }
   ],

@@ -188,45 +188,45 @@
     {
       "q": "À quelle vitesse de base chasse un Moroi tant que la santé mentale moyenne est au-dessus de 45 % ?",
       "choices": [
-        "1,5 m/s",
         "1,7 m/s",
         "2,25 m/s",
+        "1,5 m/s",
         "1,0 m/s"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Le Moroi part de 1,5 m/s au-dessus de 45 % de santé moyenne, puis gagne environ 0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %. Il accélère en plus en ligne de vue."
     },
     {
       "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
       "choices": [
-        "3,71 m/s",
         "3,0 m/s",
         "2,75 m/s",
-        "2,5 m/s"
+        "2,5 m/s",
+        "3,71 m/s"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "À 0 % de santé il part de 2,25 m/s, et 13 s de LdV continue le font monter à 1,65 × cette vitesse : 3,71 m/s, le record du jeu."
     },
     {
       "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 pendant une chasse ?",
       "choices": [
-        "5 s",
         "7 s",
+        "5 s",
         "12 s",
         "3 s"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "7 s au lieu des 5 s standard (les notes de patch annonçaient 7,5 s, mais le jeu applique 7 s)."
     },
     {
       "q": "Comment un joueur se fait-il maudire par un Moroi ?",
       "choices": [
-        "En le prenant en photo",
-        "En marchant dans son sel",
-        "En entendant un de ses sons paranormaux au micro parabolique ou à l'enregistreur de son",
-        "En restant dans sa pièce favorite"
+        "En le prenant en photo pendant un événement",
+        "En entendant un de ses sons au micro parabolique",
+        "En marchant dans le sel qu'il a perturbé",
+        "En restant longtemps dans sa pièce favorite"
       ],
-      "answer": 2,
+      "answer": 1,
       "explain": "La malédiction tombe sur celui qui l'entend au micro parabolique ou à l'enregistreur de son (si le son est enregistré) : sa santé baisse ensuite 2× plus vite, même dans la lumière."
     },
     {
@@ -234,21 +234,21 @@
       "choices": [
         "Un Thayé",
         "Un Deogen",
-        "Un Revenant",
-        "Un Moroi"
+        "Un Moroi",
+        "Un Revenant"
       ],
-      "answer": 3,
+      "answer": 2,
       "explain": "Seul le Moroi règle sa vitesse sur la santé mentale moyenne en temps réel : remonter la santé le ralentit."
     },
     {
       "q": "Pendant une chasse, tu encenses (rang 1) un Moroi lancé à pleine vitesse. Que devient sa vitesse ?",
       "choices": [
-        "Il retombe à sa vitesse de base, puis récupère le bonus de ligne de vue qu'il lui restait",
-        "Il garde sa vitesse maximale",
+        "Il garde sa vitesse maximale, comme si de rien n'était",
         "Il perd tout son bonus de ligne de vue jusqu'à la fin de la chasse",
-        "Il passe à 0,4 m/s jusqu'à la fin de la chasse"
+        "Il ralentit au minimum jusqu'à la fin de la chasse",
+        "Il retombe à sa vitesse de base, puis reprend son bonus"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "Encensé en chasse, le Moroi retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; il récupère ensuite le bonus de ligne de vue qu'il lui restait, et recommence à accélérer s'il te revoit."
     }
   ],

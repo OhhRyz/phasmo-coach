@@ -174,54 +174,54 @@
     {
       "q": "À partir de quel seuil de santé mentale moyenne le Deogen peut-il chasser ?",
       "choices": [
-        "50 %",
         "40 %",
+        "50 %",
         "35 %",
         "75 %"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "Le Deogen ne chasse pas avant 40 % de santé moyenne. 35 % est le seuil de l'Ombre, 75 % celui du Thayé jeune."
     },
     {
       "q": "Comment se comporte la vitesse du Deogen pendant une chasse ?",
       "choices": [
         "1,0 m/s, puis 3,0 m/s dès qu'il te détecte",
-        "2,75 m/s, puis plus lent à chaque chasse",
-        "3,0 m/s de loin, puis 0,4 m/s une fois près de toi",
-        "1,7 m/s avec accélération en LdV"
+        "3,0 m/s de loin, puis 0,4 m/s tout près de toi",
+        "2,75 m/s, puis plus lent d'une chasse à l'autre",
+        "1,7 m/s, puis plus vite en ligne de vue"
       ],
-      "answer": 2,
+      "answer": 1,
       "explain": "Il fonce à 3,0 m/s vers sa cible et ralentit à 0,4 m/s tout près. Le premier choix décrit le Revenant, le deuxième le Thayé."
     },
     {
       "q": "Pendant une chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, fonce sur toi de loin puis avance presque au ralenti une fois tout près. De quelle entité s'agit-il ?",
       "choices": [
-        "Le Deogen",
         "L'Oni",
         "Le Fantôme",
+        "Le Deogen",
         "Le Revenant"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en LdV ; le Fantôme est au contraire presque invisible, et le Revenant accélère quand il te détecte au lieu de ralentir."
     },
     {
       "q": "Quelle est la meilleure façon de survivre à une chasse de Deogen ?",
       "choices": [
-        "Te cacher dans un placard",
-        "Rester immobile et silencieux",
-        "Le faire tourner autour d'un obstacle une fois qu'il est sur toi",
-        "Courir en ligne droite vers le camion"
+        "Te cacher dans un placard ou un casier",
+        "Rester immobile et silencieux dans un coin",
+        "Courir en ligne droite jusqu'au camion",
+        "Tourner autour d'un meuble quand il arrive"
       ],
-      "answer": 2,
+      "answer": 3,
       "explain": "Il te trouve toujours, donc te cacher ou rester immobile ne sert à rien, et de loin il fonce à 3,0 m/s. Tout près, il tombe à 0,4 m/s : en tournant autour d'un obstacle, tu le tiens à distance."
     },
     {
       "q": "Pendant la chasse, l'entité te garde en vue dans un long couloir et accélère peu à peu. Peut-il s'agir d'un Deogen ?",
       "choices": [
-        "Non : le Deogen n'accélère pas en LdV",
-        "Oui : c'est ainsi qu'il rattrape sa cible",
-        "Oui, mais seulement sous 40 % de santé mentale",
-        "Oui, tant qu'il est encore loin de toi"
+        "Non, sa vitesse ne dépend pas de ta ligne de vue",
+        "Non, il ralentit au contraire dès qu'il te voit",
+        "Oui, c'est ainsi qu'il rattrape sa cible au loin",
+        "Oui, quand la santé moyenne de l'équipe est basse"
       ],
       "answer": 0,
       "explain": "Le Deogen n'a pas l'accélération en ligne de vue : il sait toujours où est sa cible, fonce à 3,0 m/s de loin puis ralentit jusqu'à 0,4 m/s une fois tout près. Une entité qui accélère peu à peu en te voyant n'est pas un Deogen."
@@ -229,13 +229,13 @@
     {
       "q": "L'entité tente une chasse alors que la santé moyenne de l'équipe est à 45 % (sans objet maudit). Qu'en déduis-tu ?",
       "choices": [
-        "Ce n'est pas un Deogen",
         "C'est forcément un Deogen",
-        "C'est forcément une Ombre",
-        "Cela ne permet rien d'exclure"
+        "Ce n'est pas un Deogen",
+        "C'est forcément un Démon",
+        "Ce n'est pas un Démon"
       ],
-      "answer": 0,
-      "explain": "Le Deogen ne chasse qu'en dessous de 40 % : une tentative à 45 % l'élimine (l'Ombre, à 35 %, est exclue aussi)."
+      "answer": 1,
+      "explain": "Le Deogen ne chasse qu'en dessous de 40 % : une tentative à 45 % l'élimine (l'Ombre, à 35 %, est exclue aussi). Le Démon, qui peut chasser à toute santé mentale, reste possible, sans être le seul."
     }
   ],
   "changes": [],

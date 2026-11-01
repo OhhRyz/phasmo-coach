@@ -1,27 +1,45 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { FileHead, H, IndexCard, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
-import { getGhost, MECHANICS } from '../data'
-import type { Card, CardKind, CoachNote } from '../engine/cards'
-import { fr, NBSP, NNBSP, relativeDays, safeDate } from '../engine/format'
+import {
+  FileHead,
+  H,
+  IndexCard,
+  JournalBox,
+  Notebook,
+  Page,
+  PaperButton,
+  RoughCircle,
+  Stamp,
+  Tape,
+  TapeButton,
+  TypedLink,
+} from '../components/journal/Journal'
+import { ProgressBar } from '../components/ui'
+import { getGhost, GHOSTS, MECHANICS } from '../data'
+import { namesGhost, type Card, type CardKind, type CoachNote } from '../engine/cards'
+import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate } from '../engine/format'
 import { isCoachNote, isOwnNote } from '../engine/notes'
 import { buildReviewQueue, unseenCards } from '../engine/progress'
-import { humanDuration, isDue, schedule, type Grade } from '../engine/srs'
+import { questionForCard, type Question } from '../engine/quiz'
+import { humanDuration, isDue, schedule, type CardState, type Grade } from '../engine/srs'
 import { ignoreKey } from '../engine/keys'
 import type { Profile } from '../store/schema'
 import { useStore } from '../store/store'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
-const GRADES: { g: Grade; label: string; cls: string; tone: 'red' | 'violet' | 'ink'; rotate: number }[] = [
-  { g: 1, label: 'À revoir', cls: 'again', tone: 'red', rotate: -4 },
-  { g: 2, label: 'Difficile', cls: 'hard', tone: 'violet', rotate: 2.5 },
-  { g: 3, label: 'Bien', cls: 'good', tone: 'ink', rotate: -2 },
-  { g: 4, label: 'Facile', cls: 'easy', tone: 'ink', rotate: 3.5 },
-]
+/** Juste : la carte s'espace (« Bien ») ; faux ou « Je ne sais pas » : elle revient vite (« À revoir »). */
+const RIGHT: Grade = 3
+const WRONG: Grade = 1
 
 const REQUEUE_WITHIN = 20 * 60_000
 /** Cartes nouvelles proposées d'un coup après la séance. */
 const LEARN_MORE = 10
+/** L'explication de la répétition espacée, montrée pendant la première séance, jusqu'à ce qu'on la ferme. */
+const HELP_KEY = 'phasmo-coach/aide-revision'
+
+const LETTERS = 'ABCD'
+/** Au-delà, une réponse court sur plusieurs lignes : on entoure sa lettre plutôt que tout le bloc. */
+const SHORT_ANSWER = 18
 
 /** Ce que demande la carte, tapé en haut à droite de la fiche. */
 const KIND_LABEL: Record<CardKind, string> = {
@@ -41,13 +59,26 @@ const STAMP_DATE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'sh
 const pileLayers = (left: number) => (left <= 0 ? 0 : Math.min(14, Math.ceil(Math.sqrt(left) * 2.4)))
 
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
-const narrow = () => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 759px)').matches
 
 /** Le mot seul, accordé au nombre (le nombre est composé à part, souvent en gras). */
 const word = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
 
 /** « 10 min », « 4 j » : le nombre ne quitte pas son unité. */
 const dur = (ms: number) => humanDuration(ms).replace(' ', NBSP)
+
+/** Quand la carte revient : « dans 10 min » en apprentissage, « demain », « dans 3 jours » ensuite. */
+function comesBack(s: CardState, now: number): string {
+  if (s.phase === 'review') return relativeDays(s.due, now).replace(/(\d) /u, `$1${NBSP}`)
+  return s.due <= now ? 'tout de suite' : `dans ${dur(s.due - now)}`
+}
+
+function readHelpDismissed(): boolean {
+  try {
+    return localStorage.getItem(HELP_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 /** Qui a écrit la note : le coach (stylo rouge), la personne qui tient le carnet, ou quelqu'un d'autre. */
 type Hand = 'coach' | 'mine' | 'other'
@@ -77,7 +108,7 @@ function cardTitle(c: Card, notes: CoachNote[], profile: Profile): { name: strin
   return { name: deckLabel(c), kind: KIND_LABEL[c.kind] }
 }
 
-/** Fiche de séance : chaque carte notée y reçoit son tampon. */
+/** Fiche de séance : chaque réponse y reçoit son tampon. */
 function SessionCard({
   rows,
   closed,
@@ -97,34 +128,34 @@ function SessionCard({
       <h3>Fiche de séance</h3>
       <div className="cols">
         <span>Carte</span>
-        <span>Note</span>
+        <span>Réponse</span>
       </div>
       <ol>
         {hidden > 0 && (
           <li className="rv-more-rows">
             <span className="rv-s-name">
-              … et {hidden} {word(hidden, 'carte')} plus tôt
+              … et {hidden} {word(hidden, 'réponse')} plus tôt
             </span>
             <span />
           </li>
         )}
         {shown.length === 0 && (
           <li>
-            <span className="rv-s-name rv-s-empty">aucune carte notée pour l’instant</span>
+            <span className="rv-s-name rv-s-empty">aucune réponse pour l’instant</span>
             <span />
           </li>
         )}
         {shown.map((r, k) => {
           const { name, kind } = cardTitle(r.card, notes, profile)
-          const gr = GRADES.find((x) => x.g === r.g)!
+          const ok = r.g >= 3
           return (
             <li key={`${r.id}-${r.t}`}>
               <span className="rv-s-name">
                 {name}
                 {kind && <small>{kind}</small>}
               </span>
-              <Stamp small tone={gr.tone} plain rotate={[-3, 2, -1.5, 3][k % 4]} thunk={k === shown.length - 1} delay={0.05}>
-                {gr.label}
+              <Stamp small tone={ok ? 'ink' : 'red'} plain={ok} rotate={[-3, 2, -1.5, 3][k % 4]} thunk={k === shown.length - 1} delay={0.05}>
+                {ok ? 'Exact' : 'À revoir'}
               </Stamp>
             </li>
           )
@@ -139,20 +170,96 @@ function SessionCard({
   )
 }
 
+/** La réponse donnée à la carte en cours (la note est déjà enregistrée : on lit la correction). */
+interface Outcome {
+  cardId: string
+  /** le choix touché ; null pour « Je ne sais pas » */
+  choice: string | null
+  ok: boolean
+  /** la carte revient plus loin dans la séance */
+  again: boolean
+  next: CardState
+  at: number
+}
+
+/** Une ligne de choix, comme une case de la copie : cochée quand on la touche, puis corrigée au stylo rouge. */
+function ChoiceRow({
+  q,
+  c,
+  i,
+  outcome,
+  onPick,
+}: {
+  q: Question
+  c: Question['choices'][number]
+  i: number
+  outcome: Outcome | null
+  onPick: (id: string) => void
+}) {
+  const answered = !!outcome
+  const picked = outcome?.choice === c.id
+  const right = q.correct.includes(c.id)
+  const long = c.label.length > SHORT_ANSWER
+  const st = !answered ? '' : right ? 'right' : picked ? 'wrong' : 'idle'
+  return (
+    <li>
+      <button
+        type="button"
+        className={`rv-choice ${st}`}
+        disabled={answered}
+        aria-keyshortcuts={`${i + 1} ${LETTERS[i].toLowerCase()}`}
+        onClick={() => onPick(c.id)}
+      >
+        <JournalBox state={picked ? 'yes' : 'empty'} seed={`${q.id}-${c.id}`} delay={0.05 + i * 0.04} />
+        <span className="rv-letter">
+          {answered && right && long ? (
+            <RoughCircle seed={`${q.id}-${c.id}-ok`} padX={0.3} padY={0.12} delay={0.2} width={2}>
+              {LETTERS[i]}
+            </RoughCircle>
+          ) : (
+            LETTERS[i]
+          )}
+          .
+        </span>
+        <span className="rv-label">
+          {answered && right && !long ? (
+            <RoughCircle seed={`${q.id}-${c.id}-ok`} padX={0.06} padY={0.22} delay={0.2} width={2}>
+              {c.label}
+            </RoughCircle>
+          ) : (
+            c.label
+          )}
+        </span>
+        {answered && right && <span className="sr-only">{NNBSP}: bonne réponse</span>}
+        {picked && !right && <span className="sr-only">{NNBSP}: ton choix, faux</span>}
+      </button>
+    </li>
+  )
+}
+
 export function Review() {
   const { state, deck, review, dispatch } = useStore()
   const [queue, setQueue] = useState<Card[]>(() => buildReviewQueue(state, deck, Date.now()))
-  const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(0)
   const [good, setGood] = useState(0)
   const [finished, setFinished] = useState(false)
-  // la carte qu'on vient de noter revient plus loin dans la pile (« À revoir », « Difficile »…)
-  const [requeued, setRequeued] = useState(false)
-  // début de séance : sert seulement à relire, dans le journal, les cartes notées depuis
+  // début de séance : relit dans le journal les réponses données depuis, et fixe le jour des choix
   const [since, setSince] = useState(() => Date.now())
+  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  // carte sans choix : la réponse est retournée, on dit si on savait
+  const [revealed, setRevealed] = useState(false)
+  // carte sans choix, déjà notée : quand elle revient (dit sur la carte suivante)
+  const [previous, setPrevious] = useState<string | null>(null)
+  // passages de chaque carte dans la séance : une carte qui revient change l'ordre de ses choix
+  const [passes, setPasses] = useState<Record<string, number>>({})
+  const [helpOpen, setHelpOpen] = useState(() => !readHelpDismissed())
+  // « Carte 3 sur 12 » : les cartes distinctes de la séance (une carte qui repasse ne l'allonge pas)
+  const [total, setTotal] = useState(queue.length)
+  const [ordinals, setOrdinals] = useState<Record<string, number>>({})
+  // cartes terminées pour la séance (leur dernière réponse ne les fait pas repasser) : le trait d'avancement
+  const [settled, setSettled] = useState(0)
 
   const card = queue[0]
-  const cardState = card ? state.cards[card.id] : undefined
   const now = Date.now()
   const remainingNew = useMemo(() => unseenCards(deck, state.cards, state.settings).length, [deck, state.cards, state.settings])
   const graded = useMemo(() => {
@@ -162,6 +269,18 @@ export function Review() {
       .map((l) => ({ ...l, card: byId.get(l.id) }))
       .filter((l): l is typeof l & { card: Card } => !!l.card)
   }, [state.log, deck, since])
+  // première séance : rien au journal avant elle
+  const firstSession = useMemo(() => !state.log.some((l) => l.t < since), [state.log, since])
+
+  const day = useMemo(() => dayKey(since), [since])
+  const pass = card ? (passes[card.id] ?? 0) : 0
+  const question = useMemo(
+    () => (card ? questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, notes: state.notes, day: pass ? `${day}#${pass}` : day }) : null),
+    [card, day, pass, state.notes],
+  )
+  // l'état de la carte quand elle arrive : « Nouvelle » ne disparaît pas sous les yeux une fois la réponse notée
+  const cardKey = card ? `${card.id}#${pass}` : ''
+  const arrival = useMemo(() => (card ? state.cards[card.id] : undefined), [cardKey])
 
   const finish = useCallback(
     (reviewed: number, correct: number) => {
@@ -176,9 +295,31 @@ export function Review() {
     [dispatch],
   )
 
-  const grade = useCallback(
-    (g: Grade) => {
-      if (!card || !revealed || finished) return
+  /** Carte suivante ; une carte à revoir dans la séance repart plus loin dans la pile. */
+  const advance = useCallback(
+    (o: Outcome, reviewed: number, correct: number) => {
+      const rest = queue.slice(1)
+      if (o.again && queue[0]) {
+        // d'autant plus loin que son échéance est lointaine
+        const gap = Math.max(3, Math.round((o.next.due - o.at) / 60_000))
+        rest.splice(Math.min(rest.length, gap), 0, queue[0])
+        setPasses((p) => ({ ...p, [o.cardId]: (p[o.cardId] ?? 0) + 1 }))
+      }
+      setOutcome(null)
+      setRevealed(false)
+      setQueue(rest)
+      if (rest.length === 0) finish(reviewed, correct)
+    },
+    [queue, finish],
+  )
+
+  /**
+   * Note la carte : juste → « Bien » (elle s'espace), faux ou « Je ne sais pas » → « À revoir » (elle revient vite).
+   * Un QCM montre ensuite la correction ; une carte sans choix passe aussitôt à la suivante.
+   */
+  const record = useCallback(
+    (g: Grade, choice?: string | null) => {
+      if (!card || finished || outcome) return
       const at = Date.now()
       const next = schedule(state.cards[card.id], g, at)
       review(card.id, g)
@@ -186,64 +327,101 @@ export function Review() {
       const correct = good + (g >= 3 ? 1 : 0)
       setDone(reviewed)
       setGood(correct)
-      setRevealed(false)
-      const rest = queue.slice(1)
-      const again = next.due - at < REQUEUE_WITHIN
-      if (again) {
-        // la carte revient plus loin dans la séance, d'autant plus loin que son échéance est lointaine
-        const gap = Math.max(3, Math.round((next.due - at) / 60_000))
-        rest.splice(Math.min(rest.length, gap), 0, card)
+      const o: Outcome = { cardId: card.id, choice: choice ?? null, ok: g >= 3, again: next.due - at < REQUEUE_WITHIN, next, at }
+      setOrdinals((m) => (m[card.id] ? m : { ...m, [card.id]: Object.keys(m).length + 1 }))
+      if (!o.again) setSettled((n) => n + 1)
+      if (choice === undefined) {
+        const when = comesBack(next, at)
+        setPrevious(`la carte précédente ${o.again ? `repasse ${when}, plus loin dans cette séance` : `revient ${when}`}`)
+        advance(o, reviewed, correct)
+      } else {
+        setPrevious(null)
+        setOutcome(o)
       }
-      setRequeued(again && rest[0]?.id !== card.id)
-      setQueue(rest)
-      if (rest.length === 0) finish(reviewed, correct)
     },
-    [card, revealed, finished, state.cards, review, done, good, queue, finish],
+    [card, finished, outcome, state.cards, review, done, good, advance],
   )
+
+  const pick = useCallback(
+    (id: string | null) => {
+      if (!question) return
+      record(id != null && question.correct.includes(id) ? RIGHT : WRONG, id)
+    },
+    [question, record],
+  )
+  const goOn = useCallback(() => {
+    if (outcome) advance(outcome, done, good)
+  }, [outcome, advance, done, good])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // les boutons de note restent utilisables au clavier (1 à 4) même s'ils ont le focus
-      if (ignoreKey(e, (el) => !!el.closest('.grades, .flash-reveal'))) return
+      // sur un choix ou « Je ne sais pas », les chiffres et lettres restent actifs ; Entrée et Espace y gardent leur rôle
+      if (ignoreKey(e, (el) => !!el.closest('.rv-card') && e.key !== 'Enter' && e.key !== ' ')) return
       // fin de séance : la carte suivante est encore en tête de file, mais hors de l'écran
       if (!card || finished) return
-      if (!revealed && (e.key === ' ' || e.key === 'Enter')) {
-        e.preventDefault()
-        setRevealed(true)
-      } else if (revealed && ['1', '2', '3', '4'].includes(e.key)) {
-        grade(Number(e.key) as Grade)
-      }
+      const key = e.key.toLowerCase()
+      if (question) {
+        if (outcome) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            goOn()
+          }
+          return
+        }
+        const k = /^[1-4]$/.test(key) ? Number(key) - 1 : /^[a-d]$/.test(key) ? key.charCodeAt(0) - 97 : -1
+        const c = question.choices[k]
+        if (c) {
+          e.preventDefault()
+          pick(c.id)
+        }
+      } else if (!revealed) {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault()
+          setRevealed(true)
+        }
+      } else if (key === 'o') record(RIGHT)
+      else if (key === 'n') record(WRONG)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [card, revealed, finished, grade])
+  }, [card, finished, question, outcome, revealed, goOn, pick, record])
 
-  // présentation seulement : la nouvelle carte revient à l'écran (sur téléphone, on note sous la carte)
   const pileRef = useRef<HTMLDivElement>(null)
-  const backRef = useRef<HTMLDivElement>(null)
-  const gradesRef = useRef<HTMLElement>(null)
+  const promptRef = useRef<HTMLHeadingElement>(null)
+  const actRef = useRef<HTMLDivElement>(null)
+  const answerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
-  useEffect(() => {
-    const el = pileRef.current
-    if (el && done > 0 && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' })
-    // le focus suit la carte : le bouton « Retourner la carte » de la suivante (les tampons sont désactivés)
-    if (done > 0) document.querySelector<HTMLElement>('.rv-pile .flash-reveal button')?.focus({ preventScroll: true })
-  }, [done])
 
-  // carte retournée : le focus passe au verso (lu par les lecteurs d'écran, Tab mène ensuite aux tampons) ;
-  // sur téléphone, les tampons remontent au-dessus de la barre d'onglets sans faire sortir le verso par le haut
+  // nouvelle carte : elle revient en haut de l'écran, et le focus sur sa question (Tab mène aux choix)
   useEffect(() => {
-    if (!revealed) return
-    const back = backRef.current
-    back?.focus({ preventScroll: true })
-    const grades = gradesRef.current
-    if (!back || !grades || !narrow()) return
-    const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom) || 0
-    const want = grades.getBoundingClientRect().bottom - (window.innerHeight - pad)
-    const room = back.getBoundingClientRect().top - 12
-    const dy = Math.min(want, room)
-    if (dy > 0) window.scrollBy({ top: dy, behavior: reducedMotion() ? 'auto' : 'smooth' })
-  }, [revealed])
+    if (done === 0 || !cardKey) return
+    const el = pileRef.current
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' })
+    promptRef.current?.focus({ preventScroll: true })
+  }, [cardKey])
+
+  // réponse donnée (ou carte retournée) : l'action suivante prend le focus et reste à l'écran, au-dessus
+  // de la barre d'onglets du téléphone (scroll-padding de la page, marge de .rv-act)
+  useEffect(() => {
+    if (!outcome && !revealed) return
+    const act = actRef.current
+    if (outcome) act?.querySelector<HTMLElement>('.btn-tape')?.focus({ preventScroll: true })
+    else answerRef.current?.focus({ preventScroll: true })
+    const behavior: ScrollBehavior = reducedMotion() ? 'auto' : 'smooth'
+    const show = () => {
+      if (!act?.isConnected) return
+      // téléphone : le bouton colle au bas de l'écran ; on fait monter la correction (tampon et premières lignes) au-dessus de lui
+      const back = act.parentElement?.querySelector<HTMLElement>('.rv-feedback .rv-back')
+      if (back && getComputedStyle(act).position === 'sticky') {
+        const b = back.getBoundingClientRect()
+        const dy = Math.min(b.bottom, b.top + 150) - (act.getBoundingClientRect().top - 12)
+        if (dy > 0) window.scrollBy({ top: Math.min(dy, b.top - 12), behavior })
+      } else act.scrollIntoView({ block: 'nearest', behavior })
+    }
+    show()
+    // la bonne réponse passe en gras : une police pas encore chargée peut allonger la fiche après coup
+    document.fonts?.ready.then(show)
+  }, [outcome, revealed])
 
   useEffect(() => {
     if (!finished) return
@@ -253,13 +431,28 @@ export function Review() {
 
   /** Nouvelle séance : les compteurs repartent de zéro (la précédente est déjà au registre). */
   const restart = (extraNew: number) => {
-    setQueue(buildReviewQueue(state, deck, Date.now(), extraNew))
+    const fresh = buildReviewQueue(state, deck, Date.now(), extraNew)
+    setQueue(fresh)
+    setTotal(fresh.length)
+    setOrdinals({})
+    setSettled(0)
     setDone(0)
     setGood(0)
-    setRequeued(false)
+    setOutcome(null)
     setRevealed(false)
+    setPrevious(null)
+    setPasses({})
     setSince(Date.now())
     setFinished(false)
+  }
+
+  const closeHelp = () => {
+    setHelpOpen(false)
+    try {
+      localStorage.setItem(HELP_KEY, '1')
+    } catch {
+      /* navigation privée : elle se refermera pour cette séance seulement */
+    }
   }
 
   /* ---------- fin de séance, ou rien à revoir ---------- */
@@ -282,6 +475,22 @@ export function Review() {
     }
     const nextWhen =
       nextDue === Infinity ? '' : nextPhase === 'review' ? relativeDays(nextDue, now).replace(/(\d) /, `$1${NBSP}`) : `dans ${dur(nextDue - now)}`
+    // ce qui revient quand : les cartes vues pendant la séance, groupées par retour
+    const returns: { when: string; due: number; n: number }[] = []
+    if (ended) {
+      for (const id of new Set(graded.map((r) => r.id))) {
+        const s = state.cards[id]
+        if (!s) continue
+        const when = comesBack(s, now)
+        const row = returns.find((r) => r.when === when)
+        if (row) {
+          row.n++
+          row.due = Math.min(row.due, s.due)
+        } else returns.push({ when, due: s.due, n: 1 })
+      }
+      returns.sort((a, b) => a.due - b.due)
+    }
+    const missed = done - good
     return (
       <Notebook className="rv rv-done">
         <Page side="left" section="2" label={title}>
@@ -298,17 +507,32 @@ export function Review() {
             <>
               <p className="rv-count">
                 <b>{done}</b>
-                <span>{word(done, 'carte révisée', 'cartes révisées')}</span>
+                <span>{word(done, 'réponse', 'réponses')}</span>
               </p>
               <p className="rv-lead">
-                {good === 0
-                  ? `Aucune jugée «${NNBSP}Bien${NNBSP}» ou «${NNBSP}Facile${NNBSP}».`
-                  : `Dont ${good} ${word(good, 'jugée', 'jugées')} «${NNBSP}Bien${NNBSP}» ou «${NNBSP}Facile${NNBSP}».`}{' '}
-                Les cartes difficiles reviendront plus tôt, les autres s’espaceront.
+                {good === 0 ? 'Aucune juste' : `${good} ${word(good, 'juste')}`}
+                {', '}
+                {missed === 0 ? 'aucune à revoir' : `${missed} à revoir`}. Les cartes réussies reviendront plus tard, les autres très
+                vite{NNBSP}: c’est ce qui les fixe en mémoire.
               </p>
+              {returns.length > 0 && (
+                <section className="rv-returns" aria-labelledby="h-rv-returns">
+                  <h2 id="h-rv-returns">Prochains retours</h2>
+                  <ul>
+                    {returns.map((r) => (
+                      <li key={r.when}>
+                        <span>{r.when.charAt(0).toUpperCase() + r.when.slice(1)}</span>
+                        <span>
+                          {r.n} {word(r.n, 'carte')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </>
           ) : finished && pending > 0 ? (
-            <p className="rv-lead">Séance interrompue avant la première note{NNBSP}: les cartes du jour t’attendent toujours.</p>
+            <p className="rv-lead">Séance interrompue avant la première réponse{NNBSP}: les cartes du jour t’attendent toujours.</p>
           ) : (
             <p className="rv-lead">
               Les cartes reviennent au moment où tu risques de les oublier. Rien à revoir pour l’instant
@@ -398,17 +622,73 @@ export function Review() {
     )
   }
 
+  /* ---------- la carte ---------- */
   const ghost = card.ghostId ? getGhost(card.ghostId) : undefined
-  const left = queue.length - 1
   const isNote = card.deck === 'coach'
   const note = isNote ? state.notes.find((n) => `n:${n.id}` === card.id) : undefined
   // seules les vraies notes du coach sont au stylo rouge ; une note de l'élève reste à l'encre
   const hand = isNote ? handOf(note, state.profile) : undefined
   // le texte d'une note reste tel qu'il a été écrit ; le reste reçoit la typographie française
   const text = (s: string) => (isNote ? s : fr(s))
-  // l'en-tête ne doit jamais souffler la réponse : pas d'entité avant de retourner la carte
-  const headLeft = isNote ? noteLabel(note, state.profile) : card.kind === 'reverse' && !revealed ? 'Entité inconnue' : deckLabel(card)
-  const headRight = isNote ? (revealed ? (ghost?.name ?? '') : '') : KIND_LABEL[card.kind]
+  const answered = !!outcome
+  const shown = answered || revealed
+  // l'en-tête ne souffle jamais la réponse : l'entité n'y paraît qu'une fois nommée par la question, ou après la réponse
+  const prompt = question ? question.prompt : text(card.front)
+  const quote = question ? question.quote : card.quote ? text(card.quote) : undefined
+  const hides = !isNote && !!ghost && !namesGhost(`${prompt} ${quote ?? ''}`, ghost) && card.deck === 'ghost'
+  const headLeft = isNote ? noteLabel(note, state.profile) : hides && !shown ? 'Entité inconnue' : deckLabel(card)
+  const headRight = isNote ? (shown ? (ghost?.name ?? '') : '') : KIND_LABEL[card.kind]
+
+  // rang de la carte parmi les cartes distinctes de la séance ; une carte qui repasse garde le sien
+  const position = Math.min(total, ordinals[card.id] ?? Object.keys(ordinals).length + 1)
+  const last = queue.length === 1 && !outcome?.again
+  const left = queue.length - 1
+
+  // le verso : ce qui n'est pas déjà écrit dans la bonne réponse ou dans la citation
+  const rightLabel = question?.choices.find((c) => question.correct.includes(c.id))?.label
+  const backText = card.kind === 'test' && question ? question.explain : text(card.back)
+  const showBack = backText !== rightLabel && backText !== quote
+  const instruction = question
+    ? answered
+      ? 'Lis la correction, puis passe à la carte suivante.'
+      : 'Touche la bonne réponse.'
+    : revealed
+      ? `Dis honnêtement si tu savais${NNBSP}: la carte reviendra plus tôt sinon.`
+      : `Cherche la réponse de tête, puis touche «${NNBSP}Voir la réponse${NNBSP}».`
+
+  // première séance : la révision espacée en deux phrases, au crayon (en haut sur téléphone, sur la page de droite sinon)
+  const help = (where: string) =>
+    helpOpen &&
+    firstSession && (
+      <aside className={`rv-help ${where}`} aria-label="La révision espacée">
+        <p className="pencil-note">
+          La révision espacée te repose chaque carte juste avant que tu l’oublies. Bonne réponse{NNBSP}: elle revient plus tard, demain
+          puis de plus en plus loin. Erreur{NNBSP}: elle repasse dans quelques minutes.
+        </p>
+        <TypedLink onClick={closeHelp}>Compris</TypedLink>
+      </aside>
+    )
+
+  const verso = (
+    <>
+      {showBack && (isNote ? <p className="rv-hand hand">{backText}</p> : <p className="rv-answer">{backText}</p>)}
+      {card.backList && card.backList.length > 0 && (
+        <ul className={isNote ? 'rv-list rv-list--hand' : 'rv-list'}>
+          {card.backList.map((b, i) => (
+            <li key={i} className={isNote ? 'hand' : undefined}>
+              {text(b)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {isNote && note?.author && <p className="rv-sign hand">— {note.author}</p>}
+      {ghost && (
+        <p className="rv-more">
+          <TypedLink to={`/codex/${ghost.id}`}>Relire la fiche {ghost.name}</TypedLink>
+        </p>
+      )}
+    </>
+  )
 
   return (
     <Notebook className="rv">
@@ -418,122 +698,153 @@ export function Review() {
           <span>Séance du {SHORT.format(now)}</span>
         </FileHead>
 
-        <H as="h1" count={`carte ${done + 1}`}>
-          Révision du jour
-        </H>
+        <H as="h1">Révision du jour</H>
 
-        <div ref={pileRef} className="rv-pile" style={{ '--left': pileLayers(left) } as Style} aria-live="polite">
+        <div className="rv-progress">
+          <p className="rv-step" aria-live="polite">
+            Carte <b>{position}</b> sur {total}
+            {pass > 0 && <span className="rv-again"> · à nouveau</span>}
+          </p>
+          <ProgressBar value={total ? settled / total : 0} label="Cartes terminées pour cette séance" />
+        </div>
+
+        {help('rv-help--top')}
+        {previous && <p className="pencil-note rv-requeued">{previous}</p>}
+
+        <div ref={pileRef} className="rv-pile" style={{ '--left': pileLayers(left) } as Style}>
           <IndexCard
-            key={card.id}
+            key={cardKey}
             className={`rv-card settle${isNote ? ' rv-card--note' : ''}${hand && hand !== 'coach' ? ' rv-card--mine' : ''}`}
             head={headLeft}
             right={headRight}
             clip={isNote}
             rotate={-0.4}
           >
-            <div className="rv-front">
-              <h2 className="rv-question">{text(card.front)}</h2>
-              {card.quote && <blockquote className="rv-quote">{text(card.quote)}</blockquote>}
-              <div className="rv-front-foot">
-                {!revealed && (
-                  <span className="flash-reveal">
-                    <PaperButton onClick={() => setRevealed(true)} rotate={-0.8}>
-                      Retourner la carte <span className="kbd">Espace</span>
-                    </PaperButton>
-                  </span>
-                )}
-                {!cardState && (
-                  <Stamp small tone="violet" rotate={4}>
-                    Nouvelle
-                  </Stamp>
-                )}
-                {cardState?.phase === 'relearning' && (
-                  <Stamp small tone="pencil" rotate={-3}>
-                    À consolider
-                  </Stamp>
-                )}
-              </div>
+            <div className="rv-instr-line">
+              <p className="rv-instr">{instruction}</p>
+              {!arrival && (
+                <Stamp small tone="violet" rotate={4}>
+                  Nouvelle
+                </Stamp>
+              )}
+              {arrival?.phase === 'relearning' && (
+                <Stamp small tone="pencil" rotate={-3}>
+                  À consolider
+                </Stamp>
+              )}
             </div>
+            <h2 className="rv-question" ref={promptRef} tabIndex={-1}>
+              {prompt}
+            </h2>
+            {quote && <blockquote className="rv-quote">{quote}</blockquote>}
 
-            {revealed && (
-              <div className="rv-back" ref={backRef} tabIndex={-1}>
-                <p className="rv-verso">Au dos</p>
-                {isNote ? (
-                  <p className="rv-hand hand">{card.back}</p>
-                ) : (
-                  <p className="rv-answer">{fr(card.back)}</p>
+            {question ? (
+              <>
+                <ol className="rv-choices" aria-label="Réponses possibles">
+                  {question.choices.map((c, i) => (
+                    <ChoiceRow key={c.id} q={question} c={c} i={i} outcome={outcome} onPick={pick} />
+                  ))}
+                </ol>
+                {!answered && (
+                  <div className="rv-dunno">
+                    <TypedLink onClick={() => pick(null)}>Je ne sais pas</TypedLink>
+                    <span className="rv-keys" aria-hidden>
+                      touches 1 à {question.choices.length}, ou A à {LETTERS[question.choices.length - 1]}
+                    </span>
+                  </div>
                 )}
-                {card.backList && card.backList.length > 0 && (
-                  <ul className={isNote ? 'rv-list rv-list--hand' : 'rv-list'}>
-                    {card.backList.map((b, i) => (
-                      <li key={i} className={isNote ? 'hand' : undefined}>
-                        {text(b)}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {isNote && note?.author && <p className="rv-sign hand">— {note.author}</p>}
-                {ghost && (
-                  <p className="rv-more">
-                    <TypedLink to={`/codex/${ghost.id}`}>Relire la fiche {ghost.name}</TypedLink>
-                  </p>
-                )}
-              </div>
+              </>
+            ) : (
+              !revealed && (
+                <div className="rv-front-foot">
+                  <PaperButton onClick={() => setRevealed(true)} rotate={-0.8}>
+                    Voir la réponse <span className="kbd">Espace</span>
+                  </PaperButton>
+                </div>
+              )
             )}
+
+            <div className="rv-feedback" aria-live="polite">
+              {outcome && (
+                <div className="rv-back">
+                  <div className="rv-verdict">
+                    <Stamp thunk tone="red" rotate={outcome.ok ? -5 : -7} delay={0.1}>
+                      {outcome.ok ? 'Exact' : 'À revoir'}
+                    </Stamp>
+                    <p className="pencil-note rv-return">
+                      {!outcome.ok
+                        ? `la bonne réponse est entourée · elle repasse ${comesBack(outcome.next, outcome.at)}, plus loin dans cette séance`
+                        : outcome.again
+                          ? `elle repasse ${comesBack(outcome.next, outcome.at)} pour bien s’ancrer, plus loin dans cette séance`
+                          : `elle revient ${comesBack(outcome.next, outcome.at)}`}
+                    </p>
+                  </div>
+                  {verso}
+                </div>
+              )}
+              {!question && revealed && (
+                <div className="rv-back" ref={answerRef} tabIndex={-1}>
+                  <p className="rv-verso">La réponse</p>
+                  {isNote ? (
+                    <p className="rv-hand hand">{card.back}</p>
+                  ) : (
+                    <p className="rv-answer">{fr(card.back)}</p>
+                  )}
+                  {card.backList && card.backList.length > 0 && (
+                    <ul className={isNote ? 'rv-list rv-list--hand' : 'rv-list'}>
+                      {card.backList.map((b, i) => (
+                        <li key={i} className={isNote ? 'hand' : undefined}>
+                          {text(b)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {isNote && note?.author && <p className="rv-sign hand">— {note.author}</p>}
+                </div>
+              )}
+            </div>
           </IndexCard>
         </div>
-        <p className="rv-pile-n">{left > 0 ? `encore ${left} ${word(left, 'carte')} dans la pile` : 'dernière carte de la pile'}</p>
-        {requeued && <p className="pencil-note rv-requeued">la précédente revient plus loin dans la pile</p>}
+
+        {(answered || (!question && revealed)) && (
+          <div ref={actRef} className={`rv-act${answered ? '' : ' rv-act--self'}`}>
+            {answered ? (
+              <>
+                <TapeButton onClick={goOn}>{last ? 'Terminer la séance' : 'Carte suivante'}</TapeButton>
+                <span className="rv-keys" aria-hidden>
+                  Entrée pour continuer
+                </span>
+              </>
+            ) : (
+              <div className="rv-self" role="group" aria-label="As-tu su répondre ?">
+                <button type="button" className="rv-self-btn" onClick={() => record(RIGHT)} aria-keyshortcuts="o">
+                  Je savais <span className="kbd">O</span>
+                </button>
+                <button type="button" className="rv-self-btn" onClick={() => record(WRONG)} aria-keyshortcuts="n">
+                  Je ne savais pas <span className="kbd">N</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </Page>
 
-      <Page side="right" section="2" label="Notation">
+      <Page side="right" section="2" label="Fiche de séance">
         <FileHead>
-          <span>Notation</span>
+          <span>Séance</span>
           <span>
             {done === 0 ? (
-              'aucune carte notée'
+              'aucune réponse'
             ) : (
               <>
-                <b>{done}</b> {word(done, 'carte notée', 'cartes notées')}
+                <b>{good}</b> {word(good, 'juste')} sur {done}
               </>
             )}
           </span>
         </FileHead>
 
-        <section ref={gradesRef} className={`grades rv-grades${revealed ? '' : ' is-idle'}`} role="group" aria-labelledby="h-rv-grade">
-          <H id="h-rv-grade" as="h2">
-            Comment ça s’est passé{NNBSP}?
-          </H>
-          <p className="pencil-note rv-hint" aria-hidden>
-            {revealed ? <span className="rv-keys">touches 1 à 4</span> : 'retourne d’abord la carte, puis tamponne ta réponse'}
-          </p>
-          <div className="rv-stamps">
-            {GRADES.map(({ g, label, cls, tone, rotate }) => {
-              const when = dur(schedule(cardState, g, now).due - now)
-              return (
-                <button
-                  key={g}
-                  type="button"
-                  className={`rv-grade ${cls}`}
-                  onClick={() => grade(g)}
-                  disabled={!revealed}
-                  aria-label={`${label}${NNBSP}: la carte revient dans ${when}`}
-                  aria-keyshortcuts={String(g)}
-                >
-                  <Stamp tone={tone} plain={g === 3} rotate={rotate}>
-                    {label}
-                  </Stamp>
-                  <span className="rv-when">revient dans {when}</span>
-                  <span className="kbd" aria-hidden>
-                    {g}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className={`rv-log${graded.length ? '' : ' is-empty'}`} aria-label="Cartes notées pendant la séance">
+        {help('rv-help--side')}
+        <section className={`rv-log${graded.length ? '' : ' is-empty'}`} aria-label="Réponses de la séance">
           <SessionCard rows={graded} notes={state.notes} profile={state.profile} />
         </section>
 

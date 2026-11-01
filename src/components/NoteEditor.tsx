@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { GHOSTS } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { makesCard } from '../engine/notes'
@@ -7,6 +7,9 @@ import { CheckLine, PaperButton, TapeButton, TypedLink } from './journal/Journal
 import { useToast } from './Toast'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
+
+/** Exemples des trois lignes « Mauvaise réponse », dans la suite de celui de la réponse attendue. */
+const WRONG_EXAMPLES = ['ex. 90 secondes, comme les autres', 'ex. 180 secondes', 'ex. 30 secondes']
 
 /** Le titre d'une note : celui qui a été écrit, sinon la première ligne du texte. Jamais un titre inventé. */
 export function noteTitle(title: string, body: string): string {
@@ -46,8 +49,13 @@ export function NoteEditor({
   const [ghost, setGhost] = useState<string | null>(note?.ghostId ?? ghostId)
   const [asCard, setAsCard] = useState(note?.asCard ?? true)
   const [question, setQuestion] = useState(note?.question ?? '')
+  // la question de révision est facultative : repliée tant qu'on ne la personnalise pas
+  const [custom, setCustom] = useState(!!(note?.question || note?.answer || note?.wrong?.length))
   const [answer, setAnswer] = useState(note?.answer ?? '')
+  // trois lignes « Mauvaise réponse », toujours là (les vides ne sont pas enregistrées)
+  const [wrong, setWrong] = useState<string[]>(() => [0, 1, 2].map((i) => note?.wrong?.[i] ?? ''))
   const addRef = useRef<HTMLParagraphElement>(null)
+  const uid = useId()
   const refocus = useRef(false)
 
   // le formulaire replié : le focus revient sur « + Ajouter une note » au lieu de tomber sur la page
@@ -67,12 +75,14 @@ export function NoteEditor({
     setBody('')
     setQuestion('')
     setAnswer('')
+    setWrong(['', '', ''])
     setAsCard(true)
     setGhost(ghostId)
   }
 
   const empty = !title.trim() && !body.trim()
   const noBack = !body.trim() && !answer.trim()
+  const wrongs = wrong.map((w) => w.trim()).filter(Boolean)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,6 +98,8 @@ export function NoteEditor({
       asCard,
       question: question.trim() || undefined,
       answer: answer.trim() || undefined,
+      // sans question, il n'y a pas de QCM : les mauvaises réponses ne servent à rien
+      wrong: question.trim() && wrongs.length ? wrongs : undefined,
       author: state.profile.name.trim(),
       pinned: note?.pinned,
     }
@@ -114,8 +126,8 @@ export function NoteEditor({
   }
 
   const submitBtn = (
-    <TapeButton type="submit" disabled={empty} arrow={false}>
-      {note ? 'Enregistrer' : 'Coller la note'}
+    <TapeButton type="submit" disabled={empty} arrow={false} disabledHint="écris ta note pour l’enregistrer">
+      {note ? 'Enregistrer' : 'Enregistrer la note'}
     </TapeButton>
   )
 
@@ -155,12 +167,17 @@ export function NoteEditor({
         />
       </label>
       <div className="note-card-check">
-        <CheckLine checked={asCard} onChange={setAsCard} seed={`asCard-${note?.id ?? 'new'}`} hint="La note reviendra d’elle-même au bon moment, pour ne pas être oubliée.">
-          Ajouter à la révision espacée
+        <CheckLine checked={asCard} onChange={setAsCard} seed={`asCard-${note?.id ?? 'new'}`} hint="Elle te sera reposée d’elle-même, juste avant que tu l’oublies.">
+          Me la reposer en révision
         </CheckLine>
         {asCard && noBack && !!title.trim() && <p className="pencil-note note-card-hint">écris un texte ou une réponse pour en faire une carte</p>}
       </div>
-      {asCard && (
+      {asCard && !custom && (
+        <p className="note-custom">
+          <TypedLink onClick={() => setCustom(true)}>Personnaliser la question de révision (facultatif)</TypedLink>
+        </p>
+      )}
+      {asCard && custom && (
         <div className="note-qa-fields">
           <label className="field">
             <span>Question (facultatif)</span>
@@ -172,6 +189,24 @@ export function NoteEditor({
             <input className="input" value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="ex. 60 secondes au lieu de 90" />
             <small>Sinon, le texte de la note sert de réponse.</small>
           </label>
+        </div>
+      )}
+      {asCard && custom && !!question.trim() && (
+        <div className="field note-wrong" role="group" aria-labelledby={`${uid}-wrong`}>
+          <span id={`${uid}-wrong`}>Mauvaises réponses (facultatif)</span>
+          {wrong.map((w, i) => (
+            <input
+              key={i}
+              className="input"
+              value={w}
+              onChange={(e) => setWrong((list) => list.map((x, j) => (j === i ? e.target.value : x)))}
+              placeholder={WRONG_EXAMPLES[i]}
+              aria-label={`Mauvaise réponse ${i + 1}`}
+              maxLength={200}
+            />
+          ))}
+          <small>Avec des mauvaises réponses, la note devient un QCM.</small>
+          {wrongs.length > 0 && !answer.trim() && <p className="pencil-note">écris aussi la réponse attendue pour en faire un QCM</p>}
         </div>
       )}
       {bare ? (

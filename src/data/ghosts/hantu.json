@@ -170,23 +170,23 @@
     {
       "q": "En pleine chasse, l'entité est lente dans une pièce encore tiède, puis nettement plus rapide en entrant dans une pièce bien plus froide. Quelle entité suspectes-tu ?",
       "choices": [
-        "Le Hantu",
         "Le Raiju",
         "Le Djinn",
+        "Le Hantu",
         "Le Revenant"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "La vitesse du Hantu dépend de la température de la pièce où il se trouve : 1,4 m/s au-dessus de 15 °C, jusqu'à 2,7 m/s sous 0 °C. Le Raiju accélère près de l'électronique active, le Djinn quand il te voit de loin disjoncteur allumé, le Revenant quand il te détecte."
     },
     {
       "q": "Dans quelle condition peux-tu voir la buée glacée du Hantu ?",
       "choices": [
-        "Pendant une chasse, disjoncteur éteint ou cassé",
-        "Pendant une chasse, uniquement dans une pièce sous 0 °C",
+        "Pendant une chasse, dans une pièce très froide",
         "À tout moment dans sa pièce favorite",
-        "Pendant un événement, lumières allumées"
+        "Pendant un événement, lumières allumées",
+        "Pendant une chasse, disjoncteur éteint ou cassé"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "La buée apparaît pendant les chasses, dans n'importe quelle pièce, dès que le disjoncteur est éteint ou cassé : c'est l'état du disjoncteur qui compte, pas la température de la pièce."
     },
     {
@@ -203,35 +203,35 @@
     {
       "q": "Un Hantu te voit au bout d'un long couloir. Que se passe-t-il ?",
       "choices": [
-        "Sa vitesse ne change pas : il n'accélère pas en LdV",
-        "Il accélère jusqu'à 1,65 fois sa vitesse de base",
+        "Il accélère peu à peu jusqu'à 2,8 m/s",
+        "Il garde la même vitesse qu'avant",
         "Il passe instantanément à 3,0 m/s",
-        "Il ralentit à mesure qu'il s'approche de toi"
+        "Il ralentit en s'approchant de toi"
       ],
-      "answer": 0,
-      "explain": "Le Hantu fait partie des rares entités sans accélération en LdV (avec le Revenant, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse). Le passage à 3,0 m/s est typique du Revenant, le ralentissement en approche du Deogen."
+      "answer": 1,
+      "explain": "Le Hantu fait partie des rares entités sans accélération en ligne de vue (avec le Revenant, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse) : sa vitesse ne dépend que de la température de la pièce. Le passage à 3,0 m/s est typique du Revenant, le ralentissement en approche du Deogen."
     },
     {
       "q": "Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?",
       "choices": [
-        "2,7 m/s",
         "1,4 m/s",
         "1,75 m/s",
+        "2,7 m/s",
         "3,0 m/s"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Plus la pièce est froide, plus le Hantu est rapide : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, et ainsi de suite jusqu'à 2,7 m/s sous 0 °C. Il n'accélère jamais en ligne de vue."
     },
     {
       "q": "L'entité vient de rallumer le disjoncteur. Que peux-tu en conclure ?",
       "choices": [
-        "Ce n'est pas un Hantu",
         "C'est forcément un Hantu",
         "C'est forcément un Djinn",
-        "Rien du tout"
+        "Ce n'est pas un Djinn",
+        "Ce n'est pas un Hantu"
       ],
-      "answer": 0,
-      "explain": "Le Hantu ne peut pas rallumer le disjoncteur : tu peux l'éliminer. Ça ne prouve pas pour autant qu'il s'agisse d'un Djinn."
+      "answer": 3,
+      "explain": "Le Hantu ne peut pas rallumer le disjoncteur : tu peux l'éliminer. Ça ne prouve pas pour autant qu'il s'agisse d'un Djinn, et ça ne l'écarte pas non plus : le Djinn ne peut pas couper le disjoncteur, mais rien ne l'empêche de le rallumer."
     }
   ],
   "changes": [

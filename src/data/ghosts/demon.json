@@ -169,42 +169,67 @@
     {
       "q": "Ton crucifix de rang 3 brûle alors que l'entité a tenté de chasser à environ 7 m de lui, bien au-delà de la portée habituelle de 5 m. Quelle entité est-ce ?",
       "choices": [
-        "Un Démon",
         "Un Onryo",
         "Un Esprit",
+        "Un Démon",
         "Un Yokai"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Contre le Démon, la portée du crucifix est augmentée de 50 % à chaque rang : 4,5 m au rang 1, 6 m au rang 2 et 7,5 m au rang 3, au lieu de 3, 4 et 5 m."
     },
     {
       "q": "Combien de temps après l'encens un Démon peut-il chasser de nouveau ?",
-      "choices": ["90 s", "180 s", "20 s", "60 s"],
+      "choices": [
+        "90 s",
+        "180 s",
+        "20 s",
+        "60 s"
+      ],
       "answer": 3,
       "explain": "60 s pour le Démon, contre 90 s pour une entité standard et 180 s pour l'Esprit. 20 s, c'est son délai minimum entre deux chasses."
     },
     {
       "q": "Quel est le délai minimum entre deux chasses pour un Démon ?",
-      "choices": ["20 s", "25 s", "60 s", "10 s"],
+      "choices": [
+        "20 s",
+        "25 s",
+        "60 s",
+        "10 s"
+      ],
       "answer": 0,
       "explain": "Le Démon peut rechasser 20 s après la fin d'une chasse (ou après avoir utilisé un crucifix), contre 25 s pour les autres entités."
     },
     {
       "q": "Quelle est la portée d'un crucifix de niveau 2 contre un Démon ?",
-      "choices": ["4 m", "4,5 m", "6 m", "7,5 m"],
-      "answer": 2,
+      "choices": [
+        "4 m",
+        "6 m",
+        "4,5 m",
+        "7,5 m"
+      ],
+      "answer": 1,
       "explain": "La portée est augmentée de 50 % à chaque niveau : 4,5 m (niveau 1), 6 m (niveau 2), 7,5 m (niveau 3). 4 m est la portée standard d'un crucifix de niveau 2."
     },
     {
       "q": "Une entité chasse à 85 % de santé mentale moyenne, sans objet maudit. Aucun joueur n'est sous 50 % et aucune bougie n'a été allumée. De quelle entité s'agit-il ?",
-      "choices": ["Un Yokai", "Une Banshee", "Un Onryo", "Un Démon"],
-      "answer": 3,
+      "choices": [
+        "Un Yokai",
+        "Une Banshee",
+        "Un Démon",
+        "Un Onryo"
+      ],
+      "answer": 2,
       "explain": "Le Yokai plafonne à 80 % (et seulement si l'on parle dans sa pièce), la Banshee a besoin d'une cible à 50 % ou moins, l'Onryo a besoin d'éteindre des flammes. Reste le Démon, qui peut chasser à toute santé mentale."
     },
     {
       "q": "Quel est le seuil de chasse normal du Démon ?",
-      "choices": ["50 %", "70 %", "60 %", "65 %"],
-      "answer": 1,
+      "choices": [
+        "50 %",
+        "60 %",
+        "65 %",
+        "70 %"
+      ],
+      "answer": 3,
       "explain": "70 % (en plus de son pouvoir de chasse à toute santé mentale). 60 % correspond à l'Onryo, 65 % à l'Obambo agressif ou au Raiju près d'appareils électroniques."
     }
   ],

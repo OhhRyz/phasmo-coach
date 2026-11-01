@@ -103,38 +103,38 @@
   "quiz": [
     {
       "q": "Pendant une chasse, l'entité t'a repéré ; tu te caches dans un placard et elle t'y tue. Que peux-tu en conclure ?",
-      "choices": ["Ce n'est pas un Aswang", "C'est forcément un Aswang", "C'est un Aswang qui t'avait déjà trouvé caché", "Rien : un placard ne protège jamais d'un Aswang"],
-      "answer": 0,
-      "explain": "Quand un Aswang rejoint dans une cachette officielle (placard, casier…) le joueur qu'il a détecté, sa chasse s'arrête net, sans mort. Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang. Cette faiblesse ne vaut pas dans une cachette non officielle."
+      "choices": ["C'est forcément un Aswang", "Ce n'est pas un Kormos", "Ce n'est pas un Aswang", "C'est forcément un Kormos"],
+      "answer": 2,
+      "explain": "Quand un Aswang rejoint dans une cachette officielle (placard, casier…) le joueur qu'il a détecté, sa chasse s'arrête net, sans mort. Si l'entité te tue dans une cachette officielle disponible alors qu'elle t'avait détecté, ce n'est pas un Aswang. Cette faiblesse ne vaut pas dans une cachette non officielle, et aucune autre entité ne l'a : le Kormos, par exemple, reste possible."
     },
     {
       "q": "Que se passe-t-il si l'Aswang rejoint, dans une cachette officielle, le joueur qu'il a détecté ?",
-      "choices": ["La chasse s'arrête immédiatement, sans mort", "Il tue le joueur instantanément", "Il fait demi-tour, mais la chasse continue", "Il bloque la cachette jusqu'à la fin de la chasse"],
-      "answer": 0,
+      "choices": ["Il tue le joueur instantanément", "Il fait demi-tour, mais la chasse continue", "Il bloque la cachette jusqu'à la fin de la chasse", "Il met fin à la chasse, sans tuer personne"],
+      "answer": 3,
       "explain": "Si l'Aswang rejoint le joueur qu'il a détecté dans une cachette officielle disponible, la chasse se termine aussitôt, sans mort."
     },
     {
       "q": "En combien de temps de LdV continue l'Aswang atteint-il sa vitesse maximale ?",
-      "choices": ["Environ 8,7 s", "13 s", "3 s", "Jamais : il n'accélère pas en LdV"],
+      "choices": ["8,7 s", "13 s", "4,3 s", "20 s"],
       "answer": 0,
       "explain": "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s, contre 13 s pour les entités standards. Les entités sans accélération en LdV sont le Revenant, le Hantu, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse."
     },
     {
       "q": "Quelle est la vitesse de base de l'Aswang en chasse ?",
-      "choices": ["1,53 m/s", "1,7 m/s", "1,4 m/s", "1,96 m/s"],
-      "answer": 0,
+      "choices": ["1,7 m/s", "1,53 m/s", "1,4 m/s", "1,96 m/s"],
+      "answer": 1,
       "explain": "L'Aswang démarre à 1,53 m/s. 1,7 m/s est la vitesse standard, 1,4 m/s celle du Hantu au chaud et 1,96 m/s celle de l'Obambo agressif ou du Gallu enragé."
     },
     {
       "q": "Vrai ou faux : la chasse d'un Aswang s'arrête dès qu'il te voit entrer dans une cachette.",
-      "choices": ["Faux : il doit atteindre ou entrer dans la même cachette que toi", "Vrai, dans tous les cas", "Vrai, mais seulement pour un placard", "Faux : sa chasse ne s'arrête jamais avant la fin du temps"],
-      "answer": 0,
-      "explain": "C'est une idée reçue : l'Aswang doit rejoindre la cachette du joueur détecté pour que la chasse s'arrête."
+      "choices": ["Vrai, quelle que soit la cachette choisie", "Vrai, à condition que ce soit un placard", "Faux, il doit d'abord rejoindre ta cachette", "Faux, sa chasse va jusqu'au bout malgré tout"],
+      "answer": 2,
+      "explain": "C'est une idée reçue : l'Aswang doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête. Une fois qu'il y est, elle s'arrête net, sans mort."
     },
     {
       "q": "L'Aswang t'a trouvé caché à la chasse précédente. À quoi dois-tu t'attendre à la suivante ?",
-      "choices": ["Il se dirige droit sur ta position dès le début, même pendant la période de grâce", "Il t'ignore pendant toute la chasse", "Il ne peut plus chasser pendant 5 minutes", "Il chasse plus lentement pour te laisser fuir"],
-      "answer": 0,
+      "choices": ["Il t'ignore pendant toute la chasse suivante", "Il ne peut plus te chasser de toute la partie", "Il chasse plus lentement pour te laisser fuir", "Il fonce sur ta position dès le début de la chasse"],
+      "answer": 3,
       "explain": "Au début de la chasse suivante, l'Aswang place un point de passage sur ta position et s'y rend immédiatement, même pendant la période de grâce. Change de place !"
     }
   ],

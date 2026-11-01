@@ -30,7 +30,7 @@
   },
   "summary": "L'entité la plus timide : elle ne fait presque rien quand tu es dans sa pièce, ne chasse pas avant 35 % de santé mentale et préfère se montrer en silhouette noire.",
   "keyTells": [
-    "Seule à apparaître en ombre au cercle, à la boîte à musique ou à la patte de singe",
+    "Apparaît en silhouette noire au cercle, à la boîte à musique ou à la patte de singe",
     "Aucune interaction, aucun événement, aucune chasse depuis la pièce où tu es",
     "Seuil de chasse bas : 35 %",
     "Aucun événement tant que la santé mentale moyenne est à 100 %"
@@ -218,62 +218,67 @@
     {
       "q": "Quel type d'événement une Ombre ne fait-elle jamais ?",
       "choices": [
-        "L'événement de chant",
+        "L'apparition qui chante",
         "Le brouillard fantomatique",
-        "L'apparition sous forme d'ombre",
-        "Un événement lancé hors de la pièce où tu te trouves"
+        "L'apparition en forme d'ombre",
+        "L'événement hors de ta pièce"
       ],
       "answer": 0,
       "explain": "L'Ombre ne peut pas faire d'événement de chant : un événement de chant l'élimine. Elle fait au contraire plus souvent le brouillard fantomatique, préfère se montrer en ombre et peut lancer un événement hors de ta pièce puis se téléporter jusqu'à toi."
     },
     {
       "q": "À partir de quel seuil de santé mentale moyenne une Ombre peut-elle chasser ?",
-      "choices": ["35 %", "50 %", "40 %", "70 %"],
-      "answer": 0,
+      "choices": [
+        "50 %",
+        "35 %",
+        "40 %",
+        "70 %"
+      ],
+      "answer": 1,
       "explain": "L'Ombre ne chasse pas avant 35 %. 50 % est le seuil standard, 40 % celui du Deogen (ou du Cauchemar lumière allumée), 70 % celui du Démon."
     },
     {
       "q": "Tu es dans la pièce favorite d'une Ombre. Que peut-elle quand même faire ?",
       "choices": [
         "Lancer une chasse alors qu'elle est dans la pièce avec toi",
+        "Lancer une chasse alors que la santé moyenne est encore haute",
         "Sortir de la pièce et lancer une chasse depuis une pièce voisine",
-        "Lancer une chasse naturelle alors que la santé mentale moyenne est encore à 60 %",
         "Souffler la bougie que tu tiens pendant qu'elle est dans la pièce"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Elle ne lance ni chasse ni interaction EMF (écriture, flammes soufflées…) depuis la pièce où tu te trouves, mais elle peut en sortir et chasser depuis une pièce adjacente, ou interagir avec la pièce depuis l'extérieur. Et elle ne chasse jamais naturellement au-dessus de 35 %."
     },
     {
       "q": "Quel test est définitif pour identifier une Ombre ?",
       "choices": [
-        "Constater qu'elle ne chasse pas au-dessus de 50 %",
-        "Mesurer qu'elle chasse à 1,7 m/s",
-        "Obtenir un EMF 5 près d'un objet lancé",
-        "Allumer le cercle d'invocation et la voir apparaître sous forme d'ombre"
+        "Constater qu'elle ne chasse qu'à santé très basse",
+        "Chronométrer sa vitesse pendant une chasse",
+        "Constater qu'elle ne lance presque aucun objet",
+        "La voir en silhouette noire au cercle d'invocation"
       ],
       "answer": 3,
-      "explain": "Seule l'Ombre peut apparaître en ombre au cercle d'invocation (et à la boîte à musique ou à la patte de singe). Les autres propositions sont compatibles avec beaucoup d'entités."
+      "explain": "Seule l'Ombre peut apparaître en silhouette noire au cercle d'invocation (et à la boîte à musique ou à la patte de singe). Un seuil de chasse bas, une vitesse standard ou peu d'objets lancés sont compatibles avec beaucoup d'entités."
     },
     {
       "q": "La santé mentale moyenne est encore à 100 % et un événement se produit. Qu'en conclus-tu ?",
       "choices": [
+        "Ce n'est pas une Ombre",
         "C'est sûrement une Ombre",
         "C'est forcément un Démon",
-        "Ce n'est pas une Ombre",
-        "Rien du tout"
+        "Ce n'est pas un Démon"
       ],
-      "answer": 2,
-      "explain": "L'Ombre ne peut pas faire d'événement à 100 % de santé mentale moyenne : l'événement l'élimine. Il ne désigne pas pour autant une entité précise."
+      "answer": 0,
+      "explain": "L'Ombre ne peut pas faire d'événement à 100 % de santé mentale moyenne : l'événement l'élimine. Il ne désigne pas pour autant une entité précise, et n'écarte pas le Démon."
     },
     {
       "q": "Pourquoi l'idée « une Ombre ne chasse pas si tu es dans sa pièce favorite » est-elle incomplète ?",
       "choices": [
-        "Parce que la règle vaut pour n'importe quelle pièce où elle se trouve avec un joueur",
-        "Parce qu'elle chasse quand même dans sa pièce favorite sous 35 %",
-        "Parce que la règle ne s'applique qu'en difficulté Démence",
-        "Parce qu'elle ne chasse jamais dans sa pièce favorite, même vide"
+        "Parce qu'elle y chasse quand même si la santé est très basse",
+        "Parce que ça vaut pour toute pièce où elle est avec un joueur",
+        "Parce qu'elle n'applique cette règle qu'en difficulté Démence",
+        "Parce qu'elle ne chasse pas dans sa pièce favorite, même vide"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Ce comportement ne se limite pas à la pièce favorite : l'Ombre ne fait rien qui donne de l'EMF et ne lance pas de chasse dans toute pièce où elle se trouve avec un joueur."
     }
   ],

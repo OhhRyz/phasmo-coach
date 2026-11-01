@@ -187,10 +187,10 @@
     {
       "q": "Pendant une chasse, quand le Kormos peut-il te voir ?",
       "choices": [
-        "Seulement si tu bouges à moins de 5 m de lui",
-        "Normalement, comme toute entité",
-        "Jamais : il est totalement aveugle",
-        "Seulement si ta lampe torche est allumée"
+        "Quand tu bouges tout près de lui",
+        "Dès que tu es dans son champ de vision",
+        "À aucun moment, il est totalement aveugle",
+        "Quand ta lampe torche est allumée"
       ],
       "answer": 0,
       "explain": "Le Kormos est presque aveugle : il ne voit un joueur, et ne gagne de la vitesse en ligne de vue, que si ce joueur bouge à moins de 5 m de lui. Le reste du temps, il chasse à l'oreille (pas, voix, électronique)."
@@ -199,22 +199,22 @@
       "q": "À quelle distance le Kormos entend-il un joueur qui sprinte ?",
       "choices": [
         "5 m",
+        "30 m",
         "10 m",
-        "15 m",
-        "30 m"
+        "15 m"
       ],
-      "answer": 3,
+      "answer": 1,
       "explain": "30 m en sprintant, 15 m en marchant normalement, 10 m en se déplaçant accroupi. Les 5 m correspondent à sa vue."
     },
     {
       "q": "Quel est le seuil de chasse du Kormos si un joueur sprinte dans sa pièce ?",
       "choices": [
-        "70 %",
         "50 %",
         "80 %",
+        "70 %",
         "60 %"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "50 % normalement, 70 % si un joueur sprinte dans la même pièce que lui."
     },
     {
@@ -223,18 +223,18 @@
         "Tu sprintes pour mettre de la distance",
         "Tu te caches et tu préviens l'équipe au micro",
         "Tu allumes ta lampe torche pour l'aveugler",
-        "Tu t'immobilises, micro coupé, électronique éteinte"
+        "Tu t'immobilises en silence, tout éteint"
       ],
       "answer": 3,
-      "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux."
+      "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux : arrête-toi, coupe ton micro et éteins ton électronique."
     },
     {
       "q": "Quel événement un Kormos ne fait-il jamais ?",
       "choices": [
-        "L'apparition qui marche vers un joueur (poursuite)",
-        "Le chant",
-        "L'apparition éclair",
-        "Aucun : il peut faire tous les événements"
+        "L'apparition qui marche vers toi",
+        "L'apparition qui chante",
+        "L'apparition éclair devant toi",
+        "Aucun, il les fait tous"
       ],
       "answer": 0,
       "explain": "Le Kormos ne fait jamais l'événement de poursuite (l'entité apparaît et marche vers un joueur) ni le brouillard fantomatique (bulle d'air) : s'il en fait un, ce n'est pas un Kormos. Dans les pièces aux lumières cassées, il ne fait que le chant ou l'apparition éclair."
@@ -245,7 +245,7 @@
         "1,7 m/s",
         "2,21 m/s",
         "3,0 m/s",
-        "1,0 m/s"
+        "1,96 m/s"
       ],
       "answer": 1,
       "explain": "2,21 m/s, soit 1,3 × sa vitesse de base de 1,7 m/s ; avec un bonus de LdV accumulé, ça peut monter à 3,65 m/s."

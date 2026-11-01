@@ -80,38 +80,38 @@
   "quiz": [
     {
       "q": "Quelle vitesse atteint le Raiju près d'un équipement électronique actif ?",
-      "choices": ["2,5 m/s, vitesse fixe", "1,7 m/s", "3,0 m/s", "2,25 m/s"],
+      "choices": ["2,5 m/s", "1,7 m/s", "3,0 m/s", "2,25 m/s"],
       "answer": 0,
       "explain": "Près de l'électronique active, le Raiju se déplace à 2,5 m/s fixes. 1,7 m/s est sa vitesse normale, 3,0 m/s évoque le Revenant ou un Deildegast « neuf », 2,25 m/s la Dayan quand tu bouges près d'elle."
     },
     {
       "q": "À partir de quel niveau de santé mentale moyenne le Raiju peut-il chasser près de l'électronique active ?",
-      "choices": ["65 %", "50 %", "70 %", "80 %"],
-      "answer": 0,
+      "choices": ["50 %", "65 %", "70 %", "80 %"],
+      "answer": 1,
       "explain": "Le Raiju chasse normalement à 50 %, mais dès 65 % près d'un appareil électronique actif. 70 % est le seuil du Démon, 80 % celui du Yokai quand tu parles près de lui."
     },
     {
       "q": "À quelle distance le Raiju perturbe-t-il tes appareils électroniques pendant une chasse ?",
-      "choices": ["15 m", "10 m", "20 m", "5 m"],
-      "answer": 0,
+      "choices": ["10 m", "20 m", "15 m", "5 m"],
+      "answer": 2,
       "explain": "Le Raiju perturbe l'électronique à 15 m au lieu des 10 m standard. 20 m est la portée d'audition normale des pas."
     },
     {
       "q": "Depuis Chronicle (v0.13, juin 2025), quel équipement déclenche l'accélération du Raiju ?",
-      "choices": ["L'électronique active, posée ou tenue en main", "Uniquement l'électronique posée au sol", "Uniquement les lumières de la maison", "Uniquement la caméra vidéo"],
-      "answer": 0,
+      "choices": ["Les appareils posés au sol, pas ceux en main", "Les appareils allumés près de sa pièce favorite", "Les lumières et interrupteurs de la maison", "Les appareils posés comme ceux tenus en main"],
+      "answer": 3,
       "explain": "Chronicle a corrigé un bug qui empêchait le Raiju d'accélérer près de l'électronique tenue en main. Désormais, tout équipement électronique actif du joueur, posé ou tenu, compte."
     },
     {
       "q": "Pendant une chasse, quelle est la façon la plus sûre de vérifier qu'il s'agit d'un Raiju ?",
-      "choices": ["Allumer et éteindre un appareil électronique posé au sol près de son passage", "Allumer et éteindre la lampe torche que tu tiens en main face à lui", "Couper le disjoncteur pendant la chasse", "Courir vers lui pour qu'il te voie de loin"],
+      "choices": ["Allumer puis éteindre un appareil posé au sol", "Allumer puis éteindre la lampe torche que tu tiens", "Couper le disjoncteur en pleine chasse et observer", "Te montrer de loin pour qu'il te voie et accélère"],
       "answer": 0,
-      "explain": "Si sa vitesse monte et redescend avec l'appareil, c'est un Raiju. Posé au sol, l'appareil ne trahit pas ta position ; tenu en main, il peut te faire repérer, et un Revenant ou un Kormos qui te détecte accélère aussi."
+      "explain": "Allume et éteins un appareil électronique posé au sol près de son passage : si sa vitesse monte et redescend avec l'appareil, c'est un Raiju. Posé au sol, l'appareil ne trahit pas ta position ; tenu en main, il peut te faire repérer, et un Revenant ou un Kormos qui te détecte accélère aussi."
     },
     {
       "q": "Disjoncteur allumé, une entité passe à 2,5 m/s quand elle te voit de loin, alors qu'aucun appareil n'est allumé près d'elle. Laquelle est-ce plutôt ?",
-      "choices": ["Le Djinn", "Le Raiju", "Le Revenant", "Le Myling"],
-      "answer": 0,
+      "choices": ["Le Raiju", "Le Djinn", "Le Revenant", "Le Myling"],
+      "answer": 1,
       "explain": "Le Djinn passe à 2,5 m/s disjoncteur allumé quand il te voit à plus de 3 m. Le Raiju a besoin d'électronique active, le Revenant fonce à 3,0 m/s et le Myling a une vitesse standard."
     }
   ],

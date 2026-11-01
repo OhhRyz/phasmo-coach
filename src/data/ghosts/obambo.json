@@ -171,32 +171,32 @@
     {
       "q": "Une chasse entière se déroule à 1,7 m/s sans ligne de vue (vitesse des entités à 100 %, pas de Lune de sang). Peut-il s'agir d'un Obambo ?",
       "choices": [
-        "Non : il chasse à environ 1,45 m/s calme ou 1,96 m/s agressif",
-        "Oui, en état calme",
-        "Oui, en état agressif",
-        "Oui, s'il vient de changer d'état"
+        "Non, il chasse à plus de 2 m/s dans ses deux états",
+        "Oui, s'il est en état calme pendant la chasse",
+        "Non, il chasse à 1,45 ou 1,96 m/s",
+        "Oui, s'il est en état agressif pendant la chasse"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "L'Obambo chasse à environ 1,45 m/s en état calme et 1,96 m/s en état agressif : une chasse entière à 1,7 m/s sans ligne de vue l'élimine. Ne fais pas ce test par Lune de sang (+15 %) : un Obambo calme y avance à environ 1,66 m/s."
     },
     {
       "q": "À quels seuils de santé mentale moyenne l'Obambo peut-il chasser ?",
       "choices": [
         "50 % en calme, 80 % en agressif",
-        "10 % en calme, 65 % en agressif",
         "40 % en calme, 60 % en agressif",
-        "35 % en calme, 70 % en agressif"
+        "35 % en calme, 70 % en agressif",
+        "10 % en calme, 65 % en agressif"
       ],
-      "answer": 1,
+      "answer": 3,
       "explain": "10 % en état calme, 65 % en état agressif. 40 % / 60 % correspondent aux états affaibli / enragé du Gallu."
     },
     {
       "q": "Quand l'Obambo passe-t-il pour la première fois en état agressif ?",
       "choices": [
-        "1 minute après la première ouverture d'une porte de sortie",
-        "Dès le début de la partie",
-        "Juste après sa première chasse",
-        "Quand on l'encense ou qu'il marche dans le sel"
+        "1 min après l'ouverture d'une porte de sortie",
+        "5 min après le début de la partie",
+        "1 min après la fin de sa première chasse",
+        "1 min après qu'on l'a encensé pour la première fois"
       ],
       "answer": 0,
       "explain": "Il commence calme et bascule 1 minute après la première ouverture d'une porte de sortie, puis toutes les 2 minutes. Le sel et l'encens déclenchent les changements d'état du Gallu, pas de l'Obambo."
@@ -204,23 +204,33 @@
     {
       "q": "Que se passe-t-il pour une chasse lancée alors que l'Obambo est agressif ?",
       "choices": [
-        "Elle dure 20 s de plus",
-        "Elle s'arrête dès que l'Obambo repasse en calme",
-        "Elle dure 20 % de moins que la durée de base",
-        "Elle dure deux fois plus longtemps"
+        "Elle dure 20 s de plus que la normale",
+        "Elle dure 20 % de moins que la normale",
+        "Elle dure 20 s de moins que la normale",
+        "Elle dure 20 % de plus que la normale"
       ],
-      "answer": 2,
+      "answer": 1,
       "explain": "Sa durée est réduite de 20 % de la durée de base, même s'il repasse en calme pendant la chasse. Les 20 s supplémentaires concernent les chasses maudites."
     },
     {
       "q": "En pleine chasse, l'entité passe d'un coup d'environ 1,45 m/s à environ 1,96 m/s sans te voir. Quelle entité suspectes-tu ?",
-      "choices": ["Les Jumeaux", "L'Obambo", "Le Thayé", "Le Démon"],
-      "answer": 1,
+      "choices": [
+        "Les Jumeaux",
+        "Le Thayé",
+        "L'Obambo",
+        "Le Démon"
+      ],
+      "answer": 2,
       "explain": "L'Obambo peut changer d'état en pleine chasse, et sa vitesse saute alors immédiatement. La vitesse des Jumeaux est fixée pour la chasse, celle du Thayé dépend de son âge, et le Démon reste à 1,7 m/s."
     },
     {
       "q": "Après la première bascule, combien de temps dure chaque état de l'Obambo ?",
-      "choices": ["30 secondes", "5 minutes", "Jusqu'à la chasse suivante", "2 minutes"],
+      "choices": [
+        "3 minutes",
+        "5 minutes",
+        "10 minutes",
+        "2 minutes"
+      ],
       "answer": 3,
       "explain": "Il alterne toutes les 2 minutes. Le Mimic change de comportement toutes les 30 s à 2 min, et l'état enragé du Gallu dure jusqu'à la fin de la chasse."
     }

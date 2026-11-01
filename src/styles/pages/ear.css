@@ -57,7 +57,7 @@
 .ear .ear-lead { margin: 0; max-width: 31em; font-style: italic; font-size: 18px; line-height: 1.5; }
 
 .ear .ear-step { margin-top: 0; }
-.ear .ear-go + .ear-step { margin-top: 58px; }
+.ear .ear-step + .ear-step { margin-top: 50px; }
 .ear-step-h { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
 .ear-step-n {
   display: inline-grid; place-items: center; width: 22px; height: 22px;
@@ -152,7 +152,8 @@
 .ear .opts { margin-left: -10px; }
 .ear .opt { min-height: 44px; font-size: 16px; }
 .ear .ear-mode-hint { margin: 8px 0 0; font-size: 16.5px; font-style: italic; color: var(--ink-2); max-width: 32em; }
-.ear-go { margin-top: 30px; }
+.ear-go { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin-top: 26px; }
+.ear .ear-first { margin: 0; font-size: 21px; transform: rotate(-1.5deg); }
 .ear .ear-small { margin: 22px 0 0; max-width: 36em; font-size: 14.5px; line-height: 1.5; color: var(--ink-3); }
 .ear-small .pencil-note { font-size: 21px; white-space: nowrap; }
 
@@ -165,10 +166,16 @@
 .ear-progress { display: flex; align-items: center; gap: 14px; margin: -10px 0 30px; }
 .ear-progress .typed-label { font-size: 11.5px; }
 .ear-progress-n { font-family: "Courier Prime", monospace; font-size: 12.5px; color: var(--ink-2); }
-.ear--run .h { margin-bottom: 22px; }
+.ear--run .h { margin-bottom: 14px; }
+.ear .ear-consigne { margin-bottom: 20px; }
+.ear-quit-body { margin: 0; font-size: 17px; line-height: 28px; }
 
 .ear-answer { margin: 30px 0 0; padding: 0; border: 0; min-width: 0; }
 .ear-answer > legend { float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.ear-answer > legend .ear-first { display: inline-block; margin-left: 16px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+/* tant que les pas n'ont pas été écoutés, les réponses attendent (grisées, mais lisibles) */
+.ear-answer.is-locked .ear-choice { opacity: .5; cursor: not-allowed; }
+.ear .ear-then { margin: 12px 0 -14px; font-size: 22px; transform: rotate(-1.2deg); transform-origin: left center; }
 .ear-choices {
   clear: both; list-style: none; margin: 0; padding: 0;
   display: grid; gap: 0 22px;
@@ -221,8 +228,8 @@
 .ear-grade-n small { font-size: .46em; letter-spacing: 0; }
 .ear .ear-result-line { margin: 0; font-size: 18px; }
 .ear .ear-verdict { margin: 12px 0 0; font-size: 27px; transform: rotate(-1.5deg); transform-origin: left center; }
-.ear-end-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 40px; }
-.ear-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; }
+.ear-end-actions { margin-top: 40px; }
+.ear-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; text-align: left; }
 
 /* ---------- fin de série : la note à gauche, le relevé des écoutes à droite ---------- */
 .ear-results { min-height: 640px; }

@@ -83,7 +83,7 @@ function LinkActions({ link, ready, onClose }: { link: ReturnType<typeof useShar
 
 /**
  * Envoyer ses notes par lien. Par défaut, seulement celles écrites ou modifiées depuis le dernier envoi
- * (pour que le lien tienne dans un message) ; « Tout mon carnet » renvoie l'ensemble. La date du dernier
+ * (pour que le lien tienne dans un message) ; « Toutes mes notes » renvoie l'ensemble. La date du dernier
  * envoi n'est notée que quand le lien part vraiment (copié ou envoyé).
  */
 export function ShareNotesModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -121,7 +121,7 @@ function ShareNotesDialog({ onClose }: { onClose: () => void }) {
   return (
     <Modal open onClose={onClose} title="Envoyer mes notes" actions={<LinkActions link={link} ready={!!share} onClose={onClose} />}>
       {own.length === 0 ? (
-        <p className="modal-text">{fr('Tu n’as encore écrit aucune note dans ce carnet : le lien emporte seulement les notes que tu as écrites.')}</p>
+        <p className="modal-text">{fr('Tu n’as encore écrit aucune note : le lien emporte seulement les notes que tu as écrites.')}</p>
       ) : (
         <>
           {since != null && (
@@ -132,14 +132,14 @@ function ShareNotesDialog({ onClose }: { onClose: () => void }) {
                 onChange={(v) => setShareAll(v === 'all')}
                 options={[
                   { value: 'new', label: freshCount ? `Les nouvelles (${freshCount})` : 'Les nouvelles (aucune)' },
-                  { value: 'all', label: `Tout mon carnet (${own.length})` },
+                  { value: 'all', label: `Toutes mes notes (${own.length})` },
                 ]}
               />
               {sinceLabel && <p className="pencil-note share-since">nouvelles ou modifiées depuis ton dernier envoi, le {sinceLabel}</p>}
             </div>
           )}
           {toSend.length === 0 ? (
-            <p className="modal-text">{fr('Rien de nouveau depuis le dernier envoi. Choisis « Tout mon carnet » pour tout renvoyer.')}</p>
+            <p className="modal-text">{fr('Rien de nouveau depuis le dernier envoi. Choisis « Toutes mes notes » pour tout renvoyer.')}</p>
           ) : (
             <>
               <p className="modal-text">

@@ -16,10 +16,11 @@ import {
   speedValues,
   thresholds,
   zeroTests,
+  type CoachNote,
 } from './cards'
 import { EMPTY_FILTER, filterGhosts, matchesEvidence, type FilterState } from './filter'
 import { redactGhostName, speedClasses } from './format'
-import { buildQuiz, confusionWithoutEvidence, isCorrect, partnerClaim, QUIZ_TOPICS, type Question, type QuizTopic } from './quiz'
+import { buildQuiz, confusionWithoutEvidence, homogeneous, isCorrect, partnerClaim, questionForCard, QUIZ_TOPICS, type Question, type QuizTopic } from './quiz'
 import { buildReviewQueue, ghostMastery, learnedCount, unseenCards } from './progress'
 import { createRng } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
@@ -36,12 +37,14 @@ import {
   shareSummaryLine,
 } from './share'
 import { adoptCoach, coachNameOf, isCoachNote, onboardProfile } from './notes'
-import { hydrate, initialState } from '../store/schema'
+import { hydrate, initialState, sanitizeNotes } from '../store/schema'
 import { cardMastery, isDue, schedule } from './srs'
 import { speedToBpm, bpmToSpeed } from './audio'
 
 const DAY = 86_400_000
 const T0 = new Date('2026-10-31T10:00:00').getTime()
+/** « 65 % » → 65, « 1,96 m/s » → 1.96 */
+const valueOf = (label: string) => Number(label.replace(/[^\d,]/gu, '').replace(',', '.'))
 
 describe('répétition espacée', () => {
   it('fait passer une nouvelle carte par les étapes puis la gradue à 1 jour', () => {
@@ -237,10 +240,11 @@ describe('quiz', () => {
           expect(leaks(c.label, g), `${q.id}: ${c.label}`).toBe(false)
           expect(leaks(c.label, x), `${q.id}: ${c.label}`).toBe(false)
           expect(mentionsEvidence(c.label), `${q.id}: ${c.label}`).toBe(false)
+          // « elle aussi », « Il alterne… » : rien ne dit de quelle fiche vient la phrase
+          expect(c.label, `${q.id}: ${c.label}`).not.toMatch(/(?<!\p{L})(?:aussi|également|non plus)(?!\p{L})|^(?:Il|Elle|Lui)\s(?!faut|y a|suffit)/u)
           if (c.id !== g.id) {
-            // une mauvaise réponse parle d'une autre entité confondue avec x, jamais du Mimic
-            expect(x.confusions.map((k) => k.with), q.id).toContain(c.id)
-            expect(c.id).not.toBe('the-mimic')
+            // une mauvaise réponse parle d'une autre entité (d'abord celles qu'on confond avec x), jamais de x ni du Mimic
+            expect([g.id, x.id, 'the-mimic'], q.id).not.toContain(c.id)
           }
         }
       }
@@ -456,9 +460,12 @@ describe('révision et quiz : seulement ce qui sert sans preuve', () => {
         const o = getGhost(c.id)
         // « Il chasse à 1,7 m/s et à 50 % » face au Myling
         if (q.id.startsWith('q:dist:')) expect(numbersFit(c.label, g), `${q.id} : ${c.label}`).toBe(false)
-        // « 50 % » face au Raiju (50 %, 65 % près de l'électronique), « 1,7 m/s · accélère en LdV » face à sa vitesse
-        if (q.id.startsWith('q:san:')) expect([...thresholds(o!)].every((v) => thresholds(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
-        if (q.id.startsWith('q:spd:')) expect([...speedValues(o!)].every((v) => speedValues(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
+        // « 65 % » face au Raiju (50 %, 65 % près de l'électronique), « 2,5 m/s » face à sa vitesse près de l'électronique
+        if (q.id.startsWith('q:san:')) expect(thresholds(g).has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(false)
+        if (q.id.startsWith('q:spd:')) expect(speedValues(g).has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(false)
+        // un résumé à moitié vrai (« 1,7 m/s · accélère en LdV » face au Raiju) n'est pas une mauvaise réponse
+        if (q.id.startsWith('q:sansum:')) expect([...thresholds(o!)].some((v) => thresholds(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
+        if (q.id.startsWith('q:spdsum:')) expect([...speedValues(o!)].every((v) => speedValues(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
         // une entité nommée dans le test (« le Deogen est lui aussi plus visible ») ne sert pas de mauvaise réponse
         if (q.id.startsWith('q:zero:')) expect(namesGhost(q.quote ?? '', o!), `${q.id} : ${c.id}`).toBe(false)
       }
@@ -834,5 +841,384 @@ describe('caviardage : « d’un X »', () => {
     const deogen = GHOSTS.find((g) => g.id === 'deogen')!
     expect(redactGhostName('La respiration d’un Deogen à la Spirit Box.', deogen)).toBe('La respiration de cette entité à la Spirit Box.')
     expect(redactGhostName("Le souffle d'une Deogen.", deogen)).toBe('Le souffle de cette entité.')
+  })
+})
+
+describe('révision en QCM', () => {
+  const note = (id: string, extra: Partial<CoachNote>): CoachNote => ({
+    id,
+    createdAt: T0,
+    updatedAt: T0,
+    ghostId: 'demon',
+    title: `Note ${id}`,
+    body: 'Le Démon rechasse vite après l’encens.',
+    asCard: true,
+    author: 'Ryz',
+    ...extra,
+  })
+  const notes: CoachNote[] = [
+    note('qcm', { question: 'Combien de temps l’encens bloque-t-il un Démon ?', answer: '60 secondes', wrong: ['90 secondes', '180 secondes', '30 secondes'] }),
+    note('deux', { question: 'Le Démon peut-il chasser à 70 % ?', answer: 'Oui', wrong: ['Non'] }),
+    note('sans-faux', { question: 'Que retenir du Démon ?', answer: 'Il rechasse vite' }),
+    note('sans-question', { wrong: ['Rien'] }),
+    note('doublons', { question: 'Q ?', answer: 'Même', wrong: ['même', '  '] }),
+  ]
+  const deck = buildDeck(GHOSTS, MECHANICS, notes)
+  const ctx = (day: string) => ({ allGhosts: GHOSTS, mechanics: MECHANICS, notes, day })
+  const DAYS = ['2026-10-31', '2026-11-01', '2026-11-07', '2026-12-25', '2027-03-14', '2026-10-31#1', '2026-10-31#2']
+  const facts = MECHANICS.topics.flatMap((t) => t.facts)
+  const label = (g: Ghost) => (g.name !== g.nameEn ? `${g.name} (${g.nameEn})` : g.name)
+  const bare = (g: Ghost) =>
+    [g.name, g.nameEn, g.name.replace(/^(Le|Les|La) /, ''), g.nameEn.replace(/^The /, '')]
+      .filter((n) => n.length > 3)
+      .map((n) => new RegExp(`(?<![\\p{L}])${n}(?![\\p{L}])`, 'u'))
+  const leaks = (text: string | undefined, g: Ghost) => !!text && (namesGhost(text, g) || bare(g).some((re) => re.test(text)))
+
+  it('chaque carte devient un QCM à une seule bonne réponse, ou se déclare « à retourner »', () => {
+    const asked = { ghost: 0, fact: 0, note: 0 }
+    for (const day of DAYS) {
+      for (const c of deck) {
+        const q = questionForCard(c, ctx(day))
+        if (!q) {
+          // seules les cartes écrites peuvent rester sans choix : un fait sans réponses rédigées, une note sans mauvaise réponse
+          expect(['fact', 'note'], `${c.id} (${day}) sans QCM`).toContain(c.kind)
+          if (c.kind === 'fact') expect(facts.find((f) => `m:${f.id}` === c.id)?.choices?.length ?? 0, c.id).toBeLessThan(2)
+          if (c.kind === 'note') expect(['n:sans-faux', 'n:sans-question', 'n:doublons'], c.id).toContain(c.id)
+          continue
+        }
+        asked[c.deck === 'mechanics' ? 'fact' : c.deck === 'coach' ? 'note' : 'ghost']++
+        const ids = q.choices.map((x) => x.id)
+        expect(q.cardId, c.id).toBe(c.id)
+        expect(q.multi, c.id).toBe(false)
+        expect(q.correct, c.id).toHaveLength(1)
+        expect(ids, c.id).toContain(q.correct[0])
+        expect(new Set(ids).size, `${c.id} : identifiants en double`).toBe(ids.length)
+        expect(new Set(q.choices.map((x) => x.label.trim().toLowerCase())).size, `${c.id} : réponses en double`).toBe(ids.length)
+        expect(q.choices.every((x) => x.label.trim().length > 0), c.id).toBe(true)
+        expect(ids.length, c.id).toBeLessThanOrEqual(4)
+        expect(ids.length, c.id).toBeGreaterThanOrEqual(c.kind === 'note' ? 2 : 3)
+        expect(isCorrect(q, q.correct), c.id).toBe(true)
+        if (c.deck !== 'ghost') continue
+
+        const g = getGhost(c.ghostId!)!
+        const right = q.choices.find((x) => x.id === q.correct[0])!
+        expect(right.id, c.id).toBe(g.id)
+        // jamais le Mimic en mauvaise réponse
+        for (const x of q.choices) if (x.id !== g.id) expect(x.id, `${c.id} (${day})`).not.toBe('the-mimic')
+        expect(mentionsEvidence(`${q.prompt} ${q.quote ?? ''}`), `${c.id}: ${q.prompt}`).toBe(false)
+        expect(mentionsEvidence(right.label), `${c.id}: ${right.label}`).toBe(false)
+        const named = q.choices.every((x) => getGhost(x.id) && x.label === label(getGhost(x.id)!))
+        if (named) {
+          // les choix sont des entités : ni la question ni la citation ne nomment la bonne
+          expect(leaks(q.prompt, g) || leaks(q.quote, g), `${c.id}: ${q.prompt} ${q.quote ?? ''}`).toBe(false)
+        } else {
+          // les choix sont des phrases : aucune ne nomme une entité (la sienne la désignerait)
+          for (const x of q.choices) for (const o of GHOSTS) expect(namesGhost(x.label, o), `${c.id}: ${x.label}`).toBe(false)
+        }
+      }
+    }
+    // toutes les cartes des entités (seuils, vitesses, signes, tests) ont leurs choix
+    expect(asked.ghost).toBe(deck.filter((c) => c.deck === 'ghost').length * DAYS.length)
+    expect(asked.note).toBe(2 * DAYS.length)
+    expect(asked.fact).toBe(facts.filter((f) => !f.evidence && (f.choices?.length ?? 0) >= 2).length * DAYS.length)
+  })
+
+  it('les mauvaises réponses d’un signe ne décrivent pas l’entité', () => {
+    for (const day of DAYS) {
+      for (const c of deck.filter((x) => x.kind === 'tells' || x.kind === 'reverse' || x.kind === 'sanity' || x.kind === 'speed')) {
+        const q = questionForCard(c, ctx(day))!
+        const g = getGhost(c.ghostId!)!
+        for (const x of q.choices) {
+          if (x.id === g.id) continue
+          const o = getGhost(x.id)
+          // un nombre : jamais une valeur que l'entité peut avoir ; un résumé : jamais un seuil qu'elle partage
+          if (c.kind === 'sanity' && q.prompt.startsWith('Quel est')) expect(thresholds(g).has(valueOf(x.label)), `${c.id} : ${x.label}`).toBe(false)
+          if (c.kind === 'speed' && q.prompt.startsWith('Quelle est')) expect(speedValues(g).has(valueOf(x.label)), `${c.id} : ${x.label}`).toBe(false)
+          if (c.kind === 'sanity' && q.prompt.startsWith('Quelle description')) expect([...thresholds(o!)].some((v) => thresholds(g).has(v)), `${c.id} : ${o!.id}`).toBe(false)
+          if (c.kind === 'speed' && q.prompt.startsWith('Quelle description')) expect(x.label, c.id).not.toBe(g.speed.summary)
+          // « Lequel de ces signes est celui de X ? » : le pronom d'une mauvaise réponse ne l'écarte pas d'emblée
+          if (q.prompt.startsWith('Lequel')) expect(/f[ée]minin|masculin/iu.test(x.label), `${c.id}: ${x.label}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('même carte, même jour : mêmes choix dans le même ordre', () => {
+    for (const c of deck) {
+      const a = questionForCard(c, ctx('2026-10-31'))
+      const b = questionForCard(c, ctx('2026-10-31'))
+      expect(b, c.id).toEqual(a)
+    }
+    // un autre jour, l'ordre change pour au moins une partie des cartes
+    const order = (day: string) => deck.map((c) => questionForCard(c, ctx(day))?.choices.map((x) => x.id).join() ?? '').join('|')
+    expect(order('2026-11-01')).not.toBe(order('2026-10-31'))
+  })
+
+  it('une note devient un QCM avec sa question, sa réponse et ses mauvaises réponses, telles qu’écrites', () => {
+    const q = questionForCard(deck.find((c) => c.id === 'n:qcm')!, ctx('2026-10-31'))!
+    expect(q.prompt).toBe('Combien de temps l’encens bloque-t-il un Démon ?')
+    expect(q.choices.map((x) => x.label).sort()).toEqual(['180 secondes', '30 secondes', '60 secondes', '90 secondes'])
+    expect(q.choices.find((x) => q.correct.includes(x.id))!.label).toBe('60 secondes')
+    // les doublons et les blancs ne comptent pas : sans vraie mauvaise réponse, la carte se retourne
+    expect(questionForCard(deck.find((c) => c.id === 'n:doublons')!, ctx('2026-10-31'))).toBeNull()
+  })
+
+  it('un fait sans réponses rédigées reste une carte à retourner', () => {
+    const m = {
+      topics: [
+        {
+          id: 't',
+          title: 'T',
+          icon: 'hunt' as const,
+          facts: [
+            { id: 'a', text: 'x', q: 'Combien ?', a: '15 s', choices: ['10 s', '15 s', '30 s'], answer: 1 },
+            { id: 'b', text: 'y', q: 'Combien encore ?', a: '20 s' },
+            { id: 'c', text: 'z', q: 'Rang hors limites ?', a: '1', choices: ['1', '2', '3'], answer: 3 },
+          ],
+        },
+      ],
+      trueFalse: [],
+    }
+    const [a, b, c] = mechanicsCards(m)
+    const q = questionForCard(a, { allGhosts: GHOSTS, mechanics: m, day: '2026-10-31' })!
+    expect(q.choices.find((x) => q.correct.includes(x.id))!.label).toBe('15 s')
+    expect(questionForCard(b, { allGhosts: GHOSTS, mechanics: m, day: '2026-10-31' })).toBeNull()
+    expect(questionForCard(c, { allGhosts: GHOSTS, mechanics: m, day: '2026-10-31' })).toBeNull()
+  })
+
+  it('garde au plus 3 mauvaises réponses, nettoyées, dans les notes reçues ou chargées', () => {
+    const [n] = sanitizeNotes([{ id: 'x', title: 'T', body: 'B', wrong: ['  a ', '', 3, 'b', 'c', 'd', 'x'.repeat(400)] }])
+    expect(n.wrong).toEqual(['a', 'b', 'c'])
+    expect(sanitizeNotes([{ id: 'y', title: 'T', body: 'B', wrong: 'pas une liste' }])[0].wrong).toBeUndefined()
+    expect(sanitizeNotes([{ id: 'z', title: 'T', body: 'B', wrong: ['x'.repeat(400)] }])[0].wrong).toEqual(['x'.repeat(200)])
+  })
+})
+
+describe('des réponses de même forme', () => {
+  const label = (g: Ghost) => (g.name !== g.nameEn ? `${g.name} (${g.nameEn})` : g.name)
+  /** Les choix sont des noms d'entités : un nom ne souffle rien, sa longueur non plus. */
+  const named = (q: Question) => q.choices.every((c) => getGhost(c.id) && c.label === label(getGhost(c.id)!))
+  const NUMBER = /^\d+(?:,\d+)?\s?(%|m\/s|s|min|m|°C)$/u
+  const unit = (l: string) => NUMBER.exec(l)?.[1] ?? 'texte'
+  /** Les questions rédigées (fiches, mécaniques, notes) ont leurs propres vérifications : seules comptent ici celles que l'app compose. */
+  const composed = (q: Question) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id)
+
+  /** Toutes les questions composées : chaque thème pour chaque entité, sur plusieurs tirages, et chaque carte sur plusieurs jours. */
+  let questions: Question[] = []
+  beforeAll(() => {
+    const out = new Map<string, Question>()
+    const keep = (q: Question) => out.set(`${q.id}|${q.choices.map((c) => c.label).join('|')}`, q)
+    for (const t of QUIZ_TOPICS) {
+      for (const g of GHOSTS) {
+        for (let seed = 1; seed <= 6; seed++) {
+          for (const q of buildQuiz({ topics: [t.id], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 30, rng: createRng(seed * 7919 + g.id.length) })) keep(q)
+        }
+      }
+    }
+    const deck = buildDeck(GHOSTS, MECHANICS, [])
+    for (const day of ['2026-10-31', '2026-11-01', '2026-11-07', '2026-12-25', '2027-03-14', '2027-06-21']) {
+      for (const c of deck) {
+        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day })
+        if (q) keep(q)
+      }
+    }
+    questions = [...out.values()].filter(composed)
+  }, 120_000)
+
+  it('reconnaît des réponses qui se trahissent par leur forme', () => {
+    // la capture du coach : « 50 % » face à trois longs résumés
+    expect(
+      homogeneous([
+        '50 % de sa cible · 12 à 87 % en moyenne',
+        '50 %',
+        '60 % lumière éteinte · 40 % lumière allumée',
+        '50 % · jusqu’à 80 % si quelqu’un parle dans sa pièce',
+      ]),
+    ).toBe(false)
+    expect(homogeneous(['40 %', '50 %', '60 %', '70 %'])).toBe(true)
+    expect(homogeneous(['1,5 m/s', '1,7 m/s', '1,96 m/s', '2,5 m/s'])).toBe(true)
+    // pas de mélange de types ni d'unités
+    expect(homogeneous(['50 %', '1,7 m/s', '60 %', '70 %'])).toBe(false)
+    expect(homogeneous(['50 %', 'Cinquante', '60 %'])).toBe(false)
+    // réponses courtes : 12 caractères d'écart au plus
+    expect(homogeneous(['Oui', 'Non, jamais'])).toBe(true)
+    expect(homogeneous(['Oui', 'Non, sauf en ligne de vue'])).toBe(false)
+    // la seule avec une parenthèse, un « · », un chiffre, une nuance : elle se remarque
+    const base = ['Ne touche jamais au sel en chasse', 'Éteint les lumières de sa pièce', 'Lance plus d’objets que les autres']
+    expect(homogeneous([...base, 'Ne fait aucun événement de chant'])).toBe(true)
+    expect(homogeneous([...base, 'Chasse plus tôt (dans le noir)'])).toBe(false)
+    expect(homogeneous([...base, 'Chasse tôt · éteint tout'])).toBe(false)
+    expect(homogeneous([...base, 'Chasse à 60 % dans le noir'])).toBe(false)
+    expect(homogeneous([...base, 'Chasse parfois dans le noir'])).toBe(false)
+    // deux contre deux : aucune ne se distingue seule
+    expect(homogeneous(['Chasse à 60 % dans le noir', 'Chasse à 40 % sous la lumière', ...base.slice(0, 2)])).toBe(true)
+    // la seule qui cite un pourcentage (ou une vitesse), qui commence par un chiffre, qui a des « », un « elle »,
+    // un « environ », ou la seule qui « n'accélère pas » : elle se remarque aussi
+    expect(homogeneous(['Chasse à 60 % dans le noir', 'Ralentit à 0,4 m/s tout près', ...base.slice(0, 2)])).toBe(false)
+    expect(homogeneous([...base, '3,0 m/s si personne n’a rien touché'])).toBe(false)
+    expect(homogeneous([...base, 'Peut « sauter » un bruit de pas'])).toBe(false)
+    expect(homogeneous([...base, 'Elle ralentit près des joueurs'])).toBe(false)
+    expect(homogeneous([...base, 'Alterne environ toutes les minutes'])).toBe(false)
+    expect(
+      homogeneous([
+        '1,7 m/s · accélère en ligne de vue',
+        '1,5 ou 1,9 m/s · accélère en ligne de vue',
+        '1,4 à 2,7 m/s · n’accélère pas en ligne de vue',
+        '1,53 m/s · accélère en ligne de vue',
+      ]),
+    ).toBe(false)
+  })
+
+  it('les seuils et les vitesses se demandent en nombres que le jeu connaît', () => {
+    const real = { san: new Set(GHOSTS.flatMap((g) => [...thresholds(g)])), spd: new Set(GHOSTS.flatMap((g) => [...speedValues(g)])) }
+    const seen = { san: new Set<string>(), spd: new Set<string>() }
+    // une entité standard n'a sa question en nombres que rarement (sinon « 50 % » gagnerait à coup sûr) :
+    // on la cherche sur plus de tirages, une entité à la fois
+    const none = {
+      san: ['thaye', 'obambo', 'the-mimic'],
+      spd: ['thaye', 'obambo', 'hantu', 'moroi', 'deogen', 'deildegast', 'the-twins', 'the-mimic'],
+    }
+    const extra: Question[] = []
+    for (const g of GHOSTS) {
+      for (const kind of ['san', 'spd'] as const) {
+        if (none[kind].includes(g.id) || questions.some((x) => x.id === `q:${kind}:${g.id}`)) continue
+        for (let seed = 1; seed <= 300; seed++) {
+          const q = buildQuiz({ topics: [kind === 'san' ? 'sanity' : 'speed'], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) }).find(
+            (x) => x.id === `q:${kind}:${g.id}`,
+          )
+          if (q) {
+            extra.push(q)
+            break
+          }
+        }
+      }
+    }
+    for (const q of [...questions, ...extra]) {
+      const kind = /^q:san:|^q:card:g:[^:]+:san$/u.test(q.id) && q.prompt.startsWith('Quel est') ? 'san' : /^q:spd:|^q:card:g:[^:]+:spd$/u.test(q.id) && q.prompt.startsWith('Quelle est') ? 'spd' : null
+      if (!kind) continue
+      const g = getGhost(q.ghostId!)!
+      seen[kind].add(g.id)
+      expect(q.choices, q.id).toHaveLength(4)
+      for (const c of q.choices) {
+        expect(c.label, q.id).toMatch(kind === 'san' ? /^\d+\s%$/u : /^\d,\d{1,2}\sm\/s$/u)
+        // une valeur qui existe dans le jeu ; une mauvaise réponse n'est jamais une valeur de l'entité
+        expect(real[kind].has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(true)
+        const own = kind === 'san' ? thresholds(g) : speedValues(g)
+        expect(own.has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(q.correct.includes(c.id))
+      }
+    }
+    const right = (id: string, kind: 'san' | 'spd') => {
+      const q = [...questions, ...extra].find((x) => x.ghostId === id && x.id === `q:${kind}:${id}`)!
+      return q.choices.find((c) => q.correct.includes(c.id))!.label
+    }
+    expect(right('spirit', 'san')).toBe('50\u00a0%')
+    expect(right('demon', 'san')).toBe('70\u00a0%')
+    expect(right('mare', 'san')).toBe('60\u00a0%')
+    expect(right('spirit', 'spd')).toBe('1,7\u00a0m/s')
+    expect(right('aswang', 'spd')).toBe('1,53\u00a0m/s')
+    // le Yokai chasse jusqu'à 80 % quand on parle : « 80 % » n'est jamais une mauvaise réponse pour lui
+    for (const q of [...questions, ...extra].filter((x) => x.id === 'q:san:yokai')) expect(q.choices.map((c) => c.label), q.id).not.toContain('80\u00a0%')
+    // les seuils et vitesses qui ne tiennent pas en un nombre (Thayé, Obambo, Hantu…) n'ont pas de question en nombres
+    for (const id of none.san) expect(seen.san.has(id), id).toBe(false)
+    for (const id of none.spd) expect(seen.spd.has(id), id).toBe(false)
+    expect(seen.san.size).toBeGreaterThanOrEqual(25)
+    expect(seen.spd.size).toBeGreaterThanOrEqual(20)
+  }, 60_000)
+
+  it('chaque question composée a des choix de même type, de longueur voisine et une seule bonne réponse', () => {
+    let shaped = 0
+    for (const q of questions) {
+      const ids = q.choices.map((c) => c.id)
+      expect(q.correct, q.id).toHaveLength(1)
+      expect(ids, q.id).toContain(q.correct[0])
+      expect(new Set(ids).size, q.id).toBe(ids.length)
+      if (named(q)) continue
+      shaped++
+      const labels = q.choices.map((c) => c.label)
+      const show = `${q.id} : ${labels.join(' | ')}`
+      expect(new Set(labels.map(unit)).size, show).toBe(1)
+      const lengths = labels.map((l) => l.length)
+      const [min, max] = [Math.min(...lengths), Math.max(...lengths)]
+      expect(max <= 1.6 * min || (max <= 20 && max - min <= 12), show).toBe(true)
+      expect(homogeneous(q.choices), show).toBe(true)
+    }
+    expect(shaped).toBeGreaterThan(1000)
+  })
+
+  it('la bonne réponse n’est pas d’habitude la plus longue', () => {
+    const uniqueLongest = (q: Question) => {
+      const lengths = q.choices.map((c) => c.label.length)
+      const max = Math.max(...lengths)
+      const right = q.choices.find((c) => q.correct.includes(c.id))!
+      return right.label.length === max && lengths.filter((l) => l === max).length === 1
+    }
+    const shaped = questions.filter((q) => !named(q))
+    const share = (qs: Question[]) => qs.filter(uniqueLongest).length / qs.length
+    expect(share(shaped)).toBeLessThanOrEqual(0.3)
+    // même parmi les seules phrases (départager, signes, résumés), où la longueur se voit le plus
+    const sentences = shaped.filter((q) => q.choices.every((c) => unit(c.label) === 'texte' && c.label.length > 20))
+    expect(sentences.length).toBeGreaterThan(500)
+    expect(share(sentences)).toBeLessThanOrEqual(0.3)
+    // ni dans aucune famille de questions à quatre phrases (signes, départages, résumés, tests)
+    const family = (q: Question) => (q.id.startsWith('q:card:') ? `carte « ${q.prompt.split(' ').slice(0, 3).join(' ')} »` : q.id.split(':')[1])
+    const families = new Map<string, Question[]>()
+    for (const q of shaped.filter((x) => x.choices.length >= 3)) families.set(family(q), [...(families.get(family(q)) ?? []), q])
+    for (const [name, qs] of families) if (qs.length >= 30) expect(share(qs), `${name} (${qs.length} questions)`).toBeLessThanOrEqual(0.3)
+  })
+
+  const rightOf = (q: Question) => q.choices.find((c) => q.correct.includes(c.id))!
+
+  it('une valeur fréquente ne se devine pas : « 50 % » et « 1,7 m/s » ne gagnent pas d’office', () => {
+    // le quiz tel qu'on le lance (toutes les entités) et les cartes, sur beaucoup de tirages : chaque occurrence compte
+    const asked: Question[] = []
+    for (let seed = 1; seed <= 150; seed++) {
+      asked.push(...buildQuiz({ topics: ['sanity', 'speed'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 12, rng: createRng(seed) }))
+    }
+    const deck = buildDeck(GHOSTS, MECHANICS, []).filter((c) => c.kind === 'sanity' || c.kind === 'speed')
+    for (let d = 1; d <= 40; d++) {
+      for (const c of deck) {
+        const q = questionForCard(c, { allGhosts: GHOSTS, mechanics: MECHANICS, day: `2026-12-${d}` })
+        if (q) asked.push(q)
+      }
+    }
+    const cases = [
+      { value: '50\u00a0%', has: (g: Ghost) => thresholds(g).has(50), numeric: 'Quel est', reverse: 'Laquelle de ces entités a un seuil' },
+      { value: '1,7\u00a0m/s', has: (g: Ghost) => speedValues(g).has(1.7), numeric: 'Quelle est', reverse: 'Laquelle de ces entités a une vitesse' },
+    ]
+    for (const { value, has, numeric, reverse } of cases) {
+      const offered = asked.filter((q) => q.choices.some((c) => c.label === value))
+      const won = offered.filter((q) => rightOf(q).label === value)
+      expect(offered.length, value).toBeGreaterThan(100)
+      // au hasard, une chance sur quatre : « toujours cette valeur » ne doit pas faire beaucoup mieux
+      expect(won.length / offered.length, `${value} : ${won.length}/${offered.length}`).toBeLessThanOrEqual(0.35)
+      for (const q of asked) {
+        const g = getGhost(q.ghostId!)!
+        // face à un seuil (une vitesse) particulier, la valeur standard est toujours une mauvaise réponse proposée
+        if (q.prompt.startsWith(numeric) && q.choices.every((c) => /^\d/u.test(c.label)) && !has(g)) expect(q.choices.map((c) => c.label), q.id).toContain(value)
+        // à l'envers : la bonne réponse chasse d'habitude à cette valeur, aucune mauvaise n'y passe jamais
+        if (q.prompt.startsWith(reverse)) {
+          expect(has(g), q.id).toBe(true)
+          for (const c of q.choices) {
+            if (c.id === g.id) continue
+            const o = getGhost(c.id)!
+            expect(has(o) || o.speed.isRange || /→/u.test(o.huntSanity.summary) || o.id === 'the-mimic', `${q.id} : ${o.id}`).toBe(false)
+          }
+        }
+      }
+    }
+    // les deux sortes de questions existent
+    expect(asked.some((q) => q.prompt.startsWith('Laquelle de ces entités a un seuil'))).toBe(true)
+    expect(asked.some((q) => q.prompt.startsWith('Laquelle de ces entités a une vitesse'))).toBe(true)
+  })
+
+  it('« accélère-t-elle en ligne de vue ? » : autant de oui que de non', () => {
+    const los: Question[] = []
+    for (let seed = 1; seed <= 200; seed++) {
+      los.push(...buildQuiz({ topics: ['speed'], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) }).filter((q) => q.id.startsWith('q:los:')))
+    }
+    expect(los.length).toBeGreaterThan(100)
+    const yes = los.filter((q) => q.correct[0] === 'yes').length / los.length
+    expect(yes).toBeGreaterThanOrEqual(0.35)
+    expect(yes).toBeLessThanOrEqual(0.65)
   })
 })

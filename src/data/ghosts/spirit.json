@@ -35,7 +35,7 @@
   },
   "summary": "Entité sans comportement visible particulier : sa seule vraie signature est d'attendre 180 s avant de pouvoir rechasser après avoir été encensée.",
   "keyTells": [
-    "Encensée, elle ne peut pas rechasser avant 180 s (90 s pour une entité standard)",
+    "Après l'encens, ne peut pas rechasser avant 180 s (90 s pour une entité standard)",
     "Si elle chasse moins de 180 s après l'encens, ce n'est pas un Esprit",
     "Double encens (2e à 150–170 s) puis chasse en moins de 60 s : c'est un Esprit"
   ],
@@ -148,43 +148,43 @@
     {
       "q": "Combien de temps un Esprit doit-il attendre après avoir été encensé avant de pouvoir rechasser ?",
       "choices": [
-        "90 s",
         "180 s",
+        "90 s",
         "60 s",
         "120 s"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "L'Esprit doit attendre 180 s, contre 90 s pour une entité standard et 60 s pour un Démon."
     },
     {
       "q": "Tu encenses l'entité et elle chasse 150 s plus tard. Que peux-tu en conclure ?",
       "choices": [
         "C'est forcément un Démon",
-        "C'est forcément un Esprit",
         "Ce n'est pas un Esprit",
-        "Rien : l'encens ne change pas le délai avant la chasse suivante"
+        "C'est forcément un Esprit",
+        "Ce n'est pas un Démon"
       ],
-      "answer": 2,
-      "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Ce n'est pas pour autant un Démon : une entité standard peut rechasser dès 90 s."
+      "answer": 1,
+      "explain": "Un Esprit ne peut pas chasser avant 180 s après l'encens : une chasse à 150 s l'élimine. Elle ne désigne pas pour autant un Démon et ne l'écarte pas non plus : un Démon peut rechasser dès 60 s, une entité standard dès 90 s."
     },
     {
       "q": "À quelle vitesse chasse un Esprit ?",
       "choices": [
-        "1,7 m/s avec accélération standard en LdV",
-        "1,7 m/s sans aucune accélération en LdV",
-        "1,5 ou 1,9 m/s selon la chasse",
-        "1,0 m/s, puis 3,0 m/s quand il te détecte"
+        "1,7 m/s sans aucune accélération en ligne de vue",
+        "1,5 m/s avec accélération standard en ligne de vue",
+        "1,7 m/s avec accélération standard en ligne de vue",
+        "1,5 m/s sans aucune accélération en ligne de vue"
       ],
-      "answer": 0,
-      "explain": "En chasse, rien ne distingue l'Esprit d'une entité standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue (jusqu'à environ 2,8 m/s après 13 s). Sa seule signature est le délai de 180 s après l'encens."
+      "answer": 2,
+      "explain": "En chasse, rien ne distingue l'Esprit d'une entité standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue (jusqu'à environ 2,8 m/s après 13 s). 1,5 m/s, c'est l'un des Jumeaux. Sa seule signature est le délai de 180 s après l'encens."
     },
     {
       "q": "Tu hésites entre un Esprit et un Spectre. Quel test simple les départage ?",
       "choices": [
-        "Mesurer la vitesse de chasse : l'Esprit est plus rapide",
-        "Écouter au microphone parabolique pour un cri unique",
+        "Mesurer sa vitesse de chasse et voir si elle est élevée",
+        "Écouter au microphone parabolique et guetter un cri",
         "Allumer la lumière de sa pièce et voir si elle l'éteint",
-        "Poser du sel sur son passage : le Spectre ne le perturbe jamais"
+        "Poser du sel sur son passage et voir s'il est perturbé"
       ],
       "answer": 3,
       "explain": "Le Spectre ne touche jamais au sel ; l'Esprit le perturbe normalement. Les deux chassent à 1,7 m/s ; le cri au microphone parabolique est propre à la Banshee et l'extinction immédiate de la lumière évoque le Cauchemar."
@@ -192,23 +192,23 @@
     {
       "q": "À quel seuil de santé mentale moyenne un Esprit peut-il chasser ?",
       "choices": [
+        "50 %",
         "35 %",
         "60 %",
-        "50 %",
         "70 %"
       ],
-      "answer": 2,
+      "answer": 0,
       "explain": "L'Esprit a le seuil standard de 50 %. 35 % correspond à l'Ombre, 60 % à l'Onryo (ou au Cauchemar dans le noir), 70 % au seuil habituel du Démon."
     },
     {
       "q": "Pour le test du double encensement, quand fais-tu le second encensement ?",
       "choices": [
-        "Entre 150 et 170 s après le premier",
         "Entre 30 et 50 s après le premier",
+        "Entre 150 et 170 s après le premier",
         "Entre 60 et 80 s après le premier",
-        "Plus de 200 s après le premier"
+        "Entre 200 et 220 s après le premier"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "On encense une deuxième fois 150 à 170 s après le premier, puis on regarde si l'entité chasse dans les 60 s qui suivent : si oui, c'est un Esprit."
     }
   ],

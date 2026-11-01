@@ -12,9 +12,29 @@
 /* « la suite : ses sosies » tient dans la marge, à droite du filet rouge */
 .ghost-file .page > .turn { right: 0; width: 82px; }
 
-/* la note de maîtrise : le pourcentage est entouré au stylo, le niveau est écrit au crayon (sauf « acquise ») */
+/* la note de maîtrise : le pourcentage est entouré au stylo, « ta maîtrise » et le niveau sont écrits au crayon
+   (sauf « acquise », au stylo rouge) */
 .ghost-file .grade small { color: var(--pencil); }
+.ghost-file .grade small + small { margin-top: 0; }
 .ghost-file .grade small.is-max { color: var(--red-pen); }
+
+/* « Sur cette fiche : » — le sommaire tapé, sous la description */
+.ghost-file .gh-toc {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px;
+  margin: -12px 0 30px; max-width: 34em;
+  font-family: "Courier Prime", monospace; font-size: 14.5px; color: var(--ink-2);
+}
+.ghost-file .gh-toc-k { font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 12.5px; margin-right: 2px; }
+.ghost-file .gh-toc-item { display: inline-flex; align-items: center; gap: 10px; }
+.ghost-file .gh-toc .link { display: inline-flex; align-items: center; min-height: 32px; font-size: 14.5px; }
+.ghost-file .gh-toc-sep { color: var(--ink-3); }
+/* une partie atteinte par le sommaire reçoit le focus : pas de cadre au clic, un cadre au clavier */
+.ghost-file section[tabindex="-1"] { scroll-margin-top: 16px; }
+.ghost-file section[tabindex="-1"]:focus { outline: none; }
+.ghost-file section[tabindex="-1"]:focus-visible { outline: 2px dashed var(--red-pen); outline-offset: 8px; }
+
+/* les preuves de la fiche : un relevé (coche ou tiret), pas des cases à cocher */
+.ghost-file .ev-mark--no path { color: var(--pencil); }
 
 /* « Voir les autres » : un vrai lien tapé, jamais un bouton du système */
 .ghost-file .conf-more { min-height: 40px; font-size: 15px; }
@@ -52,7 +72,23 @@
 .note-qa-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .note-actions { margin-top: 4px; }
 .note-add { margin: 6px 0; }
+/* pages empilées : « À retenir » remonte sous la description, avant les preuves et les mesures */
+@media (max-width: 1180px) {
+  .ghost-file .gh-tells { margin: 0 0 44px; }
+}
 @media (max-width: 759px) {
+  .ghost-file .gh-toc { margin: -4px 0 26px; gap: 0 8px; }
+  .ghost-file .gh-toc-k { margin-bottom: 2px; }
+  .ghost-file .gh-toc .link { min-height: 40px; }
+  .ghost-file .gh-toc-k { flex-basis: 100%; }
+  .ghost-file .gh-toc-item { gap: 8px; }
+  .ghost-file .grade small { font-size: 18px; margin-top: 4px; }
+  /* en-tête : le nom à gauche (un nom long rapetisse, voir GhostPage), la maîtrise entourée dans sa propre
+     colonne à droite, pour qu'aucun nom ne passe sous le cercle */
+  .ghost-file .ghost-head { grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; }
+  .ghost-file .ghost-head .ghost-name { grid-column: 1; grid-row: 1; align-self: center; white-space: nowrap; }
+  .ghost-file .ghost-head .grade { position: static !important; grid-column: 2; grid-row: 1; align-self: start; margin: -6px 0 0 !important; }
+  .ghost-file .ghost-head :is(.stamp, .ghost-alias) { grid-column: 1 / -1; }
   .ghost-file .gh-unsure ul { font-size: 20px; }
   /* cibles tactiles : le lien vers la pile et les noms des sosies, sans changer la mise en page */
   .ghost-file .ghost-actions .link { display: inline-flex; align-items: center; min-height: 40px; }

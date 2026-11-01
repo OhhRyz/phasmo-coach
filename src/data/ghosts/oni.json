@@ -161,62 +161,67 @@
     {
       "q": "Quand un Oni est-il plus actif ?",
       "choices": [
-        "Quand plusieurs joueurs sont à proximité",
         "Quand quelqu'un parle dans sa pièce",
         "Quand la lumière de sa pièce est allumée",
+        "Quand plusieurs joueurs sont à proximité",
         "Quand un appareil électronique est allumé près de lui"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "L'Oni est plus actif quand plusieurs personnes sont près de lui. C'est la voix qui attire le Yokai, la lumière allumée qui fait errer le Cauchemar, et l'électronique active qui accélère le Raiju."
     },
     {
       "q": "Combien de santé mentale un événement d'Oni draine-t-il ?",
-      "choices": ["20 %", "10 %", "15 %", "25 %"],
-      "answer": 0,
+      "choices": [
+        "10 %",
+        "15 %",
+        "25 %",
+        "20 %"
+      ],
+      "answer": 3,
       "explain": "20 %, soit le double des 10 % standard. 15 % correspond au pouvoir du Yurei, 25 % à celui du Djinn."
     },
     {
       "q": "Quel type d'événement un Oni ne fait-il jamais ?",
       "choices": [
-        "L'apparition en marche",
-        "Le brouillard fantomatique (bulle d'air)",
-        "Une apparition avec son modèle complet",
-        "Un événement qui fait perdre de la santé mentale"
+        "Le brouillard fantomatique",
+        "L'événement de poursuite",
+        "L'apparition éclair devant toi",
+        "L'événement de chant"
       ],
-      "answer": 1,
-      "explain": "L'Oni ne fait pas le brouillard fantomatique / la bulle d'air. Il apparaît au contraire volontiers avec son modèle complet, et ses événements coûtent 20 % de santé mentale."
+      "answer": 0,
+      "explain": "L'Oni ne fait pas le brouillard fantomatique (la bulle d'air). Il apparaît au contraire volontiers avec son modèle complet, peut faire la poursuite, l'apparition éclair ou le chant, et ses événements coûtent 20 % de santé mentale."
     },
     {
       "q": "Pendant un événement, tu entends un « souffle » sans rien voir. Peux-tu exclure l'Oni ?",
       "choices": [
         "Oui, ce souffle est propre au brouillard fantomatique",
+        "Non, l'apparition en marche peut faire ce souffle",
         "Oui, l'Oni ne fait aucun bruit pendant ses événements",
-        "Non, l'apparition en marche peut produire le même souffle",
-        "Non, mais uniquement en difficulté Démence"
+        "Non, l'Oni peut faire le brouillard fantomatique"
       ],
-      "answer": 2,
-      "explain": "Attention : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni."
+      "answer": 1,
+      "explain": "Attention : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni, qui ne fait jamais le brouillard fantomatique."
     },
     {
       "q": "Quelles entités sont plus visibles que la normale pendant une chasse ?",
       "choices": [
-        "L'Oni et le Fantôme",
+        "Le Deogen et le Fantôme",
+        "Le Fantôme et l'Ombre",
         "L'Oni et le Deogen",
-        "Le Fantôme et le Deogen",
-        "L'Oni et l'Ombre"
+        "L'Ombre et l'Oni"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Au clignotement, l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
     },
     {
       "q": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et elle avance à un pas normal qui ne ralentit pas en arrivant sur toi. Qui est-ce ?",
       "choices": [
-        "L'Oni",
         "Le Deogen",
         "Le Fantôme",
-        "L'Obake"
+        "L'Obake",
+        "L'Oni"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "L'Oni et le Deogen sont tous deux plus visibles en chasse, mais le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de toi ; l'Oni garde une vitesse normale. Le Fantôme est presque invisible, et l'Obake change de modèle le temps d'un clignotement."
     }
   ],

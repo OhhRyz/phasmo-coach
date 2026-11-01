@@ -1,8 +1,21 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { FileHead, H, Notebook, Page, PaperButton, RoughCircle, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
+import {
+  Consigne,
+  EndActions,
+  FileHead,
+  H,
+  Notebook,
+  Page,
+  PaperButton,
+  RoughCircle,
+  Stamp,
+  Tape,
+  TapeButton,
+  TypedLink,
+} from '../components/journal/Journal'
 import { roughEllipse, roughLine, roughRng } from '../components/journal/rough'
-import { ProgressBar, Seg } from '../components/ui'
+import { Modal, ProgressBar, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { platform } from '../engine/device'
@@ -291,6 +304,11 @@ export function Ear() {
   /** réécoute depuis le relevé de fin : la vitesse en cours */
   const [again, setAgain] = useState<number | null>(null)
   const [heard, setHeard] = useState<Heard[]>([])
+  /** l'écoute en cours a été jouée au moins une fois : on peut répondre */
+  const [listened, setListened] = useState(false)
+  const [quitOpen, setQuitOpen] = useState(false)
+  /** la référence a été écoutée sur la page d'accueil de l'exercice */
+  const [refHeard, setRefHeard] = useState(false)
   const steps = useRef<Footsteps | null>(null)
   const ios = useMemo(() => platform() === 'ios', [])
   const speeds = useMemo(allSpeeds, [])
@@ -316,19 +334,30 @@ export function Ear() {
     setPlaying(which)
   }
 
-  const start = () => {
+  const start = (m: Mode = mode) => {
     steps.current?.stop()
-    setRounds(makeRounds(mode, createRng(Date.now() >>> 0)))
+    setMode(m)
+    setTrail(null)
+    setRounds(makeRounds(m, createRng(Date.now() >>> 0)))
     setI(0)
     setScore(0)
     setAnswer(null)
+    setListened(false)
+    setHeard([])
+    setQuitOpen(false)
+  }
+
+  const quit = () => {
+    steps.current?.stop()
+    setQuitOpen(false)
+    setRounds(null)
     setHeard([])
   }
 
   const correctKey = round ? (mode === 'class' ? classOf(round.speed) : String(round.speed)) : ''
 
   const choose = (key: string) => {
-    if (!round || answer) return
+    if (!round || answer || !listened) return
     setAnswer(key)
     steps.current?.stop()
     if (key === correctKey) setScore((s) => s + 1)
@@ -346,12 +375,15 @@ export function Ear() {
     }
     setI(i + 1)
     setAnswer(null)
+    setListened(false)
   }
 
   /* affichage : la bande garde l'empreinte de la dernière écoute de cet écran */
   const screen = rounds ? i : -1
   const listen = (v: number, which: 'q' | 'ref') => {
     if (playing !== which) setTrail({ v, which, id: Date.now(), at: screen })
+    if (which === 'q') setListened(true)
+    else if (!rounds) setRefHeard(true)
     play(v, which)
   }
   const shown = trail && trail.at === screen ? trail : null
@@ -361,6 +393,7 @@ export function Ear() {
     if (!round) return
     const keys = mode === 'class' ? ['slow', 'normal', 'fast'] : round.choices.map(String)
     const onKey = (e: KeyboardEvent) => {
+      if (quitOpen) return
       if (ignoreKey(e, (el) => e.key !== 'Enter' && !!el.closest('.ear'))) return
       if (e.key === 'Enter') {
         if (!answer) return
@@ -368,7 +401,7 @@ export function Ear() {
         next()
         return
       }
-      if (answer) return
+      if (answer || !listened) return
       const k = /^[1-9]$/.test(e.key) ? Number(e.key) - 1 : /^[a-z]$/i.test(e.key) ? e.key.toLowerCase().charCodeAt(0) - 97 : -1
       const key = keys[k]
       if (key == null) return
@@ -388,7 +421,7 @@ export function Ear() {
         <Notebook single>
           <Page section="4" label="À l’oreille">
             <FileHead>
-              <Link to="/entrainement">‹ S’entraîner</Link>
+              <Link to="/entrainement">‹ Exercices</Link>
               <span>À l’oreille</span>
               <span>
                 Série de <b>{ROUNDS}</b> écoutes
@@ -406,39 +439,9 @@ export function Ear() {
               </p>
             </header>
 
-            <section className="ear-step" aria-labelledby="h-ear-mode">
-              <h2 className="typed-label ear-step-h" id="h-ear-mode">
-                L’exercice
-              </h2>
-              <Seg
-                label="Exercice"
-                value={mode}
-                onChange={setMode}
-                options={[
-                  { value: 'class', label: 'Lente, normale ou rapide' },
-                  { value: 'exact', label: 'Vitesse exacte' },
-                ]}
-              />
-              <p className="ear-mode-hint">
-                {mode === 'class'
-                  ? fr('Trois cases : plus lente que la référence, normale, ou plus rapide.')
-                  : fr('Quatre vitesses proposées sur la règle : retrouve la bonne au rythme des pas.')}
-              </p>
-            </section>
-
-            <div className="ear-go">
-              <TapeButton
-                onClick={() => {
-                  setTrail(null)
-                  start()
-                }}
-              >
-                Commencer ({ROUNDS} écoutes)
-              </TapeButton>
-            </div>
             <section className="ear-step" aria-labelledby="h-ear-ref">
               <h2 className="typed-label ear-step-h" id="h-ear-ref">
-                La référence, pour t’étalonner
+                <span className="ear-step-n">1</span> Écoute la référence ({ms(BASE)}), pour t’étalonner
               </h2>
               <FootprintStrip
                 speed={shown?.v ?? null}
@@ -457,7 +460,32 @@ export function Ear() {
                 </PaperButton>
                 <span className="pencil-note ear-bpm">environ {refBpm} pas par minute</span>
               </div>
+              {refHeard && <p className="pencil-note ear-then">puis l’étape 2, juste en dessous ↓</p>}
               {ios && <p className="pencil-note ear-ios">{IOS_HINT}</p>}
+            </section>
+
+            <section className="ear-step ear-step--go" aria-labelledby="h-ear-mode">
+              <h2 className="typed-label ear-step-h" id="h-ear-mode">
+                <span className="ear-step-n">2</span> Choisis l’exercice, puis commence
+              </h2>
+              <Seg
+                label="Exercice"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'class', label: 'Lente, normale ou rapide' },
+                  { value: 'exact', label: 'Vitesse exacte' },
+                ]}
+              />
+              <p className="ear-mode-hint">
+                {mode === 'class'
+                  ? fr('3 réponses possibles : plus lente que la référence, normale, ou plus rapide.')
+                  : fr('4 vitesses possibles, placées sur la règle : retrouve la bonne au rythme des pas.')}
+              </p>
+              <div className="ear-go">
+                <TapeButton onClick={() => start()}>Commencer ({ROUNDS} écoutes)</TapeButton>
+                {!refHeard && <p className="pencil-note ear-first">conseil{NNBSP}: écoute d’abord la référence ↑</p>}
+              </div>
             </section>
 
             <p className="ear-small">
@@ -542,18 +570,16 @@ export function Ear() {
               </table>
             )}
 
-            <div className="ear-end-actions">
-              <TapeButton
-                onClick={() => {
-                  setTrail(null)
-                  start()
-                }}
-              >
-                Nouvelle série
-              </TapeButton>
-              <TypedLink onClick={leave(() => setRounds(null))}>Changer d’exercice</TypedLink>
+            <EndActions className="ear-end-actions">
+              <TapeButton onClick={leave(() => start())}>Recommencer une série</TapeButton>
+              <TypedLink onClick={leave(() => setRounds(null))}>Changer les réglages</TypedLink>
               <TypedLink to="/entrainement">Retour aux exercices</TypedLink>
-            </div>
+              {good && mode === 'class' ? (
+                <TypedLink onClick={leave(() => start('exact'))}>Passer à la vitesse exacte →</TypedLink>
+              ) : (
+                <TypedLink to="/quiz?topic=speed">Faire un quiz sur les vitesses →</TypedLink>
+              )}
+            </EndActions>
           </Page>
 
           <Page side="right" section="4" label="Relevé des écoutes">
@@ -673,15 +699,7 @@ export function Ear() {
       <Notebook single>
         <Page section="4" label={`Écoute ${i + 1} sur ${rounds.length}`}>
           <FileHead>
-            <button
-              type="button"
-              className="link-btn ear-quit"
-              onClick={() => {
-                steps.current?.stop()
-                setRounds(null)
-                setHeard([])
-              }}
-            >
+            <button type="button" className="link-btn ear-quit" onClick={() => (heard.length ? setQuitOpen(true) : quit())}>
               ‹ Quitter la série
             </button>
             <span>À l’oreille · {MODE_LABEL[mode]}</span>
@@ -698,9 +716,12 @@ export function Ear() {
             </span>
           </div>
 
-          <H as="h1" count={mode === 'class' ? 'trois cases' : 'quatre vitesses'}>
+          <H as="h1" count={mode === 'class' ? '3 réponses possibles' : '4 vitesses possibles'}>
             Quelle vitesse entends-tu{NNBSP}?
           </H>
+          <Consigne className="ear-consigne">
+            1. écoute les pas · 2. compare avec la référence si besoin · 3. entoure ta réponse.
+          </Consigne>
 
           <FootprintStrip speed={shown?.v ?? null} status={stripStatus} runId={shown?.id ?? 0} caption={statusText} />
           <SpeedRuler
@@ -731,15 +752,19 @@ export function Ear() {
             </PaperButton>
           </div>
           {ios && i === 0 && !answer && <p className="pencil-note ear-ios">{IOS_HINT}</p>}
+          {listened && !answer && <p className="pencil-note ear-then">puis entoure ta réponse ↓</p>}
 
-          <fieldset className="ear-answer">
-            <legend className="typed-label">{answer ? 'Ta réponse' : 'Entoure ta réponse'}</legend>
+          <fieldset className={`ear-answer${!listened && !answer ? ' is-locked' : ''}`}>
+            <legend className="typed-label">
+              {answer ? 'Ta réponse' : 'Entoure ta réponse'}
+              {!listened && !answer && <span className="pencil-note ear-first">écoute d’abord les pas ↑</span>}
+            </legend>
             <ol className={`ear-choices ear-choices--${mode}`}>
               {options.map((o, k) => {
                 const state = answer ? (o.key === correctKey ? 'right' : o.key === answer ? 'wrong' : 'idle') : ''
                 return (
                   <li key={o.key}>
-                    <button type="button" className={`ear-choice ${state}`} disabled={!!answer} onClick={() => choose(o.key)}>
+                    <button type="button" className={`ear-choice ${state}`} disabled={!!answer || !listened} onClick={() => choose(o.key)}>
                       <span className="ear-letter">{'ABCD'[k]}.</span>
                       <span className="ear-label">
                         {(() => {
@@ -786,7 +811,7 @@ export function Ear() {
                 </p>
                 <div className="ear-next-row">
                   <TapeButton className="ear-next" onClick={next} autoFocus>
-                    {i + 1 >= rounds.length ? 'Voir le résultat' : 'Suivante'}
+                    {i + 1 >= rounds.length ? 'Voir le résultat' : 'Écoute suivante'}
                   </TapeButton>
                 </div>
               </>
@@ -794,6 +819,22 @@ export function Ear() {
           </div>
         </Page>
       </Notebook>
+
+      <Modal
+        open={quitOpen}
+        onClose={() => setQuitOpen(false)}
+        title="Quitter la série ?"
+        actions={
+          <>
+            <TypedLink onClick={() => setQuitOpen(false)}>Continuer la série</TypedLink>
+            <PaperButton onClick={quit}>Quitter</PaperButton>
+          </>
+        }
+      >
+        <p className="ear-quit-body">
+          {heard.length === 1 ? 'Ta première écoute sera perdue' : `Tes ${heard.length} écoutes seront perdues`}{NNBSP}: la série ne sera pas notée.
+        </p>
+      </Modal>
     </div>
   )
 }

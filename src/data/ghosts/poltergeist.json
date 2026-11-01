@@ -169,24 +169,24 @@
     {
       "q": "Que fait le Poltergeist avec les objets pendant une chasse ?",
       "choices": [
-        "Il ne lance plus aucun objet",
-        "Il lance un objet toutes les 0,5 s, avec plus de force",
-        "Il éteint toutes les lumières sur son passage",
-        "Il ne lance des objets que vers sa cible"
+        "Il en lance un toutes les 3 s, avec moins de force",
+        "Il en lance un toutes les 0,5 s, avec moins de force",
+        "Il en lance un toutes les 0,5 s, avec plus de force",
+        "Il en lance un toutes les 3 s, avec plus de force"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "En chasse, le Poltergeist lance un objet toutes les 0,5 s avec une force accrue : aligne des objets sur son trajet pour le voir."
     },
     {
       "q": "Combien de santé mentale fait perdre l'explosion de Poltergeist aux joueurs proches ?",
       "choices": [
-        "10 % d'un coup",
-        "25 % d'un coup",
+        "10 % par explosion",
+        "25 % d'un seul coup",
         "0,5 % par seconde",
         "2 % par objet lancé"
       ],
       "answer": 3,
-      "explain": "Chaque objet projeté par l'explosion retire 2 % de santé aux joueurs proches. 25 % d'un coup, c'est le Djinn ; 0,5 % par seconde, le Fantôme ; 10 %, un événement standard."
+      "explain": "Chaque objet projeté par l'explosion retire 2 % de santé aux joueurs proches : la perte dépend du nombre d'objets, pas d'un forfait par explosion. 25 % d'un coup, c'est le Djinn ; 0,5 % par seconde, le Fantôme ; 10 %, un événement standard."
     },
     {
       "q": "Quelle entité est la seule capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée ?",
@@ -203,33 +203,33 @@
       "q": "Quel test confirme le mieux un Poltergeist ?",
       "choices": [
         "Poser du sel et vérifier qu'il n'est pas perturbé",
-        "Allumer la lumière et voir si elle s'éteint aussitôt",
-        "Poser plusieurs objets en tas dans sa pièce et voir s'ils sont projetés en même temps",
-        "Encenser l'entité et chronométrer 180 s"
+        "Entasser des objets et voir s'ils volent d'un coup",
+        "Allumer la lumière et voir si l'entité l'éteint",
+        "Encenser l'entité et chronométrer sa chasse suivante"
       ],
-      "answer": 2,
-      "explain": "L'explosion d'objets est propre au Poltergeist. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, les 180 s après l'encens l'Esprit."
+      "answer": 1,
+      "explain": "L'explosion d'objets est propre au Poltergeist : pose plusieurs objets en tas dans sa pièce et regarde s'ils sont projetés en même temps. Le sel intact évoque le Spectre, la lumière éteinte aussitôt le Cauchemar, une chasse impossible avant 180 s après l'encens l'Esprit."
     },
     {
       "q": "Plusieurs objets que tu avais posés côte à côte dans sa pièce sont projetés d'un coup. Parmi ces entités, laquelle est la bonne ?",
       "choices": [
         "Esprit",
         "Cauchemar",
-        "Deogen",
-        "Poltergeist"
+        "Poltergeist",
+        "Deogen"
       ],
-      "answer": 3,
+      "answer": 2,
       "explain": "Seule l'explosion de Poltergeist projette plusieurs objets en même temps : ni l'Esprit, ni le Cauchemar, ni le Deogen ne le font."
     },
     {
       "q": "Le Poltergeist peut-il interagir avec les objets autrement qu'en les lançant ?",
       "choices": [
-        "Non, mais il peut quand même toucher les portes, les interrupteurs et le disjoncteur",
-        "Oui, comme toutes les entités",
-        "Non, et il ne touche jamais aux portes ni aux interrupteurs",
-        "Seulement pendant une chasse"
+        "Non, et il ne touche ni aux portes ni aux interrupteurs",
+        "Oui, il les déplace comme toutes les autres entités",
+        "Oui, mais il ne touche ni aux portes ni aux interrupteurs",
+        "Non, mais il touche aux portes et aux interrupteurs"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "Le Poltergeist n'interagit avec les objets qu'en les lançant. Il peut quand même toucher les portes, actionner les interrupteurs et le disjoncteur."
     }
   ],

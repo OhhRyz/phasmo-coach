@@ -95,6 +95,17 @@ function firstLine(body: string): string {
   return line.length > 60 ? `${line.slice(0, 59).trimEnd()}…` : line
 }
 
+/** Les mauvaises réponses d'une note posée en QCM : 3 au plus, sans blancs, 200 caractères chacune. */
+function wrongAnswers(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out = raw
+    .filter((w): w is string => typeof w === 'string')
+    .map((w) => w.trim().slice(0, 200).trim())
+    .filter(Boolean)
+    .slice(0, 3)
+  return out.length ? out : undefined
+}
+
 export function sanitizeNotes(raw: unknown): CoachNote[] {
   if (!Array.isArray(raw)) return []
   const out: CoachNote[] = []
@@ -116,6 +127,7 @@ export function sanitizeNotes(raw: unknown): CoachNote[] {
       asCard: n.asCard !== false,
       question: typeof n.question === 'string' && n.question.trim() ? n.question.slice(0, 500) : undefined,
       answer: typeof n.answer === 'string' && n.answer.trim() ? n.answer.slice(0, 2000) : undefined,
+      wrong: wrongAnswers(n.wrong),
       author: str(n.author).slice(0, 80),
       pinned: n.pinned === true,
     })

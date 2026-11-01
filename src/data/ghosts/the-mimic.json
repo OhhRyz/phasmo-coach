@@ -173,10 +173,10 @@
     {
       "q": "Peut-on éliminer le Mimic sur sa vitesse de chasse ?",
       "choices": [
-        "Non : il copie la vitesse de l'entité qu'il imite",
-        "Oui : il chasse toujours à 1,7 m/s",
-        "Oui : il n'accélère jamais en LdV",
-        "Oui : il est toujours plus lent qu'une entité standard"
+        "Non, il prend celle de l'entité imitée",
+        "Oui, il garde la vitesse standard d'une entité",
+        "Oui, il est plus lent qu'une entité standard",
+        "Non, mais il est un peu plus rapide que la normale"
       ],
       "answer": 0,
       "explain": "Le Mimic copie la vitesse, le seuil de chasse et les capacités de l'entité qu'il imite : il est capable de n'importe quel schéma de chasse. Ne l'élimine jamais sur sa vitesse."
@@ -184,43 +184,43 @@
     {
       "q": "Partie à 0 preuve : tu vois des orbes dans la pièce favorite. Qu'en conclus-tu ?",
       "choices": [
-        "C'est le Mimic",
         "C'est un Hantu",
-        "C'est un bug, il faut l'ignorer",
+        "C'est un Mimic",
+        "C'est un Revenant",
         "C'est un Yurei"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "À 0 preuve, aucune entité ne donne de preuve… sauf le Mimic, dont les orbes sont une capacité et non une vraie preuve."
     },
     {
       "q": "D'une chasse à l'autre, l'entité change du tout au tout : une fois très rapide sans jamais accélérer, la fois suivante à vitesse normale avec une accélération quand elle te voit. Qui suspectes-tu ?",
       "choices": [
-        "Le Mimic",
         "Le Revenant",
         "Le Thayé",
+        "Le Mimic",
         "Le Hantu"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Un comportement qui change radicalement d'une chasse à l'autre est la signature du Mimic, qui change d'entité imitée toutes les 30 s à 2 min. Le Revenant, le Thayé et le Hantu n'accélèrent jamais en ligne de vue. Attention : un Djinn (disjoncteur allumé puis coupé) ou un Raiju (près puis loin de l'électronique) peut donner la même impression."
     },
     {
       "q": "À quelle fréquence le Mimic change-t-il d'entité imitée ?",
       "choices": [
-        "À chaque chasse uniquement",
-        "Toutes les 30 s à 2 min",
-        "Toutes les 5 min",
-        "Une seule fois par partie"
+        "Au début de chaque chasse",
+        "Toutes les 5 à 10 min",
+        "Une seule fois par partie",
+        "Toutes les 30 s à 2 min"
       ],
-      "answer": 1,
+      "answer": 3,
       "explain": "Il change de comportement toutes les 30 s à 2 min, d'où un comportement incohérent au fil de la partie."
     },
     {
       "q": "Entre quelles bornes de santé mentale moyenne le Mimic peut-il chasser ?",
       "choices": [
-        "De 10 % à 100 %, selon l'entité qu'il imite",
-        "Toujours à 50 %",
-        "Seulement entre 35 % et 70 %",
-        "Jamais au-dessus de 50 %"
+        "De 10 % à 100 %",
+        "De 35 % à 70 %",
+        "De 0 % à 50 %",
+        "De 50 % à 80 %"
       ],
       "answer": 0,
       "explain": "Le Mimic copie le seuil de l'entité imitée : il peut chasser très tard (10 %, comme un Obambo calme) ou à n'importe quelle santé mentale en copiant le Démon. Par défaut, 50 %."
@@ -229,9 +229,9 @@
       "q": "Quelle affirmation sur les orbes du Mimic est vraie ?",
       "choices": [
         "Ils suivent l'entité au lieu de rester dans sa pièce",
-        "Ils restent dans la pièce favorite et ressemblent aux orbes normaux",
-        "Ils sont d'une couleur différente",
-        "Ils n'apparaissent qu'en partie à 0 preuve"
+        "Ils restent dans la pièce favorite, comme les autres",
+        "Ils sont d'une couleur différente des vrais orbes",
+        "Ils n'apparaissent qu'en partie sans preuve"
       ],
       "answer": 1,
       "explain": "L'idée d'orbes qui suivent l'entité est une rumeur : ils restent dans la pièce favorite, sans différence visuelle, et apparaissent dans toutes les difficultés."

@@ -7,12 +7,39 @@ import { JournalBox } from './journal/Journal'
 const MARK_LABEL: Record<EvidenceMark, string> = {
   unknown: 'non testée',
   found: 'trouvée',
-  excluded: 'exclue',
+  excluded: 'absente',
+}
+
+/** Ce que fera la prochaine touche (annoncé aux lecteurs d'écran et au survol). */
+const NEXT_ACTION: Record<EvidenceMark, string> = {
+  unknown: 'touche pour la cocher trouvée',
+  found: 'touche pour la marquer absente (barrée)',
+  excluded: 'touche pour l’effacer',
+}
+
+const HOW_STEPS = ['touche 1\u00a0fois\u202f: trouvée', '2\u00a0fois\u202f: absente (barrée)', '3\u00a0fois\u202f: effacée']
+
+/** La consigne du carnet de preuves, la même partout où il apparaît (texte brut, pour les étiquettes). */
+export const TRACKER_HOW = HOW_STEPS.join(' · ')
+
+/** La même consigne à afficher : chaque étape reste d'un seul tenant quand la ligne se coupe. */
+export function TrackerHow() {
+  return (
+    <>
+      {HOW_STEPS.map((step, k) => (
+        <span key={k}>
+          <span style={{ whiteSpace: 'nowrap' }}>{step}</span>
+          {k < HOW_STEPS.length - 1 && '\u00a0· '}
+        </span>
+      ))}
+    </>
+  )
 }
 
 /**
  * Le carnet de preuves, comme la page du journal du jeu :
- * un clic coche la preuve, un deuxième la barre au crayon, un troisième efface.
+ * une touche coche la preuve (trouvée), une deuxième la barre au crayon (absente), une troisième efface.
+ * Sur ordinateur, le clic droit la marque absente directement.
  */
 export function EvidenceTracker({
   value,
@@ -28,17 +55,19 @@ export function EvidenceTracker({
   compact?: boolean
 }) {
   return (
-    <ul className={`ev-list tracker${compact ? ' tracker--compact' : ''}`} aria-label="Preuves (un clic : trouvée, deux : exclue, trois : effacée)">
+    <ul className={`ev-list tracker${compact ? ' tracker--compact' : ''}`} aria-label={`Preuves (${TRACKER_HOW})`}>
       {EVIDENCE_IDS.map((id) => {
         const mark = value[id] ?? 'unknown'
         const ev = EVIDENCE[id]
         const impossible = mark === 'unknown' && possible && !possible.has(id)
+        const label = `${ev.label} : ${MARK_LABEL[mark]}${impossible ? ' (impossible avec ce qui reste)' : ''} — ${NEXT_ACTION[mark]}`
         return (
           <li key={id} className={`ev ${mark === 'found' ? 'yes' : mark === 'excluded' ? 'no' : ''}${impossible ? ' impossible' : ''}`} data-ev={id} style={{ '--c': ev.color } as CSSProperties}>
             <button
               type="button"
               className="ev-btn"
-              aria-label={`${ev.label} : ${MARK_LABEL[mark]}`}
+              aria-label={label}
+              title={`${label}${mark === 'excluded' ? '' : ' · clic droit : absente directement'}`}
               onClick={() => onChange({ ...value, [id]: cycleMark(mark) })}
               onContextMenu={(e) => {
                 e.preventDefault()

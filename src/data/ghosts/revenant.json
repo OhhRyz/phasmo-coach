@@ -161,67 +161,67 @@
     {
       "q": "Caché hors de sa vue, tu parles à voix haute pendant une chasse : les pas du Revenant, jusque-là très lents, deviennent aussitôt très rapides. Pourquoi ?",
       "choices": [
-        "Il t'a détecté à la voix : il passe à 3,0 m/s dès qu'il détecte un joueur, même sans le voir",
-        "Il accélère toujours au bout de 13 s de chasse",
-        "Il accélère seulement quand le disjoncteur est allumé",
-        "Il fonce vers l'appareil électronique allumé le plus proche"
+        "Il a entendu ta voix et gagne son bonus de ligne de vue",
+        "Il change de vitesse à la moitié de la chasse",
+        "Il t'a détecté à la voix, même sans te voir",
+        "Il réagit au disjoncteur qu'on vient de rallumer"
       ],
-      "answer": 0,
-      "explain": "Le Revenant passe instantanément de 1,0 à 3,0 m/s dès qu'il détecte un joueur, par la vue, la voix ou un appareil électronique actif. Face à lui, la cachette et le silence te sauvent, pas la course."
+      "answer": 2,
+      "explain": "Le Revenant passe instantanément de 1,0 à 3,0 m/s dès qu'il détecte un joueur, par la vue, la voix ou un appareil électronique actif. Il n'a pas d'accélération en ligne de vue, et ni le temps écoulé ni le disjoncteur ne changent sa vitesse. Face à lui, la cachette et le silence te sauvent, pas la course."
     },
     {
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
       "choices": [
         "1,7 m/s",
         "0,4 m/s",
-        "1,0 m/s",
-        "2,5 m/s"
+        "2,5 m/s",
+        "1,0 m/s"
       ],
-      "answer": 2,
+      "answer": 3,
       "explain": "Il rampe à 1,0 m/s. 1,7 m/s est la vitesse standard, 0,4 m/s celle d'un Deogen tout près de toi, 2,5 m/s celle d'un Djinn ou d'un Raiju quand ils accélèrent."
     },
     {
       "q": "Que fait un Revenant au moment où il détecte un joueur ?",
       "choices": [
-        "Il accélère progressivement pendant 13 s jusqu'à 1,65 fois sa vitesse",
-        "Il ralentit à mesure qu'il se rapproche du joueur",
-        "Il passe à 2,5 m/s, seulement si le disjoncteur est allumé",
-        "Il passe instantanément à 3,0 m/s"
+        "Il passe instantanément à 3,0 m/s",
+        "Il accélère peu à peu jusqu'à 2,8 m/s",
+        "Il ralentit à 0,4 m/s près du joueur",
+        "Il passe à 2,5 m/s si le courant est allumé"
       ],
-      "answer": 3,
-      "explain": "Le Revenant saute immédiatement à 3,0 m/s. L'accélération progressive sur 13 s est la LdV standard (qu'il n'a pas), le ralentissement à l'approche est propre au Deogen, et le disjoncteur concerne le Djinn."
+      "answer": 0,
+      "explain": "Le Revenant saute immédiatement à 3,0 m/s. L'accélération progressive jusqu'à environ 2,8 m/s est la ligne de vue standard (qu'il n'a pas), le ralentissement à 0,4 m/s près du joueur est propre au Deogen, et le passage à 2,5 m/s courant allumé concerne le Djinn."
     },
     {
       "q": "Quand un Revenant commence-t-il à ralentir après t'avoir pris en chasse ?",
       "choices": [
-        "Quand il ne te détecte plus et qu'il a atteint ta dernière position connue",
-        "Dès que tu brises la ligne de vue",
-        "Après 13 secondes de poursuite",
-        "Uniquement à la fin de la chasse"
+        "Dès que tu brises la ligne de vue en courant te cacher",
+        "Une fois à ta dernière position, sans te détecter",
+        "Après une longue poursuite sans te rattraper",
+        "Vers la fin de la chasse, quoi qu'il arrive"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Il garde ses 3,0 m/s jusqu'à ne plus te détecter ET avoir atteint ta dernière position connue, puis ralentit progressivement jusqu'à 1,0 m/s. Briser la LdV ne suffit donc pas à le ralentir tout de suite."
     },
     {
       "q": "Pendant toute une chasse, l'entité se déplace à une vitesse constante d'environ 1,7 m/s sans t'avoir détecté. Qu'en conclus-tu ?",
       "choices": [
         "C'est forcément un Revenant",
+        "C'est forcément un Esprit",
         "Ce n'est pas un Revenant",
-        "C'est un Revenant en train de ralentir",
-        "Ce test ne permet rien de conclure sur le Revenant"
+        "Ce n'est pas un Esprit"
       ],
-      "answer": 1,
-      "explain": "Un Revenant qui ne te détecte pas est à 1,0 m/s ; une vitesse stable à 1,7 m/s ne correspond ni à 1,0 ni à 3,0 m/s, donc ce n'est pas un Revenant. Son ralentissement ne dure que le temps de redescendre de 3,0 à 1,0 m/s."
+      "answer": 2,
+      "explain": "Un Revenant qui ne te détecte pas est à 1,0 m/s ; une vitesse stable à 1,7 m/s ne correspond ni à 1,0 ni à 3,0 m/s, donc ce n'est pas un Revenant. Un Esprit, qui chasse à 1,7 m/s, reste possible, mais beaucoup d'autres entités chassent aussi à cette vitesse."
     },
     {
       "q": "Dans quel groupe AUCUNE entité n'a l'accélération standard en ligne de vue ?",
       "choices": [
         "Revenant, Djinn, Raiju, Moroi",
         "Revenant, Ombre, Démon, Yurei",
-        "Revenant, Hantu, Deogen, Thayé",
-        "Revenant, Les Jumeaux, Obambo, Gallu"
+        "Revenant, Les Jumeaux, Obambo, Gallu",
+        "Revenant, Hantu, Deogen, Thayé"
       ],
-      "answer": 2,
+      "answer": 3,
       "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
     }
   ],

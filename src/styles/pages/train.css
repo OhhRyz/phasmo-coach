@@ -1,0 +1,38 @@
+/* Page : Exercices (#/entrainement). Complète les anciennes règles .tr-* d'ear.css (chargée avant). */
+
+/* titre et consigne à gauche, historique à droite ; la bande Dymo et la flèche sur toute la largeur */
+.tr .tr-grid {
+  grid-template-columns: minmax(0, 1fr) 320px; gap: 0 36px;
+  /* la ligne souple absorbe la hauteur de l'historique : le titre et la consigne restent groupés */
+  grid-template-rows: auto auto 1fr auto auto;
+  grid-template-areas: "title lib" "cons lib" ". lib" "go go" "down down";
+}
+.tr-grid .tr-title { grid-area: title; margin: 0 0 18px; }
+.tr-grid .tr-consigne { grid-area: cons; max-width: 30em; margin: 0; }
+.tr-grid .tr-go { grid-area: go; margin-top: 26px; }
+.tr-grid .tr-down { grid-area: down; }
+.tr-grid .tr-libcard { grid-area: lib; }
+
+/* deux rangées d'enveloppes : ce qu'on fait, puis ce qu'on lit */
+.tr-shelf.tr-shelves { max-width: 1180px; }
+.tr-shelves .tr-row .envelopes { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px 28px; }
+.tr-shelves .tr-row + .tr-row { margin-top: 48px; }
+.tr-row-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 0 0 22px; }
+.tr-row-head .shelf-label { margin: 0 0 0 6px; }
+.tr-phone-only { display: none; }
+
+@media (max-width: 1180px) {
+  .tr-shelf.tr-shelves { max-width: 760px; }
+  .tr-shelves .tr-row .envelopes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 759px) {
+  /* téléphone : l'historique avant la flèche, pour que « juste en dessous » mène bien aux enveloppes */
+  .tr .tr-grid { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "title" "cons" "go" "lib" "down"; }
+  .tr-grid .tr-go { margin-top: 22px; }
+  .tr-grid .tr-libcard { margin-top: 34px; }
+  .tr-shelves .tr-row .envelopes { gap: 16px 12px; }
+  .tr-shelves .tr-row + .tr-row { margin-top: 36px; }
+  .tr-shelves .envelope .label .env-action { font-size: 13.5px; }
+  /* sur téléphone, l'onglet Mécaniques est masqué : on dit où il se trouve */
+  .tr-row-head .tr-phone-only { display: block; margin: 0 0 0 6px; font-size: 20.5px; line-height: 1.1; color: var(--desk-ink); }
+}

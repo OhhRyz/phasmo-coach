@@ -77,38 +77,38 @@
   "quiz": [
     {
       "q": "Quelles sont les deux vitesses de base possibles des Jumeaux en chasse ?",
-      "choices": ["Environ 1,5 m/s ou 1,9 m/s", "1,7 m/s ou 2,5 m/s", "1,45 m/s ou 1,96 m/s", "1,0 m/s ou 3,0 m/s"],
-      "answer": 0,
+      "choices": ["1,7 m/s ou 2,5 m/s", "1,45 m/s ou 1,96 m/s", "1,5 m/s ou 1,9 m/s", "1,0 m/s ou 3,0 m/s"],
+      "answer": 2,
       "explain": "Les Jumeaux chassent à ±0,2 m/s autour des 1,7 m/s standard. 1,7/2,5 m/s évoque le Raiju ou le Djinn, 1,45/1,96 m/s l'Obambo et 1,0/3,0 m/s le Revenant."
     },
     {
       "q": "Une chasse se déroule entièrement à 1,7 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
-      "choices": ["Non : les Jumeaux chassent à environ 1,5 ou 1,9 m/s", "Oui, si c'est le jumeau principal", "Oui, si c'est le jumeau errant", "Oui, une chasse sur deux"],
-      "answer": 0,
+      "choices": ["Non, ils chassent tous deux à 2,5 m/s", "Oui, si c'est le jumeau principal qui chasse", "Oui, si c'est le jumeau errant qui chasse", "Non, ils chassent à 1,5 ou 1,9 m/s"],
+      "answer": 3,
       "explain": "Les Jumeaux chassent à environ 1,5 m/s (jumeau principal) ou 1,9 m/s (jumeau errant), jamais à la vitesse standard : une vitesse de base de 1,7 m/s les élimine. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
     },
     {
       "q": "Vrai ou faux : les Jumeaux sont deux entités distinctes.",
-      "choices": ["Faux : une seule entité avec deux portées d'interaction", "Vrai : deux entités qui chassent chacune leur tour", "Vrai : deux entités qui peuvent chasser en même temps", "Faux : une entité qui se téléporte à chaque interaction"],
+      "choices": ["Faux : une seule entité qui agit sur deux portées", "Vrai : deux entités qui chassent chacune leur tour", "Vrai : deux entités qui peuvent chasser en même temps", "Faux : une entité qui se téléporte à chaque interaction"],
       "answer": 0,
       "explain": "C'est une seule entité qui peut interagir dans une petite et une grande portée. Les capteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
     },
     {
       "q": "Avec les Jumeaux, où les capteurs de mouvement se déclenchent-ils et où le sel est-il perturbé ?",
-      "choices": ["Uniquement à sa position physique réelle", "Aux deux endroits où elle interagit", "Uniquement dans sa portée étendue", "N'importe où sur la carte"],
-      "answer": 0,
+      "choices": ["Aux deux endroits où elle interagit", "À l'endroit exact où elle se trouve", "À la limite de la portée où elle agit", "Dans toute la pièce où elle interagit"],
+      "answer": 1,
       "explain": "Seules les interactions profitent de la portée étendue ; capteurs de mouvement et sel ne réagissent qu'à l'endroit où se trouve réellement l'entité."
     },
     {
       "q": "En LdV continue, quelle vitesse maximale atteint le jumeau rapide ?",
-      "choices": ["Environ 3,0 m/s", "Environ 3,14 m/s", "Environ 2,8 m/s", "Environ 3,7 m/s"],
-      "answer": 0,
+      "choices": ["Environ 3,14 m/s", "Environ 2,8 m/s", "Environ 3,0 m/s", "Environ 3,7 m/s"],
+      "answer": 2,
       "explain": "Pour les Jumeaux, l'accélération en LdV part de la vitesse standard : (1,7 × 1,65) + 0,2 ≈ 3,0 m/s. 3,14 m/s serait le calcul « attendu », 2,8 m/s le maximum d'une entité normale et 3,71 m/s celui du Moroi."
     },
     {
       "q": "Une courbe « Twinteraction » sur le tableau d'activité prouve-t-elle qu'il s'agit des Jumeaux ?",
-      "choices": ["Non : n'importe quelle entité peut la produire avec des interactions rapprochées", "Oui, c'est une preuve définitive", "Oui, mais seulement sur les grandes cartes", "Non, car ce motif n'apparaît jamais sur le tableau"],
-      "answer": 0,
+      "choices": ["Oui, c'est une preuve définitive", "Oui, mais seulement sur les grandes cartes", "Non, ce motif n'apparaît jamais sur le tableau", "Non, toute entité peut la produire"],
+      "answer": 3,
       "explain": "Les Jumeaux produisent plus souvent ce motif grâce à leur capacité, mais toute entité peut le créer en enchaînant plusieurs interactions rapidement."
     }
   ],

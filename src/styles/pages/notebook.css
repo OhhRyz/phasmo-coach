@@ -79,6 +79,8 @@
 }
 .carnet-share-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 16px; }
 .carnet-share-btns .paper-btn { min-height: 44px; }
+.page .carnet-share .carnet-export-hint { margin: 8px 0 0; font-size: 20px; line-height: 1.1; color: var(--pencil); }
+.carnet .carnet-consigne { max-width: 34em; }
 .page .carnet-share .carnet-coaching { margin: 18px 0 0; }
 .carnet-coaching .link { display: inline-flex; align-items: center; min-height: 40px; font-size: 15px; }
 

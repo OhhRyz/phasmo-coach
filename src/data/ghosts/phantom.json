@@ -181,67 +181,67 @@
     {
       "q": "Que se passe-t-il quand tu prends un Fantôme en photo pendant un événement ?",
       "choices": [
-        "Il lance immédiatement une chasse",
         "Il disparaît, mais les sons de l'événement continuent",
-        "Il apparaît plus nettement sur la photo",
-        "L'événement s'arrête et il réapparaît dans sa pièce favorite"
+        "Il interrompt l'événement et lance une chasse",
+        "Il reste visible et apparaît bien plus net sur la photo",
+        "L'événement s'arrête et il retourne dans sa pièce"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "Une photo fait disparaître le Fantôme, et il n'apparaît pas sur la photo d'entité du journal, alors que les sons de l'événement continuent."
     },
     {
       "q": "Quelle photo prouve que ce n'est PAS un Fantôme ?",
       "choices": [
-        "Une photo d'empreintes UV",
-        "Une photo d'un crucifix brûlé",
-        "Une photo étiquetée « Fantôme » où l'entité est visible",
-        "Une photo d'os"
+        "Une photo d'eau sale prise dans un évier de la maison",
+        "Une photo de l'entité, nette et bien visible",
+        "Une photo d'un crucifix brûlé par l'entité",
+        "Une photo d'os trouvés près de sa pièce"
       ],
-      "answer": 2,
-      "explain": "Le Fantôme n'apparaît jamais sur une photo étiquetée « Fantôme » : si l'entité y est visible, ce n'en est pas un. Une photo d'empreintes, de crucifix brûlé ou d'os ne permet pas de l'exclure."
+      "answer": 1,
+      "explain": "Le Fantôme n'apparaît jamais sur une photo d'entité (étiquetée « Fantôme ») : si l'entité y est visible, ce n'en est pas un. Une photo d'eau sale, de crucifix brûlé ou d'os ne permet pas de l'exclure."
     },
     {
       "q": "Comment reconnaître un Fantôme pendant une chasse ?",
       "choices": [
-        "Il est presque invisible, avec de longues phases d'invisibilité",
-        "Il clignote plus souvent et reste plus visible",
+        "Il reste visible plus longtemps entre deux clignotements",
         "Il change de modèle le temps d'un clignotement",
-        "Il a un souffle glacé visible"
+        "Il reste invisible plus longtemps entre deux clignotements",
+        "Il souffle une buée glacée visible pendant toute la chasse"
       ],
-      "answer": 0,
-      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
+      "answer": 2,
+      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements : il est presque invisible en chasse. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
     },
     {
       "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Fantôme ou Spectre : qu'est-ce qui les distingue ?",
       "choices": [
-        "Le Spectre se téléporte près de toi, le Fantôme y vient en errant",
         "Le Fantôme se téléporte près de toi, le Spectre y vient en errant",
         "Seul le Spectre peut laisser un EMF 2 près d'un joueur",
-        "Seul le Fantôme peut laisser un EMF 2 près d'un joueur"
+        "Seul le Fantôme peut laisser un EMF 2 près d'un joueur",
+        "Le Spectre se téléporte près de toi, le Fantôme y vient en errant"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "Les deux peuvent laisser un EMF 2 près d'un joueur pris au hasard : le Spectre en se téléportant (seule entité à le faire hors événement), le Fantôme en errant jusqu'à lui. Pour les départager, pose du sel (le Spectre ne le perturbe jamais) ou prends l'entité en photo pendant un événement."
     },
     {
       "q": "Combien de santé mentale perds-tu près d'un Fantôme pendant une chasse ou un événement ?",
       "choices": [
-        "25 % d'un coup",
-        "2 % par objet lancé",
-        "0,5 % par seconde, multiplié par le nombre de joueurs à portée de battements de cœur",
-        "15 % si tu le touches"
+        "0,5 % par seconde et par joueur proche",
+        "2 % par objet qu'il lance autour de toi",
+        "25 % d'un coup, dès qu'il apparaît",
+        "15 % à chaque fois que tu le touches"
       ],
-      "answer": 2,
+      "answer": 0,
       "explain": "Le Fantôme draine 0,5 % par seconde à toute l'équipe, multiplié par le nombre de joueurs dans la portée des battements de cœur. 25 % d'un coup, c'est le Djinn ; 2 % par objet, l'explosion du Poltergeist ; 15 % au toucher, la Banshee pendant son chant."
     },
     {
       "q": "Quelle capacité du Fantôme peut laisser un EMF 2 près d'un joueur ?",
       "choices": [
-        "Il erre vers un joueur pris au hasard",
         "Il se téléporte sur un joueur pris au hasard",
+        "Il erre vers un joueur pris au hasard",
         "Il fait sauter le disjoncteur",
         "Il lance plusieurs objets d'un coup"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Le Fantôme erre (marche) vers un joueur au hasard et laisse un EMF 2 là où il arrive. La téléportation vers un joueur, c'est le Spectre."
     }
   ],

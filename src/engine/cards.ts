@@ -46,6 +46,8 @@ export interface CoachNote {
   asCard: boolean
   question?: string
   answer?: string
+  /** jusqu'à 3 mauvaises réponses : avec une question et une réponse, la carte devient un QCM */
+  wrong?: string[]
   author: string
   pinned?: boolean
 }
@@ -116,7 +118,7 @@ export function withoutEvidenceAsides(text: string): string {
 }
 
 /** Combinaison de preuves ou preuve forcée (« Seule entité avec EMF 5 + orbes… », « UV garanti en Cauchemar ») : rien à apprendre. */
-function isEvidenceList(text: string): boolean {
+export function isEvidenceList(text: string): boolean {
   return evidenceIn(text).length >= 2 || (/\bgaranti/iu.test(text) && /Cauchemar|Démence/u.test(text))
 }
 

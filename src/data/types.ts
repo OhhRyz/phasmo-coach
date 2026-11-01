@@ -82,6 +82,13 @@ export interface MechanicsFact {
   text: string
   q: string
   a: string
+  /**
+   * La carte posée en QCM : 3 ou 4 réponses, la bonne comprise (comme les questions rédigées des fiches).
+   * Sans elles, la carte reste une question à retourner (« Je savais » / « Je ne savais pas »).
+   */
+  choices?: string[]
+  /** rang de la bonne réponse dans `choices` */
+  answer?: number
   /** utile seulement pour relever les preuves : bon à savoir, hors révision et hors quiz */
   evidence?: boolean
 }

@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { EvidenceTracker } from '../components/EvidenceTracker'
+import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { GhostRow } from '../components/GhostRow'
 import { UvPrint } from '../components/journal/Charts'
-import { FileHead, H, MarginNote, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
+import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
+import { EVIDENCE_IDS } from '../data/evidence'
 import { EMPTY_FILTER, filterGhosts, marked, possibleEvidence, type FilterState } from '../engine/filter'
-import type { SpeedClass } from '../engine/format'
+import { NNBSP, type SpeedClass } from '../engine/format'
 import { useMastery } from '../store/hooks'
 
 const SPEEDS: { value: SpeedClass; label: string }[] = [
@@ -66,14 +67,33 @@ function Toggle<T extends string>({ items, value, onChange, label }: { items: { 
 
 const s = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
 
+const PHONE = '(max-width: 759px)'
+
+/** Vrai tant que la fenêtre correspond à la requête (suit les changements de taille). */
+function useMedia(query: string): boolean {
+  const [on, setOn] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(query).matches)
+  useEffect(() => {
+    if (typeof matchMedia === 'undefined') return
+    const mq = matchMedia(query)
+    const sync = () => setOn(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [query])
+  return on
+}
+
 export function Codex() {
   const mastery = useMastery()
   const [initial] = useState(loadSession)
   const [filter, setFilter] = useState<FilterState>(initial.filter)
   const [query, setQuery] = useState(initial.query)
-  // les éliminées restent dans le registre, barrées au crayon (on peut les masquer). Tant qu'on n'a rien
-  // choisi, elles s'effacent d'elles-mêmes quand il n'en reste que trois ou moins : la réponse remonte en tête.
+  // sur ordinateur, les éliminées restent dans le registre, barrées au crayon (on peut les masquer) ; tant
+  // qu'on n'a rien choisi, elles s'effacent d'elles-mêmes quand il n'en reste que trois ou moins. Sur
+  // téléphone, le registre est loin sous les preuves : on n'y montre d'emblée que ce qui reste possible.
   const [outPref, setOutPref] = useState<boolean | null>(null)
+  const phone = useMedia(PHONE)
+  const regRef = useRef<HTMLElement>(null)
   const [showMore, setShowMore] = useState(
     initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null,
   )
@@ -104,7 +124,7 @@ export function Codex() {
   }, [filter, query])
 
   const possible = useMemo(() => possibleEvidence(filterGhosts(GHOSTS, filter), filter), [filter])
-  const showOut = outPref ?? matching.length > 3
+  const showOut = outPref ?? (phone ? false : matching.length > 3)
 
   // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées
   const rows = useMemo(() => {
@@ -135,10 +155,22 @@ export function Codex() {
   const only = searching && matching.length === 1 ? matching[0] : null
   const moreCount = filter.speed.length + (filter.huntAbove != null ? 1 : 0) + (filter.los !== null ? 1 : 0)
   // la réponse du carnet, lisible juste sous le titre (sur téléphone le registre est loin en dessous)
-  const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'exclue')].filter(Boolean)
+  const marks = [found > 0 && s(found, 'trouvée'), excluded > 0 && s(excluded, 'absente')].filter(Boolean)
   const headCount = marks.length
     ? `${marks.join(' · ')} · ${matching.length === 0 ? 'aucune possible' : s(matching.length, 'possible')}`
     : 'rien de coché'
+  const ticked = found + excluded > 0
+  // une preuve encore non testée mais impossible avec les entités qui restent : grisée dans le carnet
+  const greyed = ticked && EVIDENCE_IDS.some((id) => (filter.evidence[id] ?? 'unknown') === 'unknown' && !possible.has(id))
+
+  /** « voir la liste » : amène le registre sous les yeux et y place le focus (lecteurs d'écran, clavier). */
+  const toRegistry = () => {
+    const el = regRef.current
+    if (!el) return
+    const smooth = typeof matchMedia !== 'undefined' && !matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+    el.focus({ preventScroll: true })
+  }
 
   return (
     <Notebook className="cx-book">
@@ -158,7 +190,8 @@ export function Codex() {
             Mon carnet de preuves
           </H>
           <p className="cx-intro">
-            Coche ce que tu observes sur le terrain : le registre barre au crayon les entités qui ne collent plus.
+            Pendant une partie, coche ici les preuves que tu trouves{NNBSP}: le registre barre les entités qui ne collent plus. Touche un
+            nom pour lire sa fiche.
           </p>
 
           <div className="cx-count-field">
@@ -180,15 +213,16 @@ export function Codex() {
           </div>
 
           <div className="cx-tracker">
-            <MarginNote className="cx-legend" style={{ left: -108, top: 4, width: 82, '--r': '-4deg' }}>
-              <span>1 clic : trouvée</span>
-              <span>2 : exclue</span>
-              <span>3 : effacée</span>
-            </MarginNote>
+            <Consigne className="cx-how">
+              <TrackerHow />
+            </Consigne>
             <EvidenceTracker value={filter.evidence} onChange={(evidence) => setFilter({ ...filter, evidence })} possible={possible} />
-            {found + excluded > 0 && (
-              <p className="cx-tracker-hint pencil-note">preuve grisée : impossible avec ce qui reste</p>
+            {(ticked || moreCount > 0) && matching.length > 1 && (
+              <button type="button" className="link-btn pencil-note cx-see" onClick={toRegistry}>
+                {phone ? '↓' : '→'} {matching.length} entités encore possibles{NNBSP}: voir la liste
+              </button>
             )}
+            {greyed && <p className="cx-tracker-hint pencil-note">preuve grisée{NNBSP}: impossible avec ce qui reste</p>}
           </div>
 
           {/* la conclusion arrive là où l'œil se trouve : juste sous les preuves */}
@@ -265,13 +299,6 @@ export function Codex() {
               />
             </div>
           </div>
-
-          {!only && (
-            <div className="cx-actions">
-              <TapeButton to="/enquete">Lancer une mise en situation</TapeButton>
-              <span className="pencil-note cx-action-hint">et remplis ce carnet sur un contrat raconté minute par minute</span>
-            </div>
-          )}
         </div>
         <span className="folio">— ii —</span>
       </Page>
@@ -285,7 +312,7 @@ export function Codex() {
           <span>Ordre du journal du jeu</span>
         </FileHead>
 
-        <section aria-labelledby="cx-h-reg" className="cx-reg-section">
+        <section aria-labelledby="cx-h-reg" className="cx-reg-section" ref={regRef} tabIndex={-1}>
           <H id="cx-h-reg">Les {GHOSTS.length} entités</H>
 
           <div className="cx-count" aria-live="polite">
@@ -336,6 +363,12 @@ export function Codex() {
 
           {rows.length > 0 && <p className="cx-foot pencil-note">chaque ligne ouvre la fiche de l’entité</p>}
         </section>
+
+        {/* s'exercer, une fois le registre parcouru : le carnet se remplit sur un contrat simulé */}
+        <p className="cx-train">
+          <TypedLink to="/enquete">S’entraîner sur un contrat simulé</TypedLink>
+          <span className="pencil-note cx-train-hint">pour apprendre à remplir ce carnet de preuves, rapport après rapport</span>
+        </p>
         <span className="folio">— iii —</span>
       </Page>
     </Notebook>

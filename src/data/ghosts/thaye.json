@@ -185,40 +185,40 @@
       "q": "À quel seuil de santé mentale un Thayé chasse-t-il quand il est au plus jeune âge ?",
       "choices": [
         "70 %",
-        "75 %",
         "50 %",
+        "75 %",
         "80 %"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "75 % jeune, puis −6 points par vieillissement jusqu'à 15 %. 70 % est le seuil du Démon, 80 % celui du Yokai qu'on fait parler."
     },
     {
       "q": "Quelle description correspond à la vitesse de chasse du Thayé ?",
       "choices": [
-        "2,75 m/s jeune puis jusqu'à 1,0 m/s, sans accélération en LdV",
-        "2,75 m/s jeune puis jusqu'à 1,0 m/s, avec accélération en LdV",
-        "1,0 m/s jeune puis jusqu'à 2,75 m/s en vieillissant",
-        "3,0 m/s constant tant que personne ne touche d'objet"
+        "2,75 m/s jeune puis jusqu'à 1,0 m/s, avec accélération en ligne de vue",
+        "1,0 m/s jeune puis jusqu'à 2,75 m/s, sans accélération en ligne de vue",
+        "1,0 m/s jeune puis jusqu'à 2,75 m/s, avec accélération en ligne de vue",
+        "2,75 m/s jeune puis jusqu'à 1,0 m/s, sans accélération en ligne de vue"
       ],
-      "answer": 0,
-      "explain": "Le Thayé ralentit en vieillissant (−0,175 m/s par âge) et n'accélère jamais en LdV. Le dernier choix décrit le Deildegast."
+      "answer": 3,
+      "explain": "Le Thayé ralentit en vieillissant (−0,175 m/s par âge) et n'accélère jamais en ligne de vue."
     },
     {
       "q": "Quelle question au Ouija permet d'identifier un Thayé ?",
       "choices": [
-        "« Où êtes-vous ? »",
-        "« Quand êtes-vous mort ? »",
         "« Quel âge avez-vous ? »",
-        "« Quel est mon niveau de santé mentale ? »"
+        "« Dans quelle pièce êtes-vous ? »",
+        "« Quand êtes-vous mort ? »",
+        "« Quelle est ma santé mentale ? »"
       ],
-      "answer": 2,
+      "answer": 0,
       "explain": "« Quel âge avez-vous ? » (5 % de santé) renvoie l'âge actuel : s'il augmente entre deux questions, ou s'il atteint 90 ans ou plus, c'est un Thayé. « Quand êtes-vous mort ? » donne un nombre aléatoire."
     },
     {
       "q": "Qu'est-ce qui fait vieillir un Thayé ?",
       "choices": [
-        "Chaque chasse qu'il lance",
-        "Le temps qu'un joueur passe dans sa pièce",
+        "Chaque chasse qu'il lance sur l'équipe",
+        "Un joueur présent dans la même pièce",
         "Les lumières allumées dans sa pièce",
         "Les objets que l'équipe ramasse"
       ],
@@ -229,22 +229,22 @@
       "q": "En chasse, quel indice distingue un Thayé d'un Moroi ?",
       "choices": [
         "Le Thayé est toujours plus lent que le Moroi",
-        "Le Moroi n'accélère jamais en LdV",
-        "Le Thayé ne chasse jamais avant 50 %",
-        "Le Thayé n'accélère jamais en LdV"
+        "Le Moroi n'accélère jamais en ligne de vue",
+        "Le Thayé n'accélère jamais en ligne de vue",
+        "Le Moroi est toujours plus lent que le Thayé"
       ],
-      "answer": 3,
-      "explain": "C'est la différence clé : le Moroi accélère en LdV, le Thayé jamais. Un Thayé jeune (2,75 m/s) est d'ailleurs plus rapide qu'un Moroi sans LdV (2,25 m/s max)."
+      "answer": 2,
+      "explain": "C'est la différence clé : le Moroi accélère en ligne de vue, le Thayé jamais. Ni l'un ni l'autre n'est toujours le plus lent : un Thayé jeune (2,75 m/s) est plus rapide qu'un Moroi sans ligne de vue (2,25 m/s max), mais un Thayé âgé descend jusqu'à 1,0 m/s."
     },
     {
       "q": "Combien de fois un Thayé peut-il vieillir avant d'atteindre sa vitesse et son seuil minimum ?",
       "choices": [
-        "10 fois",
         "5 fois",
         "20 fois",
-        "Sans limite"
+        "15 fois",
+        "10 fois"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "10 vieillissements : 2,75 → 1,0 m/s (−0,175 par âge) et 75 % → 15 % (−6 points par âge)."
     }
   ],

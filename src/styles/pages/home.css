@@ -2,7 +2,11 @@
 .steps-doodle { display: block; width: 100%; max-width: 170px; margin-top: 8px; color: var(--ink-2); }
 .suspects .hint.pencil-note { color: var(--pencil); font-size: 20px; }
 .welcome-form { max-width: 520px; }
-.page .welcome-coaching { margin: -6px 0 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
+.page .welcome-local { margin: -8px 0 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
+.welcome-go .btn-hint { max-width: 22em; }
+.page .welcome-next { margin: 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
+.page .welcome-coaching { margin: -8px 0 0; max-width: 26em; font-size: 21px; line-height: 1.1; }
+.welcome-entry .stamp { margin-bottom: 14px; }
 .registry .nm .rough { color: var(--red-pen); }
 
 /* conseil d'installation : une annotation au crayon de l'app, jamais la voix du coach */
@@ -38,6 +42,46 @@
 .home .suspects-more small { margin-left: 7px; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 12.5px; color: var(--red-pen); }
 .home .suspects-start { margin: 22px 0 0; font-size: 20px; }
 
+/* le mode d'emploi : une fiche bristol scotchée, trois étapes entourées au crayon (l'app parle, pas le coach) */
+.home .guide { margin: 6px 0 0; scroll-margin-top: 24px; }
+.home .guide .index-card { padding-bottom: 22px; }
+.home .guide .tape { left: 50%; top: -13px; margin-left: -46px; transform: rotate(-3deg); }
+.home .guide + .plan { margin-top: 52px; }
+.home .guide + .coach-card { margin-top: 44px; }
+/* tout reste calé sur les lignes de la fiche (28 px) : sur ordinateur, la bande Dymo tient dans le premier écran */
+.guide-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.guide-steps li { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; align-items: start; line-height: 28px; }
+.guide-steps .n {
+  position: relative; width: 34px; height: 34px; margin-top: -3px; display: grid; place-items: center;
+  font-family: "Caveat", cursive; font-weight: 700; font-size: 25px; line-height: 1; color: var(--pencil);
+}
+.guide-steps .n svg { position: absolute; inset: -3px; width: 40px; height: 40px; overflow: visible; color: var(--pencil); }
+.guide-k { font-family: "Elite", monospace; font-weight: 400; font-size: 15.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.guide-when { margin-left: 6px; font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .04em; color: var(--ink-2); white-space: nowrap; }
+.page .guide-steps p { margin: 0; font-size: 16.5px; line-height: 28px; color: var(--ink); }
+.home .guide-actions { margin-top: 28px; }
+.page .guide-again { margin: 14px 0 0; font-size: 20px; line-height: 1.1; }
+
+/* sous la révision : où sont les exercices (ordinateur : en bas de page, sur le bureau) */
+.home .home-down {
+  display: flex; align-items: flex-end; gap: 4px; width: max-content; max-width: 100%;
+  margin: 26px 6px -14px auto; font-size: 22px; transform: rotate(-2.5deg);
+}
+.home .home-down svg { flex: none; color: var(--pencil); overflow: visible; margin-bottom: -18px; }
+.home .home-down + section { margin-top: 40px; }
+
+/* suspects et registre : ce qu'on peut toucher */
+.page .suspects-legend { margin: -6px 0 4px; font-size: 20.5px; line-height: 1.1; }
+.page .registry-tap { margin: -12px 0 14px; font-size: 20.5px; line-height: 1.1; }
+
+/* les exercices : sur le bureau (ordinateur), ou dans la page juste après les suspects (une colonne) */
+.home-shelf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 0 0 22px; }
+.home-shelf-head .shelf-label { margin: 0 0 0 6px; }
+.home-shelf .home-shelf-hint { margin: 0; font-size: 21px; color: var(--desk-ink); }
+.home-shelf--in-page { max-width: none; margin: 56px 0 8px; padding: 0; }
+.home-shelf--in-page .home-shelf-hint { color: var(--pencil); }
+.home-shelf--in-page .envelopes { grid-template-columns: 1fr 1fr; }
+
 /* mots du coach */
 .home .notes-empty { grid-column: 1 / -1; max-width: 30em; }
 .home .notes-empty .pencil-note { margin: 0 0 8px; font-size: 21px; }
@@ -50,9 +94,25 @@
   .home .link, .home .suspects-more a { display: inline-flex; align-items: center; min-height: 40px; }
   .home .install-note .link { margin-top: 2px; }
   .home .registry { grid-template-rows: repeat(15, 40px); }
+  /* le lien occupe toute la hauteur de la ligne (40 px) ; le surligneur reste à la hauteur du nom */
+  .home .registry .nm { display: flex; align-items: center; min-height: 40px; padding: 0; }
+  .home .registry .nm::before { top: 10px; bottom: 9px; }
+  :root[data-theme="dark"] .home .registry .nm::before { top: 21px; bottom: 8px; }
   .home .registry .nm::after { /* zone de toucher : toute la ligne */
-    content: ""; position: absolute; left: -34px; right: -34px; top: 50%; height: 40px; margin-top: -20px;
+    content: ""; position: absolute; left: -34px; right: -34px; top: 0; bottom: 0;
   }
+  .home .guide-steps li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
+  .home .guide-when { display: block; margin: 0; }
+  .page .guide-steps p { font-size: 16px; }
+  .guide-steps { gap: 14px; }
+  .home .entry .stamp { margin-bottom: 12px; }
+  .home .guide-actions { gap: 6px 22px; }
+  .home .guide + .plan { margin-top: 40px; }
+  .home-shelf--in-page { margin-top: 44px; }
+  .home-shelf--in-page .envelopes { gap: 16px 12px; }
+  .home-shelf--in-page .envelope .label .env-action { font-size: 13.5px; }
+  .page .suspects-legend { margin-top: -10px; font-size: 19.5px; }
+  .page .registry-tap { font-size: 19.5px; }
   .home .install-note { font-size: 20.5px; margin: 14px 0 24px; }
   .home .coach-card { margin-top: 26px; }
   .home .coach-card + .plan { margin-top: 34px; }

@@ -1,6 +1,27 @@
-/* Page : révision — une fiche bristol à la fois, posée sur la pile du jour */
+/* Page : révision — une fiche bristol à la fois, posée sur la pile du jour, à laquelle on répond en touchant un choix */
 
-.rv .h { margin-bottom: 28px; }
+.rv .h { margin-bottom: 14px; }
+
+/* ---------- où en est la séance ---------- */
+.rv-progress { display: flex; align-items: center; gap: 16px; max-width: 640px; margin: 0 0 22px; }
+.rv-step {
+  margin: 0 !important; white-space: nowrap;
+  font-family: "Courier Prime", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2);
+}
+.rv-step b { font-size: 16px; color: var(--ink); }
+.rv-again { color: var(--ink-3); }
+
+/* la première séance : ce que fait la révision espacée, au crayon (sur la page de droite, à côté de la fiche) */
+.rv-help--top { display: none !important; }
+.rv-help--side { margin: 6px 0 34px; }
+.rv-help {
+  display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 0 18px;
+  max-width: 640px; margin: -4px 0 22px; padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--pencil);
+}
+.rv-help .pencil-note { flex: 1 1 22em; margin: 0 !important; font-size: 22px; line-height: 1.1; }
+.rv-help .link { display: inline-flex; align-items: center; min-height: 44px; }
+.rv-requeued { max-width: 640px; margin: -8px 0 16px !important; font-size: 21px; transform: rotate(-.6deg); transform-origin: left center; }
 
 /* ---------- la pile : une tranche de carte par fiche restante ---------- */
 .rv-pile {
@@ -21,45 +42,84 @@
   box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .8);
 }
 .rv-pile > .index-card { z-index: 1; }
-.rv-pile-n {
-  max-width: 640px; margin: 14px 0 0 !important; text-align: right;
-  font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
-}
-.rv-requeued { max-width: 640px; margin: 4px 0 0 !important; text-align: right; font-size: 21px; transform: rotate(-1deg); transform-origin: right center; }
 
 /* ---------- la fiche ---------- */
-.rv-card { display: flex; flex-direction: column; min-height: 320px; padding: 15px 30px 24px; }
+.rv-card { display: flex; flex-direction: column; padding: 15px 30px 22px; }
 .rv-card .ic-head span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; }
 .rv-card .ic-head span:last-child { white-space: nowrap; }
 .rv-card .clip { left: 46%; }
-.rv-front { display: flex; flex-direction: column; flex: 1 0 auto; }
+
+/* la consigne tapée : ce qu'il faut faire, tout de suite */
+.rv-instr-line { display: flex; align-items: center; justify-content: space-between; gap: 6px 14px; min-height: 28px; margin-top: 8px; }
+.rv-instr { margin: 0 !important; font-family: "Elite", monospace; font-size: 17px; line-height: 1.3; color: var(--ink-2); }
+.rv-instr-line .stamp { flex: none; }
 
 .rv-question {
-  margin: 12px 0 0; font-family: "Fell", serif; font-weight: 400; font-size: 30px; line-height: 1.12; letter-spacing: -.005em;
+  margin: 10px 0 0; font-family: "Fell", serif; font-weight: 400; font-size: 30px; line-height: 1.12; letter-spacing: -.005em;
   text-wrap: pretty;
 }
+.rv-question:focus { outline: none; } /* reçoit le focus à chaque nouvelle carte, pour la lecture */
 .rv-quote {
   margin: 16px 0 0; padding: 0 0 0 16px;
   border-left: 2px solid var(--pencil);
   font-style: italic; font-size: 17.5px; line-height: 28px; color: var(--ink-2);
 }
-.rv-front-foot {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 18px;
-  min-height: 52px; margin-top: auto; padding-top: 22px;
+
+/* ---------- les choix : de grandes lignes à toucher, comme sur la copie du quiz ---------- */
+.rv-choices { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px dashed var(--ink-3); }
+.rv-choice {
+  display: grid; grid-template-columns: 30px 26px minmax(0, 1fr); gap: 8px; align-items: center;
+  width: 100%; min-height: 56px; padding: 10px 6px 10px 4px;
+  border: 0; border-bottom: 1px dashed var(--ink-3); background: none;
+  text-align: left; color: inherit; font: inherit; cursor: pointer;
+  transition: background-color .15s ease, opacity .25s ease;
 }
-.rv-front-foot:empty { display: none; }
-.rv-front-foot .stamp { margin-left: auto; }
-.rv-front-foot .paper-btn { min-height: 46px; font-size: 15px; padding: 10px 16px 9px; }
+.rv-choice .box { position: relative; width: 22px; height: 22px; }
+.rv-choice .box svg { position: absolute; inset: -8px; width: 38px; height: 38px; overflow: visible; }
+.rv-choice .box .b { color: var(--ink-2); }
+.rv-choice .box .t { color: var(--ink); }
+.rv-letter { font-family: "Elite", monospace; font-size: 17px; white-space: nowrap; }
+.rv-letter .rough, .rv-label .rough { color: var(--red-pen); }
+/* les réponses sont du savoir : imprimées, plus lisibles qu'à la machine quand elles font une phrase */
+.rv-label { font-family: "Caslon", serif; font-size: 17.5px; line-height: 1.38; min-width: 0; overflow-wrap: anywhere; text-wrap: pretty; }
+@media (hover: hover) {
+  .rv-choice:not(:disabled):hover { background: rgba(120, 100, 60, .08); }
+  :root[data-theme="dark"] .rv-choice:not(:disabled):hover { background: rgba(255, 255, 255, .05); }
+}
+.rv-choice:focus-visible { outline-offset: -2px; }
+.rv-choice:not(:disabled):active { background: rgba(120, 100, 60, .14); }
+.rv-choice:disabled { cursor: default; }
+.rv-choice.idle { opacity: .6; }
+.rv-choice.right .rv-label { font-weight: 700; }
+/* le choix faux est barré au stylo rouge */
+.rv-choice.wrong .rv-label {
+  text-decoration: line-through; text-decoration-color: var(--red-pen); text-decoration-thickness: 2.2px; text-decoration-skip-ink: none;
+}
+
+.rv-dunno { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+.rv-dunno .link { display: inline-flex; align-items: center; min-height: 44px; }
+.rv-keys { font-family: "Caveat", cursive; font-weight: 500; font-size: 20px; line-height: 1; color: var(--pencil); }
+
+/* carte sans choix : on la retourne */
+.rv-front-foot {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px;
+  min-height: 52px; margin-top: 22px;
+}
+.rv-front-foot .paper-btn { min-height: 48px; font-size: 15.5px; padding: 10px 18px 9px; }
 .rv-front-foot .paper-btn .kbd { margin-left: 6px; letter-spacing: .04em; text-transform: none; }
 
-/* le verso : un double filet rouge, comme le dos de la fiche */
-.rv-back { position: relative; margin-top: 18px; padding-top: 8px; }
+/* ---------- la correction : le verso de la fiche, sous un double filet rouge ---------- */
+.rv-back { position: relative; margin-top: 22px; padding-top: 12px; }
 .rv-back::before {
   content: ""; position: absolute; left: -30px; right: -30px; top: 0;
   height: 1.6px; background: var(--card-head); box-shadow: 0 4px 0 var(--card-head);
 }
 html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
 @keyframes rv-flip { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.rv-back:focus { outline: none; } /* reçoit le focus quand on retourne la carte : c'est une lecture, pas une commande */
+.rv-verdict { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0 10px; }
+.rv-verdict .stamp { font-size: 17px; }
+.rv-return { margin: 0 !important; font-size: 21px; line-height: 1.05; }
 .rv-verso {
   margin: 0 !important; line-height: 28px;
   font-family: "Courier Prime", monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
@@ -74,41 +134,32 @@ html.js .rv-back { animation: rv-flip .45s cubic-bezier(.2, .8, .3, 1) both; }
 .rv-sign { margin: 4px 0 0 !important; text-align: right; font-size: 26px; line-height: 28px; font-weight: 700; }
 /* une note de l'élève (ou d'un autre auteur) : à l'encre, le stylo rouge reste au coach */
 .rv-card--mine .rv-back .hand, .rv-card--mine .rv-list--hand li { color: var(--ink); }
-/* le verso reçoit le focus quand on retourne la carte : c'est une lecture, pas une commande */
-.rv-back:focus { outline: none; }
 .rv-more { margin: 8px 0 -6px !important; line-height: 28px; }
 .rv-more .link { display: inline-flex; align-items: center; min-height: 40px; }
 
-/* ---------- page de droite : les quatre tampons ---------- */
-.rv-grades .h { margin-bottom: 4px; }
-.rv-hint { margin: 0 0 20px !important; min-height: 24px; font-size: 21px; }
-.rv-stamps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 22px; max-width: 470px; }
-.rv-grade {
-  --gr: -.8deg;
-  position: relative; display: grid; justify-items: center; align-content: center; gap: 12px;
-  min-height: 112px; padding: 22px 10px 14px;
+/* ---------- l'action suivante, sous la fiche ---------- */
+.rv-act {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px;
+  max-width: 640px; margin-top: 26px;
+  scroll-margin-bottom: 24px; scroll-margin-top: 20px;
+}
+.rv-act .btn-tape { min-height: 52px; white-space: nowrap; }
+.rv-self { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 520px; }
+.rv-self-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 60px; padding: 12px 14px;
   border: 0; cursor: pointer; color: var(--ink);
   background: var(--label); box-shadow: var(--shadow-sm);
-  transform: rotate(var(--gr));
-  transition: transform .18s ease, box-shadow .18s ease, opacity .25s ease;
+  font-family: "Elite", monospace; font-size: 19px; line-height: 1.15; text-align: center;
+  transform: rotate(-.6deg);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-.rv-grade:nth-child(2) { --gr: .9deg; --i: 1; }
-.rv-grade:nth-child(3) { --gr: .5deg; --i: 2; }
-.rv-grade:nth-child(4) { --gr: -1.1deg; --i: 3; }
-.rv-grade .stamp { font-size: 17px; opacity: .88; transition: opacity .15s ease; }
-.rv-grade.easy .stamp { outline-offset: 3px; }
-.rv-grade:not(:disabled):hover, .rv-grade:focus-visible { transform: rotate(0deg) translateY(-3px); box-shadow: var(--shadow-md); }
-.rv-grade:not(:disabled):hover .stamp, .rv-grade:focus-visible .stamp { opacity: 1; }
-.rv-grade:not(:disabled):active { transform: translateY(1px) scale(.97); box-shadow: var(--shadow-sm); }
-.rv-grade:disabled { cursor: default; opacity: .42; box-shadow: none; }
-.rv-grade:disabled .stamp { filter: url(#ink) grayscale(.6); }
-html.js .rv-grades:not(.is-idle) .rv-grade { animation: rv-drop .45s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i, 0) * 60ms); }
-@keyframes rv-drop { from { opacity: .42; translate: 0 -8px; } to { opacity: 1; translate: 0 0; } }
-.rv-when { font-family: "Courier Prime", monospace; font-size: 13.5px; letter-spacing: .04em; color: var(--ink-2); }
-.rv-grade .kbd { position: absolute; right: 9px; top: 8px; }
+.rv-self-btn + .rv-self-btn { transform: rotate(.7deg); }
+.rv-self-btn:hover, .rv-self-btn:focus-visible { transform: rotate(0deg) translateY(-2px); box-shadow: var(--shadow-md); }
+.rv-self-btn:active { transform: translateY(1px) scale(.98); box-shadow: var(--shadow-sm); }
 
-/* fiche de séance : une ligne par carte notée, avec son tampon */
-.rv-log { margin-top: 50px; }
+/* fiche de séance : une ligne par réponse, avec son tampon */
+.rv-log { margin-top: 6px; }
 .rv-session { max-width: 400px; margin-top: 0; padding-bottom: 20px; }
 .rv-session .cols, .rv-session li { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
 .rv-session .cols span:last-child { text-align: right; }
@@ -120,7 +171,7 @@ html.js .rv-grades:not(.is-idle) .rv-grade { animation: rv-drop .45s cubic-bezie
 
 .rv-foot {
   display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 20px;
-  max-width: 470px; margin-top: 40px; padding-top: 6px; border-top: 1px solid var(--ink-3);
+  max-width: 400px; margin-top: 40px; padding-top: 6px; border-top: 1px solid var(--ink-3);
   font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
 }
 .rv-foot .link { display: inline-flex; align-items: center; min-height: 44px; }
@@ -134,6 +185,20 @@ html.js .rv-grades:not(.is-idle) .rv-grade { animation: rv-drop .45s cubic-bezie
 .rv-count span { font-family: "Fell", serif; font-size: 32px; line-height: 1; }
 .rv-lead { margin: 22px 0 0 !important; max-width: 30em; font-size: 18px; line-height: 1.5; }
 .rv-count + .rv-lead { margin-top: 12px !important; }
+
+/* ce qui revient quand : un relevé tapé, en pointillés */
+.rv-returns { max-width: 420px; margin-top: 24px; }
+.rv-returns h2 {
+  margin: 0 0 4px; font-family: "Courier Prime", monospace; font-weight: 700; font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2);
+}
+.rv-returns ul { list-style: none; margin: 0; padding: 0; border-top: 1.2px solid var(--ink-3); }
+.rv-returns li {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 8px 0 7px; border-bottom: 1px dotted var(--ink-3);
+  font-family: "Courier Prime", monospace; font-size: 15.5px;
+}
+.rv-returns li span:last-child { font-weight: 700; white-space: nowrap; }
+
 .rv-next { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 26px; margin-top: 34px; }
 .rv-next .btn-tape { white-space: nowrap; }
 .rv-next-links { display: flex; flex-wrap: wrap; gap: 6px 22px; }
@@ -153,34 +218,46 @@ html.js .rv-grades:not(.is-idle) .rv-grade { animation: rv-drop .45s cubic-bezie
 
 /* ---------- téléphone ---------- */
 @media (max-width: 759px) {
-  .rv .h { margin-bottom: 20px; }
-  .rv .h .h-count { font-size: 11.5px; }
+  .rv .h { margin-bottom: 10px; }
+  .rv-progress { gap: 12px; margin-bottom: 16px; }
+  .rv-step { font-size: 12.5px; }
+  .rv-step b { font-size: 14.5px; }
+  .rv-help--top { display: flex !important; }
+  .rv-help--side { display: none; }
+  .rv-help { margin-bottom: 16px; padding-left: 10px; }
+  .rv-help .pencil-note { font-size: 20.5px; }
+  .rv-requeued { font-size: 20px; }
+
   .rv-card { min-height: 0; padding: 15px 16px 18px; }
   .rv-card .clip { left: auto; right: 26px; }
   .rv-card--note .ic-head span:last-child:not(:first-child) { display: none; }
   .rv-card .ic-head { font-size: 13px; letter-spacing: .1em; }
   .rv-card .ic-head span:last-child { font-size: 11px; }
-  .rv-back::before { left: -16px; right: -16px; }
+  .rv-instr { font-size: 15.5px; }
   .rv-question { font-size: 25px; margin-top: 8px; }
+  .rv-quote { font-size: 17px; padding-left: 12px; }
+  .rv-choices { margin-top: 16px; }
+  .rv-choice { grid-template-columns: 28px 22px minmax(0, 1fr); gap: 6px; min-height: 56px; padding: 9px 2px 9px 0; }
+  .rv-label { font-size: 17px; }
+  .rv-back::before { left: -16px; right: -16px; }
   .rv-answer { font-size: 18px; }
   .rv-hand { font-size: 28px; }
-  .rv-front-foot { padding-top: 18px; }
-  .rv-pile-n { font-size: 11px; }
-  .rv-requeued { font-size: 20px; }
 
-  .rv-grades.is-idle, .rv-grades .rv-hint:has(.rv-keys), .rv-log.is-empty { display: none; }
-  .rv .kbd { display: none; }
-  .rv-grades .h { margin-bottom: 18px; }
-  .rv-grades { scroll-margin-top: 12px; }
-  .rv-hint { margin-bottom: 14px !important; }
-  .rv-keys { display: none; }
-  .rv-stamps { gap: 14px 12px; }
-  .rv-grade { min-height: 92px; padding: 18px 6px 10px; gap: 9px; }
-  .rv-grade .stamp { font-size: 14.5px; }
-  .rv-when { font-size: 12.5px; }
-  .rv-log { margin-top: 34px; }
+  /* l'action suivante reste au-dessus de la barre d'onglets, même en relisant la fiche */
+  .rv-act {
+    position: sticky; z-index: 6; bottom: calc(86px + env(safe-area-inset-bottom));
+    margin-top: 20px; scroll-margin-bottom: 16px;
+  }
+  .rv-act .btn-wrap { flex: 1 1 auto; }
+  .rv-act .btn-tape { width: 100%; justify-content: center; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .5); }
+  .rv-self { gap: 10px; max-width: none; }
+  .rv-self-btn { min-height: 64px; font-size: 17.5px; padding: 10px 8px; box-shadow: 0 6px 18px -8px rgba(0, 0, 0, .55); }
+  .rv .kbd, .rv-keys { display: none; }
+
+  .rv-log { margin-top: 10px; }
+  .rv-log.is-empty { display: none; }
   .rv-session { max-width: none; margin-right: 4px; }
-  .rv-foot { margin-top: 30px; }
+  .rv-foot { max-width: none; margin-top: 30px; }
 
   .rv-title { font-size: 44px; }
   .rv-title em { font-size: 21px; }

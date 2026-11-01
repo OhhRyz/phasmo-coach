@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
+  Consigne,
   FileHead,
   H,
   Notebook as Book,
@@ -282,7 +283,9 @@ function Carnet() {
         {/* ===================== page de gauche : écrire ===================== */}
         <Page side="left" section="6" label="Écrire une note">
           <FileHead>
-            <span>{holder ? <>Carnet de <b>{holder}</b></> : 'Carnet de notes'}</span>
+            <span>
+              <b>Mes notes</b>
+            </span>
             <span>
               {total === 0 ? (
                 'aucune note'
@@ -298,25 +301,28 @@ function Carnet() {
             <h1 className="entry-date">
               {holder ? (
                 <>
-                  <em>Le carnet de</em>
+                  <em>Les notes de</em>
                   {holder}
                 </>
               ) : (
                 <>
-                  <em>Le carnet</em>de notes
+                  <em>Mes</em>notes
                 </>
               )}
             </h1>
             <p className="entry-line">{fr(lead)}</p>
           </div>
 
+          <Consigne className="carnet-consigne">
+            {fr('écris une astuce ou une erreur à ne plus refaire, puis enregistre-la ; avec la case de révision cochée, elle te sera reposée d’elle-même')}
+          </Consigne>
           <NoteEditor autoFocus={!arrived} />
 
           <section className="carnet-share" aria-labelledby="h-share">
             <h2 className="carnet-share-h" id="h-share">
               Sauvegarder
             </h2>
-            <p>{fr('Un fichier avec toutes les notes du carnet, en copie de sécurité ou pour les passer sur un autre appareil.')}</p>
+            <p>{fr('Un fichier avec toutes tes notes, en copie de sécurité ou pour les passer sur un autre appareil.')}</p>
             <div className="carnet-share-btns">
               <PaperButton
                 disabled={!total}
@@ -340,6 +346,7 @@ function Carnet() {
                 }}
               />
             </div>
+            {!total && <p className="pencil-note carnet-export-hint">{fr('rien à exporter : aucune note pour l’instant')}</p>}
             <p className="carnet-coaching">
               <TypedLink to="/coaching">Partager ou recevoir des notes</TypedLink>
             </p>
@@ -396,7 +403,7 @@ function Carnet() {
             )}
 
             {total === 0 ? (
-              <Empty title="Le carnet est vide">
+              <Empty title="Aucune note pour l’instant">
                 <p>
                   {fr(
                     isStudent

@@ -207,3 +207,246 @@ describe('mécaniques', () => {
     for (const tf of MECHANICS.trueFalse.filter((x) => !x.evidence)) expect(notOrbs(tf.claim), tf.id).toEqual([])
   })
 })
+
+describe('mécaniques en QCM', () => {
+  /** Le QCM d'un fait, lu tel qu'il est écrit dans mechanics.json. */
+  type Mcq = { id: string; a: string; evidence?: boolean; choices?: unknown; answer?: unknown }
+  const retained = MECHANICS.topics.flatMap((t) => t.facts as Mcq[]).filter((f) => !f.evidence)
+  const choicesOf = (f: Mcq) => f.choices as string[]
+  const rightOf = (f: Mcq) => choicesOf(f)[f.answer as number]
+  const wrongOf = (f: Mcq) => choicesOf(f).filter((_, i) => i !== f.answer)
+  const numbers = (s: string) => plain(s).match(/\d+(?:,\d+)?/g) ?? []
+  /** « 2,5 m/s » → « # m/s » : la forme d'une réponse chiffrée. */
+  const shape = (s: string) => plain(s).replace(/\d+(?:,\d+)?/g, '#')
+  const same = (s: string) => plain(s).toLowerCase().replace(/\s+/g, ' ').trim()
+
+  it('pose chaque fait retenu en QCM : 4 réponses distinctes et le rang de la bonne', () => {
+    expect(retained.length).toBeGreaterThan(0)
+    for (const f of retained) {
+      expect(Array.isArray(f.choices), f.id).toBe(true)
+      const choices = choicesOf(f)
+      expect(choices, f.id).toHaveLength(4)
+      for (const c of choices) {
+        expect(typeof c, f.id).toBe('string')
+        expect(c.trim().length, f.id).toBeGreaterThan(0)
+        // le style des questions rédigées des fiches : pas de point final
+        expect(c, `${f.id} → ${c}`).not.toMatch(/\.$/)
+        // jamais de réponse fourre-tout
+        expect(plain(c), `${f.id} → ${c}`).not.toMatch(/toutes (les|ces) réponses|aucune (de ces|des) réponses|tout est vrai/i)
+      }
+      expect(new Set(choices.map(same)).size, f.id).toBe(4)
+      expect(Number.isInteger(f.answer), f.id).toBe(true)
+      expect(f.answer as number, f.id).toBeGreaterThanOrEqual(0)
+      expect(f.answer as number, f.id).toBeLessThan(4)
+    }
+  })
+
+  it('a pour bonne réponse une version courte de la réponse rédigée', () => {
+    for (const f of retained) {
+      const right = rightOf(f)
+      for (const w of wrongOf(f)) expect(same(w), f.id).not.toBe(same(right))
+      // ses nombres sont ceux de la réponse rédigée
+      for (const n of numbers(right)) expect(numbers(f.a), `${f.id} → ${right}`).toContain(n)
+      // une question fermée : la bonne réponse dit oui ou non comme la réponse rédigée, les leurres aussi
+      const yes = /^(Oui|Non)\b/.exec(plain(f.a))?.[1]
+      if (yes) {
+        expect(plain(right).startsWith(yes), `${f.id} → ${right}`).toBe(true)
+        for (const c of choicesOf(f)) expect(plain(c), f.id).toMatch(/^(Oui|Non)\b/)
+        expect(choicesOf(f).filter((c) => plain(c).startsWith(yes)).length, f.id).toBeLessThan(4)
+      }
+    }
+  })
+
+  it('propose des leurres de même forme que la bonne réponse', () => {
+    for (const f of retained) {
+      const right = rightOf(f)
+      // une réponse chiffrée (« 2,5 m/s », « 26 actions ») : quatre valeurs différentes dans la même unité
+      if (/^#(?: [^\s,]+){0,2}$/.test(shape(right))) {
+        for (const c of choicesOf(f)) expect(shape(c), `${f.id} → ${c}`).toBe(shape(right))
+        expect(new Set(choicesOf(f).map((c) => numbers(c)[0])).size, f.id).toBe(4)
+      }
+      // la bonne réponse ne se repère pas à sa longueur
+      const longest = Math.max(...wrongOf(f).map((c) => plain(c).length))
+      expect(plain(right).length, `${f.id} → ${right}`).toBeLessThanOrEqual(longest * 1.5 + 4)
+    }
+    // ni à sa place : chaque rang porte la bonne réponse d'au moins un fait sur six
+    for (let i = 0; i < 4; i++) expect(retained.filter((f) => f.answer === i).length, `rang ${i}`).toBeGreaterThanOrEqual(retained.length / 6)
+  })
+
+  it('ne fait relever aucune preuve dans les réponses proposées, hormis les orbes du Mimic', () => {
+    const notOrbs = (s: string) => evidenceCited(s).filter((re) => re !== String(ORBS))
+    for (const f of retained) for (const c of choicesOf(f)) expect(notOrbs(c), `${f.id} → ${c}`).toEqual([])
+  })
+})
+
+/**
+ * Les QCM écrits à la main (questions des fiches, faits de mécaniques retenus) : quelqu'un qui ne connaît
+ * pas le jeu ne doit pas repérer la bonne réponse à sa forme. Mêmes type, longueur et structure pour les
+ * quatre réponses ; le détail en plus va dans l'explication.
+ */
+describe('QCM rédigés : des réponses de même forme', () => {
+  type Mcq = { id: string; q: string; choices: string[]; answer: number }
+  const fromGhosts: Mcq[] = GHOSTS.flatMap((g) => g.quiz.map((q, i) => ({ id: `${g.id}#${i}`, q: q.q, choices: q.choices, answer: q.answer })))
+  const fromFacts: Mcq[] = MECHANICS.topics
+    .flatMap((t) => t.facts)
+    .filter((f) => !f.evidence && Array.isArray(f.choices) && typeof f.answer === 'number')
+    .map((f) => ({ id: f.id, q: f.q, choices: f.choices as string[], answer: f.answer as number }))
+  const all = [...fromGhosts, ...fromFacts]
+  const label = (q: Mcq) => `${q.id} : ${q.choices.join(' | ')}`
+  const size = (s: string) => [...plain(s)].length
+  const shape = (s: string) => plain(s).replace(/\d+(?:,\d+)?/g, '#')
+  /** « 50 % », « 1,7 m/s », « 26 actions » : une valeur et son unité, rien d'autre. */
+  const isValue = (s: string) => /^#(?: [^\s,]+){0,2}$/.test(shape(s))
+  /** une valeur mesurée (« 8 s », « 25 % », « 3 m ») ; « Patient 07 » reste un nom */
+  const VALUE = /\d+(?:,\d+)?\s?(?:%|m\/s|m|s|min|minutes?|secondes?|fois|°C)(?![\p{L}])/u
+  /** une nuance : « toujours », « seulement », « environ »… */
+  const HEDGE =
+    /(?<![\p{L}])(?:toujours|jamais|seulement|uniquement|forcément|sûrement|parfois|rarement|souvent|surtout|généralement|en général|habituellement|en moyenne|environ)(?![\p{L}])/iu
+  /** « n'accélère pas », « sans accélération » : le sens de l'accélération en ligne de vue */
+  const NO_LOS = /n'accélère (?:pas|jamais|plus)|sans (?:aucune |la moindre |jamais )?accél[ée]r|aucune accélération/iu
+  const POLARITY = /^(Oui|Non|Vrai|Faux)\b/
+  const NEGATION = /^Ce n'est pas\b/
+  /** Ce qui se voit d'un coup d'œil : la seule réponse qui l'a (ou la seule qui ne l'a pas) se remarque. */
+  const MARKS: [string, RegExp][] = [
+    ['parenthèse', /\(/],
+    ['« · »', /·/],
+    ['« : »', /:/],
+    ['« ; »', /;/],
+    ['guillemets', /[«»]/],
+    ['valeur chiffrée', VALUE],
+    ['pourcentage', /%/],
+    ['vitesse', /m\/s/],
+    ['nuance', HEDGE],
+    ['ligne de vue', NO_LOS],
+    ['« Ce n’est pas »', NEGATION],
+  ]
+  const uniqueLongest = (q: Mcq) => {
+    const lengths = q.choices.map(size)
+    const max = Math.max(...lengths)
+    return lengths[q.answer] === max && lengths.filter((x) => x === max).length === 1
+  }
+  const uniqueShortest = (q: Mcq) => {
+    const lengths = q.choices.map(size)
+    const min = Math.min(...lengths)
+    return lengths[q.answer] === min && lengths.filter((x) => x === min).length === 1
+  }
+  /** Les mots qui portent le sens (sans articles, prépositions, pronoms ni élisions) : « 1,7 » reste un seul mot. */
+  const STOP = new Set(
+    'les des une un le la de du et en au aux à a est son sa ses il elle on qui que quoi quel quelle quels quelles dans sur pour par pas ne plus avec tu te ton ta tes se ce cette ces y ou entité entités chasse chasses'.split(' '),
+  )
+  const words = (s: string) =>
+    new Set(
+      plain(s)
+        .toLowerCase()
+        .replace(/(?<![\p{L}])(?:l|d|s|n|qu|t|j|c|m|jusqu|lorsqu|puisqu)'/gu, ' ')
+        .replace(/[«»()·:;.?!']/g, ' ')
+        .replace(/,(?!\d)/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w && !STOP.has(w)),
+    )
+  /** Les noms des entités tels qu'ils s'écrivent dans une réponse (« Le Spectre », « Spectre »), avec leur majuscule. */
+  const NAMES = GHOSTS.map((g) => {
+    const names = [g.name, g.name.replace(/^(?:Les |Le |La |L['’])/u, '')].map((n) => plain(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    return { id: g.id, re: new RegExp(`(?<![\\p{L}])(?:${names.join('|')})(?![\\p{L}])`, 'u') }
+  })
+
+  it('couvre les questions des fiches et les faits retenus', () => {
+    expect(fromGhosts.length).toBeGreaterThanOrEqual(GHOSTS.length * 5)
+    expect(fromFacts.length).toBeGreaterThan(0)
+  })
+
+  it('a des réponses de longueur voisine', () => {
+    for (const q of all) {
+      const lengths = q.choices.map(size)
+      const [min, max] = [Math.min(...lengths), Math.max(...lengths)]
+      // la plus longue ne dépasse pas 1,6 fois la plus courte ; entre réponses courtes (20 caractères au plus), 12 d'écart au plus
+      expect(max <= min * 1.6 || (max <= 20 && max - min <= 12), label(q)).toBe(true)
+    }
+  })
+
+  it('donne les réponses chiffrées dans la même unité, avec des valeurs différentes', () => {
+    for (const q of all) {
+      if (!q.choices.some(isValue)) continue
+      expect(new Set(q.choices.map(shape)).size, label(q)).toBe(1)
+      expect(new Set(q.choices.map((c) => plain(c).match(/\d+(?:,\d+)?/)?.[0])).size, label(q)).toBe(q.choices.length)
+    }
+  })
+
+  it('n’isole aucune réponse par sa structure', () => {
+    for (const q of all) {
+      // des valeurs nues (« 50 % », « 1,7 m/s ») : seule la valeur change
+      if (q.choices.every(isValue)) continue
+      const choices = q.choices.map(plain)
+      const n = choices.length
+      // ni la seule à porter une parenthèse, un « · », des guillemets, un chiffre, une nuance, un « n'accélère pas »…, ni la seule à s'en passer
+      for (const [name, re] of MARKS) {
+        const k = choices.filter((c) => re.test(c)).length
+        expect(k === 1 || (n > 2 && k === n - 1), `${label(q)} (${name} : ${k}/${n})`).toBe(false)
+      }
+      // « Oui, … » / « Non, … » : toutes les réponses commencent ainsi, autant de oui que de non
+      if (choices.some((c) => POLARITY.test(c))) {
+        for (const c of choices) expect(c, label(q)).toMatch(POLARITY)
+        const yes = choices.filter((c) => /^(?:Oui|Vrai)\b/.test(c)).length
+        if (n % 2 === 0) expect(yes, `${label(q)} (oui/non)`).toBe(n / 2)
+      }
+    }
+  })
+
+  it('ne fait pas de la bonne réponse celle qui parle de l’entité la plus citée', () => {
+    for (const q of all) {
+      const choices = q.choices.map(plain)
+      // les entités citées dans certaines réponses seulement, et dans combien
+      const counts = NAMES.map(({ id, re }) => ({ id, re, k: choices.filter((c) => re.test(c)).length })).filter((x) => x.k && x.k < choices.length)
+      if (!counts.length) continue
+      const top = Math.max(...counts.map((x) => x.k))
+      const leaders = counts.filter((x) => x.k === top)
+      if (top < 2 || leaders.length > 1) continue
+      expect(leaders[0].re.test(choices[q.answer]), `${label(q)} (${leaders[0].id} cité ${top} fois)`).toBe(false)
+    }
+  })
+
+  it('ne fait pas de la bonne réponse le mélange des autres', () => {
+    // chaque mauvaise réponse change un morceau de la bonne : la bonne est alors celle qui partage le plus avec les autres
+    for (const set of [fromGhosts, fromFacts]) {
+      let medoids = 0
+      let rightMedoids = 0
+      for (const q of set) {
+        const sets = q.choices.map(words)
+        const shared = sets.map((w, i) => sets.reduce((sum, o, j) => (j === i ? sum : sum + [...w].filter((x) => o.has(x)).length), 0))
+        const others = shared.filter((_, i) => i !== q.answer)
+        expect(shared[q.answer] - Math.max(...others), `${label(q)} (mots partagés : ${shared.join('/')})`).toBeLessThan(2)
+        const best = Math.max(...shared)
+        if (shared.filter((x) => x === best).length > 1) continue
+        medoids++
+        if (shared[q.answer] === best) rightMedoids++
+      }
+      // la réponse « au centre » des autres n'est la bonne qu'au hasard (une fois sur quatre), pas plus d'une fois sur trois
+      expect(rightMedoids, `${rightMedoids} sur ${medoids}`).toBeLessThanOrEqual(Math.max(2, medoids * 0.35))
+    }
+  })
+
+  it('ne fait pas de la bonne réponse la seule à reprendre la question', () => {
+    for (const q of all) {
+      const asked = words(q.q)
+      const echo = q.choices.map((c) => [...words(c)].filter((w) => w.length > 3 && asked.has(w)).length)
+      const others = echo.filter((_, i) => i !== q.answer)
+      expect(echo[q.answer] > Math.max(...others), `${label(q)} (mots de la question : ${echo.join('/')})`).toBe(false)
+    }
+  })
+
+  it('ne fait de la bonne réponse ni la plus longue, ni la plus courte', () => {
+    for (const set of [fromGhosts, fromFacts]) {
+      // seule réponse la plus longue (ou la plus courte) dans 30 % des questions au plus (le hasard en donne environ 25 %)
+      const longest = set.filter(uniqueLongest)
+      expect(longest.length, longest.map((q) => q.id).join(', ')).toBeLessThanOrEqual(set.length * 0.3)
+      const shortest = set.filter(uniqueShortest)
+      expect(shortest.length, shortest.map((q) => q.id).join(', ')).toBeLessThanOrEqual(set.length * 0.3)
+    }
+  })
+
+  it('place la bonne réponse à tous les rangs', () => {
+    for (const set of [fromGhosts, fromFacts]) {
+      for (let i = 0; i < 4; i++) expect(set.filter((q) => q.answer === i).length, `rang ${i}`).toBeGreaterThanOrEqual(set.length / 6)
+    }
+  })
+})

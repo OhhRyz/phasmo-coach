@@ -72,6 +72,10 @@
 .qz-title { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 54px; line-height: .98; letter-spacing: -.012em; }
 .qz-title em { display: block; margin-bottom: 6px; font-size: 25px; letter-spacing: .01em; color: var(--ink-2); }
 .qz-lead { margin: 14px 0 0 !important; max-width: 31em; font-style: italic; font-size: 18px; line-height: 1.5; }
+/* commencer tout de suite, avec les réglages par défaut : le bouton juste sous l'intro */
+.qz-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 22px; }
+.qz-quick .btn-hint { flex-basis: 100%; margin-top: 0; }
+.qz-or { margin: 0 !important; font-size: 21px; transform: rotate(-1.5deg); }
 
 .qz-field { margin: 0 0 26px; padding: 0; border: 0; min-width: 0; }
 .qz-field > legend { float: left; width: 100%; }
@@ -110,7 +114,6 @@
 
 .qz-empty { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; max-width: 460px; margin: 26px 0 0 !important; font-size: 16.5px; color: var(--ink-2); }
 .qz-empty .stamp { margin-top: 3px; }
-.qz-need { margin: 22px 0 -10px !important; font-size: 21px; }
 .qz-go { margin-top: 30px; }
 .qz-history { margin-top: 56px; }
 .qz-libcard { max-width: 320px; margin-top: 4px; }
@@ -148,10 +151,11 @@
   text-wrap: pretty;
 }
 .qz-num { min-width: 1.4em; }
-.qz-instr {
-  margin-top: 8px !important; padding-left: calc(1.4em * 23 / 12.5 + 12px);
-  font-family: "Courier Prime", monospace; font-size: 12.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-}
+/* la consigne de la question, tapée à l'encre ordinaire (la voix de l'app, pas celle du sujet ronéotypé) */
+.qz-consigne { margin: 0 0 12px !important; text-shadow: none; }
+.qz-consigne b { font-weight: 700; }
+.qz-count { color: var(--ink-2); white-space: nowrap; }
+.qz-on-phone { display: none; }
 
 .qz-run .qz-sheet { margin-right: -28px; }
 .qz-body { display: grid; grid-template-columns: minmax(0, 1fr) 256px; gap: 0 26px; align-items: stretch; }
@@ -191,7 +195,19 @@
 }
 .qz-correction .stamp { margin: 4px 0 16px; font-size: 15px; }
 .qz-correction .qz-explain { font-size: 16.5px; line-height: 1.45; }
-.qz-correction .link { display: inline-flex; align-items: center; min-height: 40px; }
+.qz-correction .link { display: inline-flex; align-items: center; min-height: 40px; text-align: left; }
+
+/* la fiche express (posée sur la copie, sans la quitter) */
+.qz-fiche { line-height: 1.5; }
+.qz-fiche p { margin: 0 0 10px; }
+.qz-fiche-sum { font-style: italic; font-size: 16.5px; line-height: 28px; color: var(--ink-2); }
+.qz-fiche-line { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 4px 12px; align-items: baseline; font-size: 16.5px; line-height: 28px; }
+.qz-fiche-k { font-family: "Courier Prime", monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+p.qz-fiche-k { margin: 14px 0 2px; }
+.qz-fiche-tells { margin: 0; padding-left: 1.3em; font-size: 16.5px; line-height: 28px; }
+.qz-fiche-tells li + li { margin-top: 2px; }
+.qz-fiche-more { margin: 12px 0 0 !important; font-size: 20px; }
+.qz-quit-body { margin: 0; font-size: 17px; line-height: 28px; }
 
 .qz-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 14px 22px; min-height: 56px; margin-top: 26px; }
 .qz-actions .btn-wrap, .qz-next { scroll-margin-bottom: 24px; scroll-margin-top: 20px; }
@@ -232,8 +248,8 @@ html.js .qz-bar::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) both; 
 @media (min-width: 1181px) {
   .qz-results .page--left > .qz-stick { position: sticky; top: 24px; }
 }
-.qz-end-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 26px; margin-top: 38px; }
-.qz-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; }
+.qz-end-actions { margin-top: 38px; }
+.qz-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; text-align: left; }
 
 /* le corrigé */
 .qz-fixes { list-style: none; margin: 0; padding: 0; }
@@ -305,7 +321,9 @@ html.js .qz-bar::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) both; 
 
   .qz-grid li { width: 27px; height: 27px; font-size: 11.5px; }
   .qz-prompt { font-size: 19.5px; gap: 8px; }
-  .qz-instr { padding-left: 0; }
+  .qz-on-desk { display: none; }
+  .qz-on-phone { display: inline; }
+  .qz-fiche-line { grid-template-columns: 1fr; gap: 0; }
   .qz-quote { font-size: 16.5px; }
   .qz-run .qz-sheet { margin-right: 0; }
   .qz-body { grid-template-columns: 1fr; }

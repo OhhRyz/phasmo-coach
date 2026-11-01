@@ -143,7 +143,7 @@ function CountCircle({ n }: { n: number }) {
   const w = 12 + label.length * 9
   const d = roughEllipse(w, 20, roughRng('count'), 0.05, 0.1)
   return (
-    <b className="count" aria-label={`${n} carte${n > 1 ? 's' : ''} à réviser`}>
+    <b className="count" aria-label={`${n} question${n > 1 ? 's' : ''} à réviser`}>
       {label}
       <svg className="draw" viewBox={`0 0 ${w + 14} 32`} aria-hidden>
         <path d={d} transform="translate(7 6)" pathLength={1} strokeWidth={1.6} style={{ ['--d' as string]: '1.2s' }} />
@@ -156,7 +156,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const { state, deck, saveFailed } = useStore()
   const { pathname } = useLocation()
   useTheme() // garde le thème synchronisé (choix « comme l'appareil »)
-  const due = useMemo(() => buildReviewQueue(state, deck, Date.now()).length, [state, deck])
+  // avant l'ouverture du carnet, aucun compteur : rien n'invite à partir ailleurs que sur l'accueil
+  const due = useMemo(() => (state.onboarded ? buildReviewQueue(state, deck, Date.now()).length : 0), [state, deck])
   const trainActive = TRAIN_PATHS.some((p) => pathname.startsWith(p))
   const current = (active: boolean) => (active ? ('page' as const) : undefined)
 
@@ -181,8 +182,9 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       <nav className="tabs" aria-label="Navigation principale">
+        {/* un seul mot par endroit, le même sur ordinateur et sur téléphone (« Mes notes » s'abrège en « Notes ») */}
         <Link className="tab" to="/" aria-current={current(pathname === '/')}>
-          <span className="long">Aujourd’hui</span>
+          <span className="long">Accueil</span>
           <span className="short">Accueil</span>
         </Link>
         <Link className="tab" to="/revision" aria-current={current(pathname.startsWith('/revision'))}>
@@ -196,7 +198,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </Link>
         {/* sur téléphone l'onglet Mécaniques est masqué : l'onglet Exercices s'allume à sa place */}
         <Link className={`tab${pathname.startsWith('/mecaniques') ? ' also-current' : ''}`} to="/entrainement" aria-current={current(trainActive)}>
-          <span className="long">S’entraîner</span>
+          <span className="long">Exercices</span>
           <span className="short">Exercices</span>
         </Link>
         <Link className="tab" to="/mecaniques" aria-current={current(pathname.startsWith('/mecaniques'))}>
@@ -204,8 +206,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="short">Méca</span>
         </Link>
         <Link className="tab" to="/carnet" aria-current={current(pathname.startsWith('/carnet'))}>
-          <span className="long">Carnet</span>
-          <span className="short">Carnet</span>
+          <span className="long">Mes notes</span>
+          <span className="short">Notes</span>
         </Link>
       </nav>
 
@@ -222,11 +224,13 @@ export function Layout({ children }: { children: ReactNode }) {
         <span>Projet de fan, non affilié à Kinetic Games. Données issues de l’Unofficial Phasmo Cheat Sheet de Ty Bayn.</span>
         {/* le coaching est facultatif : l'app sert à tout le monde, il se règle depuis ce lien */}
         <span className="desk-foot-links">
+          {/* rouvre la fiche « Mode d'emploi » de l'accueil, rangée après la première lecture */}
+          <Link to="/?guide=1">Mode d’emploi</Link>
           <Link to="/coaching" aria-current={current(pathname.startsWith('/coaching'))}>
             Coaching
           </Link>
           <Link to="/a-propos" aria-current={current(pathname.startsWith('/a-propos'))}>
-            Sources, licence et fonctionnement
+            Sources et licence
           </Link>
         </span>
       </footer>

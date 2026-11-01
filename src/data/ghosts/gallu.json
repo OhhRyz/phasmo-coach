@@ -219,68 +219,68 @@
     {
       "q": "Qu'est-ce qui fait passer un Gallu de l'état normal à l'état enragé ?",
       "choices": [
-        "La fin d'une chasse",
-        "Une santé moyenne qui passe sous 50 %",
-        "Marcher dans du sel, être encensé ou utiliser un crucifix",
-        "Une lumière allumée dans sa pièce"
+        "Le sel, l'encens ou un crucifix utilisé",
+        "La fin d'une chasse ou d'un événement",
+        "Une santé basse ou un joueur qui meurt",
+        "Une lumière ou un appareil allumé près de lui"
       ],
-      "answer": 2,
+      "answer": 0,
       "explain": "Sel (n'importe quel rang, 2 s de délai), encens ou crucifix utilisé (immédiat) le font enrager. La fin d'une chasse, elle, le fait passer d'enragé à affaibli."
     },
     {
       "q": "À quelle vitesse chasse un Gallu enragé ?",
       "choices": [
-        "1,96 m/s",
         "1,36 m/s",
+        "1,96 m/s",
         "1,7 m/s",
         "2,5 m/s"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Enragé : 1,96 m/s. 1,7 m/s correspond à l'état normal et 1,36 m/s à l'état affaibli. 2,5 m/s, c'est le Djinn ou le Raiju dans leurs conditions."
     },
     {
       "q": "À partir de quel seuil de santé mentale moyenne un Gallu enragé peut-il chasser ?",
       "choices": [
         "50 %",
-        "60 %",
         "40 %",
+        "60 %",
         "70 %"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Enragé : 60 %. Normal : 50 %. Affaibli : 40 %."
     },
     {
       "q": "Juste après avoir marché dans ton tas de sel, l'entité fait 5 ou 6 pas audibles. Qu'en conclus-tu ?",
       "choices": [
-        "C'est un Gallu",
         "C'est un Obake",
         "C'est un Spectre",
-        "Rien : toute entité peut faire jusqu'à 6 pas"
+        "C'est un Fantôme",
+        "C'est un Gallu"
       ],
-      "answer": 0,
-      "explain": "Après le sel, une entité laisse entre 0 et 4 bruits de pas. Le Gallu est la seule à pouvoir en faire plus de 4. L'Obake peut au contraire sauter un pas, et le Spectre ne perturbe jamais le sel."
+      "answer": 3,
+      "explain": "Après le sel, une entité laisse entre 0 et 4 bruits de pas. Le Gallu est la seule à pouvoir en faire plus de 4. L'Obake peut au contraire sauter un pas, le Spectre ne perturbe jamais le sel, et le Fantôme n'a rien de particulier au sel."
     },
     {
       "q": "Comment évoluent tes protections contre un Gallu affaibli ?",
       "choices": [
-        "Crucifix -2 m et aveuglement par l'encens de 4 s",
         "Crucifix +1 m et aveuglement par l'encens de 6 s",
+        "Crucifix -2 m et aveuglement par l'encens de 4 s",
         "Crucifix et encens n'ont plus aucun effet",
-        "Le crucifix ne peut plus brûler"
+        "Le crucifix ne peut plus brûler contre lui"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "Affaibli, il est plus vulnérable : crucifix +1 m et 6 s d'aveuglement (5 s en standard). Crucifix -2 m et 4 s, c'est l'état enragé."
     },
     {
       "q": "L'entité traverse une ligne de sel sans la perturber. Qu'est-ce qui désigne un Gallu plutôt qu'un Spectre ?",
       "choices": [
-        "Elle chasse à 1,7 m/s",
-        "Elle laisse un EMF 2 près d'un joueur sans interaction",
-        "Elle avait perturbé une autre ligne de sel juste avant",
-        "Elle ne chasse jamais au-dessus de 50 %"
+        "Elle a contourné une autre ligne de sel juste avant",
+        "Elle a perturbé une autre ligne de sel juste avant",
+        "Elle se téléporte près d'un joueur, sans interaction",
+        "Elle traverse le sel même pendant ses chasses"
       ],
-      "answer": 2,
-      "explain": "Un Gallu perturbe le sel en état normal puis s'enrage et ne le touche plus ; le Spectre ne le perturbe jamais. 1,7 m/s convient aux deux, l'EMF 2 sans interaction évoque la téléportation du Spectre, et un Gallu enragé peut chasser jusqu'à 60 %."
+      "answer": 1,
+      "explain": "Un Gallu perturbe le sel en état normal puis s'enrage et ne le touche plus ; le Spectre ne le perturbe jamais. Aucune entité ne contourne le sel, la téléportation près d'un joueur est celle du Spectre, et on ignore encore si un Gallu enragé est ralenti par le sel pendant les chasses."
     }
   ],
   "changes": [

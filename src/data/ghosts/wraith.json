@@ -36,7 +36,7 @@
   "keyTells": [
     "Ne perturbe jamais le sel : il passe dessus sans le toucher",
     "Pas ralenti par le sel de rang 3 pendant les chasses",
-    "Se téléporte près d'un joueur au hasard : EMF 2 (ou 5) sans interaction autour de toi"
+    "Se téléporte près d'un joueur au hasard : EMF 2 sans interaction autour de toi"
   ],
   "tells": [
     {
@@ -169,24 +169,24 @@
     {
       "q": "Comment le Spectre réagit-il au sel ?",
       "choices": [
-        "Il l'évite et fait demi-tour",
-        "Il ne le perturbe jamais",
-        "Il le perturbe et laisse toujours des empreintes UV",
-        "Il est ralenti davantage que les autres entités"
+        "Il l'évite et fait demi-tour devant",
+        "Il le perturbe dès qu'il passe dessus",
+        "Il passe dessus sans le perturber",
+        "Il est ralenti plus longtemps que les autres"
       ],
-      "answer": 1,
+      "answer": 2,
       "explain": "Le Spectre n'interagit jamais avec le sel et n'est pas ralenti par le sel de rang 3. Il ne l'évite pas : il se déplace comme les autres entités et passe dessus sans le toucher."
     },
     {
       "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Quelle capacité du Spectre cela peut-il trahir ?",
       "choices": [
         "Son passage à travers les murs",
-        "Son accélération en LdV",
-        "Sa téléportation près d'un joueur au hasard",
-        "Son drain de 25 % de santé mentale"
+        "Son accélération en ligne de vue",
+        "Son drain soudain de santé mentale",
+        "Sa téléportation vers un joueur"
       ],
-      "answer": 2,
-      "explain": "Le Spectre peut se téléporter près d'un joueur au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Le drain de 25 % est celui du Djinn."
+      "answer": 3,
+      "explain": "Le Spectre peut se téléporter près d'un joueur pris au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Son accélération en ligne de vue est standard et ne laisse aucun EMF ; le drain soudain de 25 % est celui du Djinn."
     },
     {
       "q": "Pendant une chasse, l'entité traverse du sel de rang 3 sans ralentir le moins du monde. Quelle entité est-ce ?",
@@ -202,35 +202,35 @@
     {
       "q": "Depuis fin 2025, quelle autre entité que le Spectre peut traverser du sel sans le perturber ?",
       "choices": [
+        "L'Obambo en état agressif",
         "Le Gallu en état enragé",
-        "L'Esprit",
-        "Les Jumeaux",
+        "Le Thayé à son plus jeune âge",
         "La Dayan quand tu restes immobile"
       ],
-      "answer": 0,
-      "explain": "Le Gallu, ajouté le 16 décembre 2025, ne perturbe pas le sel en état enragé (après encens, sel ou crucifix). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre."
+      "answer": 1,
+      "explain": "Le Gallu, ajouté le 16 décembre 2025, ne perturbe pas le sel en état enragé (après encens, sel ou crucifix). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre. L'Obambo, le Thayé et la Dayan perturbent le sel normalement, quels que soient leur état, leur âge ou tes mouvements."
     },
     {
       "q": "Vrai ou faux : le Spectre traverse les murs pendant les chasses.",
       "choices": [
-        "Vrai, il traverse tous les murs",
-        "Faux : il se déplace exactement comme les autres entités",
-        "Vrai, mais seulement les murs de sa pièce favorite",
-        "Vrai, mais seulement en état D.O.T.S"
+        "Vrai, il traverse tous les murs pendant la chasse",
+        "Vrai, mais pas ceux de sa pièce favorite",
+        "Faux, il se déplace comme les autres entités",
+        "Faux, mais il se téléporte pendant la chasse"
       ],
-      "answer": 1,
-      "explain": "C'est une mauvaise interprétation du texte du journal : le Spectre traque et se déplace comme toutes les autres entités."
+      "answer": 2,
+      "explain": "C'est une mauvaise interprétation du texte du journal : le Spectre traque et se déplace comme toutes les autres entités. Sa téléportation près d'un joueur se produit hors des chasses ; pendant une chasse, il marche."
     },
     {
       "q": "À quelle vitesse chasse un Spectre ?",
       "choices": [
-        "1,7 m/s sans aucune accélération en LdV",
-        "2,5 m/s près de l'électronique allumée",
-        "1,0 m/s, puis 3,0 m/s quand il te détecte",
-        "1,7 m/s avec accélération en LdV standard"
+        "1,7 m/s sans aucune accélération en ligne de vue",
+        "2,5 m/s avec accélération standard en ligne de vue",
+        "2,5 m/s sans aucune accélération en ligne de vue",
+        "1,7 m/s avec accélération standard en ligne de vue"
       ],
       "answer": 3,
-      "explain": "Le Spectre a une vitesse standard. 2,5 m/s près de l'électronique, c'est le Raiju ; 1,0 puis 3,0 m/s, c'est le Revenant."
+      "explain": "Le Spectre a une vitesse standard : 1,7 m/s, avec l'accélération habituelle en ligne de vue. 2,5 m/s, c'est le Raiju près de l'électronique allumée ou le Djinn disjoncteur allumé."
     }
   ],
   "changes": [

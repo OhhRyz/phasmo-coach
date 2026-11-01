@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { FileHead, H, IndexCard, Notebook, Page, TapeButton, TypedLink } from '../components/journal/Journal'
+import { Consigne, FileHead, H, IndexCard, Notebook, Page, TapeButton, TypedLink } from '../components/journal/Journal'
 import { PasteLink } from '../components/PasteLink'
 import { LinkModal, ShareNotesModal } from '../components/ShareNotes'
 import { Seg } from '../components/ui'
@@ -25,7 +25,7 @@ function steps(role: Role, coach: string): Step[] {
     return [
       {
         h: 'Tu écris',
-        p: 'Une explication donnée en partie, notée une fois dans le carnet : une astuce, une erreur à ne plus refaire, un test à retenir. Cochée « Ajouter à la révision espacée », elle devient une carte.',
+        p: 'Une explication donnée en partie, notée une fois dans « Mes notes » : une astuce, une erreur à ne plus refaire, un test à retenir. Cochée pour la révision, elle devient une question.',
       },
       {
         h: 'Tu envoies un lien',
@@ -33,7 +33,7 @@ function steps(role: Role, coach: string): Step[] {
       },
       {
         h: 'Ton élève l’ouvre',
-        p: 'Tes notes arrivent dans son carnet, au stylo rouge, et reviennent d’elles-mêmes dans sa révision au moment où elles commencent à s’effacer.',
+        p: 'Tes notes s’ajoutent aux siennes, au stylo rouge, et reviennent d’elles-mêmes dans sa révision au moment où elles commencent à s’effacer.',
       },
       {
         h: 'Son bilan te revient',
@@ -45,7 +45,7 @@ function steps(role: Role, coach: string): Step[] {
   return [
     {
       h: `${who} écrit`,
-      p: 'Une explication donnée en partie, notée une fois dans son carnet : une astuce, une erreur à ne plus refaire, un test à retenir.',
+      p: 'Une explication donnée en partie, notée une fois pour toutes : une astuce, une erreur à ne plus refaire, un test à retenir.',
     },
     {
       h: `${who} t’envoie un lien`,
@@ -53,7 +53,7 @@ function steps(role: Role, coach: string): Step[] {
     },
     {
       h: 'Tu l’ouvres',
-      p: 'Ses notes arrivent dans ton carnet, au stylo rouge, et reviennent d’elles-mêmes dans ta révision au moment où elles commencent à s’effacer. Sur iPhone, avec le carnet installé, colle le lien sur cette page.',
+      p: 'Ses notes arrivent dans « Mes notes », au stylo rouge, et reviennent d’elles-mêmes dans ta révision au moment où elles commencent à s’effacer. Sur iPhone, avec le carnet installé, colle le lien sur cette page.',
     },
     {
       h: 'Tu renvoies ta progression',
@@ -78,11 +78,11 @@ function CoachShare({ onShare }: { onShare: () => void }) {
         {fr(
           s.written
             ? 'Le lien emporte les notes que tu as écrites : par défaut, seulement les nouvelles depuis le dernier envoi.'
-            : 'Le lien emportera les notes que tu écris dans le carnet : écris d’abord la première.',
+            : 'Le lien emportera les notes que tu écris dans « Mes notes » : écris d’abord la première.',
         )}
       </p>
       <div className="plan-actions">
-        <TapeButton onClick={onShare} disabled={!s.written}>
+        <TapeButton onClick={onShare} disabled={!s.written} disabledHint={fr('écris d’abord une note dans « Mes notes » : le lien emporte tes notes')}>
           Partager mes notes
         </TapeButton>
         <TypedLink to="/carnet">{s.written ? 'Écrire une note' : 'Écrire la première note'}</TypedLink>
@@ -162,7 +162,7 @@ export function Coaching() {
     if (role === 'coach') return 'Tes notes partent par lien et reviennent d’elles-mêmes dans la révision de ton élève. En retour, son bilan te montre ce qui est retenu et ce qui est à reprendre.'
     if (role === 'student')
       return `Les notes ${coach ? `de ${coach}` : 'de ton coach'} arrivent par lien et reviennent d’elles-mêmes dans ta révision, au stylo rouge. En retour, tu lui envoies ta progression.`
-    return 'Un coach écrit ses notes dans son carnet et te les envoie par lien : elles reviennent d’elles-mêmes dans ta révision, au stylo rouge. En retour, tu lui envoies un bilan de ta progression. Seul·e, l’app marche telle quelle : rien à régler ici.'
+    return 'Un coach écrit ses notes et te les envoie par lien : elles reviennent d’elles-mêmes dans ta révision, au stylo rouge. En retour, tu lui envoies un bilan de ta progression. Seul·e, l’app marche telle quelle : rien à régler ici.'
   }, [role, coach])
 
   const paste =
@@ -170,7 +170,7 @@ export function Coaching() {
       ? { title: 'Coller un bilan reçu', hint: 'un lien de bilan s’ouvre tout seul ; s’il est arrivé en simple texte, colle-le ici' }
       : role === 'student'
         ? { title: 'Coller un lien reçu', hint: 'un lien de notes ou de bilan reçu en simple texte : colle-le ici' }
-        : { title: 'Coller un lien reçu', hint: 'un lien de notes reçu d’un coach : colle-le ici, ses notes arriveront dans ton carnet et tu passeras en « coaché·e »' }
+        : { title: 'Coller un lien reçu', hint: 'un lien de notes reçu d’un coach : colle-le ici, ses notes arriveront dans « Mes notes » et tu passeras en « coaché·e »' }
 
   return (
     <>
@@ -191,6 +191,7 @@ export function Coaching() {
 
           <section className="cg-role" aria-labelledby="h-role">
             <H id="h-role">Sur cet appareil</H>
+            <Consigne>{fr('touche ton rôle sur cet appareil ; seul·e, il n’y a rien d’autre à régler')}</Consigne>
             <Seg
               label="Rôle sur cet appareil"
               value={role}
@@ -226,7 +227,7 @@ export function Coaching() {
         {/* ===================== page de droite : le mode d'emploi ===================== */}
         <Page side="right" section="6" label="Comment ça marche">
           <FileHead>
-            <span>Mode d’emploi</span>
+            <span>Pas à pas</span>
             <span>Aucun compte, aucun serveur</span>
           </FileHead>
 
@@ -245,7 +246,7 @@ export function Coaching() {
             </ol>
             {role === 'solo' && (
               <p className="pencil-note cg-solo">
-                {fr('seul·e, rien ne change : tes notes vont dans le carnet et reviennent en révision de la même façon')}
+                {fr('seul·e, rien ne change : tes notes vont dans « Mes notes » et reviennent en révision de la même façon')}
               </p>
             )}
           </section>

@@ -10,6 +10,11 @@
 .sc-lead { margin: 0; max-width: 31em; font-style: italic; font-size: 19px; line-height: 1.5; color: var(--ink); }
 .sc .pencil-note { font-size: 21px; }
 
+/* une même phrase, deux mises en page : « à droite » sur ordinateur, « en bas » sur téléphone ;
+   « clique » à la souris, « touche » au doigt */
+.sc-on-phone, .sc-on-touch { display: none; }
+@media (hover: none), (pointer: coarse), (max-width: 759px) { .sc-on-mouse { display: none; } .sc-on-touch { display: inline; } }
+
 /* ==========================================================================
    Ordre de mission (configuration)
    ========================================================================== */
@@ -28,7 +33,11 @@
 .sc-radio input { top: 50%; margin-top: -13px; }
 .sc-radio .box { margin-top: 0; }
 .sc-radio .txt { display: grid; gap: 1px; }
+.sc-radio-name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
 .sc-radio .txt b { font-family: "Fell", serif; font-weight: 400; font-size: 23px; line-height: 1.1; }
+.sc-radio .sc-advice { font-size: 10.5px; letter-spacing: .12em; padding: 3px 7px 2px; margin: 4px 0 6px; }
+.sc-radio .sc-expert { font-size: 20px; line-height: 1; color: var(--pencil); }
+.sc-legend-sub { font-weight: 400; letter-spacing: .08em; text-transform: none; color: var(--ink-3); }
 .sc-radio .txt small {
   display: block; font-family: "Courier Prime", monospace; font-style: normal; font-size: 12px; line-height: 1.35;
   letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
@@ -46,6 +55,10 @@
 .sc-pool-only { margin: 2px 0 0; font-family: "Fell", serif; font-size: 23px; line-height: 1.2; }
 
 .sc-go { margin-top: 4px; padding-bottom: 6px; }
+.sc-go .consigne { max-width: 34em; }
+/* téléphone seulement : les règles sont sous le bouton */
+.sc-rules-link { display: none; margin: 14px 0 0; }
+.sc-rules-link .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* page de droite : règlement + registre */
 .sc-rules { list-style: none; margin: 0; padding: 0; }
@@ -84,6 +97,13 @@
 .sc-clock { margin-left: auto; }
 .sc-clock dd { font-family: "Elite", monospace; font-weight: 400; font-size: 17px; letter-spacing: .06em; color: var(--ink); }
 
+/* premier contrat : le mode d'emploi, un post-it tapé à la machine (la voix de l'app, pas celle du coach) */
+.sc-howto { margin: 0 0 26px; max-width: 470px; }
+.sc-howto .sticky { font-family: "Courier Prime", monospace; font-size: 15.5px; line-height: 1.5; padding: 16px 20px 16px; }
+.sc-howto ol { margin: 0; padding-left: 1.4em; }
+.sc-howto li + li { margin-top: 4px; }
+.sc-howto b { font-weight: 700; }
+
 /* les rapports */
 .sc-log { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
 .sc-report { position: relative; padding: 13px 0 15px; border-bottom: 1px solid var(--rule); }
@@ -117,20 +137,37 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 .sc-ev.is-missing .box .b { color: color-mix(in srgb, var(--c) 45%, var(--ink-3)); }
 .sc-ev .pencil-note { font-size: 20px; }
 
+/* sous la preuve : la reporter d'un geste dans le carnet, au crayon */
+.sc-report-to { margin: 2px 0 -6px 34px !important; }
+.sc-report-link.link {
+  display: inline-flex; align-items: center; min-height: 40px;
+  font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; letter-spacing: 0; color: var(--pencil);
+  text-decoration-color: var(--pencil); text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+.sc-report-link.link:hover { color: var(--red-pen); text-decoration-color: var(--red-pen); }
+.sc .sc-reported { display: inline-flex; align-items: center; min-height: 40px; font-size: 20px; color: var(--pencil); opacity: .85; }
+
 .sc-listen { margin-top: 12px; }
 
-.sc-end { scroll-margin-bottom: 150px; }
+/* consigne, actions et compteur : gardés à l'écran après « Rapport suivant » */
+.sc-next { margin-top: 26px; scroll-margin-bottom: 24px; }
+.sc-next .consigne { max-width: 36em; }
 
 /* fausse piste */
 .sc-miss { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 24px 0 0; }
 .sc-miss-stamp { font-size: 19px; padding: 8px 14px 6px; }
 
-.sc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 24px; margin-top: 26px; }
+.sc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 24px; margin-top: 4px; }
+.sc .sc-decide { margin: 12px 0 0; font-size: 21px; }
 .sc-sealed { margin: 16px 0 0 !important; font-family: "Courier Prime", monospace; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
 
 /* page de droite : le carnet */
 .sc-sheet-toggle, .sc-scrim { display: none; }
 .sc-how { margin: -6px 0 10px !important; color: var(--pencil); font-size: 19.5px !important; }
+/* les preuves lues dans les rapports et pas encore notées */
+.sc .sc-todo { margin: -4px 0 12px; font-size: 20.5px; line-height: 1.15; color: var(--pencil); }
+.sc-todo b { font-weight: 600; color: var(--ink); }
+.sc .sc-zero { margin: 8px 0 0; font-size: 20px; line-height: 1.12; max-width: 30em; }
 .sc-board section + section { margin-top: 40px; }
 .sc-board .tracker { margin-bottom: 4px; }
 
@@ -161,9 +198,21 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 /* ==========================================================================
    Désigner l'entité (fiche posée)
    ========================================================================== */
-.sc-guess-note { margin: 0 0 14px !important; font-size: 21px !important; line-height: 28px !important; }
-.sc-guess .opts { gap: 4px 6px; }
-.sc-guess .opt { min-height: 44px; padding: 4px 12px 3px; font-family: "Fell", serif; font-size: 21px; line-height: 1.1; }
+.sc-guess-note { margin: 0 0 10px !important; font-size: 21px !important; line-height: 28px !important; }
+.sc-guess-warn { margin: 0 0 10px !important; font-size: 20px !important; line-height: 26px !important; color: var(--ink); font-weight: 600; }
+.sc-guess-scope { margin: 0 0 4px !important; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .04em; color: var(--ink-2); }
+.sc-guess .opts { gap: 6px 8px; }
+/* chaque nom attend son cercle : un tracé au crayon en pointillé, repassé au stylo une fois choisi */
+.sc-guess .opt {
+  min-height: 44px; padding: 4px 12px 3px; font-family: "Fell", serif; font-size: 21px; line-height: 1.1;
+  border: 1.5px dashed color-mix(in srgb, var(--pencil) 55%, transparent);
+}
+.sc-guess .opt[aria-pressed="true"] { border: 2px solid var(--red-pen); }
+.sc-guess-all { margin: 10px 0 0 !important; }
+.sc-guess-all .link { display: inline-flex; align-items: center; min-height: 40px; text-align: left; }
+/* « choisis un nom » sous Valider, aligné à droite comme les actions de la fiche */
+.modal-actions .sc-validate + .btn-hint { flex-basis: 100%; margin-top: -6px; text-align: right; font-size: 20px; }
+.sc-quit-body { margin: 0; font-size: 17px; line-height: 28px; }
 
 /* ==========================================================================
    Rapport de clôture (résultat)
@@ -184,6 +233,7 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 .sc-score-of { font-family: "Caveat", cursive; font-weight: 600; font-size: 25px; color: var(--red-pen); }
 
 .sc-outcome { margin: 0 0 24px !important; }
+.sc .sc-tip { margin: -8px 0 24px; max-width: 30em; font-size: 21px; line-height: 1.15; transform: rotate(-.6deg); transform-origin: left center; }
 
 .sc-facts { margin: 0; border-top: 1px solid var(--rule); }
 .sc-facts > div { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 4px 16px; padding: 10px 0 11px; border-bottom: 1px solid var(--rule); }
@@ -201,7 +251,8 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 .sc-notes-row .sticky { font-size: 22px; padding: 18px 18px 16px; }
 .sc-notes-row .sticky:only-child { max-width: 300px; }
 
-.sc-actions--end { margin-top: 34px; }
+.sc-end-actions { margin-top: 34px; }
+.sc-end-actions .link { display: inline-flex; align-items: center; min-height: 40px; }
 
 /* le rapport complet */
 .sc-intro { margin: -4px 0 18px !important; font-size: 16px; color: var(--ink-2); max-width: 34em; }
@@ -235,6 +286,9 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
   .sc-lead { font-size: 17.5px; }
 
   .sc-diff-grid { grid-template-columns: 1fr; gap: 14px; }
+  .sc-rules-link { display: block; }
+  .sc-on-desk { display: none; }
+  .sc-on-phone { display: inline; }
   .sc-warn { grid-template-columns: 12px 1fr; font-size: 19px !important; transform: rotate(-.6deg); }
   .sc-brace { min-height: 90px; }
   .sc-radio .txt b { font-size: 21px; }
@@ -250,7 +304,11 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 
   /* le carnet de preuves devient un volet au-dessus des onglets */
   body:has(.sc--play) { padding-bottom: calc(76px + 58px + env(safe-area-inset-bottom)); }
-  .sc-end { scroll-margin-bottom: 270px; }
+  /* au-dessus de la languette du carnet (la barre d'onglets est déjà comptée par la page) */
+  .sc-next { scroll-margin-bottom: 76px; }
+  .sc-howto { margin-bottom: 22px; }
+  .sc-howto .sticky { font-size: 14.5px; line-height: 1.45; padding: 14px 16px 14px; }
+  .sc-report-to { margin-left: 0 !important; }
   .sc--play > .sc-board {
     position: fixed; z-index: 26; left: 0; right: 0;
     bottom: calc(62px + env(safe-area-inset-bottom));
@@ -275,6 +333,8 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
   }
   .sc-sheet-title { grid-column: 1; font-family: "Elite", monospace; font-size: 14px; line-height: 1.1; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
   .sc-sheet-sum { grid-column: 1; font-family: "Caveat", cursive; font-weight: 500; font-size: 21px; line-height: 1; color: var(--pencil); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* des preuves attendent : la ligne au crayon appuie plus fort (le rouge reste au correcteur) */
+  .sc-sheet-sum.is-todo { color: var(--ink); font-weight: 700; }
   .sc-sheet-act {
     grid-column: 2; grid-row: 1 / 3; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .06em;
     text-decoration: underline; text-decoration-color: var(--red-pen); text-decoration-thickness: 1.5px; text-underline-offset: 4px;

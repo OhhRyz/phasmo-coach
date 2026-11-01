@@ -14,18 +14,18 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
 
 - **Codex** des 30 entités, en français, avec le filtre d’élimination (preuves trouvées / exclues, nombre de
   preuves de la partie, vitesse, seuil de chasse, ligne de vue).
-- **Révision espacée** : chaque fiche est découpée en cartes. Une nouvelle carte revient d’abord dans la
-  séance (1 puis 10 min), puis à 1 j, 3 j, 8 j, 20 j… et 10 min plus tard si elle a été oubliée. C’est la
-  « mémoire » de l’app : on ne revoit que ce qui commence à s’effacer.
+- **Réviser** (révision espacée) : chaque jour, des questions à choix multiple tirées des fiches. Une
+  question bien répondue revient de plus en plus tard (1 j, 3 j, 8 j, 20 j…), une erreur revient vite.
+  C’est la « mémoire » de l’app : on ne revoit que ce qui commence à s’effacer.
 - **Quiz** générés à partir des fiches, centrés sur ce qui sert sans preuve : comportements, vitesse et
   ligne de vue, seuils de chasse, tests sans preuve, comment distinguer deux entités, questions expertes,
   vrai/faux sur les mécaniques. Les preuves restent dans le codex et les fiches, sans être à apprendre par
   cœur. Les questions visent d’abord les entités les moins maîtrisées. Une erreur ramène dans la révision du jour la carte correspondante, si elle était déjà apprise.
-- **Mises en situation** : un contrat raconté rapport par rapport en Professionnel, Cauchemar, Démence ou
-  0 preuve, avec carnet de preuves, élimination et désignation de l’entité.
+- **Mises en situation** : un contrat raconté rapport par rapport en Professionnel (conseillé pour
+  débuter), Cauchemar, Démence ou 0 preuve, avec carnet de preuves, élimination et désignation de l’entité.
 - **À l’oreille** : reconnaître la vitesse d’une entité au rythme de ses pas (sons synthétisés).
-- **Carnet** : chacun y écrit ses notes (une astuce, une erreur à ne plus refaire…), qui peuvent devenir
-  des cartes de révision ; export / import de sauvegarde.
+- **Mes notes** : chacun y écrit ses notes (une astuce, une erreur à ne plus refaire…), qui peuvent
+  revenir en révision ; export / import de sauvegarde.
 - **Coaching** (facultatif, lien en bas de chaque page) : le carnet à deux. Les notes du coach se
   partagent par simple lien (aucun serveur) et sont les seules écrites au stylo rouge ; en retour, un
   **bilan de progression** par lien (maîtrise de chaque entité, série, notes du coach retenues ou à
@@ -35,6 +35,20 @@ du coach et aux corrections. Les règles de cette direction artistique sont dans
 - **Installable** sur téléphone (PWA) et utilisable hors ligne.
 
 Tout est stocké dans le navigateur de l’appareil (`localStorage`) : pas de compte, pas de serveur.
+
+### Se repérer
+
+- **Onglets** (les mêmes mots partout) : *Accueil · Réviser · Codex · Exercices · Mécaniques · Mes notes*
+  sur ordinateur ; sur téléphone *Accueil · Réviser · Codex · Exercices · Notes* (les Mécaniques sont
+  rangées dans *Exercices*).
+- **Mode d’emploi** : à la première ouverture, une fiche en trois étapes (Réviser chaque jour, les
+  Exercices dans les enveloppes, le Codex pendant une partie) ; on la range d’un clic et on la rouvre par
+  le lien « Mode d’emploi » en bas de chaque page.
+- **Exercices** : les enveloppes disent ce qu’on y fait, combien de temps, et le geste pour l’ouvrir ;
+  « À faire » (révision, contrat, quiz, oreille) puis « À lire » (mécaniques, codex). Chaque exercice
+  commence par une ligne « Consigne » et finit par « et maintenant ? ».
+- **Vocabulaire** : « carnet de preuves » désigne seulement les cases à cocher du codex et de la mise en
+  situation ; les notes personnelles sont « Mes notes ».
 
 ## Démarrer
 
@@ -56,19 +70,19 @@ le profil) : « Seul·e », « Je suis coaché·e » ou « Je coache quelqu’un
 
 1. **La personne qui s’entraîne** installe l’app sur son téléphone (iPhone : Safari → bouton
    *Partager* → *Sur l’écran d’accueil* ; Android : menu de Chrome → *Installer l’application*) et fait
-   sa *Révision du jour* (≈ 10 min, réglable dans le profil). Une fois installée, l’app marche hors ligne.
+   sa *Révision du jour* (≈ 5 à 10 min, réglable dans le profil). Une fois installée, l’app marche hors ligne.
    L’app le rappelle elle-même tant qu’elle tourne dans un onglet : sur iPhone, Safari peut effacer les
    données d’un site non installé après 7 jours sans visite.
 2. **Le coach** ouvre l’app sur son propre appareil, choisit « Je coache quelqu’un » sur la page
-   *Coaching*, écrit ses explications dans le *Carnet* en cochant « Ajouter à la révision espacée », puis
+   *Coaching*, écrit ses explications dans *Mes notes* en cochant la case de révision, puis
    *Coaching → Partager mes notes*. Par défaut, le lien ne contient que ses propres notes, nouvelles ou
-   modifiées depuis le dernier envoi (pour rester assez court pour Discord) ; « Tout mon carnet » envoie
+   modifiées depuis le dernier envoi (pour rester assez court pour Discord) ; « Toutes mes notes » envoie
    l’ensemble.
 3. **La personne coachée** ouvre le lien reçu. Si l’app est installée sur l’écran d’accueil, elle copie le
    lien et le colle dans *Coaching → Coller un lien reçu* : sur iPhone, un lien touché dans Discord ou
    Messages s’ouvre dans Safari, qui n’a pas la même mémoire que l’app installée. Un carnet « seul·e » qui
    reçoit des notes passe de lui-même en « coaché·e », avec l’expéditeur comme coach. Les notes du coach
-   s’écrivent au stylo rouge dans son carnet et reviennent d’elles-mêmes en révision.
+   s’écrivent au stylo rouge dans ses notes et reviennent d’elles-mêmes en révision.
 4. Elle renvoie un **bilan** (*Coaching → Envoyer ma progression à …*) : maîtrise de chaque entité, série
    de jours, dernières séances et notes du coach retenues ou à reprendre. Le coach l’ouvre d’un simple
    clic (ou le colle dans *Coaching → Coller un bilan reçu*).

@@ -243,6 +243,7 @@ export function TapeButton({
   rotate,
   autoFocus,
   className = '',
+  disabledHint,
 }: {
   to?: string
   onClick?: () => void
@@ -253,9 +254,12 @@ export function TapeButton({
   rotate?: number
   autoFocus?: boolean
   className?: string
+  /** Pourquoi le bouton est grisé (affiché au crayon dessous) : un bouton inactif dit toujours quoi faire. */
+  disabledHint?: ReactNode
 }) {
   const style = rotate != null ? ({ '--r': `${rotate}deg` } as Style) : undefined
   return (
+    <>
     <span className={`btn-wrap${disabled ? ' is-disabled' : ''}${className ? ` ${className}` : ''}`}>
       {to ? (
         <Link className="btn-tape" to={to} style={style}>
@@ -269,6 +273,34 @@ export function TapeButton({
         </button>
       )}
     </span>
+    {disabled && disabledHint && (
+      <span className="pencil-note btn-hint" role="note">
+        {disabledHint}
+      </span>
+    )}
+    </>
+  )
+}
+
+/**
+ * Consigne d'un exercice : une ligne tapée, juste au-dessus de la zone où l'on agit. Toujours au même
+ * endroit et sous la même forme, pour qu'on sache d'un coup d'œil quoi faire.
+ */
+export function Consigne({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`consigne ${className}`}>
+      <span className="consigne-k">Consigne{'\u202f'}:</span> {children}
+    </p>
+  )
+}
+
+/** Fin d'un exercice : « et maintenant ? » suivi des suites possibles (bande Dymo d'abord). */
+export function EndActions({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={`end-actions ${className}`}>
+      <p className="pencil-note end-actions-h">et maintenant{'\u202f'}?</p>
+      <div className="end-actions-row">{children}</div>
+    </div>
   )
 }
 
@@ -413,6 +445,8 @@ export function Envelope({
   rotate = 0,
   labelRotate = 0.6,
   delay = 0,
+  action,
+  meta,
   children,
 }: {
   to: string
@@ -423,6 +457,10 @@ export function Envelope({
   rotate?: number
   labelRotate?: number
   delay?: number
+  /** Ce que l'on fait en ouvrant l'enveloppe (« Commencer le quiz »), écrit comme un lien. */
+  action?: string
+  /** Format et durée (« 10 questions · 3 min »). */
+  meta?: string
   children?: ReactNode
 }) {
   return (
@@ -431,7 +469,14 @@ export function Envelope({
       <span className="label">
         <strong>{title}</strong>
         <span>{text}</span>
+        {meta && <span className="env-meta">{meta}</span>}
         {children}
+        {action && (
+          <span className="env-action">
+            {action}
+            <TapeArrow />
+          </span>
+        )}
       </span>
       {hand && <span className="hand">{hand}</span>}
     </Link>

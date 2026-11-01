@@ -223,68 +223,68 @@
     {
       "q": "Sur quelle santé mentale la Banshee se base-t-elle pour chasser ?",
       "choices": [
-        "La moyenne de l'équipe (50 %)",
-        "Celle de sa cible (50 % ou moins)",
+        "Celle de sa cible, où qu'elle soit",
+        "La moyenne de toute l'équipe",
         "La moyenne des joueurs à l'intérieur",
-        "Celle du joueur le plus proche"
+        "Celle du joueur le plus proche d'elle"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "La Banshee chasse quand sa cible est à 50 % ou moins, même si cette cible est dehors. En moyenne d'équipe, ça peut aller de 12 % à 87 %."
     },
     {
       "q": "Quel outil permet d'entendre le cri unique de la Banshee ?",
       "choices": [
-        "La Spirit Box",
-        "Le lecteur EMF",
+        "La radio globale",
         "Le microphone parabolique",
+        "La caméra vidéo frontale",
         "Le détecteur de mouvement"
       ],
-      "answer": 2,
+      "answer": 1,
       "explain": "Le cri s'entend au microphone parabolique (et peut aussi se capter à l'enregistreur de son), avec 33 % de chances."
     },
     {
       "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
       "choices": [
-        "N'importe quel joueur",
-        "Seulement sa cible",
-        "Seulement l'hôte",
-        "Seulement les joueurs dans la pièce favorite"
+        "Sa cible, quand elle tient le micro",
+        "L'hôte, quand il tient le micro",
+        "Tout joueur qui écoute au micro",
+        "Les joueurs qui sont près d'elle"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Croire que seule la cible l'entend est une idée reçue : tout joueur avec le microphone parabolique peut l'entendre."
     },
     {
       "q": "En multijoueur, tout le monde est à l'intérieur pendant une chasse de Banshee. Que risque un joueur qui n'est pas sa cible et qui la croise ?",
       "choices": [
-        "Rien : elle le dépasse et continue de traquer sa cible",
         "Il meurt, comme face à n'importe quelle entité",
         "Il devient aussitôt sa nouvelle cible",
-        "Il perd 15 % de santé mentale d'un coup"
+        "Il perd beaucoup de santé mentale d'un coup",
+        "Il ne risque rien, même en la touchant"
       ],
-      "answer": 0,
+      "answer": 3,
       "explain": "Tant que sa cible est à l'intérieur, la Banshee ne poursuit qu'elle, même si d'autres joueurs sont plus proches : ceux-ci peuvent la croiser, voire la toucher, sans mourir. C'est l'un de ses tests de confirmation. La perte de 15 % concerne la cible qui la touche pendant un événement de chant."
     },
     {
       "q": "Le prénom de l'entité est masculin. Quelle entité peux-tu éliminer ?",
       "choices": [
-        "Le Fantôme",
-        "Le Goryo",
-        "La Banshee",
-        "Le Yurei"
+        "Banshee",
+        "Fantôme",
+        "Goryo",
+        "Yurei"
       ],
-      "answer": 2,
+      "answer": 0,
       "explain": "Depuis la mise à jour Winter's Jest v0.15.1.0 (décembre 2025), la Banshee ne se présente plus que comme féminine (prénom et modèle)."
     },
     {
       "q": "En solo, qui est la cible de la Banshee ?",
       "choices": [
-        "Toujours toi, l'hôte",
-        "Personne : elle chasse sur la moyenne",
-        "Le joueur le plus proche à chaque chasse",
-        "Une nouvelle cible au hasard à chaque chasse"
+        "Personne, elle chasse sans cible en solo",
+        "Toi, du début à la fin de la partie",
+        "Toi, tant que tu restes à l'intérieur",
+        "Personne tant qu'elle n'a pas chassé"
       ],
-      "answer": 0,
-      "explain": "En solo, l'hôte est toujours la cible : c'est donc ta propre santé, à 50 % ou moins, qui déclenche ses chasses."
+      "answer": 1,
+      "explain": "En solo, l'hôte est la cible pendant toute la partie, même dehors : c'est donc ta propre santé, à 50 % ou moins, qui déclenche ses chasses."
     }
   ],
   "changes": [

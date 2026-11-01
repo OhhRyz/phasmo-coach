@@ -14,9 +14,9 @@ export type { ReportPayload } from '../engine/share'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
-/** « 1 carte, aucune note » : le contenu d'une sauvegarde, au singulier comme au pluriel. */
+/** « 1 question, aucune note » : le contenu d'une sauvegarde, au singulier comme au pluriel. */
 function importText(nCards: number, nNotes: number): string {
-  const cards = nCards === 0 ? 'aucune carte' : `${nCards} carte${nCards > 1 ? 's' : ''}`
+  const cards = nCards === 0 ? 'aucune question vue' : `${nCards} question${nCards > 1 ? 's' : ''} vue${nCards > 1 ? 's' : ''}`
   const notes = nNotes === 0 ? 'aucune note' : `${nNotes} note${nNotes > 1 ? 's' : ''}`
   return `La progression actuelle sera remplacée par celle du fichier (${cards}, ${notes}). Pense à exporter avant si besoin.`
 }
@@ -121,7 +121,7 @@ export function Profile() {
             </div>
             <p className="idcard-stats">
               <span>
-                <b>{seen || 'aucune'}</b> carte{seen > 1 ? 's' : ''} vue{seen > 1 ? 's' : ''}
+                <b>{seen || 'aucune'}</b> question{seen > 1 ? 's' : ''} vue{seen > 1 ? 's' : ''}
               </span>
               <span>
                 <b>{state.log.length || 'aucune'}</b> révision{state.log.length > 1 ? 's' : ''}
@@ -144,7 +144,7 @@ export function Profile() {
             </h2>
             <div className="pocket-item">
               <h3>Sauvegarde complète</h3>
-              <p>Un fichier avec toute la progression et le carnet, pour changer d’appareil ou garder une copie.</p>
+              <p>Un fichier avec toute ta progression et tes notes, pour changer d’appareil ou garder une copie.</p>
               <div className="pocket-btns">
                 <PaperButton onClick={exportAll} rotate={0.8}>
                   Exporter
@@ -202,22 +202,27 @@ export function Profile() {
             <H id="h-rev">Révision</H>
             <div className="field pace">
               <label className="field-label" htmlFor="pf-pace">
-                Nouvelles cartes par jour
+                Nouvelles questions par jour
               </label>
               <div className="pace-row">
                 <PaperButton onClick={() => setPerDay(perDay - 1)} disabled={perDay <= NEW_MIN} rotate={-1.5}>
                   <span aria-hidden>−</span>
-                  <span className="sr-only">Une carte de moins</span>
+                  <span className="sr-only">Une question de moins</span>
                 </PaperButton>
                 <output className="pace-n" htmlFor="pf-pace" aria-live="polite">
                   {perDay}
                 </output>
                 <PaperButton onClick={() => setPerDay(perDay + 1)} disabled={perDay >= NEW_MAX} rotate={1.2}>
                   <span aria-hidden>+</span>
-                  <span className="sr-only">Une carte de plus</span>
+                  <span className="sr-only">Une question de plus</span>
                 </PaperButton>
-                <span className="pace-unit">nouvelles cartes chaque jour</span>
+                <span className="pace-unit">nouvelles questions chaque jour</span>
               </div>
+              {(perDay <= NEW_MIN || perDay >= NEW_MAX) && (
+                <p className="pencil-note settings-hint pace-limit" role="note">
+                  {perDay <= NEW_MIN ? `${NEW_MIN} au minimum : le bouton − ne descend pas plus bas` : `${NEW_MAX} au maximum : le bouton + ne monte pas plus haut`}
+                </p>
+              )}
               <input
                 id="pf-pace"
                 className="range"
@@ -236,12 +241,12 @@ export function Profile() {
               seed="pf-mechanics"
               hint="Chasses, encens, équipement…"
             >
-              {fr('Inclure les cartes « Mécaniques »')}
+              {fr('Inclure les questions « Mécaniques »')}
             </CheckLine>
 
             <div className="field focus-field">
               <span className="field-label" id="lbl-focus">
-                {fr(`Limiter les nouvelles cartes à ces entités ${focus.length ? `(${focus.length})` : '(aucune : toutes)'}`)}
+                {fr(`Limiter les nouvelles questions à ces entités ${focus.length ? `(${focus.length})` : '(aucune : toutes)'}`)}
               </span>
               <div className="focus-names" role="group" aria-labelledby="lbl-focus">
                 {GHOSTS.map((g) => {
@@ -263,7 +268,7 @@ export function Profile() {
                 })}
               </div>
               <p className="pencil-note settings-hint">
-                {fr('les nouvelles cartes ne viendront que des entités entourées (les notes du carnet et les mécaniques restent incluses) ; aucune entourée = toutes')}
+                {fr('touche un nom pour l’entourer : les nouvelles questions ne viendront que des entités entourées (tes notes et les mécaniques restent incluses) ; aucune entourée = toutes')}
               </p>
             </div>
           </section>
@@ -273,13 +278,13 @@ export function Profile() {
               Effacer
             </h2>
             <div className="danger-row">
-              <p>Effacer la progression (cartes, quiz, séances) en gardant le profil et le carnet.</p>
+              <p>Effacer la progression (questions, quiz, séances) en gardant le profil et tes notes.</p>
               <button type="button" className="stamp-btn" style={{ '--r': '-3deg' } as Style} onClick={() => setConfirm('progress')}>
                 Réinitialiser
               </button>
             </div>
             <div className="danger-row">
-              <p>Tout effacer sur cet appareil, carnet compris.</p>
+              <p>Tout effacer sur cet appareil, notes comprises.</p>
               <button type="button" className="stamp-btn" style={{ '--r': '2deg' } as Style} onClick={() => setConfirm('all')}>
                 Tout effacer
               </button>

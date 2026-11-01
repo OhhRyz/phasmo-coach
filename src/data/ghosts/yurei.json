@@ -31,7 +31,7 @@
   "keyTells": [
     "Seule à fermer ou toucher une porte de sortie hors chasse et hors événement",
     "Pouvoir : ferme une porte et fait perdre 15 % de santé mentale aux joueurs proches",
-    "Encensée, elle reste enfermée dans sa pièce pendant 90 s"
+    "Encensé, reste enfermé dans sa pièce pendant 90 s"
   ],
   "tells": [
     {
@@ -165,60 +165,65 @@
       "choices": [
         "Ce n'est pas un Yurei",
         "C'est forcément un Yurei",
-        "C'est un Yurei sous l'effet de l'encens",
-        "Rien : cela ne permet pas de conclure"
+        "C'est forcément un Démon",
+        "Ce n'est pas un Démon"
       ],
       "answer": 0,
-      "explain": "Hors chasse, le Yurei ouvre ou ferme toujours une porte jusqu'au bout. Une porte laissée à mi-course l'élimine (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement)."
+      "explain": "Hors chasse, le Yurei ouvre ou ferme toujours une porte jusqu'au bout. Une porte laissée à mi-course l'élimine (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement). Les autres entités, Démon compris, peuvent laisser une porte à mi-course."
     },
     {
       "q": "De combien le pouvoir du Yurei fait-il chuter la santé mentale des joueurs proches ?",
-      "choices": ["10 %", "15 %", "20 %", "25 %"],
+      "choices": [
+        "10 %",
+        "15 %",
+        "20 %",
+        "25 %"
+      ],
       "answer": 1,
       "explain": "15 %. Un événement standard coûte 10 %, un événement d'Oni 20 %, et le pouvoir du Djinn 25 %."
     },
     {
       "q": "De quoi le Yurei a-t-il besoin pour utiliser son pouvoir ?",
       "choices": [
-        "D'une porte dans la pièce où il se trouve",
-        "Du disjoncteur allumé",
+        "Du disjoncteur allumé dans la maison",
         "D'un joueur qui parle dans sa pièce",
-        "D'une bougie allumée à proximité"
+        "D'une porte dans la pièce où il est",
+        "D'une bougie allumée près de lui"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Il lui faut une porte dans la pièce. Le disjoncteur concerne le Djinn, la voix le Yokai, et les flammes l'Onryo."
     },
     {
       "q": "Tu encenses l'entité ; 40 s plus tard, un capteur de mouvement placé à la porte de sa pièce se déclenche, sans aucun événement en cours. Qu'en conclus-tu ?",
       "choices": [
         "C'est forcément un Yurei",
-        "C'est un Démon",
-        "Il faut attendre 180 s pour que le test soit valable",
+        "C'est forcément un Démon",
+        "Ce n'est pas un Démon",
         "Ce n'est pas un Yurei"
       ],
       "answer": 3,
-      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Le Démon ne se déduit pas de ce test, et 180 s est le délai d'encens de l'Esprit."
+      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Le Démon ne se déduit pas de ce test et ne s'écarte pas non plus ; 180 s est le délai d'encens de l'Esprit."
     },
     {
       "q": "Laquelle de ces observations est un signe quasi certain de Yurei ?",
       "choices": [
-        "Une porte claque pendant une chasse",
-        "La porte de sortie se ferme seule, hors chasse et hors événement",
+        "Une porte de sortie bouge hors chasse et événement",
+        "Une porte claque en pleine chasse, près de toi",
         "Un interrupteur s'éteint juste après que tu l'as allumé",
-        "Une porte de placard s'entrouvre légèrement"
+        "Une porte de placard s'entrouvre à mi-course"
       ],
-      "answer": 1,
+      "answer": 0,
       "explain": "Seul le Yurei peut toucher à une porte de sortie hors chasse et hors événement. Toutes les entités bougent les portes en chasse, et éteindre aussitôt une lumière allumée près de lui est le pouvoir du Cauchemar."
     },
     {
       "q": "Combien de temps un Yurei encensé reste-t-il bloqué dans sa pièce ?",
       "choices": [
-        "90 s",
         "60 s",
+        "90 s",
         "180 s",
         "5 s"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "Encensé, le Yurei reste bloqué dans sa pièce pendant toute la durée de l'effet de l'encens (90 s). Si des capteurs placés à ses entrées se déclenchent avant, hors événement, ce n'est pas un Yurei."
     }
   ],

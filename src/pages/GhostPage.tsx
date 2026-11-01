@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { HatchDefs, SanityChart, SpeedChart, UvPrint } from '../components/journal/Charts'
 import {
   CircledNumber,
   FileHead,
   H,
-  JournalBox,
   MarginNote,
   Notebook,
   Page,
@@ -18,6 +17,7 @@ import {
   TapeButton,
   TypedLink,
 } from '../components/journal/Journal'
+import { roughLine, roughRng, tickPath } from '../components/journal/rough'
 import { NoteEditor } from '../components/NoteEditor'
 import { NoteText } from './Notebook'
 import { Empty } from '../components/ui'
@@ -41,8 +41,53 @@ const KIND: Record<ObservationKind, string> = {
   event: 'Événement',
   tell: 'Signe',
 }
-/** Les mêmes mots que les tampons de la révision. */
-const GRADE_WORD = { 1: 'à revoir', 2: 'difficile', 3: 'bien', 4: 'facile' } as const
+/** Les mêmes mots que les tampons de la révision (« Exact » / « À revoir ») ; « difficile » vient d'anciennes séances. */
+const GRADE_WORD = { 1: 'à revoir', 2: 'difficile', 3: 'exact', 4: 'exact' } as const
+/** Pages empilées (tablette, téléphone) : la fiche se lit d'un seul fil, « À retenir » remonte sous la description. */
+const STACKED = '(max-width: 1180px)'
+const PHONE = '(max-width: 759px)'
+
+/** Vrai tant que la fenêtre correspond à la requête (suit les changements de taille). */
+function useMedia(query: string): boolean {
+  const [on, setOn] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(query).matches)
+  useEffect(() => {
+    if (typeof matchMedia === 'undefined') return
+    const mq = matchMedia(query)
+    const sync = () => setOn(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [query])
+  return on
+}
+
+/**
+ * Le relevé des preuves de la fiche : une coche à la main (dans la couleur de la preuve) ou un tiret au
+ * crayon. Pas de case : rien à cocher ici, les cases à toucher sont celles du carnet de preuves.
+ */
+function EvMark({ has, color, seed, delay }: { has: boolean; color: string; seed: string; delay: number }) {
+  const r = roughRng(seed)
+  return (
+    <span className={`box ev-mark${has ? '' : ' ev-mark--no'}`} style={{ '--c': color } as Style} aria-hidden>
+      <svg className="draw" viewBox="0 0 38 38">
+        {has ? (
+          <path className="t" d={tickPath(22, r)} pathLength={1} strokeWidth={3.6} style={{ '--d': `${delay}s`, '--dur': '.45s' } as Style} />
+        ) : (
+          <path d={roughLine(12, 19 + r() * 2, 27, 18 + r() * 2, r, 0.8)} pathLength={1} strokeWidth={2} style={{ '--d': `${delay}s`, '--dur': '.3s' } as Style} />
+        )}
+      </svg>
+    </span>
+  )
+}
+
+/** Amène une partie de la fiche sous les yeux et y place le focus (clavier, lecteurs d'écran). */
+function jumpTo(id: string) {
+  const el = document.getElementById(id)?.closest('section')
+  if (!el) return
+  const smooth = typeof matchMedia !== 'undefined' && !matchMedia('(prefers-reduced-motion: reduce)').matches
+  el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+  el.focus({ preventScroll: true })
+}
 const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -94,6 +139,28 @@ export function GhostPage() {
   const [playing, setPlaying] = useState<number | null>(null)
   const [moreConf, setMoreConf] = useState(false)
   const steps = useRef<Footsteps | null>(null)
+  const stacked = useMedia(STACKED)
+  const nameRef = useRef<HTMLHeadingElement>(null)
+
+  // téléphone : le nom tient sur sa ligne, à côté de la maîtrise entourée (un nom long rapetisse au lieu de déborder)
+  useLayoutEffect(() => {
+    const el = nameRef.current
+    if (!el) return
+    const fit = () => {
+      el.style.fontSize = ''
+      if (typeof matchMedia === 'undefined' || !matchMedia(PHONE).matches || el.scrollWidth <= el.clientWidth) return
+      const size = parseFloat(getComputedStyle(el).fontSize)
+      el.style.fontSize = `${Math.floor(size * (el.clientWidth / el.scrollWidth) * 0.97)}px`
+    }
+    fit()
+    let live = true
+    document.fonts?.ready.then(() => live && fit())
+    window.addEventListener('resize', fit)
+    return () => {
+      live = false
+      window.removeEventListener('resize', fit)
+    }
+  }, [id])
 
   useEffect(() => {
     steps.current = createFootsteps(() => setPlaying(null))
@@ -151,6 +218,33 @@ export function GhostPage() {
   const level = masteryLevel(m)
   const now = Date.now()
 
+  const hasSigns = ghost.tells.length + ghost.behaviors.length + ghost.abilities.length > 0
+  const notesId = isCoach ? 'h-coach' : 'h-mine'
+  // le sommaire de la fiche : les parties les plus utiles, dans l'ordre de lecture
+  const contents = [
+    ghost.keyTells.length > 0 && { id: 'h-tells', label: 'À retenir' },
+    { id: 'h-zero', label: 'Sans preuve' },
+    { id: 'h-conf', label: 'Ne pas confondre' },
+    hasSigns && { id: 'h-signs', label: 'Signes' },
+    { id: notesId, label: isCoach ? 'Notes' : 'Mes notes' },
+  ].filter((c): c is { id: string; label: string } => !!c)
+
+  // « À retenir » : sur la page de droite côte à côte, juste sous la description quand les pages s'empilent
+  const tells =
+    ghost.keyTells.length > 0 ? (
+      <section aria-labelledby="h-tells" tabIndex={-1} className="gh-tells">
+        <H id="h-tells">À retenir</H>
+        <ol className="tells">
+          {ghost.keyTells.map((t, k) => (
+            <li key={k}>
+              <CircledNumber n={k + 1} delay={0.5 + k * 0.15} />
+              <p>{t}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ) : null
+
   const toggle = (v: number) => {
     if (playing === v) {
       steps.current?.stop()
@@ -177,7 +271,9 @@ export function GhostPage() {
           </FileHead>
 
           <header className="ghost-head">
-            <h1 className="ghost-name">{ghost.name}</h1>
+            <h1 className="ghost-name" ref={nameRef}>
+              {ghost.name}
+            </h1>
             {stamp && (
               <Stamp thunk rotate={8} delay={0.55}>
                 {stamp}
@@ -197,11 +293,28 @@ export function GhostPage() {
                   {NBSP}%
                 </RoughCircle>
               </span>
-              <small className={level.tone === 'max' ? 'is-max' : undefined}>{level.label.toLocaleLowerCase('fr')}</small>
+              <small className="grade-k">ta maîtrise</small>
+              {level.tone !== 'none' && <small className={level.tone === 'max' ? 'is-max' : undefined}>{level.label.toLocaleLowerCase('fr')}</small>}
             </MarginNote>
           </header>
 
           <p className="lead">{ghost.summary}</p>
+
+          <nav className="gh-toc" aria-label="Sur cette fiche">
+            <span className="gh-toc-k">Sur cette fiche{NNBSP}:</span>
+            {contents.map((c, k) => (
+              <span key={c.id} className="gh-toc-item">
+                <TypedLink onClick={() => jumpTo(c.id)}>{c.label}</TypedLink>
+                {k < contents.length - 1 && (
+                  <span className="gh-toc-sep" aria-hidden>
+                    ·
+                  </span>
+                )}
+              </span>
+            ))}
+          </nav>
+
+          {stacked && tells}
 
           <div className="ghost-hero">
             <Polaroid ghostId={ghost.id} caption={ghost.name} small={`n° ${idx + 1}`} rotate={-2.6} delay={0.1} />
@@ -216,11 +329,12 @@ export function GhostPage() {
                   const fake = ghost.fakeEvidence === e
                   return (
                     <li key={e} className={`ev ${has || fake ? 'yes' : 'no'}`} data-ev={e} style={{ '--c': ev.color } as Style}>
-                      <JournalBox state={has || fake ? 'yes' : 'empty'} color={ev.color} seed={`${ghost.id}-${e}`} delay={0.2 + k * 0.05} />
+                      <EvMark has={has || fake} color={ev.color} seed={`${ghost.id}-${e}`} delay={0.2 + k * 0.05} />
                       <span className="ev-text">
                         <span className="ev-name">
                           <span className="l">{ev.label}</span>
                           <span className="s">{ev.short}</span>
+                          <span className="sr-only">{has || fake ? `${NNBSP}: oui` : `${NNBSP}: non`}</span>
                         </span>
                         {has && (
                           <span className="side">
@@ -272,7 +386,9 @@ export function GhostPage() {
           <div className="ghost-actions">
             <TapeButton to={`/quiz?ghost=${ghost.id}`}>Me tester sur {ghost.name.length > 14 ? 'cette entité' : ghost.name}</TapeButton>
             <TypedLink to="/revision">
-              {ghostCards.length} carte{ghostCards.length > 1 ? 's' : ''} dans ta pile
+              {ghostCards.length === 0
+                ? 'aucune question dans ta révision'
+                : `${ghostCards.length} question${ghostCards.length > 1 ? 's' : ''} dans ta révision`}
             </TypedLink>
           </div>
           <UvPrint style={{ left: 4, top: 470, width: 150, transform: 'rotate(-18deg)', ['--ur' as string]: '230px' }} />
@@ -285,21 +401,9 @@ export function GhostPage() {
             <span>Vérifié en oct. 2026</span>
           </FileHead>
 
-          {ghost.keyTells.length > 0 && (
-            <section aria-labelledby="h-tells">
-              <H id="h-tells">À retenir</H>
-              <ol className="tells">
-                {ghost.keyTells.map((t, k) => (
-                  <li key={k}>
-                    <CircledNumber n={k + 1} delay={0.5 + k * 0.15} />
-                    <p>{t}</p>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
+          {!stacked && tells}
 
-          <section aria-labelledby="h-zero">
+          <section aria-labelledby="h-zero" tabIndex={-1}>
             <H id="h-zero" count={definitive ? `${definitive} test${definitive > 1 ? 's' : ''} définitif${definitive > 1 ? 's' : ''}` : undefined}>
               Sans preuve
             </H>
@@ -356,7 +460,7 @@ export function GhostPage() {
               Fiche <b>{idx + 1}</b> / {GHOSTS.length}
             </span>
           </FileHead>
-          <section aria-labelledby="h-conf">
+          <section aria-labelledby="h-conf" tabIndex={-1}>
             <H id="h-conf" count={confusions.length ? `${confusions.length} entité${confusions.length > 1 ? 's' : ''}` : undefined}>
               Ne pas confondre
             </H>
@@ -405,8 +509,8 @@ export function GhostPage() {
             )}
           </section>
 
-          {ghost.tells.length + ghost.behaviors.length + ghost.abilities.length > 0 && (
-            <section aria-labelledby="h-signs">
+          {hasSigns && (
+            <section aria-labelledby="h-signs" tabIndex={-1}>
               <H id="h-signs">Signes et comportements</H>
               {ghost.tells.length > 0 && (
                 <div className="conf-group">
@@ -467,7 +571,7 @@ export function GhostPage() {
           )}
 
           {(fromCoach.length > 0 || isCoach) && (
-            <section aria-labelledby="h-coach">
+            <section aria-labelledby="h-coach" tabIndex={-1}>
               <H id="h-coach" count={fromCoach.length ? `${fromCoach.length} note${fromCoach.length > 1 ? 's' : ''}` : undefined}>
                 {coach ? `Notes de ${coach}` : 'Notes du coach'}
               </H>
@@ -483,7 +587,7 @@ export function GhostPage() {
           )}
 
           {(!isCoach || mine.length > 0) && (
-            <section aria-labelledby="h-mine">
+            <section aria-labelledby="h-mine" tabIndex={-1}>
               <H id="h-mine" count={mine.length ? `${mine.length} note${mine.length > 1 ? 's' : ''}` : undefined}>
                 {isCoach ? 'Autres notes' : 'Mes notes'}
               </H>

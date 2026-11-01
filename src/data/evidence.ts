@@ -52,10 +52,11 @@ const RAW_EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
     label: 'Températures glaciales',
     short: 'Glacial',
     color: 'var(--ev-freezing)',
-    howTo: 'Le thermomètre descend sous 0 °C dans la pièce favorite (buée visible).',
-    found: 'Le thermomètre affiche −2 °C dans la pièce favorite et ta respiration fait de la buée.',
-    notFound: 'La pièce favorite est froide, mais le thermomètre ne descend jamais sous 0 °C.',
-    side: 'sous 0 °C au thermomètre',
+    // astuce du coach : dès 0,quelque chose °C au thermomètre, c'est déjà glacial (pas besoin d'attendre sous 0)
+    howTo: 'Le thermomètre affiche moins de 1 °C dans la pièce favorite : dès 0,quelque chose (par exemple 0,6 °C), compte déjà les températures glaciales, sans attendre de passer sous 0.',
+    found: 'Le thermomètre affiche 0,6 °C dans la pièce favorite : c’est déjà glacial.',
+    notFound: 'La pièce favorite est froide, mais le thermomètre ne descend jamais sous 1 °C.',
+    side: 'moins de 1 °C (0,x °C suffit)',
   },
   orbs: {
     id: 'orbs',
