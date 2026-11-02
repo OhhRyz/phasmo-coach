@@ -153,6 +153,9 @@
 .cx-ev .faint { font-weight: 400; }
 .cx-speed, .cx-san { font-family: "Courier Prime", monospace; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
 .cx-speed { grid-area: speed; }
+/* trouvée par un mot de sa fiche : la phrase, le mot passé au surligneur (le même coup que la maîtrise) */
+.cx-snip { grid-column: 2 / -1; margin: 3px 0 1px; max-width: 46em; font-family: "Caslon", Georgia, serif; font-style: italic; font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
+.cx-hit { padding: 0 2px; color: var(--ink); font-style: normal; background: var(--hl); border-radius: 2px 7px 3px 6px / 6px 3px 7px 2px; box-shadow: 0 0 10px var(--hl-glow); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .cx-san { grid-area: san; }
 /* sur ordinateur, l'en-tête des colonnes suffit : l'étiquette reste pour les lecteurs d'écran */
 .cx-san .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -169,8 +172,8 @@
 .cx-row:has(.cx-link:focus-visible) { outline: 2px dashed var(--red-pen); outline-offset: 2px; }
 
 /* éliminée : barrée au crayon, estompée, jamais cachée */
-.cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san) { opacity: .42; }
-:root[data-theme="dark"] .cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san) { opacity: .4; }
+.cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san, .cx-snip) { opacity: .42; }
+:root[data-theme="dark"] .cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san, .cx-snip) { opacity: .4; }
 .cx-row.is-out .cx-link { color: var(--ink-2); }
 .cx-row.is-out .mastery-hl::before { filter: grayscale(1); }
 .cx-row.is-out .cx-los { opacity: .5; }

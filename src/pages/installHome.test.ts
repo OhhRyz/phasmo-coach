@@ -4,7 +4,7 @@ import { NNBSP } from '../engine/format'
 import { currentTab, LIGHT_LABEL, lightState, pageTitle } from '../components/Layout'
 import { ACQUIRED, acquiredLine, notebookStats, registryCounts } from '../components/Registry'
 import { QR_QUIET, qrModules, qrPath } from '../components/QrCode'
-import { discordMessage, installLabel } from './installGuide'
+import { CHOICES, discordMessage, guideFor } from './installGuide'
 import { IOS_FRESH_START } from './Home'
 
 const URL = 'https://phasmo-coach.example/#/installer'
@@ -22,10 +22,21 @@ describe('Installer l’app depuis un ordinateur : un message prêt pour Discord
     expect(lines[2]).toContain('Chrome')
   })
 
-  it('nomme le bouton tel qu’il s’affiche sur la page, le même sur iPhone et sur Android', () => {
-    expect(installLabel({ os: 'ios' })).toBe(installLabel({ os: 'android' }))
-    expect(lines[1]).toContain(`«${NNBSP}${installLabel({ os: 'ios' })}${NNBSP}»`)
-    expect(lines[2]).toContain('le même bouton')
+  // les libellés entre « » de chaque ligne, tels qu'ils s'affichent dans les menus du téléphone
+  const quoted = (l: string) => [...l.matchAll(/«[\s\u202f\u00a0]*([^«»]+?)[\s\u202f\u00a0]*»/gu)].map((m) => m[1])
+  const stepLabels = (choice: 'iphone' | 'android') => guideFor(CHOICES[choice]).steps.flatMap((st) => quoted(st.text))
+
+  it('donne les étapes avec les libellés exacts des menus, pas « le même bouton »', () => {
+    for (const l of lines) expect(l).not.toMatch(/même bouton/)
+    // iPhone : Partager dans Safari, puis « Sur l’écran d’accueil », comme dans les étapes de la page
+    expect(lines[1]).toContain('Partager')
+    expect(quoted(lines[1])).toContain('Sur l’écran d’accueil')
+    expect(stepLabels('iphone')).toContain('Sur l’écran d’accueil')
+    // Android : le menu de Chrome, puis « Ajouter à l’écran d’accueil » ou « Installer »
+    expect(lines[2]).toContain('menu')
+    expect(quoted(lines[2])).toEqual(expect.arrayContaining(['Ajouter à l’écran d’accueil', 'Installer']))
+    for (const label of quoted(lines[2])) expect(stepLabels('android')).toContain(label)
+    for (const label of quoted(lines[1]).filter((q) => q !== '…')) expect(stepLabels('iphone').concat('Partager')).toContain(label)
   })
 
   it('typographie française : espace fine avant les deux-points, le lien reste intact', () => {

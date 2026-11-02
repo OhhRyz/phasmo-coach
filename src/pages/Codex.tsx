@@ -148,6 +148,26 @@ export function exactName<T extends Pick<Ghost, 'name' | 'nameEn'>>(ghosts: read
 }
 
 /**
+ * Les textes d'une fiche où cherche le Codex, dans l'ordre où l'on en tire l'extrait : description, « À
+ * retenir », signes, tests, observations, vitesse et seuil. Pas « Ne pas confondre » : ces lignes décrivent
+ * d'autres entités.
+ */
+export function searchTexts(g: Ghost): string[] {
+  return [
+    g.summary,
+    ...g.keyTells,
+    ...g.tells.map((t) => t.text),
+    ...g.behaviors.map((t) => t.text),
+    ...g.abilities.map((t) => t.text),
+    ...g.confirmationTests.map((t) => t.text),
+    ...g.eliminationTests.map((t) => t.text),
+    ...g.observations.map((o) => o.text),
+    ...g.speed.details,
+    ...g.huntSanity.details,
+  ]
+}
+
+/**
  * Ce que trouve la recherche, et ce qu'en garde le carnet : `matching`, les entités qui collent ; `out`,
  * celles que la recherche trouve mais que le carnet écarte. Le nom exact d'une entité ne trouve qu'elle.
  */
@@ -157,10 +177,72 @@ export function searchCodex(ghosts: readonly Ghost[], query: string, filter: Fil
   const byQuery = exact
     ? [exact]
     : q
-      ? ghosts.filter((g) => [g.name, g.nameEn, g.summary, ...g.keyTells].some((t) => normalizeText(t).includes(q)))
+      ? ghosts.filter((g) => [g.name, g.nameEn, ...searchTexts(g)].some((t) => normalizeText(t).includes(q)))
       : [...ghosts]
   const matching = filterGhosts(byQuery, filter)
   return { matching, out: byQuery.filter((g) => !matching.includes(g)) }
+}
+
+/** Un extrait de fiche autour du mot cherché : le mot trouvé, tel qu'il s'écrit, entre ce qui l'entoure. */
+export interface Snippet {
+  before: string
+  hit: string
+  after: string
+}
+
+/** Un texte sans accents ni majuscules, avec pour chaque caractère sa place dans le texte d'origine. */
+function normalizedWithMap(text: string): { norm: string; at: number[] } {
+  let norm = ''
+  const at: number[] = []
+  let i = 0
+  for (const ch of text) {
+    const n = normalizeText(ch)
+    norm += n
+    for (let k = 0; k < n.length; k++) at.push(i)
+    i += ch.length
+  }
+  return { norm, at }
+}
+
+const WORD = /[\p{L}\d]/u
+
+/**
+ * Pourquoi la recherche a trouvé cette entité, quand ce n'est pas par son nom : un court extrait de sa fiche
+ * autour du mot (« … toutes les 2 minutes à la montre du jeu… »). De préférence un mot qui commence par ce
+ * qu'on a tapé ; null si le nom correspond, ou si rien ne correspond.
+ */
+export function searchSnippet(g: Ghost, query: string, room = { before: 42, after: 64 }): Snippet | null {
+  const q = normalizeText(query.trim())
+  if (!q || [g.name, g.nameEn].some((n) => normalizeText(n).includes(q))) return null
+  const texts = searchTexts(g).map((t) => ({ t, ...normalizedWithMap(t) }))
+  const find = (wordStart: boolean) => {
+    for (const x of texts) {
+      for (let j = x.norm.indexOf(q); j >= 0; j = x.norm.indexOf(q, j + 1)) {
+        if (!wordStart || j === 0 || !WORD.test(x.norm[j - 1])) return { x, j }
+      }
+    }
+    return null
+  }
+  const found = find(true) ?? find(false)
+  if (!found) return null
+  const { x, j } = found
+  const start = x.at[j]
+  const last = x.at[j + q.length - 1]
+  const end = last + (x.t.codePointAt(last)! > 0xffff ? 2 : 1)
+  // l'extrait s'arrête sur des mots entiers, avec « … » là où il coupe la phrase
+  let from = Math.max(0, start - room.before)
+  if (from > 0) {
+    const space = x.t.indexOf(' ', from)
+    from = space >= 0 && space < start ? space + 1 : start
+  }
+  let to = Math.min(x.t.length, end + room.after)
+  if (to < x.t.length) {
+    const space = x.t.lastIndexOf(' ', to)
+    to = space >= end ? space : end
+  }
+  const before = x.t.slice(from, start)
+  const after = x.t.slice(end, to).replace(/[\s,;:]+$/u, '')
+  return { before: (from > 0 ? '…' : '') + before, hit: x.t.slice(start, end), after: after + (to < x.t.length ? '…' : '') }
 }
 
 /**
@@ -224,11 +306,14 @@ export function Codex() {
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
 
-  // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées
+  // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées. Trouvée par un mot de sa
+  // fiche (pas par son nom) : un extrait montre le mot dans sa phrase
   const rows = useMemo(() => {
     const keep = new Set([...matching, ...(showOut ? out : [])])
-    return GHOSTS.map((g, i) => ({ g, n: i + 1 })).filter(({ g }) => keep.has(g))
-  }, [matching, out, showOut])
+    return GHOSTS.map((g, i) => ({ g, n: i + 1 }))
+      .filter(({ g }) => keep.has(g))
+      .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
+  }, [matching, out, showOut, query])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
   const stickyRef = useRef<HTMLDivElement>(null)
@@ -612,8 +697,16 @@ export function Codex() {
                 <span>Vitesse · seuil</span>
               </div>
               <ol className="cx-reg">
-                {rows.map(({ g, n }) => (
-                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} circled={deduced && only === g} />
+                {rows.map(({ g, n, snippet }) => (
+                  <GhostRow
+                    key={g.id}
+                    ghost={g}
+                    n={n}
+                    mastery={mastery[g.id] ?? 0}
+                    dimmed={!matching.includes(g)}
+                    circled={deduced && only === g}
+                    snippet={snippet}
+                  />
                 ))}
               </ol>
             </>
