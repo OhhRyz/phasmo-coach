@@ -4,6 +4,7 @@
  */
 import type { Ghost } from '../data/types'
 import { pick, shuffle, weightedPick, type Rng } from '../engine/random'
+import { readRun } from './savedRun'
 
 export type EarMode = 'class' | 'exact'
 export type SpeedClassKey = 'slow' | 'normal' | 'fast'
@@ -97,4 +98,51 @@ export function makeRounds(mode: EarMode, rng: Rng, speeds: readonly number[], n
     return decks[c].pop()!
   }
   return drawClasses(rng, n).map((c) => ({ speed: draw(c), choices: [] }))
+}
+
+/* ---------- la série en cours, gardée pour l'onglet (voir savedRun) ---------- */
+
+/** Une écoute de la série, pour le relevé de fin. */
+export interface Heard {
+  speed: number
+  answer: string
+  ok: boolean
+}
+
+/** La série en cours : reprise depuis la page de l'exercice après un détour, ou d'elle-même après un rechargement. */
+export const SERIES_KEY = 'phasmo-coach/serie-oreille'
+
+export interface SavedSeries {
+  mode: EarMode
+  rounds: EarRound[]
+  i: number
+  answer: string | null
+  score: number
+  heard: Heard[]
+  /** l'entrée de l'historique où la série s'affiche : un rechargement (F5) sur cette entrée la reprend d'elle-même (comme au quiz) */
+  entry?: string
+}
+
+/**
+ * Une série affichée relue telle quelle : son mode, ses écoutes, l'écoute en cours dans la série, ses réponses
+ * (aucune encore tant qu'on est sur la première écoute). Elle se garde dès son début : un rechargement sur sa page
+ * (F5, nouvelle version de l'app) la rend même avant la première réponse.
+ */
+export const shownSeries = (r: SavedSeries): boolean =>
+  !!r &&
+  (r.entry === undefined || typeof r.entry === 'string') &&
+  (r.mode === 'class' || r.mode === 'exact') &&
+  Array.isArray(r.rounds) &&
+  Array.isArray(r.heard) &&
+  typeof r.i === 'number' &&
+  r.i >= 0 &&
+  r.i < r.rounds.length &&
+  (r.heard.length > 0 || r.i === 0)
+
+/** Une série à proposer à la reprise (« Reprendre la série ») : lisible, et commencée (au moins une réponse). */
+export const validSeries = (r: SavedSeries): boolean => shownSeries(r) && r.heard.length > 0
+
+/** La série affichée en dernier, même sans réponse : celle que reprend la page rechargée (voir shownSeries). */
+export function readShownSeries(now = Date.now()): SavedSeries | null {
+  return readRun<SavedSeries>(SERIES_KEY, shownSeries, now)
 }

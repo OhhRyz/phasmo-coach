@@ -21,12 +21,16 @@ import './styles/backup.css'
 import { App } from './App'
 import { GHOSTS } from './data'
 import { warmQuiz } from './engine/quiz'
+import { startServiceWorker } from './serviceWorker'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
+// hors ligne, et les nouvelles versions qui arrivent au bon moment (voir serviceWorker.ts)
+startServiceWorker()
 
 // Les questions se préparent pendant que le navigateur n'a rien d'autre à faire : le premier quiz démarre
 // ensuite sans attendre. Même tableau GHOSTS que les pages (les calculs sont gardés par tableau).

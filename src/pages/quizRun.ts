@@ -80,17 +80,32 @@ const validQuestion = (q: Question) =>
   strings(q.correct) &&
   q.correct.length > 0
 
-/** Une copie relue telle quelle : des questions lisibles, au moins une réponse, la question en cours dans la copie. */
-export function validCopy(c: SavedCopy): boolean {
+/**
+ * Une copie affichée relue telle quelle : des questions lisibles, la question en cours dans la copie, ses réponses
+ * (aucune encore tant qu'on est sur la première question). La copie se garde dès qu'elle est distribuée : un
+ * rechargement sur sa page (F5, nouvelle version de l'app) la rend même avant la première réponse.
+ */
+export function shownCopy(c: SavedCopy): boolean {
   if (!c || !Array.isArray(c.questions) || !c.questions.every(validQuestion)) return false
   if (!Number.isInteger(c.index) || c.index < 0 || c.index >= c.questions.length) return false
-  if (!Array.isArray(c.answers) || c.answers.length === 0 || c.answers.length > c.index + 1) return false
+  if (!Array.isArray(c.answers) || c.answers.length > c.index + 1 || (c.answers.length === 0 && c.index > 0)) return false
   if (!c.answers.every((a) => a && validQuestion(a.q) && strings(a.selected) && typeof a.correct === 'boolean')) return false
   return strings(c.selected) && typeof c.checked === 'boolean' && (c.entry === undefined || typeof c.entry === 'string')
 }
 
+/** Une copie à proposer à la reprise (« Reprendre la copie ») : lisible, et commencée (au moins une réponse). */
+export function validCopy(c: SavedCopy): boolean {
+  return shownCopy(c) && c.answers.length > 0
+}
+
+/** La copie laissée en route, à proposer à la reprise (accueil, exercices, page du quiz) ; null sans réponse encore. */
 export function readCopy(now = Date.now()): SavedCopy | null {
   return readRun<SavedCopy>(COPY_KEY, validCopy, now)
+}
+
+/** La copie affichée en dernier, même sans réponse : celle que reprend la page du quiz rechargée (voir shownCopy). */
+export function readShownCopy(now = Date.now()): SavedCopy | null {
+  return readRun<SavedCopy>(COPY_KEY, shownCopy, now)
 }
 
 /**

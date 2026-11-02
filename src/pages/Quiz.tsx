@@ -36,9 +36,9 @@ import {
   defaultPool,
   GRADED_KEY,
   QUIZ_COUNTS,
-  readCopy,
   readGraded,
   readQuizCount,
+  readShownCopy,
   rememberQuizCount,
   requeueSummary,
   RESUME_PARAM,
@@ -48,6 +48,7 @@ import {
   type GradedCopy,
   type QuizPool as Pool,
   type SavedCopy,
+  validCopy,
 } from './quizRun'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -222,12 +223,16 @@ export function Quiz() {
     return defaultPool(studied.length)
   })
   const [empty, setEmpty] = useState(false)
-  // une copie laissée en route dans cet onglet (autre onglet, retour, détour par une fiche) : proposée à la reprise.
-  // La page rechargée en pleine copie (F5, tirer pour rafraîchir), là où la copie s'affichait, la reprend d'elle-même
+  // une copie laissée en route dans cet onglet (autre onglet, retour, détour par une fiche) : proposée à la reprise
+  // si elle a au moins une réponse. La page rechargée en pleine copie (F5, tirer pour rafraîchir, nouvelle version de
+  // l'app), là où la copie s'affichait, la reprend d'elle-même, même avant la première réponse.
   // Une copie rendue sur cette entrée de l'historique (retour depuis « Relire la fiche », rechargement) rouvre son corrigé
   const [boot] = useState(() => {
-    const kept = readCopy()
-    const now = kept && reloadedOn('/quiz') && (kept.entry === undefined || kept.entry === entry) ? kept : null
+    const shown = readShownCopy()
+    const now = shown && reloadedOn('/quiz') && (shown.entry === undefined || shown.entry === entry) ? shown : null
+    const kept = shown && validCopy(shown) ? shown : null
+    // distribuée puis laissée sans réponse : rien à reprendre, la page repart de ses réglages
+    if (shown && !now && !kept) clearRun(COPY_KEY)
     return { kept, now, graded: now ? null : readGraded(entry) }
   })
   const [questions, setQuestions] = useState<Question[] | null>(boot.now?.questions ?? boot.graded?.questions ?? null)
@@ -331,10 +336,12 @@ export function Quiz() {
 
   const q = questions?.[index]
 
-  // la copie en cours se garde à chaque réponse (rendue ou abandonnée, elle s'efface), avec l'entrée de l'historique
-  // où elle s'affiche : celle où l'on arrive, ou celle qui la remplace (« Reprendre la copie », paramètre effacé)
+  // la copie en cours se garde dès qu'elle est distribuée, puis à chaque case cochée et à chaque réponse (rendue ou
+  // abandonnée, elle s'efface), avec l'entrée de l'historique où elle s'affiche : celle où l'on arrive, ou celle qui
+  // la remplace (« Reprendre la copie », paramètre effacé). Une nouvelle version de l'app, installée pendant que
+  // l'app est en arrière-plan, la retrouve ainsi même sur la première question
   useEffect(() => {
-    if (!questions || index >= questions.length || answers.length === 0) return
+    if (!questions || index >= questions.length) return
     saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked, entry })
   }, [questions, index, answers, selected, checked, entry])
 

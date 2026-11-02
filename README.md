@@ -1,6 +1,9 @@
 # Phasmo Coach
 
-**En ligne : https://phasmo-coach.vercel.app** (à ouvrir dans Safari ou Chrome, puis « Sur l’écran d’accueil »).
+**En ligne : https://phasmo-coach.vercel.app** (sur iPhone, dans Safari : « Partager », sur iOS 26 dans le menu
+du petit bouton collé à gauche de l’adresse, puis « Sur l’écran d’accueil », au besoin après le rond avec une flèche
+vers le bas ; sur Android, dans Chrome : le menu, puis « Ajouter à l’écran d’accueil » ou « Installer ». La page
+« Installer l’app » donne les gestes de chaque téléphone).
 
 Application web d’entraînement **hors-jeu** pour Phasmophobia, pour tout le monde : apprendre les
 entités, leurs preuves, vitesses, seuils de chasse et tests 0 preuve, puis s’en servir en situation. Elle
@@ -125,7 +128,14 @@ L’app est statique (`dist/`) et fonctionne sur n’importe quel hébergeur, y 
 
 - **Vercel** (mise en ligne actuelle) : le projet Vercel est relié à ce dépôt. Chaque push sur `main` est
   mis en ligne automatiquement ; chaque autre branche obtient son adresse d’aperçu. Réglages dans
-  `vercel.json` (build `npm run build`, dossier `dist`, pas de cache sur le service worker).
+  `vercel.json` (build `npm run build`, dossier `dist` ; `index.html`, `sw.js` et le manifeste revalidés à
+  chaque visite, seuls les fichiers à empreinte de `assets/` gardés un an).
+- **Nouvelles versions** : le service worker (`src/serviceWorker.ts`, par `virtual:pwa-register`) cherche une
+  nouvelle version au chargement, au retour au premier plan et toutes les 30 minutes ; une fois téléchargée,
+  la page se recharge d’elle-même au bon moment (`src/engine/update.ts`) : tout de suite si personne n’y a
+  encore touché, sinon quand l’app passe en arrière-plan ou au prochain changement de page, jamais pendant une
+  saisie. Les exercices en cours reprennent là où ils en étaient ; une ligne « Nouvelle version installée »
+  le signale.
 - **Vérifications** : le workflow `.github/workflows/ci.yml` lance les tests et le build à chaque push.
 - **Ailleurs** (Netlify, GitHub Pages…) : commande `npm run build`, dossier `dist`.
 

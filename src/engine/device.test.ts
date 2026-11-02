@@ -10,6 +10,12 @@ const UA = {
   // iOS 26 : Safari fige la version du système à 18_6 et annonce Version/26.0
   iphoneSafari26:
     'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1',
+  // relevé sur l'iPhone du propriétaire (iOS 26, Safari réglé en anglais) : même figeage du système
+  iphoneSafari261:
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1',
+  // iPadOS 26 en « mode ordinateur » (réglage par défaut) : un Mac qui annonce Version/26.0
+  ipadSafari26:
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
   // iPad en « mode ordinateur » : il se présente comme un Mac
   ipadDesktopMode:
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15',
@@ -225,25 +231,83 @@ describe('Installer l’app : une seule marche à suivre, celle de l’appareil'
     }
   })
 
-  it('iPhone, Safari (iOS 26) : « … », Partager, « Sur l’écran d’accueil », nom modifiable, « Ajouter »', () => {
-    const guide = g(UA.iphoneSafari26)
-    expect(guide.title).toBe('Sur iPhone, avec Safari')
-    expect(guide.steps[0].text).toContain('« … »')
-    expect(guide.steps[0].text).toContain('« Partager »')
-    // barre d'onglets gardée en bas ou en haut : Partager est déjà là
-    expect(guide.steps[0].hint).toMatch(/^Tu vois le bouton Partager.*en bas de l’écran \? Touche-le directement\.$/)
-    expect(guide.steps[1].text).toContain('« Sur l’écran d’accueil »')
-    expect(guide.steps[2].text).toMatch(/Change le nom.*« Ajouter »/)
-    expect(guide.steps[2].hint).toContain('app web')
+  /** Les libellés entre « » d'un texte, dans l'ordre (espaces fines ou insécables comprises). */
+  const quoted = (t: string) => [...t.matchAll(/«[\s\u202f\u00a0]*([^«»]+?)[\s\u202f\u00a0]*»/gu)].map((m) => m[1])
+
+  it('iPhone, Safari (iOS 26, le système se dit encore 18_6) : petit bouton à gauche de l’adresse, Partager, « View More », « Sur l’écran d’accueil », « Ajouter »', () => {
+    // la version vient de Version/26.x, pas de « iPhone OS 18_6 »
+    expect(detectDevice(UA.iphoneSafari26, 5).version).toBe(26)
+    expect(detectDevice(UA.iphoneSafari261, 5).version).toBe(26)
+    for (const ua of [UA.iphoneSafari26, UA.iphoneSafari261]) {
+      const guide = g(ua)
+      expect(guide.key).toBe('ios-safari')
+      expect(guide.title).toBe('Sur iPhone, avec Safari')
+      const [share, more, add] = guide.steps
+      // 1. le petit bouton est collé à gauche de l'adresse, dans son cadre, dans la barre du bas ; il ouvre un menu
+      // où l'on touche Partager. Le rond « < » (retour), juste à gauche du cadre, n'est pas celui-là : l'étape le dit
+      expect(share.text).toBe(
+        'Dans la barre en bas de l’écran, touche le petit bouton collé à gauche de l’adresse du site, dans le même cadre qu’elle (pas la flèche de retour), puis « Partager » (Share).',
+      )
+      expect(share.text).toMatch(/^Dans la barre en bas de l’écran,/)
+      expect(share.text).toMatch(/pas la flèche de retour/)
+      expect(share.text).toMatch(/puis « Partager » \(Share\)\.$/)
+      // pas de « … » dans l'étape (la barre relevée n'en a pas) : il reste dans l'indice, pour l'autre disposition
+      expect(share.text).not.toContain('…')
+      expect(share.hint).toMatch(/^Tu vois plutôt « … » à droite de la barre \? Touche-le, puis « Partager »\./)
+      // les dispositions « en bas » ou « en haut » gardent le bouton Partager à l'écran
+      expect(share.hint).toContain('carré avec une flèche vers le haut')
+      // 2. « Add to Home Screen » n'apparaît qu'après « View More » : le rond à la flèche vers le bas, décrit par sa forme
+      expect(more.text).toMatch(/^Dans la fenêtre qui s’ouvre, touche le rond avec une flèche vers le bas, au bout de la rangée de ronds \(View More\), puis « Sur l’écran d’accueil » \(Add to Home Screen\)\.$/)
+      expect(more.text.indexOf('View More')).toBeLessThan(more.text.indexOf('Sur l’écran d’accueil'))
+      expect(more.hint).toMatch(/défiler/)
+      // 3. le nom, « Ajouter » ; l'écran suivant n'a pas été vu sur iOS 26 : l'indice ne promet rien de précis
+      expect(add.text).toBe('Change le nom si tu veux, puis touche « Ajouter » (Add).')
+      expect(add.hint).toBe('Si une option pour l’ouvrir comme une app web s’affiche, laisse-la activée.')
+      // les libellés français, puis anglais, dans l'ordre des gestes
+      expect(guide.steps.flatMap((st) => quoted(st.text))).toEqual(['Partager', 'Sur l’écran d’accueil', 'Ajouter'])
+    }
   })
 
-  it('iPhone, Safari jusqu’à iOS 18 : le bouton Partager en bas de l’écran, pas de « … »', () => {
+  it('iPhone, Safari jusqu’à iOS 18 : le bouton Partager en bas de l’écran, sans « … » ni « View More »', () => {
     const guide = g(UA.iphoneSafari18)
-    expect(guide.steps[0].text).toMatch(/^Touche le bouton Partager.*en bas de l’écran\.$/)
+    expect(detectDevice(UA.iphoneSafari18, 5).version).toBe(18)
+    expect(guide.key).toBe('ios-safari')
+    expect(guide.steps[0].text).toMatch(/^Touche le bouton Partager \(Share\), un carré avec une flèche vers le haut, en bas de l’écran\.$/)
     expect(all(guide)).not.toContain('« … »')
-    expect(guide.steps[1].text).toContain('« Sur l’écran d’accueil »')
-    // version inconnue (choix manuel « iPhone ») : la marche à suivre d'iOS 26, avec le recours en indice
-    expect(guideFor(CHOICES.iphone).steps[0].text).toContain('« … »')
+    expect(all(guide)).not.toMatch(/View More|à gauche de l’adresse/)
+    expect(guide.steps[1].text).toBe('Touche « Sur l’écran d’accueil » (Add to Home Screen).')
+    expect(guide.steps[1].hint).toMatch(/défiler/)
+    expect(guide.steps[2].text).toContain('« Ajouter » (Add)')
+  })
+
+  it('iPhone, version inconnue (choix manuel « iPhone ») : la marche à suivre d’iOS 26', () => {
+    const manual = guideFor(CHOICES.iphone)
+    expect(CHOICES.iphone.version).toBeNull()
+    expect(manual.steps.map((st) => st.text)).toEqual(g(UA.iphoneSafari26).steps.map((st) => st.text))
+    // la frontière : 25 garde le bouton du bas, 26 et plus le petit bouton à gauche de l'adresse
+    const at = (version: number) => guideFor({ ...CHOICES.iphone, version }).steps[0].text
+    expect(at(25)).toMatch(/^Touche le bouton Partager/)
+    expect(at(26)).toMatch(/petit bouton collé à gauche de l’adresse/)
+    expect(at(27)).toMatch(/petit bouton collé à gauche de l’adresse/)
+  })
+
+  it('iPad, Safari (iPadOS 18 ou 26) : Partager en haut, sinon le petit bouton à gauche de l’adresse ; « View More » ou défiler', () => {
+    for (const ua of [UA.ipadDesktopMode, UA.ipadMobile, UA.ipadSafari26]) {
+      const d = detectDevice(ua, 5)
+      expect(d.ipad, ua).toBe(true)
+      const guide = guideFor(d)
+      expect(guide.key).toBe('ipad-safari')
+      expect(guide.title).toBe('Sur iPad, avec Safari')
+      // la barre d'adresse de l'iPad reste en haut : jamais « en bas de l'écran »
+      expect(all(guide)).not.toContain('en bas de l’écran')
+      expect(guide.steps[0].text).toMatch(/Partager \(Share\).*en haut de l’écran\.$/)
+      expect(guide.steps[0].hint).toMatch(/petit bouton à gauche de l’adresse, en haut.*« Partager »/)
+      // la même phrase vaut pour les deux fenêtres de partage (avec ou sans « View More »)
+      expect(guide.steps[1].text).toBe('Touche « Sur l’écran d’accueil » (Add to Home Screen).')
+      expect(guide.steps[1].hint).toMatch(/rond avec une flèche vers le bas \(View More\), ou fais défiler/)
+      expect(guide.steps[2].text).toContain('« Ajouter » (Add)')
+    }
+    expect(detectDevice(UA.ipadSafari26, 5).version).toBe(26)
   })
 
   it('Safari sur iPhone ou iPad : la vue Safari d’une autre app (Discord…) n’a pas « Sur l’écran d’accueil »', () => {
@@ -258,7 +322,7 @@ describe('Installer l’app : une seule marche à suivre, celle de l’appareil'
     expect(menuOf('opera')).toBe('le menu d’Opera')
     expect(menuOf('chrome')).toBe('le menu de Chrome')
     expect(menuOf('other')).toBe('le menu du navigateur')
-    expect(g(UA.iphoneEdge).steps[0].text).toBe('Ouvre le menu d’Edge, puis « Partager ».')
+    expect(g(UA.iphoneEdge).steps[0].text).toBe('Ouvre le menu d’Edge, puis « Partager » (Share).')
     expect(g(UA.androidEdge).steps[0].text).toBe('Ouvre le menu d’Edge.')
     expect(g(UA.androidOpera).steps[0].text).toBe('Ouvre le menu d’Opera.')
     expect(buttonHint(detectDevice(UA.desktopEdge), false)).toBe('Ça se fait en trois étapes dans le menu d’Edge : le bouton te les montre.')
@@ -278,7 +342,9 @@ describe('Installer l’app : une seule marche à suivre, celle de l’appareil'
   it('autre navigateur sur iPhone : le bouton Partager, et Safari en recours', () => {
     for (const ua of [UA.iphoneChrome, UA.iphoneFirefox, UA.iphoneEdge]) {
       const guide = g(ua)
-      expect(all(guide)).toContain('« Sur l’écran d’accueil »')
+      expect(all(guide)).toContain('« Sur l’écran d’accueil » (Add to Home Screen)')
+      // la fenêtre de partage du système peut cacher l'option derrière « View More » (iOS 26) : l'indice le dit
+      expect(guide.steps[1].hint).toMatch(/View More/)
       expect(guide.after).toContain('Safari')
       expect(guide.copyLink).toBe(true)
     }
@@ -290,6 +356,9 @@ describe('Installer l’app : une seule marche à suivre, celle de l’appareil'
     expect(ios.title).toBe('Ouvert dans Instagram')
     expect(all(ios)).toContain('« Ouvrir dans le navigateur »')
     expect(all(ios)).toContain('Safari')
+    // l'app peut être en anglais, comme le téléphone : le libellé anglais suit le français
+    expect(ios.steps[1].text).toBe('Choisis « Ouvrir dans le navigateur » ou « Ouvrir dans Safari » (Open in browser, Open in Safari).')
+    expect(g(UA.facebookAndroid).steps[1].text).toBe('Choisis « Ouvrir dans le navigateur » ou « Ouvrir dans Chrome » (Open in browser, Open in Chrome).')
     expect(ios.copyLink).toBe(true)
     // avant même de toucher le bouton, on sait qu'il faut changer de navigateur (même si une invitation existe)
     expect(buttonHint(detectDevice(UA.instagramIos, 5), false)).toMatch(/Depuis Instagram, impossible d’installer.*Safari/)

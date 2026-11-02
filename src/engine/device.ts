@@ -11,7 +11,11 @@ export interface Device {
   /** iPad, y compris en « mode ordinateur » (il se présente alors comme un Mac). */
   ipad: boolean
   browser: Browser
-  /** Version principale du navigateur quand elle compte (Safari sur Mac : 17 et plus sait installer). */
+  /**
+   * Version principale du navigateur quand elle compte, lue dans « Version/N » : Safari sur Mac (17 et plus sait
+   * installer), Safari sur iPhone (26 et plus range Partager à gauche de l'adresse ; iOS 26 se dit encore
+   * « iPhone OS 18_6 », seul « Version/26 » le trahit).
+   */
   version: number | null
   /**
    * Navigateur intégré d'une autre app (Instagram, Facebook…) : le nom de l'app, « une autre app » si

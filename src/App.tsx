@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes, useLocation, useNavigationType } from 'react
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
 import { ToastProvider } from './components/Toast'
+import { UpdateNotice, UpdateOnNavigate } from './components/AppUpdate'
 import { StoreProvider } from './store/store'
 import { About } from './pages/About'
 import { Codex } from './pages/Codex'
@@ -107,8 +108,10 @@ export function App() {
   return (
     <StoreProvider>
       <ToastProvider>
+        <UpdateNotice />
         <HashRouter>
           <PageArrival />
+          <UpdateOnNavigate />
           <Layout>
             <SafeRoutes>
             <Routes>

@@ -23,44 +23,28 @@ import { NBSP, NNBSP, fr, num } from '../engine/format'
 import { ignoreKey } from '../engine/keys'
 import { createRng } from '../engine/random'
 import { useStore } from '../store/store'
-import { clearRun, readRun, reloadedOn, saveRun } from './savedRun'
-import { allSpeeds, BASE_SPEED, classOf, EAR_ROUNDS, makeRounds, type EarMode, type EarRound } from './earRounds'
+import { clearRun, reloadedOn, saveRun } from './savedRun'
+import {
+  allSpeeds,
+  BASE_SPEED,
+  classOf,
+  EAR_ROUNDS,
+  makeRounds,
+  readShownSeries,
+  SERIES_KEY,
+  validSeries,
+  type EarMode,
+  type EarRound,
+  type Heard,
+  type SavedSeries,
+} from './earRounds'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
 type Mode = EarMode
 type Round = EarRound
 
-/** Une écoute de la série, pour le relevé de fin. */
-interface Heard {
-  speed: number
-  answer: string
-  ok: boolean
-}
-
 const ROUNDS = EAR_ROUNDS
-
-/** La série en cours (voir savedRun) : reprise depuis la page de l'exercice après un détour. */
-const SERIES_KEY = 'phasmo-coach/serie-oreille'
-interface SavedSeries {
-  mode: Mode
-  rounds: Round[]
-  i: number
-  answer: string | null
-  score: number
-  heard: Heard[]
-  /** l'entrée de l'historique où la série s'affiche : un rechargement (F5) sur cette entrée la reprend d'elle-même (comme au quiz) */
-  entry?: string
-}
-const validSeries = (r: SavedSeries) =>
-  (r.entry === undefined || typeof r.entry === 'string') &&
-  (r.mode === 'class' || r.mode === 'exact') &&
-  Array.isArray(r.rounds) &&
-  Array.isArray(r.heard) &&
-  r.heard.length > 0 &&
-  typeof r.i === 'number' &&
-  r.i >= 0 &&
-  r.i < r.rounds.length
 const BASE = BASE_SPEED
 
 const CLASS_LABEL = { slow: 'Plus lente que la normale', normal: `Normale (1,7${NBSP}m/s)`, fast: 'Plus rapide que la normale' }
@@ -287,11 +271,16 @@ function SpeedRuler({ max, dots, cands, picked, zones, truth, label }: RulerProp
 export function Ear() {
   const { dispatch } = useStore()
   const { key: entry } = useLocation()
-  // une série laissée en route dans cet onglet (autre onglet, retour, détour) : proposée à la reprise. La page
-  // rechargée en pleine série (F5, tirer pour rafraîchir), là où la série s'affichait, la reprend d'elle-même
+  // une série laissée en route dans cet onglet (autre onglet, retour, détour) : proposée à la reprise si elle a au
+  // moins une réponse. La page rechargée en pleine série (F5, tirer pour rafraîchir, nouvelle version de l'app), là
+  // où la série s'affichait, la reprend d'elle-même, même avant la première réponse
   const [boot] = useState(() => {
-    const kept = readRun<SavedSeries>(SERIES_KEY, validSeries)
-    return { kept, now: kept && reloadedOn('/oreille') && (kept.entry === undefined || kept.entry === entry) ? kept : null }
+    const shown = readShownSeries()
+    const now = shown && reloadedOn('/oreille') && (shown.entry === undefined || shown.entry === entry) ? shown : null
+    const kept = shown && validSeries(shown) ? shown : null
+    // commencée puis laissée sans réponse : rien à reprendre, la page repart de son accueil
+    if (shown && !now && !kept) clearRun(SERIES_KEY)
+    return { kept, now }
   })
   const [mode, setMode] = useState<Mode>(boot.now?.mode ?? 'class')
   const [rounds, setRounds] = useState<Round[] | null>(boot.now?.rounds ?? null)
@@ -388,9 +377,10 @@ export function Ear() {
     setListened(false)
   }
 
-  // la série en cours se garde à chaque réponse (terminée ou quittée, elle s'efface)
+  // la série en cours se garde dès son début, puis à chaque réponse (terminée ou quittée, elle s'efface) : une
+  // nouvelle version de l'app, installée pendant que l'app est en arrière-plan, la retrouve même avant la première
   useEffect(() => {
-    if (!rounds || i >= rounds.length || heard.length === 0) return
+    if (!rounds || i >= rounds.length) return
     saveRun<SavedSeries>(SERIES_KEY, { mode, rounds, i, answer, score, heard, entry })
   }, [mode, rounds, i, answer, score, heard, entry])
 

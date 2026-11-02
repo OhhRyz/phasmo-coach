@@ -1,4 +1,5 @@
 import { dayKey } from '../engine/format'
+import { hashPath, justUpdated, type UpdateReload } from '../engine/update'
 
 /**
  * Un exercice laissé moins longtemps que cela se reprend même passé minuit : une partie du soir ne perd pas sa
@@ -48,16 +49,18 @@ export function clearRun(key: string): void {
 /**
  * Le chemin que le navigateur vient de recharger (F5, tirer pour rafraîchir), d'après le type de la navigation
  * et l'adresse de la page (« #/enquete?contrat=… » → « /enquete ») ; null pour une ouverture ou un lien suivi.
+ * `update` : le rechargement venait de l'app, pour passer à sa nouvelle version (voir engine/update) ; il ne
+ * fait reprendre l'exercice que s'il a été fait sur la page en cours (pas en arrivant sur une autre page).
  */
-export function reloadedPath(type: string | undefined, hash: string): string | null {
-  if (type !== 'reload') return null
-  return hash.replace(/^#/, '').split('?')[0] || '/'
+export function reloadedPath(type: string | undefined, hash: string, update?: Pick<UpdateReload, 'resume'> | null): string | null {
+  if (type !== 'reload' || (update && !update.resume)) return null
+  return hashPath(hash)
 }
 
 let reloaded: string | null = (() => {
   try {
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
-    return reloadedPath(nav?.type, window.location.hash)
+    return reloadedPath(nav?.type, window.location.hash, justUpdated)
   } catch {
     return null
   }

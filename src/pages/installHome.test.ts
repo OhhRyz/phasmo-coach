@@ -39,6 +39,28 @@ describe('Installer l’app depuis un ordinateur : un message prêt pour Discord
     for (const label of quoted(lines[1]).filter((q) => q !== '…')) expect(stepLabels('iphone').concat('Partager')).toContain(label)
   })
 
+  it('iPhone : la ligne vaut pour iOS 18 comme pour iOS 26 (Partager d’abord, libellés anglais compris)', () => {
+    // espaces fines et insécables de la typographie française : des espaces pour chercher les mots
+    const line = lines[1].replace(/[\u202f\u00a0]/g, ' ')
+    const ordered = (text: string, words: string[]) => {
+      const at = words.map((w) => text.indexOf(w))
+      expect(at.every((p) => p >= 0), `${words.join(' / ')} dans « ${text} »`).toBe(true)
+      expect([...at].sort((a, b) => a - b)).toEqual(at)
+    }
+    // le bouton Partager est nommé (sur iOS 18, on le touche directement en bas de l'écran), puis « Sur l'écran
+    // d'accueil » ; le petit bouton de l'adresse et le rond « View More » ne valent que pour iOS 26, et le disent
+    ordered(line, ['« Partager » (Share)', 'sur iOS 26', 'petit bouton collé à gauche de l’adresse', '« Sur l’écran d’accueil » (Add to Home Screen)', 'au besoin', 'rond avec une flèche vers le bas (View More)'])
+    // les gestes d'iOS 26 de la page se retrouvent tous dans la ligne
+    const ios26 = guideFor(CHOICES.iphone).steps.map((st) => st.text).join(' ')
+    ordered(ios26, ['petit bouton collé à gauche de l’adresse', 'Partager', 'Share', 'rond avec une flèche vers le bas', 'Sur l’écran d’accueil', 'Add to Home Screen'])
+    // et le premier geste d'iOS 18, le bouton Partager, aussi
+    const ios18 = guideFor({ ...CHOICES.iphone, version: 18 }).steps[0].text
+    expect(ios18).toMatch(/^Touche le bouton Partager \(Share\)/)
+    expect(line).toContain('« Partager » (Share)')
+    // plus de « … » à toucher d'abord : la barre d'adresse d'iOS 26 relevée n'en a pas
+    expect(line).not.toContain('…')
+  })
+
   it('typographie française : espace fine avant les deux-points, le lien reste intact', () => {
     for (const l of lines) expect(l).not.toMatch(/ [:;?!»]/)
     expect(lines[0].endsWith(URL)).toBe(true)

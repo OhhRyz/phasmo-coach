@@ -3,8 +3,9 @@ import { fr, NNBSP } from '../engine/format'
 
 /**
  * La marche à suivre pour installer l'app, selon l'appareil et le navigateur. Les libellés entre « »
- * sont ceux des menus des systèmes en français ; quand ils changent d'une version à l'autre, la phrase
- * reste vraie pour toutes (« l'option qui commence par « Installer » »).
+ * sont ceux des menus des systèmes en français (sur iPhone, suivis de l'anglais entre parenthèses) ; quand ils
+ * changent d'une version à l'autre, la phrase reste vraie pour toutes (« l'option qui commence par
+ * « Installer » »). Un bouton dont on ne connaît pas le libellé français se décrit par sa forme et sa place.
  */
 
 export interface Step {
@@ -92,22 +93,38 @@ export function deviceLabel(d: Device): string {
   return what ? `${where} · ${what}` : where
 }
 
+/**
+ * Beaucoup d'iPhone sont réglés en anglais : le libellé anglais suit le français, entre parenthèses, pour les
+ * gestes qui comptent (relevés sur iOS 26 en anglais ; « Partager », « Sur l'écran d'accueil » et « Ajouter »
+ * sont ceux d'iOS en français).
+ */
+const SHARE = '« Partager » (Share)'
+const HOME_SCREEN = '« Sur l’écran d’accueil » (Add to Home Screen)'
+const ADD = '« Ajouter » (Add)'
+/**
+ * Le bouton « View More » de la fenêtre de partage d'iOS 26 : un rond avec une flèche vers le bas, au bout de la
+ * rangée de ronds (« Copy », « Add to Bookmarks »…). Son libellé français n'est pas connu : on le décrit.
+ */
+const VIEW_MORE = 'le rond avec une flèche vers le bas, au bout de la rangée de ronds (View More)'
+
+/** « Sur l'écran d'accueil », sur un iPhone ou un iPad dont on ne sait pas si la fenêtre de partage le cache. */
 const STEP_HOME_SCREEN: Step = {
-  text: 'Touche « Sur l’écran d’accueil ».',
-  hint: 'Tu ne le vois pas ? Fais défiler la liste, ou touche « En voir plus ».',
+  text: `Touche ${HOME_SCREEN}.`,
+  hint: 'Tu ne le vois pas ? Touche d’abord le rond avec une flèche vers le bas (View More), ou fais défiler la liste.',
 }
+/** Le nom se change avant d'ajouter ; l'écran qui suit n'a pas encore été vu sur iOS 26 : l'indice reste vrai partout. */
 const STEP_ADD: Step = {
-  text: 'Change le nom si tu veux, puis touche « Ajouter ».',
+  text: `Change le nom si tu veux, puis touche ${ADD}.`,
   hint: 'Si une option pour l’ouvrir comme une app web s’affiche, laisse-la activée.',
 }
-const STEP_ADD_SHORT: Step = { text: 'Change le nom si tu veux, puis touche « Ajouter ».' }
+const STEP_ADD_SHORT: Step = { text: `Change le nom si tu veux, puis touche ${ADD}.` }
 const SAFARI_FALLBACK = 'Tu ne trouves pas « Sur l’écran d’accueil » ? Ouvre ce lien dans Safari : là, ça marche à coup sûr.'
 /**
  * Un lien touché dans Discord, WhatsApp… s'ouvre souvent dans une vue Safari intégrée à l'app : elle signe
- * exactement comme Safari, mais n'a ni « … » près de l'adresse ni « Sur l'écran d'accueil ».
+ * exactement comme Safari, mais n'a ni la barre d'adresse de Safari ni « Sur l'écran d'accueil ».
  */
 const SAFARI_VIEW_FALLBACK =
-  'Pas de « Sur l’écran d’accueil » dans la liste ? Tu es sans doute dans le navigateur d’une autre app (Discord, WhatsApp…) : touche la boussole ou « Ouvrir dans Safari », puis recommence.'
+  'Toujours pas de « Sur l’écran d’accueil » ? Tu es sans doute dans le navigateur d’une autre app (Discord, WhatsApp…) : touche la boussole ou « Ouvrir dans Safari » (Open in Safari), puis recommence.'
 const PHONE_LINK = 'Pour ton téléphone : envoie-toi ce lien et ouvre-le dessus, la page te montrera quoi faire.'
 const INSTALL_OPTION = 'Touche « Ajouter à l’écran d’accueil », ou l’option qui commence par « Installer ».'
 
@@ -144,7 +161,8 @@ export function guideFor(d: Device): Guide {
       title: `Ouvert dans ${d.inApp}`,
       steps: [
         { text: 'Touche le menu de l’app : « … » ou les trois points, souvent en haut à droite.' },
-        { text: `Choisis « Ouvrir dans le navigateur » (ou « Ouvrir dans ${target} »).` },
+        // l'app peut être réglée en anglais, comme le téléphone : le libellé anglais suit, entre parenthèses
+        { text: `Choisis « Ouvrir dans le navigateur » ou « Ouvrir dans ${target} » (Open in browser, Open in ${target}).` },
         { text: `Dans ${target}, touche à nouveau « ${installLabel(d)} » sur cette page.` },
       ],
       after: `Pas de menu ? Copie le lien, puis colle-le dans la barre d’adresse de ${target}.`,
@@ -156,13 +174,15 @@ export function guideFor(d: Device): Guide {
   if (d.os === 'ios') {
     if (d.browser === 'safari') {
       if (d.ipad) {
+        // iPadOS 18 : Partager est en haut à droite ; iPadOS 26 : pas encore vu sur un vrai iPad, la barre d'adresse
+        // reste en haut. L'étape et son indice sont vrais dans les deux cas.
         return {
           key: 'ipad-safari',
           title: 'Sur iPad, avec Safari',
           steps: [
             {
-              text: 'Touche le bouton Partager (un carré avec une flèche vers le haut), en haut de l’écran.',
-              hint: 'Tu ne le vois pas ? Touche « … » près de la barre d’adresse, puis « Partager ».',
+              text: 'Touche le bouton Partager (Share), un carré avec une flèche vers le haut, en haut de l’écran.',
+              hint: 'Tu ne le vois pas ? Touche le petit bouton à gauche de l’adresse, en haut (ou « … » près de la barre), puis « Partager ».',
             },
             STEP_HOME_SCREEN,
             STEP_ADD,
@@ -171,20 +191,38 @@ export function guideFor(d: Device): Guide {
           copyLink: true,
         }
       }
-      // jusqu'à iOS 18, Partager est dans la barre du bas ; depuis iOS 26 (Version/26), derrière « … » à côté de
-      // l'adresse, sauf si l'on a gardé la barre d'onglets en bas ou en haut
-      const shareBelow = d.version != null && d.version < 26
+      // jusqu'à iOS 18 (Version/18), Partager est dans la barre du bas. Depuis iOS 26 (Version/26, alors que le
+      // système se dit encore « iPhone OS 18_6 »), relevé sur un vrai iPhone : barre d'adresse en bas, Partager
+      // dans le menu du petit bouton à gauche de l'adresse, et « Add to Home Screen » caché derrière « View More »
+      // dans la fenêtre de partage. Version inconnue (choix manuel « iPhone ») : celle d'aujourd'hui, iOS 26.
+      if (d.version != null && d.version < 26) {
+        return {
+          key: 'ios-safari',
+          title: 'Sur iPhone, avec Safari',
+          steps: [
+            { text: 'Touche le bouton Partager (Share), un carré avec une flèche vers le haut, en bas de l’écran.' },
+            { text: `Touche ${HOME_SCREEN}.`, hint: 'Tu ne le vois pas ? Fais défiler la liste vers le bas.' },
+            STEP_ADD,
+          ],
+          after: SAFARI_VIEW_FALLBACK,
+          copyLink: true,
+        }
+      }
       return {
         key: 'ios-safari',
         title: 'Sur iPhone, avec Safari',
         steps: [
-          shareBelow
-            ? { text: 'Touche le bouton Partager (un carré avec une flèche vers le haut), en bas de l’écran.' }
-            : {
-                text: 'Touche « … » à droite de la barre d’adresse, puis « Partager ».',
-                hint: 'Tu vois le bouton Partager (un carré avec une flèche vers le haut) en bas de l’écran ? Touche-le directement.',
-              },
-          STEP_HOME_SCREEN,
+          {
+            // relevé sur l'iPhone : « < » (retour), puis le cadre de l'adresse, qui porte à sa gauche le petit bouton
+            // du menu de la page. « Le petit bouton à gauche de l'adresse » pourrait désigner le retour : on précise
+            text: `Dans la barre en bas de l’écran, touche le petit bouton collé à gauche de l’adresse du site, dans le même cadre qu’elle (pas la flèche de retour), puis ${SHARE}.`,
+            // les autres dispositions de Safari (réglages, onglets « en bas » ou « en haut ») : « … », ou Partager déjà là
+            hint: 'Tu vois plutôt « … » à droite de la barre ? Touche-le, puis « Partager ». Un carré avec une flèche vers le haut en bas de l’écran ? C’est Partager : touche-le directement.',
+          },
+          {
+            text: `Dans la fenêtre qui s’ouvre, touche ${VIEW_MORE}, puis ${HOME_SCREEN}.`,
+            hint: 'Tu ne le vois pas ? Fais défiler la liste vers le bas.',
+          },
           STEP_ADD,
         ],
         after: SAFARI_VIEW_FALLBACK,
@@ -197,8 +235,8 @@ export function guideFor(d: Device): Guide {
         key: 'ios-chrome',
         title: `Sur ${where}, avec Chrome`,
         steps: [
-          { text: 'Touche le bouton Partager, dans la barre d’adresse.', hint: 'Tu ne le vois pas ? Ouvre le menu « … », puis « Partager ».' },
-          { text: 'Touche « Sur l’écran d’accueil ».', hint: 'Fais défiler la liste si besoin.' },
+          { text: 'Touche le bouton Partager (Share), dans la barre d’adresse.', hint: 'Tu ne le vois pas ? Ouvre le menu « … », puis « Partager ».' },
+          STEP_HOME_SCREEN,
           STEP_ADD_SHORT,
         ],
         after: SAFARI_FALLBACK,
@@ -209,8 +247,8 @@ export function guideFor(d: Device): Guide {
       key: 'ios-other',
       title: name ? `Sur ${where}, avec ${name}` : `Sur ${where}`,
       steps: [
-        { text: `Ouvre ${menuOf(d.browser)}, puis « Partager ».` },
-        { text: 'Touche « Sur l’écran d’accueil ».', hint: 'Fais défiler la liste si besoin.' },
+        { text: `Ouvre ${menuOf(d.browser)}, puis ${SHARE}.` },
+        STEP_HOME_SCREEN,
         STEP_ADD_SHORT,
       ],
       after: SAFARI_FALLBACK,
@@ -352,13 +390,15 @@ export function guideFor(d: Device): Guide {
 /**
  * Sur ordinateur, « Copier un message pour Discord » : le lien de la page « Installer l'app », puis une
  * ligne par téléphone. Le lien touché dans Discord s'ouvre dans son navigateur intégré, d'où l'on ne peut
- * pas installer : d'abord Safari (iPhone) ou Chrome (Android), puis les libellés exacts de leurs menus, les
- * mêmes que dans les étapes de la page (STEP_HOME_SCREEN, INSTALL_OPTION).
+ * pas installer : d'abord Safari (iPhone) ou Chrome (Android), puis les gestes des étapes de la page, en bref.
+ * iPhone : une phrase vraie pour iOS 18 (Partager dans la barre du bas) comme pour iOS 26 (Partager dans le menu du
+ * petit bouton de l'adresse, « Sur l'écran d'accueil » derrière « View More ») ; la page ouverte par le lien montre
+ * ensuite les gestes de l'iPhone qui l'ouvre.
  */
 export function discordMessage(url: string): string {
   return [
     `Phasmo Coach${NNBSP}: ${url}`,
-    fr('Sur iPhone : ouvre ce lien dans Safari, touche Partager (ou « … » puis « Partager »), puis « Sur l’écran d’accueil ».'),
+    fr(`Sur iPhone : ouvre ce lien dans Safari, touche ${SHARE}, sur iOS 26 dans le menu du petit bouton collé à gauche de l’adresse, puis ${HOME_SCREEN}, au besoin après le rond avec une flèche vers le bas (View More).`),
     fr('Sur Android : ouvre-le dans Chrome, touche le menu (les trois points), puis « Ajouter à l’écran d’accueil » ou l’option qui commence par « Installer ».'),
   ].join('\n')
 }

@@ -8,7 +8,20 @@ import { entityMentions } from '../engine/mentions'
 import { createRng, hashString } from '../engine/random'
 import { schedule, type Grade } from '../engine/srs'
 import { initialState, type PersistedState } from '../store/schema'
-import { allSpeeds, BASE_SPEED, classOf, EAR_ROUNDS, makeRounds, MIN_GAP, pickDistractors } from './earRounds'
+import {
+  allSpeeds,
+  BASE_SPEED,
+  classOf,
+  EAR_ROUNDS,
+  makeRounds,
+  MIN_GAP,
+  pickDistractors,
+  readShownSeries,
+  SERIES_KEY,
+  shownSeries,
+  validSeries,
+  type SavedSeries,
+} from './earRounds'
 import { expectedAnswers, sessionMinutes } from './reviewPlan'
 import {
   answersBefore,
@@ -53,11 +66,13 @@ import {
   readCopy,
   readGraded,
   readQuizCount,
+  readShownCopy,
   rememberQuizCount,
   requeueSummary,
   RESUME_QUIZ,
   scopeLine,
   STUDIED_MIN,
+  shownCopy,
   validCopy,
   validGraded,
   GRADED_KEY,
@@ -118,6 +133,39 @@ describe('À l’oreille : lente, normale ou rapide', () => {
   it('les vitesses lentes et rapides tournent : toutes celles des fiches finissent par passer', () => {
     const heard = new Set(all.flat().map((x) => x.speed))
     expect([...heard].sort((a, b) => a - b)).toEqual(speeds)
+  })
+})
+
+describe('À l’oreille : la série en cours se garde dès son début', () => {
+  const now = Date.parse('2026-11-01T15:00:00')
+  const rounds = makeRounds('class', createRng(7), speeds)
+  const started: SavedSeries = { mode: 'class', rounds, i: 0, answer: null, score: 0, heard: [], entry: 'k1' }
+  const answered: SavedSeries = { ...started, answer: 'slow', score: 1, heard: [{ speed: rounds[0].speed, answer: 'slow', ok: true }] }
+  const roundTrip = (r: unknown) => JSON.parse(JSON.stringify(r)) as SavedSeries
+
+  it('commencée, sans réponse : rendue au rechargement de sa page, pas proposée à la reprise', () => {
+    sessionStorage.clear()
+    saveRun(SERIES_KEY, started, now)
+    expect(readShownSeries(now)).toEqual(roundTrip(started))
+    expect(validSeries(roundTrip(started))).toBe(false)
+    // avec une réponse : les deux
+    saveRun(SERIES_KEY, answered, now)
+    expect(readShownSeries(now)).toEqual(roundTrip(answered))
+    expect(validSeries(roundTrip(answered))).toBe(true)
+    sessionStorage.clear()
+  })
+
+  it('une série abîmée, finie, ou sans réponse au-delà de la première écoute ne se reprend pas', () => {
+    const bad: unknown[] = [
+      { ...started, i: 1 },
+      { ...answered, i: rounds.length },
+      { ...answered, i: -1 },
+      { ...answered, mode: 'autre' },
+      { ...answered, rounds: 'rien' },
+      { ...answered, heard: null },
+      { ...answered, entry: 3 },
+    ]
+    for (const b of bad) expect(shownSeries(roundTrip(b)), JSON.stringify(b).slice(0, 80)).toBe(false)
   })
 })
 
@@ -1144,6 +1192,27 @@ describe('Quiz : la copie en cours se reprend, d’ailleurs aussi', () => {
       { index: 1 },
     ]
     for (const b of bad) expect(validCopy(roundTrip(b)), JSON.stringify(b).slice(0, 80)).toBe(false)
+  })
+
+  it('distribuée, sans réponse encore : gardée dès la première question, rendue au rechargement de sa page, jamais proposée', () => {
+    sessionStorage.clear()
+    // la première question, une case déjà cochée (question à plusieurs réponses), rien de validé
+    const fresh: SavedCopy = { ...copy, index: 0, answers: [], selected: [qs[0].choices[1].id] }
+    saveRun(COPY_KEY, fresh, now)
+    expect(shownCopy(roundTrip(fresh))).toBe(true)
+    // la page rechargée (F5, ou nouvelle version de l'app passée en arrière-plan) la reprend telle quelle…
+    expect(readShownCopy(now)).toEqual(roundTrip(fresh))
+    expect(reloadedPath('reload', '#/quiz', { resume: true })).toBe('/quiz')
+    // … mais rien à « Reprendre » depuis l'accueil, les exercices ou la page du quiz : elle n'a pas de réponse
+    expect(validCopy(roundTrip(fresh))).toBe(false)
+    expect(readCopy(now)).toBeNull()
+    // sans réponse, elle ne peut être que sur la première question
+    expect(shownCopy(roundTrip({ ...fresh, index: 1 }))).toBe(false)
+    // commencée : rendue au rechargement et proposée ailleurs
+    saveRun(COPY_KEY, copy, now)
+    expect(readShownCopy(now)).toEqual(roundTrip(copy))
+    expect(readCopy(now)).toEqual(roundTrip(copy))
+    sessionStorage.clear()
   })
 
   it('le corrigé reste à son entrée de l’historique : « Relire la fiche », puis « Précédent », ou F5, le rouvre ; pas une autre arrivée', () => {

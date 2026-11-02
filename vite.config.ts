@@ -10,7 +10,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // la nouvelle version prend la main dès qu'elle est téléchargée ; la page se recharge au bon moment
+      // (src/serviceWorker.ts, par virtual:pwa-register) : pas de registerSW.js injecté en plus
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         // short_name : le nom proposé sous l'icône de l'écran d'accueil (modifiable sur iPhone avant d'ajouter)
@@ -32,6 +35,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // « autoUpdate » sans registerSW.js injecté : le plugin ne règle plus ces deux-là de lui-même. La nouvelle
+        // version s'active dès qu'elle est téléchargée et prend la main sur les pages ouvertes
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // les textes de licence s'ouvrent tels quels, pas dans l'app
         navigateFallbackDenylist: [/\/licences\//],
