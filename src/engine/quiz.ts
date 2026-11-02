@@ -1798,8 +1798,80 @@ const SIGN_FAMILY = /^q:(tell|obs|zero):/
 
 /** Au-delà de cette longueur, une réponse est une phrase (un signe, un résumé), pas un nombre ni un mot. */
 const SENTENCE = 12
-/** Tirages sans question nouvelle avant d'accepter une question qui reprend une phrase déjà lue dans la copie. */
+/**
+ * Pour compléter une copie (voir buildQuiz, `ease`) : tirages sans question nouvelle avant d'accepter une question
+ * qui reprend une phrase déjà lue dans la copie, puis autant encore avant d'accepter un fait déjà demandé (voir factKeys).
+ */
 const REPEAT_PATIENCE = 30
+
+/** Une valeur chiffrée (« 180 s », « 2,7 m/s », « 150 à 170 s ») : chaque nombre avec son unité. */
+const FACT_VALUES = /(\d+(?:,\d+)?)(?:\s*(?:à|-|–)\s*(\d+(?:,\d+)?))?\s?(%|m\/s|min|s|m)(?![\p{L}\d/])/gu
+/** Un nombre à virgule, même sans son unité (« 1,7 m/s · 1,96 enragé · 1,36 affaibli ») : une vitesse, le plus souvent. */
+const DECIMALS = /(?<![\d,])\d+,\d+(?![\d,])/gu
+/** Le son entendu (micro, cris) ; le thème « son » des signes compte aussi le possessif (« son seuil »). */
+const HEARD = /micro|parabolique|enregistreur|\bcris?\b/iu
+/** Les thèmes précis d'un fait : ceux des signes (voir NARROW), et la cible d'une chasse (« ne poursuit que sa cible »). */
+const FACT_THEMES = (): Theme[] => [...[...NARROW].filter((t) => t !== 'son'), 'cible']
+/** Les questions de vitesse et de seuil : leur fait est une valeur. */
+const NUMERIC_ASK = /^q:(?:san|spd|sansum|spdsum|early|sanp|spdp|los):/u
+/** Les thèmes larges d'un fait : sa vitesse, son seuil (voir SOFT_FACT). */
+const BROAD_THEMES: readonly Theme[] = ['vitesse', 'seuil']
+/** L'accélération en ligne de vue : un fait à elle seule (« accélère en ligne de vue », puis « accélère-t-elle quand elle te voit ? »). */
+const LOS = /ligne de vue|\bLdV\b/iu
+/**
+ * Une clé qu'une copie peut reprendre pour se remplir au lieu de sortir de sa liste (voir buildQuiz, `ease`) : la
+ * carte d'où vient la question, la vitesse ou le seuil en général (BROAD_FACT : deux vitesses d'une entité à deux
+ * valeurs différentes, calme puis agressif, ne demandent pas le même fait) ; et, sur trop peu d'entités pour la
+ * copie, l'objet ou le geste (l'encens, le sel…). Une valeur chiffrée, la ligne de vue, un départage, eux, ne
+ * reviennent jamais.
+ */
+export const SOFT_FACT = /^carte:|\|~/u
+/** La vitesse ou le seuil en général (voir SOFT_FACT). */
+export const BROAD_FACT = /^carte:|\|~(?:vitesse|seuil)$/u
+
+/** Une question de vitesse ou de seuil (« Quelle est la vitesse… ? », « Laquelle chasse dès… ? ») : son fait est une valeur. */
+export function numericAsk(id: string): boolean {
+  return NUMERIC_ASK.test(id)
+}
+
+/**
+ * Ce qu'une question demande de l'entité dont elle parle : la carte dont elle vient, chaque valeur chiffrée et
+ * chaque objet ou geste précis (l'encens, le sel, une porte…) de son énoncé, de sa citation et de sa bonne
+ * réponse (pas des mauvaises, qui parlent d'autres entités). Deux questions sur une même entité qui partagent
+ * une clé reposent sur le même fait : « Attend 180 s après un encens » (un signe), puis « l'Esprit attend
+ * 180 s après l'encens » (un départage), puis le test du double encensement. Une copie n'en pose qu'une ; une
+ * copie sur trop peu d'entités pour ses questions ne reprend qu'une clé « souple » (voir SOFT_FACT), jamais une
+ * valeur. Sans entité (vrai ou faux des mécaniques), aucune clé.
+ */
+export function factKeys(q: Pick<Question, 'ghostId' | 'cardId' | 'prompt' | 'quote' | 'choices' | 'correct'> & Partial<Pick<Question, 'id'>>, names: ReadonlySet<string> = new Set()): string[] {
+  const g = q.ghostId
+  if (!g) return []
+  const right = q.choices.filter((c) => q.correct.includes(c.id) && !names.has(c.label)).map((c) => c.label)
+  // une question de vitesse ou de seuil demande une valeur : celle de la réponse (ou du résumé cité), pas la
+  // condition de l'énoncé (« si tu bouges à moins de 10 m »)
+  const asked = numericAsk(q.id ?? '')
+  const text = [asked ? '' : q.prompt, q.quote ?? '', ...right].join(' \n ')
+  const keys = new Set<string>()
+  if (q.cardId) keys.add(`carte:${q.cardId}`)
+  // deux départages d'une même entité (face à deux entités différentes) citent le plus souvent le même trait
+  if (q.id?.startsWith('q:dist:')) keys.add(`${g}|départage`)
+  // un nombre à virgule se reconnaît sans son unité (« 1,96 » dans un résumé, « 1,96 m/s » dans une réponse)
+  const value = (n: string, unit: string) => keys.add(n.includes(',') ? `${g}|${n}` : `${g}|${n} ${unit}`)
+  for (const m of text.matchAll(FACT_VALUES)) {
+    value(m[1], m[3])
+    if (m[2]) value(m[2], m[3])
+  }
+  for (const [n] of text.matchAll(DECIMALS)) keys.add(`${g}|${n}`)
+  // une vitesse ou un seuil sous condition (« dans le froid », « près de l'électronique ») : la condition n'est pas
+  // le fait demandé, la valeur l'est. Un signe sur le froid du Hantu reste un autre fait que sa vitesse au froid
+  if (!asked) {
+    for (const t of FACT_THEMES()) if (THEMES[t].test(text)) keys.add(`${g}|~${t}`)
+    if (HEARD.test(text)) keys.add(`${g}|~son`)
+  }
+  for (const t of BROAD_THEMES) if (THEMES[t].test(text)) keys.add(`${g}|~${t}`)
+  if (LOS.test(text)) keys.add(`${g}|ligne de vue`)
+  return [...keys]
+}
 
 /**
  * Construit une série de questions variées, en privilégiant les entités les moins maîtrisées. Une série sur
@@ -1838,24 +1910,45 @@ export function buildQuiz(opts: QuizOptions): Question[] {
       return !!o && c.label === ghostChoice(o).label
     })
   // les phrases déjà lues parmi les réponses de la copie (pas les noms ni les nombres) : une question qui en reprend
-  // une passe après les autres tant qu'il y a le choix (REPEAT_PATIENCE), sinon les premières questions d'une
-  // copie liraient deux fois les mêmes mauvaises réponses. Une série sur une seule entité n'a pas ce choix
+  // une passe après les autres, seulement pour compléter la copie (voir deal, `loose`), sinon les premières
+  // questions d'une copie liraient deux fois les mêmes mauvaises réponses. Une série sur une seule entité n'a pas ce choix
   const nameLabels = new Set(opts.allGhosts.map((o) => ghostChoice(o).label))
   const sentences = (q: Question) => q.choices.map((c) => c.label).filter((l) => l.length > SENTENCE && !nameLabels.has(l))
   const read = new Set<string>()
+  // le même fait d'une entité ne revient pas sous une autre forme dans la copie (voir factKeys), et aucune entité
+  // n'en prend plus que sa part : deux questions au plus quand il y a assez d'entités pour la copie, sinon une de
+  // plus que la moyenne. Une série sur une seule entité n'a pas ce choix
+  const facts = new Set<string>()
+  const asked = new Map<string, number>()
+  const listSize = Math.max(1, opts.ghosts.length)
+  // assez d'entités pour la copie (de quoi en poser 40 % de plus, deux par entité)
+  const roomy = listSize * 2 >= count * 1.4
+  const share = roomy ? 2 : Math.ceil(count / listSize) + 1
   const generators = solo ? SOLO_GENERATORS : GENERATORS
   const tf = topics.includes('mechanics') ? trueFalseQuestions(opts.mechanics, rng) : []
   const weight = (g: Ghost) => 1.25 - (opts.mastery?.[g.id] ?? 0)
   let topicIdx = Math.floor(rng() * topics.length)
 
-  /** Tire des questions sur `list` jusqu'à `count` (ou à court d'idées) ; `extra` les marque `beyond`. */
-  const deal = (list: Ghost[], c: Ctx, listed: ReadonlySet<string> | null, stray: ((q: Question) => boolean) | null, extra = false) => {
+  /**
+   * Tire des questions sur `list` jusqu'à `count` (ou à court d'idées) ; `extra` les marque `beyond`. `ease` : la
+   * copie n'a pas pu se remplir autrement. 1 : une carte, la vitesse ou le seuil d'une entité peuvent servir deux
+   * fois, sur un autre fait (voir SOFT_FACT), et une phrase déjà lue revient après une série de tirages sans rien
+   * d'autre ; 2 : une entité peut aussi dépasser sa part, puis un même fait revenir (voir factKeys).
+   */
+  const deal = (list: Ghost[], c: Ctx, listed: ReadonlySet<string> | null, stray: ((q: Question) => boolean) | null, extra = false, ease: 0 | 1 | 2 = 0) => {
     let attempts = 0
     let misses = 0
+    // ce que la série de tirages sans question nouvelle a déjà fait accepter (au plus `ease`) : 1, une phrase déjà
+    // lue ; 2, un fait déjà demandé
+    let given = 0
     // une seule entité s'épuise vite : on s'arrête après une longue série de tirages sans question nouvelle
     while (out.length < count && attempts < count * 40 && misses < 120) {
       attempts++
       misses++
+      if (given < ease && misses > REPEAT_PATIENCE) {
+        given++
+        misses = 0
+      }
       const topic = topics[topicIdx % topics.length]
       topicIdx++
       let q: Question | null = null
@@ -1876,11 +1969,22 @@ export function buildQuiz(opts: QuizOptions): Question[] {
         }
       }
       if (!q || seen.has(q.id) || screens.has(screenOf(q)) || stray?.(q)) continue
-      if (!solo && misses <= REPEAT_PATIENCE && sentences(q).some((l) => read.has(l))) continue
+      if (!solo && given < 1 && sentences(q).some((l) => read.has(l))) continue
+      const keys = solo ? [] : factKeys(q, nameLabels)
+      // « au-dessus de 50 %, laquelle peut chasser ? » demande le seuil précoce de l'entité, sans l'écrire (65 % pour
+      // la Dayan qui te voit bouger) : il compte comme s'il était cité
+      const early = !solo && q.id.startsWith('q:early:') && q.ghostId ? byId.get(q.ghostId) : undefined
+      if (early) for (const v of thresholds(early)) if (v > 50) keys.push(`${early.id}|${v} %`)
+      // pour se remplir (ease) : une carte, la vitesse ou le seuil ; sur trop peu d'entités, un objet aussi (voir SOFT_FACT)
+      const soft = (k: string) => ease > 0 && (BROAD_FACT.test(k) || (!roomy && SOFT_FACT.test(k)))
+      if (keys.some((k) => facts.has(k) && !soft(k) && given < 2)) continue
+      if (!solo && ease < 2 && q.ghostId && (asked.get(q.ghostId) ?? 0) >= share) continue
       if (!solo && q.ghostId && SIGN_FAMILY.test(q.id)) {
         if (signed.has(q.ghostId)) continue
         signed.add(q.ghostId)
       }
+      for (const k of keys) facts.add(k)
+      if (q.ghostId) asked.set(q.ghostId, (asked.get(q.ghostId) ?? 0) + 1)
       seen.add(q.id)
       screens.add(screenOf(q))
       for (const l of sentences(q)) read.add(l)
@@ -1894,9 +1998,19 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     }
   }
   deal(opts.ghosts, ctx, pool, strays)
+  // à court de questions : une carte sert une deuxième fois (sur un autre fait, voir SOFT_FACT), une phrase déjà lue
+  // parmi les mauvaises réponses revient, plutôt que de laisser la place à une entité hors de la liste
+  if (!solo && out.length < count) deal(opts.ghosts, ctx, pool, strays, false, 1)
   // pas assez de questions sur la liste pour ces thèmes : la fin de la copie porte sur toutes les entités, comme
   // une copie sur toutes (sans liste à privilégier parmi les mauvaises réponses)
-  if (strays && opts.fillUp && out.length < count) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true)
+  const beyond = strays && opts.fillUp
+  if (beyond && out.length < count) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true)
+  // toujours pas assez (peu d'entités, beaucoup de questions) : une entité dépasse sa part, puis un même fait
+  // revient, plutôt que de s'arrêter avant le nombre de questions demandé
+  if (!solo && out.length < count) {
+    if (beyond) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true, 2)
+    else deal(opts.ghosts, ctx, pool, strays, false, 2)
+  }
   // une entité qui a peu de questions dans ces thèmes (le Mimic copie tout : seuls ses tests se posent) : la
   // série se complète de ses questions rédigées plutôt que de s'arrêter à deux
   if (solo && out.length < count / 2 && !topics.includes('expert')) {

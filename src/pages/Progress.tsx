@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { FileHead, Notebook, Page } from '../components/journal/Journal'
 import { notebookStats, NotebookStats, Registry } from '../components/Registry'
 import { safeDate } from '../engine/format'
@@ -9,7 +10,8 @@ const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', 
 
 /**
  * « Ma progression » : un seul endroit pour voir où l'on en est, sans changer d'onglet. Le registre des
- * entités de l'accueil et les chiffres de la carte d'enquête du profil, rien de plus.
+ * entités de l'accueil et les chiffres de la carte d'enquête du profil, rien de plus. On y arrive du profil :
+ * « ‹ Profil » y ramène, comme « ‹ Exercices » depuis un exercice.
  */
 export function ProgressPage() {
   const { state, deck } = useStore()
@@ -20,6 +22,7 @@ export function ProgressPage() {
     <Notebook single className="progression">
       <Page section="1" label="Ma progression">
         <FileHead>
+          <Link to="/profil">‹ Profil</Link>
           <span>
             Carnet de <b>{state.profile.name || '—'}</b>
           </span>

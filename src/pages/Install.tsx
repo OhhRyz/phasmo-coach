@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { CircledNumber, FileHead, H, IndexCard, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { ExportedLine, useCopyProgress, useExportBackup } from '../components/Backup'
 import { useToast } from '../components/Toast'
@@ -127,10 +127,9 @@ function GuideCard({
 
 /**
  * Sur ordinateur, le carnet est d'abord fait pour le téléphone : le code QR de cette page, à scanner avec lui,
- * et un message prêt à coller dans Discord (pour soi, ou pour quelqu'un d'autre). `steps` : le choix du
- * téléphone dont on lit les étapes ici, sans rien déplier.
+ * et un message prêt à coller dans Discord (pour soi, ou pour quelqu'un d'autre).
  */
-function PhoneSection({ steps }: { steps?: ReactNode }) {
+function PhoneSection() {
   const toast = useToast()
   const [showMessage, setShowMessage] = useState(false)
   const url = appUrl('/installer')
@@ -175,7 +174,6 @@ function PhoneSection({ steps }: { steps?: ReactNode }) {
           <p className="pencil-note install-message-what">le lien, puis une ligne pour iPhone (Safari) et une pour Android (Chrome)</p>
         </div>
       </div>
-      {steps}
     </section>
   )
 }
@@ -338,6 +336,15 @@ export function InstallPage() {
               )}
             </div>
 
+            {/* sur ordinateur, les étapes des téléphones se lisent sans rien déplier : le choix se fait juste
+                au-dessus de la fiche qu'il change */}
+            {onComputer && (
+              <div className="install-choose install-choose--open">
+                <span className="typed-label">Les étapes pour</span>
+                <Seg label="Les étapes pour" value={choice ?? choiceOf(detected)} options={CHOICE_OPTIONS} onChange={chooseDevice} />
+              </div>
+            )}
+
             {open && (
               <GuideCard
                 guide={guide}
@@ -351,14 +358,7 @@ export function InstallPage() {
             )}
 
             {onComputer ? (
-              <PhoneSection
-                steps={
-                  <div className="install-choose install-choose--open">
-                    <span className="typed-label">Les étapes pour</span>
-                    <Seg label="Les étapes pour" value={choice ?? choiceOf(detected)} options={CHOICE_OPTIONS} onChange={chooseDevice} />
-                  </div>
-                }
-              />
+              <PhoneSection />
             ) : (
               <div className="install-other">
                 <button type="button" className="link link-btn" aria-expanded={chooser} aria-controls="install-choose" onClick={() => setChooser((v) => !v)}>

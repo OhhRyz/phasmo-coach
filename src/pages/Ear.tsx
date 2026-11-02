@@ -15,7 +15,7 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { roughEllipse, roughLine, roughRng } from '../components/journal/rough'
-import { Modal, ProgressBar, Seg } from '../components/ui'
+import { focusPageTitle, Modal, ProgressBar, Seg } from '../components/ui'
 import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { platform } from '../engine/device'
@@ -23,7 +23,7 @@ import { NBSP, NNBSP, fr, num } from '../engine/format'
 import { ignoreKey } from '../engine/keys'
 import { createRng } from '../engine/random'
 import { useStore } from '../store/store'
-import { clearRun, readRun, saveRun } from './savedRun'
+import { clearRun, readRun, reloadedOn, saveRun } from './savedRun'
 import { allSpeeds, BASE_SPEED, classOf, EAR_ROUNDS, makeRounds, type EarMode, type EarRound } from './earRounds'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
@@ -283,22 +283,29 @@ function SpeedRuler({ max, dots, cands, picked, zones, truth, label }: RulerProp
 
 export function Ear() {
   const { dispatch } = useStore()
-  const [mode, setMode] = useState<Mode>('class')
-  const [rounds, setRounds] = useState<Round[] | null>(null)
-  const [i, setI] = useState(0)
-  const [answer, setAnswer] = useState<string | null>(null)
-  const [score, setScore] = useState(0)
+  // une série laissée en route dans cet onglet (autre onglet, retour, détour) : proposée à la reprise. La page
+  // rechargée en pleine série (F5, tirer pour rafraîchir) la reprend d'elle-même, là où elle en était
+  const [boot] = useState(() => {
+    const kept = readRun<SavedSeries>(SERIES_KEY, validSeries)
+    return { kept, now: kept && reloadedOn('/oreille') ? kept : null }
+  })
+  const [mode, setMode] = useState<Mode>(boot.now?.mode ?? 'class')
+  const [rounds, setRounds] = useState<Round[] | null>(boot.now?.rounds ?? null)
+  const [i, setI] = useState(boot.now?.i ?? 0)
+  const [answer, setAnswer] = useState<string | null>(boot.now?.answer ?? null)
+  const [score, setScore] = useState(boot.now?.score ?? 0)
   const [playing, setPlaying] = useState<'q' | 'ref' | null>(null)
   /** réécoute depuis le relevé de fin : la vitesse en cours */
   const [again, setAgain] = useState<number | null>(null)
-  const [heard, setHeard] = useState<Heard[]>([])
-  /** l'écoute en cours a été jouée au moins une fois : on peut répondre */
-  const [listened, setListened] = useState(false)
+  const [heard, setHeard] = useState<Heard[]>(boot.now?.heard ?? [])
+  /** l'écoute en cours a été jouée au moins une fois : on peut répondre (reprise : à réécouter, sauf déjà répondue) */
+  const [listened, setListened] = useState(boot.now ? boot.now.answer != null : false)
   const [quitOpen, setQuitOpen] = useState(false)
+  /** « Nouvelle série » alors qu'une série attend d'être reprise : elle se confirme, comme l'abandon */
+  const [replaceOpen, setReplaceOpen] = useState(false)
   /** la référence a été écoutée sur la page d'accueil de l'exercice */
   const [refHeard, setRefHeard] = useState(false)
-  // une série laissée en route dans cet onglet (autre onglet, retour, rechargement) : proposée à la reprise
-  const [saved, setSaved] = useState(() => readRun<SavedSeries>(SERIES_KEY, validSeries))
+  const [saved, setSaved] = useState(boot.now ? null : boot.kept)
   const steps = useRef<Footsteps | null>(null)
   const ios = useMemo(() => platform() === 'ios', [])
   const speeds = useMemo(() => allSpeeds(GHOSTS), [])
@@ -327,6 +334,7 @@ export function Ear() {
   const start = (m: Mode = mode) => {
     clearRun(SERIES_KEY)
     setSaved(null)
+    setReplaceOpen(false)
     steps.current?.stop()
     setMode(m)
     setTrail(null)
@@ -345,6 +353,8 @@ export function Ear() {
     setQuitOpen(false)
     setRounds(null)
     setHeard([])
+    // la page de l'exercice revient : le focus sur son titre, pas sur la page entière
+    requestAnimationFrame(focusPageTitle)
   }
 
   const correctKey = round ? (mode === 'class' ? classOf(round.speed) : String(round.speed)) : ''
@@ -391,6 +401,7 @@ export function Ear() {
     // l'écoute en cours, si elle n'a pas encore de réponse, se réécoute avant de répondre
     setListened(saved.answer != null)
     setQuitOpen(false)
+    setReplaceOpen(false)
     setSaved(null)
   }
 
@@ -411,6 +422,12 @@ export function Ear() {
     const onKey = (e: KeyboardEvent) => {
       if (quitOpen) return
       if (ignoreKey(e, (el) => e.key !== 'Enter' && !!el.closest('.ear'))) return
+      // Échap ne quitte jamais d'elle-même : elle pose la question, comme au quiz et en mise en situation
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setQuitOpen(true)
+        return
+      }
       if (e.key === 'Enter') {
         if (!answer) return
         e.preventDefault()
@@ -498,18 +515,21 @@ export function Ear() {
                   ? fr('3 réponses possibles : plus lente que la référence, normale, ou plus rapide.')
                   : fr('4 vitesses possibles, placées sur la règle : retrouve la bonne au rythme des pas.')}
               </p>
-              {saved && (
-                <p className="ear-resume">
-                  <span className="pencil-note">
+              {saved ? (
+                // une série laissée en route : la reprendre est l'action principale, une nouvelle série se confirme
+                <div className="ear-go ear-go--resume">
+                  <p className="pencil-note ear-resume-note">
                     {`série laissée en route${NNBSP}: ${saved.heard.length} ${saved.heard.length > 1 ? 'écoutes' : 'écoute'} sur ${saved.rounds.length}`}
-                  </span>
-                  <TypedLink onClick={resume}>Reprendre la série</TypedLink>
-                </p>
+                  </p>
+                  <TapeButton onClick={resume}>Reprendre la série</TapeButton>
+                  <PaperButton onClick={() => setReplaceOpen(true)}>Nouvelle série ({ROUNDS} écoutes)</PaperButton>
+                </div>
+              ) : (
+                <div className="ear-go">
+                  <TapeButton onClick={() => start()}>Commencer ({ROUNDS} écoutes)</TapeButton>
+                  {!refHeard && <p className="pencil-note ear-first">conseil{NNBSP}: écoute d’abord la référence ↑</p>}
+                </div>
               )}
-              <div className="ear-go">
-                <TapeButton onClick={() => start()}>Commencer ({ROUNDS} écoutes)</TapeButton>
-                {!refHeard && <p className="pencil-note ear-first">conseil{NNBSP}: écoute d’abord la référence ↑</p>}
-              </div>
             </section>
 
             <p className="ear-small">
@@ -518,6 +538,25 @@ export function Ear() {
             </p>
           </Page>
         </Notebook>
+
+        {saved && (
+          <Modal
+            open={replaceOpen}
+            onClose={() => setReplaceOpen(false)}
+            title={`Abandonner la série laissée en route${NNBSP}?`}
+            actions={
+              <>
+                <TypedLink onClick={resume}>Reprendre la série</TypedLink>
+                <PaperButton onClick={() => start()}>Nouvelle série</PaperButton>
+              </>
+            }
+          >
+            <p className="ear-quit-body">
+              {saved.heard.length > 1 ? `Tes ${saved.heard.length} écoutes seront perdues` : 'Ta première écoute sera perdue'}
+              {NNBSP}: la série ne sera pas notée.
+            </p>
+          </Modal>
+        )}
       </div>
     )
   }
@@ -856,7 +895,8 @@ export function Ear() {
         }
       >
         <p className="ear-quit-body">
-          {heard.length === 1 ? 'Ta première écoute sera perdue' : `Tes ${heard.length} écoutes seront perdues`}{NNBSP}: la série ne sera pas notée.
+          {heard.length === 0 ? 'Aucune réponse pour l’instant' : heard.length === 1 ? 'Ta première écoute sera perdue' : `Tes ${heard.length} écoutes seront perdues`}
+          {NNBSP}: la série ne sera pas notée.
         </p>
       </Modal>
     </div>

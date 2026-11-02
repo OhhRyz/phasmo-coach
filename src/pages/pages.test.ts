@@ -40,10 +40,27 @@ import {
 import { reviseLabel } from './exhibits'
 import { pageTitle } from '../components/Layout'
 import { criteriaText, exactName, keepsSearch, searchCodex, searchTarget } from './Codex'
-import { draftChanged, type NoteDraft } from '../components/NoteEditor'
+import { draftChanged, titleHelp, type NoteDraft } from '../components/NoteEditor'
 import { CONTRACT_KEY, readContract, validContract, type SavedContract } from './contractRun'
-import { saveRun } from './savedRun'
-import { copyMeta, defaultPool, quickQuizLabel, readCopy, RESUME_QUIZ, scopeLine, STUDIED_MIN, validCopy, COPY_KEY, type SavedCopy } from './quizRun'
+import { reloadedPath, saveRun } from './savedRun'
+import {
+  copyMeta,
+  COUNT_KEY,
+  defaultPool,
+  quickQuizLabel,
+  readCopy,
+  readQuizCount,
+  rememberQuizCount,
+  requeueSummary,
+  RESUME_QUIZ,
+  scopeLine,
+  STUDIED_MIN,
+  validCopy,
+  COPY_KEY,
+  type SavedCopy,
+} from './quizRun'
+import { TEST_NOT_RECORDED, trueFalseLabel } from './Mechanics'
+import { noteQuestion } from '../engine/cards'
 import { cameFromCodex, FROM_CODEX } from './codexReturn'
 import { bareSpace, ignoreKey } from '../engine/keys'
 import { fr, NBSP as NBSP_, NNBSP } from '../engine/format'
@@ -1198,3 +1215,123 @@ function shuffleIds(rng: () => number): string[] {
   }
   return ids
 }
+
+describe('Rechargement (F5) : l’exercice en cours reprend sur la page rechargée', () => {
+  it('le chemin rechargé, adresse à paramètres comprise ; rien pour une ouverture ou un lien suivi', () => {
+    expect(reloadedPath('reload', '#/enquete')).toBe('/enquete')
+    expect(reloadedPath('reload', '#/quiz?topic=mechanics&n=10')).toBe('/quiz')
+    expect(reloadedPath('reload', '#/enquete?contrat=reprendre')).toBe('/enquete')
+    expect(reloadedPath('reload', '')).toBe('/')
+    expect(reloadedPath('navigate', '#/enquete')).toBeNull()
+    expect(reloadedPath('back_forward', '#/quiz')).toBeNull()
+    expect(reloadedPath(undefined, '#/quiz')).toBeNull()
+  })
+})
+
+describe('Quiz : le nombre de questions choisi reste après un rechargement', () => {
+  it('10 par défaut ; 5 une fois choisi ; une valeur inconnue ou illisible n’y change rien', () => {
+    localStorage.removeItem(COUNT_KEY)
+    expect(readQuizCount()).toBe(10)
+    rememberQuizCount(5)
+    expect(readQuizCount()).toBe(5)
+    rememberQuizCount(7)
+    expect(readQuizCount()).toBe(5)
+    localStorage.setItem(COUNT_KEY, 'beaucoup')
+    expect(readQuizCount()).toBe(10)
+    localStorage.removeItem(COUNT_KEY)
+  })
+})
+
+describe('Quiz : « Revoir … dans la révision » compte ce qu’il annonce', () => {
+  const m = (cardId: string | undefined, requeued: boolean) => ({ q: { cardId }, requeued })
+
+  it('le cas des juges : 4 erreurs, 3 cartes déjà apprises ; la 4e est dite', () => {
+    const r = requeueSummary([m('g:spirit:tells', true), m('g:demon:san', true), m('g:jinn:spd', true), m('g:mare:tells', false)])
+    expect(r.cards).toBe(3)
+    expect(r.link).toBe('Revoir ces 3 cartes dans la révision')
+    expect(r.note).toBe(
+      `3 de tes 4 erreurs portent sur 3 cartes déjà apprises, remises dans ta révision du jour${NNBSP}; l’autre porte sur une carte que tu n’as pas encore apprise.`,
+    )
+  })
+
+  it('autant de cartes que d’erreurs : « mes N erreurs », sans explication ; aucune carte : pas de lien', () => {
+    expect(requeueSummary([m('a', true), m('b', true)])).toEqual({ cards: 2, link: 'Revoir mes 2 erreurs dans la révision', note: null })
+    expect(requeueSummary([m('a', true)])).toEqual({ cards: 1, link: 'Revoir mon erreur dans la révision', note: null })
+    expect(requeueSummary([m('a', false), m(undefined, false)])).toEqual({ cards: 0, link: null, note: null })
+  })
+
+  it('deux erreurs sur la même carte, une question sans carte, des cartes pas encore apprises : chaque écart est dit', () => {
+    expect(requeueSummary([m('a', true), m('a', true)]).note).toBe(`Tes 2 erreurs portent sur la même carte déjà apprise, remise dans ta révision du jour.`)
+    expect(requeueSummary([m('a', true), m('a', true)]).link).toBe('Revoir cette carte dans la révision')
+    expect(requeueSummary([m('a', true), m(undefined, false)]).note).toBe(
+      `Une de tes 2 erreurs porte sur une carte déjà apprise, remise dans ta révision du jour${NNBSP}; l’autre n’a pas de carte de révision.`,
+    )
+    expect(requeueSummary([m('a', true), m('b', false), m('c', false)]).note).toContain('les 2 autres portent sur des cartes que tu n’as pas encore apprises')
+    expect(requeueSummary([m('a', true), m('b', false), m(undefined, false)]).note).toContain(
+      'parmi les 2 autres, une porte sur une carte que tu n’as pas encore apprise et une n’a pas de carte de révision',
+    )
+  })
+
+  it('sur des copies tirées au hasard : le lien compte les cartes remises, l’explication toutes les erreurs', () => {
+    const rng = createRng(11)
+    for (let k = 0; k < 300; k++) {
+      const list = Array.from({ length: 1 + Math.floor(rng() * 8) }, () => {
+        const r = rng()
+        return r < 0.5 ? m(`c${Math.floor(rng() * 4)}`, true) : r < 0.8 ? m(`d${k}`, false) : m(undefined, false)
+      })
+      const s = requeueSummary(list)
+      const cards = new Set(list.filter((a) => a.requeued).map((a) => a.q.cardId)).size
+      expect(s.cards).toBe(cards)
+      if (!cards) continue
+      expect(s.link).toContain(cards > 1 ? String(cards) : cards === list.length ? 'mon erreur' : 'cette carte')
+      // les comptes ne se contredisent pas : l'écart avec le nombre d'erreurs est toujours expliqué
+      if (s.note) expect(s.note).toMatch(list.length > 1 ? new RegExp(`${list.length} erreurs`) : /erreur/)
+      else expect(cards).toBe(list.length)
+    }
+  })
+})
+
+describe('Mécaniques : le quiz vrai ou faux annonce la copie qu’il distribue', () => {
+  it('« 10 questions, tirées parmi 36 », pas « 36 questions » pour une copie de dix', () => {
+    expect(trueFalseLabel(10, 36)).toBe('Quiz vrai ou faux · 10 questions, tirées parmi 36')
+    expect(trueFalseLabel(5, 36)).toBe('Quiz vrai ou faux · 5 questions, tirées parmi 36')
+    expect(trueFalseLabel(10, 8)).toBe('Quiz vrai ou faux · 8 questions')
+    expect(trueFalseLabel(10, 1)).toBe('Quiz vrai ou faux · 1 question')
+  })
+
+  it('« Me tester » dit qu’il ne note rien, et où une réponse compte', () => {
+    expect(TEST_NOT_RECORDED).toMatch(/^Rien n’est noté ici/)
+    expect(TEST_NOT_RECORDED).toContain('Réviser')
+  })
+})
+
+describe('Note : l’aide du titre, l’aperçu et l’enregistrement suivent la même règle', () => {
+  const T = new Date('2026-11-01T09:00:00').getTime()
+  const bodies = [
+    'L’encens bloque le Démon 60 s.',
+    'Encens et Démon\nIl rechasse 60 s après, pas 90.',
+    'Combien de temps l’encens bloque-t-il un Démon ?\n60 secondes au lieu de 90.',
+    'Plus rapide dans le froid, jusqu’à 2,7 m/s.\nPlus lent au chaud.',
+    '- souffle froid visible\n- chasse dès 50 %',
+    'Piège',
+  ]
+
+  it('sans titre : l’aide dit « la première ligne en sert » seulement quand la carte peut s’enregistrer, sinon elle demande un titre', () => {
+    for (const body of bodies) {
+      for (const ghostId of [null, 'demon']) {
+        const q = noteQuestion({ title: '', body, ghostId, createdAt: T }, GHOSTS)
+        const help = titleHelp(true, !!q.vague)
+        if (q.vague) {
+          expect(help, body).toMatch(/écris un titre/)
+          expect(help, body).not.toMatch(/en sert/)
+        } else {
+          expect(help, body).toMatch(/première ligne de la note en sert/)
+        }
+      }
+    }
+    // sans révision, un titre n'est jamais demandé
+    expect(titleHelp(false, false)).toBe('Sans titre, la première ligne de la note en sert.')
+    // une réponse écrite sans texte de note : pas de « première ligne » à invoquer
+    expect(titleHelp(true, true, false)).toBe('Écris un titre, il servira de question en révision.')
+  })
+})

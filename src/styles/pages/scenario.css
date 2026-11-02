@@ -24,9 +24,9 @@
 .sc-entry .stamp { position: absolute; right: 0; top: -8px; }
 .sc-entry .sc-lead { margin-top: 12px; max-width: none; font-size: 18px; }
 /* un contrat laissé en route (détour par le codex…) : on le reprend d'ici, comme la copie du quiz */
-.sc-resume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 18px; margin: 14px 0 0; }
-.sc-resume .pencil-note { font-size: 21px; }
-.sc-resume .link { display: inline-flex; align-items: center; min-height: 40px; }
+/* un contrat laissé en route : le reprendre est l'action principale (un nouveau contrat passe par le bas de la page) */
+.sc-resume { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin: 16px 0 0; }
+.sc-resume .pencil-note { flex-basis: 100%; margin: 0 !important; font-size: 21px; }
 
 .sc-field { margin: 0 0 22px; padding: 0; border: 0; min-width: 0; }
 .sc-field > .typed-label, .sc-field > legend { margin-bottom: 8px; }

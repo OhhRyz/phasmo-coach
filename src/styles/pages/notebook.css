@@ -64,6 +64,10 @@
    ========================================================================== */
 .carnet .entry { margin-bottom: 34px; }
 .carnet .entry-line { color: var(--ink-2); }
+/* le carnet de preuves de la partie n'est pas ici : une ligne au crayon mène au Codex */
+.carnet .carnet-codex { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; margin: 8px 0 0; max-width: 34em; }
+.carnet .carnet-codex .pencil-note { font-size: 20px; line-height: 1.15; color: var(--pencil); }
+.carnet .carnet-codex .link { display: inline-flex; align-items: center; min-height: 40px; }
 .carnet #h-notes { scroll-margin-top: 18px; }
 .carnet #h-notes:focus { outline: none; }
 

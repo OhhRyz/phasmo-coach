@@ -32,3 +32,35 @@ export function clearRun(key: string): void {
     /* rien à effacer */
   }
 }
+
+/**
+ * Le chemin que le navigateur vient de recharger (F5, tirer pour rafraîchir), d'après le type de la navigation
+ * et l'adresse de la page (« #/enquete?contrat=… » → « /enquete ») ; null pour une ouverture ou un lien suivi.
+ */
+export function reloadedPath(type: string | undefined, hash: string): string | null {
+  if (type !== 'reload') return null
+  return hash.replace(/^#/, '').split('?')[0] || '/'
+}
+
+let reloaded: string | null = (() => {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+    return reloadedPath(nav?.type, window.location.hash)
+  } catch {
+    return null
+  }
+})()
+
+/**
+ * La page vient d'être rechargée sur ce chemin : l'exercice qu'on y faisait (copie, contrat, série) reprend de
+ * lui-même, là où il en était, au lieu de rendre la page de réglages. Vrai jusqu'à ce qu'on quitte la page
+ * (voir arrivedAt) : y revenir ensuite par un onglet ou un lien propose la reprise, sans la faire.
+ */
+export function reloadedOn(pathname: string): boolean {
+  return reloaded === pathname
+}
+
+/** L'app affiche ce chemin : une autre page que celle qui a été rechargée, et le rechargement est oublié. */
+export function arrivedAt(pathname: string): void {
+  if (reloaded !== pathname) reloaded = null
+}

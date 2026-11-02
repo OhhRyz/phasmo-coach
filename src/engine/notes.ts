@@ -1,4 +1,4 @@
-import type { Profile, Settings } from '../store/schema'
+import type { Profile, Role, Settings } from '../store/schema'
 import type { CoachNote } from './cards'
 
 /**
@@ -82,4 +82,20 @@ export function skipsOwnReview(note: CoachNote, profile: Pick<Profile, 'role' | 
 /** Les notes qui deviennent des cartes dans la révision de cet appareil (voir skipsOwnReview). */
 export function reviewNotes(notes: CoachNote[], profile: Pick<Profile, 'role' | 'name'>, settings: Pick<Settings, 'reviewOwnNotes'>): CoachNote[] {
   return notes.some((n) => skipsOwnReview(n, profile, settings)) ? notes.filter((n) => !skipsOwnReview(n, profile, settings)) : notes
+}
+
+/**
+ * La case « Me la reposer en révision » d'une nouvelle note : comme on l'a laissée à la dernière note écrite
+ * dans ce rôle (cochée tant qu'on ne l'a jamais décochée). Une valeur illisible (fichier importé) la laisse cochée.
+ */
+export function noteAsCard(settings: Pick<Settings, 'noteAsCard'>, role: Role): boolean {
+  const kept = settings.noteAsCard
+  return !(kept && typeof kept === 'object' && kept[role] === false)
+}
+
+/** Les réglages après une note écrite dans ce rôle, la case laissée ainsi (rien ne change si c'était déjà le cas). */
+export function keepNoteAsCard(settings: Pick<Settings, 'noteAsCard'>, role: Role, asCard: boolean): Pick<Settings, 'noteAsCard'> | null {
+  if (noteAsCard(settings, role) === asCard) return null
+  const kept = settings.noteAsCard && typeof settings.noteAsCard === 'object' ? settings.noteAsCard : {}
+  return { noteAsCard: { ...kept, [role]: asCard } }
 }

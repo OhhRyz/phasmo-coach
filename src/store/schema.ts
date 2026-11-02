@@ -39,6 +39,11 @@ export interface Settings {
    * l'élève, qui les reçoit en cartes avec le partage (voir skipsOwnReview). Sans effet pour les autres rôles.
    */
   reviewOwnNotes?: boolean
+  /**
+   * La case « Me la reposer en révision » (« En faire une question de révision » côté coach) telle qu'on l'a
+   * laissée à la dernière note écrite, pour chaque rôle : la note suivante part du même choix (voir noteAsCard).
+   */
+  noteAsCard?: Partial<Record<Role, boolean>>
 }
 
 /**

@@ -18,7 +18,7 @@ import { useToast } from '../components/Toast'
 import { Empty } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
-import { fr, plural, relativeDays, safeDate, validTime } from '../engine/format'
+import { fr, NNBSP, plural, relativeDays, safeDate, validTime } from '../engine/format'
 import { coachNameOf, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
 import { downloadJson, importCounts, importSummary, isNotesFile, readNotesPayload, type NotesPayload } from '../engine/share'
 import type { CardState } from '../engine/srs'
@@ -346,6 +346,11 @@ function Carnet() {
               )}
             </h1>
             <p className="entry-line">{fr(lead)}</p>
+            {/* on cherche parfois ici les preuves cochées pendant la partie : elles sont dans le Codex */}
+            <p className="carnet-codex">
+              <span className="pencil-note">le carnet de preuves de ta partie est dans le Codex{NNBSP}:</span>{' '}
+              <TypedLink to="/codex">ouvrir le carnet de preuves</TypedLink>
+            </p>
           </div>
 
           <Consigne className="carnet-consigne">

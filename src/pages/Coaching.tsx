@@ -14,13 +14,20 @@ import { useStore } from '../store/store'
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
+/** L'entrée de la page tant qu'aucun rôle n'est choisi (seul·e) : ni coach ni élève, les deux côtés. */
+export const COACHING_SOLO_LEAD =
+  'Le carnet à deux relie un coach et son élève : le coach envoie ses notes par lien, elles reviennent d’elles-mêmes dans la révision de l’élève, au stylo rouge ; en retour, l’élève lui envoie un bilan de sa progression. Seul·e, l’app marche telle quelle : rien à régler ici.'
+
 interface Step {
   h: string
   p: string
 }
 
-/** Le mode d'emploi, vu du côté de la personne qui tient ce carnet. */
-function steps(role: Role, coach: string): Step[] {
+/**
+ * Le mode d'emploi, vu du côté de la personne qui tient ce carnet ; seul·e (aucun rôle choisi), vu de
+ * l'extérieur : le coach d'un côté, l'élève de l'autre.
+ */
+export function steps(role: Role, coach: string): Step[] {
   if (role === 'coach') {
     return [
       {
@@ -38,6 +45,26 @@ function steps(role: Role, coach: string): Step[] {
       {
         h: 'Son bilan te revient',
         p: 'Un lien en lecture seule : maîtrise de chaque entité, série de jours, et pour chacune de tes notes, retenue ou à reprendre.',
+      },
+    ]
+  }
+  if (role === 'solo') {
+    return [
+      {
+        h: 'Le coach écrit',
+        p: 'Une explication donnée en partie, notée une fois pour toutes : une astuce, une erreur à ne plus refaire, un test à retenir.',
+      },
+      {
+        h: 'Le coach envoie un lien',
+        p: 'Par Discord ou par message. Les notes voyagent dans le lien lui-même : aucun compte, aucun serveur ne les garde.',
+      },
+      {
+        h: 'L’élève l’ouvre',
+        p: 'Les notes arrivent dans « Mes notes », au stylo rouge, et reviennent d’elles-mêmes dans la révision de l’élève au moment où elles commencent à s’effacer. Sur iPhone, avec le carnet installé, le lien se colle sur cette page.',
+      },
+      {
+        h: 'L’élève renvoie sa progression',
+        p: 'Un bilan en lecture seule : maîtrise de chaque entité, série de jours, et où en est l’élève sur chacune des notes. Le coach voit ce qui est retenu et ce qui est à reprendre.',
       },
     ]
   }
@@ -162,7 +189,8 @@ export function Coaching() {
     if (role === 'coach') return 'Tes notes partent par lien et reviennent d’elles-mêmes dans la révision de ton élève. En retour, son bilan te montre ce qui est retenu et ce qui est à reprendre.'
     if (role === 'student')
       return `Les notes ${coach ? `de ${coach}` : 'de ton coach'} arrivent par lien et reviennent d’elles-mêmes dans ta révision, au stylo rouge. En retour, tu lui envoies ta progression.`
-    return 'Un coach écrit ses notes et te les envoie par lien : elles reviennent d’elles-mêmes dans ta révision, au stylo rouge. En retour, tu lui envoies un bilan de ta progression. Seul·e, l’app marche telle quelle : rien à régler ici.'
+    // aucun rôle choisi : on décrit le carnet à deux des deux côtés, sans prendre la personne pour un élève
+    return COACHING_SOLO_LEAD
   }, [role, coach])
 
   const paste =
