@@ -32,6 +32,7 @@ import type { CoachNote } from '../engine/cards'
 import { fr, NBSP, NNBSP, num, safeDate, spellLdV, validTime } from '../engine/format'
 import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
 import { entityMentions } from '../engine/mentions'
+import { lowerFirst, pairZeroVariants, testException } from '../engine/fiche'
 import { masteryLevel } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -130,17 +131,36 @@ function Linked({ text, skip }: { text: string; skip: readonly string[] }) {
   )
 }
 
+/**
+ * Une liste de signes ou de capacités. Une ligne redite pour la partie sans preuve (le Spectre laisse « un EMF 2
+ * ou un EMF 5 », et sans preuve « un EMF 2 ») se range sous la ligne qu'elle adapte, annoncée comme telle : elle
+ * ne se lit plus comme un doublon qui se contredit.
+ */
 function Lines({ items, self }: { items: TextItem[]; self: string }) {
   return (
     <ul className="lines">
-      {items.map((i, k) => (
+      {pairZeroVariants(items).map(({ item, variant }, k) => (
         <li key={k}>
-          <Linked text={i.text} skip={[self]} />
-          {i.zeroEvidence && <span className="pencil-note zero-mark"> marche sans preuve</span>}
+          <Linked text={item.text} skip={[self]} />
+          {item.zeroEvidence && <span className="pencil-note zero-mark"> marche sans preuve</span>}
+          {variant && ' '}
+          {variant && (
+            <span className="zero-variant">
+              <span className="pencil-note zero-variant-k">en partie sans preuve{NNBSP}:</span> <Linked text={lowerFirst(variant.text)} skip={[self]} />
+            </span>
+          )}
         </li>
       ))}
     </ul>
   )
+}
+
+/** La clé, dans l'état de l'entrée d'historique, de la liste « Ne pas confondre » dépliée. */
+const CONF_OPEN = 'confOpen'
+
+/** La liste « Ne pas confondre » est-elle dépliée sur cette entrée de l'historique ? */
+export function confOpen(state: unknown): boolean {
+  return !!state && typeof state === 'object' && (state as Record<string, unknown>)[CONF_OPEN] === true
 }
 
 export function GhostPage() {
@@ -153,7 +173,14 @@ export function GhostPage() {
   const mastery = useMastery()
   const { state, deck } = useStore()
   const [playing, setPlaying] = useState<number | null>(null)
-  const [moreConf, setMoreConf] = useState(false)
+  // « Voir les N autres » de « Ne pas confondre » : ouvert ou replié avec l'entrée de l'historique, pour que
+  // « Précédent » (après une entité de la liste dépliée) rouvre la liste dépliée, à sa place (voir ScrollMemory)
+  const moreConf = confOpen(location.state)
+  const setMoreConf = (open: boolean) =>
+    navigate(
+      { pathname: location.pathname, search: location.search, hash: location.hash },
+      { replace: true, preventScrollReset: true, state: { ...(location.state && typeof location.state === 'object' ? location.state : {}), [CONF_OPEN]: open } },
+    )
   const [reporting, setReporting] = useState(false)
   const steps = useRef<Footsteps | null>(null)
   const stacked = useMedia(STACKED)
@@ -185,9 +212,9 @@ export function GhostPage() {
     steps.current = createFootsteps(() => setPlaying(null))
     return () => steps.current?.stop()
   }, [])
+  // une autre fiche : le son s'arrête, le signalement se referme (la liste « Ne pas confondre » suit son entrée d'historique)
   useEffect(() => {
     steps.current?.stop()
-    setMoreConf(false)
     setReporting(false)
   }, [id])
 
@@ -264,6 +291,11 @@ export function GhostPage() {
     hasSigns && { id: 'h-signs', label: 'Signes' },
     { id: notesId, label: isCoach ? 'Notes' : 'Mes notes' },
   ].filter((c): c is { id: string; label: string } => !!c)
+  // une erreur repérée en lisant : la fenêtre s'ouvre d'ici, sans descendre au bas de la fiche
+  const tocLinks = [
+    ...contents.map((c) => ({ key: c.id, label: c.label, go: () => jumpTo(c.id) })),
+    { key: 'report', label: 'Signaler une erreur', go: () => setReporting(true) },
+  ]
 
   // « À retenir » : sur la page de droite côte à côte, juste sous la description quand les pages s'empilent
   const tells =
@@ -357,10 +389,10 @@ export function GhostPage() {
 
           <nav className="gh-toc" aria-label="Sur cette fiche">
             <span className="gh-toc-k">Sur cette fiche{NNBSP}:</span>
-            {contents.map((c, k) => (
-              <span key={c.id} className="gh-toc-item">
-                <TypedLink onClick={() => jumpTo(c.id)}>{c.label}</TypedLink>
-                {k < contents.length - 1 && (
+            {tocLinks.map((c, k) => (
+              <span key={c.key} className="gh-toc-item">
+                <TypedLink onClick={c.go}>{c.label}</TypedLink>
+                {k < tocLinks.length - 1 && (
                   <span className="gh-toc-sep" aria-hidden>
                     ·
                   </span>
@@ -479,25 +511,32 @@ export function GhostPage() {
             {ghost.confirmationTests.length === 0 && (
               <p className="muted">Pas de test de confirmation fiable{NNBSP}: il faut éliminer les autres entités.</p>
             )}
-            {ghost.confirmationTests.map((t, k) => (
-              <article className="protocol" key={k}>
-                <div className="protocol-top">
-                  <h3>Test n° {k + 1}</h3>
-                  {t.definitive ? (
-                    <Stamp small rotate={k % 2 ? 3 : -4}>
-                      Définitif
-                    </Stamp>
-                  ) : (
-                    <Stamp small tone="pencil" rotate={-1}>
-                      Indice
-                    </Stamp>
-                  )}
-                </div>
-                <p>
-                  <Linked text={t.text} skip={self} />
-                </p>
-              </article>
-            ))}
+            {ghost.confirmationTests.map((t, k) => {
+              // le test nomme lui-même une exception (« Seul un Gallu enragé… fait pareil ») : le tampon y renvoie
+              const exception = t.definitive ? testException(t.text, GHOSTS) : null
+              return (
+                <article className="protocol" key={k}>
+                  <div className="protocol-top">
+                    <h3>Test n° {k + 1}</h3>
+                    {t.definitive ? (
+                      <span className="protocol-verdict">
+                        <Stamp small rotate={k % 2 ? 3 : -4}>
+                          Définitif
+                        </Stamp>
+                        {exception && <span className="pencil-note protocol-except">sauf {exception}, voir ci-dessous</span>}
+                      </span>
+                    ) : (
+                      <Stamp small tone="pencil" rotate={-1}>
+                        Indice
+                      </Stamp>
+                    )}
+                  </div>
+                  <p>
+                    <Linked text={t.text} skip={self} />
+                  </p>
+                </article>
+              )
+            })}
             {ghost.eliminationTests.map((t, k) => (
               <p className="elim" key={k}>
                 <b>Élimine</b>
@@ -560,7 +599,7 @@ export function GhostPage() {
                   ))}
                 </ul>
                 {twoShared.length > 4 && (
-                  <button className="link link-btn conf-more" type="button" aria-expanded={moreConf} onClick={() => setMoreConf((v) => !v)}>
+                  <button className="link link-btn conf-more" type="button" aria-expanded={moreConf} onClick={() => setMoreConf(!moreConf)}>
                     {moreConf ? 'Replier la liste' : twoShared.length - 4 === 1 ? 'Voir l’autre' : `Voir les ${twoShared.length - 4} autres`}
                   </button>
                 )}

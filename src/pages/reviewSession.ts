@@ -3,6 +3,7 @@ import { dayKey, startOfDay } from '../engine/format'
 import { askKey, SAME_ASK_GAP, SAME_GHOST_GAP } from '../engine/progress'
 import { isDue, LEARN_AHEAD, type CardState } from '../engine/srs'
 import { DEFAULT_NEW_PER_DAY, type ReviewEntry } from '../store/schema'
+import { stillRecent } from './savedRun'
 
 /** Cartes nouvelles proposées d'un coup après la séance (« Apprendre 10 cartes »). */
 export const LEARN_MORE = 10
@@ -221,7 +222,7 @@ export function restoreSaved<T extends { finished: boolean }>(resumed: T | null,
 
 /** Ce qu'il faut pour reprendre une séance là où on l'a laissée (les cartes par leur identifiant). */
 export interface SavedSession<O = unknown> {
-  /** le jour de la séance : le lendemain, on repart sur les cartes du jour */
+  /** le jour de la séance : le lendemain, on repart sur les cartes du jour (sauf minuit passé en pleine séance, voir resumeSession) */
   day: string
   since: number
   queue: string[]
@@ -246,7 +247,8 @@ const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is
 const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0)
 
 /**
- * La séance gardée, si elle se reprend : du même jour, avec au moins une réponse, et dont les réponses sont
+ * La séance gardée, si elle se reprend : du même jour (ou d'une réponse de moins de RUN_IDLE, minuit passé en
+ * pleine séance), avec au moins une réponse, et dont les réponses sont
  * bien au journal (une remise à zéro ou une sauvegarde importée entre-temps la rend caduque). En cours, il lui
  * reste des cartes ; close (`finished`), elle rouvre son bilan, avec les seules réponses données avant sa
  * clôture. Les cartes sorties du paquet (note supprimée…) sont retirées de la file.
@@ -259,7 +261,13 @@ export function resumeSession<O extends { cardId: string }>(
 ): (Omit<SavedSession<O>, 'queue' | 'finished' | 'ended'> & { queue: Card[]; finished: boolean; ended: number | null }) | null {
   if (!raw || typeof raw !== 'object') return null
   const s = raw as Partial<SavedSession<O>>
-  if (s.day !== dayKey(now) || typeof s.since !== 'number' || s.since > now) return null
+  if (typeof s.since !== 'number' || s.since > now) return null
+  // une séance de la veille se reprend encore si l'on vient d'y répondre (minuit passé en pleine séance) : elle
+  // garde son jour et son début, son bilan reste celui d'une seule séance
+  const start = s.since
+  const until = s.finished === true && typeof s.ended === 'number' ? Math.min(s.ended, now) : now
+  const last = log.reduce((t, l) => (l.t >= start && l.t <= until && l.t > t ? l.t : t), start)
+  if (s.day !== dayKey(now) && !(s.day === dayKey(start) && stillRecent(last, now))) return null
   const done = count(s.done)
   if (done === 0) return null
   const since = s.since

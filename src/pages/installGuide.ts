@@ -352,14 +352,14 @@ export function guideFor(d: Device): Guide {
 /**
  * Sur ordinateur, « Copier un message pour Discord » : le lien de la page « Installer l'app », puis une
  * ligne par téléphone. Le lien touché dans Discord s'ouvre dans son navigateur intégré, d'où l'on ne peut
- * pas installer : d'abord Safari (iPhone) ou Chrome (Android), puis le bouton de la page.
+ * pas installer : d'abord Safari (iPhone) ou Chrome (Android), puis les libellés exacts de leurs menus, les
+ * mêmes que dans les étapes de la page (STEP_HOME_SCREEN, INSTALL_OPTION).
  */
 export function discordMessage(url: string): string {
-  const button = installLabel({ os: 'ios' })
   return [
     `Phasmo Coach${NNBSP}: ${url}`,
-    fr(`Sur iPhone : ouvre ce lien dans Safari, puis touche « ${button} ».`),
-    fr('Sur Android : ouvre-le dans Chrome, puis touche le même bouton.'),
+    fr('Sur iPhone : ouvre ce lien dans Safari, touche Partager (ou « … » puis « Partager »), puis « Sur l’écran d’accueil ».'),
+    fr('Sur Android : ouvre-le dans Chrome, touche le menu (les trois points), puis « Ajouter à l’écran d’accueil » ou l’option qui commence par « Installer ».'),
   ].join('\n')
 }
 

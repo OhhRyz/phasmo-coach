@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { FROM_CODEX } from '../pages/codexReturn'
+import type { Snippet } from '../pages/Codex'
 import type { Ghost } from '../data/types'
 import { sanityText, speedText } from '../engine/format'
 import { roughLine, roughRng } from './journal/rough'
@@ -37,6 +38,7 @@ function Strike({ seed }: { seed: string }) {
 /**
  * Une ligne du registre du codex : numéro, nom, maîtrise, preuves, vitesse et seuil.
  * `dimmed` : entité éliminée par le carnet de preuves (barrée au crayon, pas cachée).
+ * `snippet` : trouvée par un mot de sa fiche, pas par son nom : la phrase où il se trouve, le mot surligné.
  */
 export function GhostRow({
   ghost,
@@ -44,6 +46,7 @@ export function GhostRow({
   dimmed,
   n,
   circled,
+  snippet,
 }: {
   ghost: Ghost
   mastery: number
@@ -51,6 +54,7 @@ export function GhostRow({
   n?: number
   /** seule entité encore possible : entourée au stylo */
   circled?: boolean
+  snippet?: Snippet | null
 }) {
   const los = losText(ghost)
   return (
@@ -97,6 +101,13 @@ export function GhostRow({
           {sanityText(ghost)}
         </span>
       </span>
+      {snippet && (
+        <span className="cx-snip">
+          {snippet.before}
+          <mark className="cx-hit">{snippet.hit}</mark>
+          {snippet.after}
+        </span>
+      )}
       {los !== 'Oui' && <span className="cx-los pencil-note">{los === 'Non' ? 'n’accélère pas en ligne de vue' : 'accélération variable'}</span>}
       {dimmed && <Strike seed={ghost.id} />}
     </li>

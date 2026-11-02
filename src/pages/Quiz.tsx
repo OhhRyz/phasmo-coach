@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { FicheExpress } from '../components/FicheExpress'
-import { Modal, Seg } from '../components/ui'
+import { focusPageTitle, Modal, Seg } from '../components/ui'
 import {
   CheckLine,
   Consigne,
@@ -29,9 +29,26 @@ import { studiedGhosts, WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { bareSpace, ignoreKey } from '../engine/keys'
 import { useStore } from '../store/store'
-import { clearRun, saveRun } from './savedRun'
+import { clearRun, reloadedOn, saveRun } from './savedRun'
 import { START_REVIEW } from './reviewSession'
-import { COPY_KEY, defaultPool, readCopy, RESUME_PARAM, scopeLine, STUDIED_MIN, type Answer, type QuizPool as Pool, type SavedCopy } from './quizRun'
+import {
+  COPY_KEY,
+  defaultPool,
+  GRADED_KEY,
+  QUIZ_COUNTS,
+  readCopy,
+  readGraded,
+  readQuizCount,
+  rememberQuizCount,
+  requeueSummary,
+  RESUME_PARAM,
+  scopeLine,
+  STUDIED_MIN,
+  type Answer,
+  type GradedCopy,
+  type QuizPool as Pool,
+  type SavedCopy,
+} from './quizRun'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -64,7 +81,6 @@ const SHORT_ANSWER = 22
 
 const topicLabel = (id: QuizTopic) => QUIZ_TOPICS.find((t) => t.id === id)?.label ?? ''
 const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
-const COUNTS = [5, 10, 20, 30]
 /** Les abréviations des fiches, en toutes lettres sur la copie (« LdV » → « ligne de vue »). */
 const spell = spellLdV
 /** À la première question qui complète une copie sur les entités étudiées (voir QuizOptions.fillUp). */
@@ -193,7 +209,12 @@ export function Quiz() {
   const topicParam = QUIZ_TOPICS.find((t) => t.id === params.get('topic'))?.id
   const [topics, setTopics] = useState<QuizTopic[]>(topicParam ? [topicParam] : DEFAULT_TOPICS)
   const countParam = Number(params.get('n'))
-  const [count, setCount] = useState(COUNTS.includes(countParam) ? countParam : 10)
+  // le nombre de questions d'un raccourci (?n=5), sinon celui choisi la dernière fois (gardé après un rechargement)
+  const [count, setCount] = useState(() => (QUIZ_COUNTS.includes(countParam) ? countParam : readQuizCount()))
+  const chooseCount = (n: number) => {
+    setCount(n)
+    rememberQuizCount(n)
+  }
   const [pool, setPool] = useState<Pool>(() => {
     if (focusGhost && getGhost(focusGhost)) return 'one'
     const asked = params.get('pool')
@@ -201,22 +222,29 @@ export function Quiz() {
     return defaultPool(studied.length)
   })
   const [empty, setEmpty] = useState(false)
-  const [questions, setQuestions] = useState<Question[] | null>(null)
-  const [index, setIndex] = useState(0)
-  const [selected, setSelected] = useState<string[]>([])
-  const [answers, setAnswers] = useState<Answer[]>([])
-  const [checked, setChecked] = useState(false)
+  // une copie laissée en route dans cet onglet (autre onglet, retour, détour par une fiche) : proposée à la reprise.
+  // La page rechargée en pleine copie (F5, tirer pour rafraîchir), là où la copie s'affichait, la reprend d'elle-même
+  // Une copie rendue sur cette entrée de l'historique (retour depuis « Relire la fiche », rechargement) rouvre son corrigé
+  const [boot] = useState(() => {
+    const kept = readCopy()
+    const now = kept && reloadedOn('/quiz') && (kept.entry === undefined || kept.entry === entry) ? kept : null
+    return { kept, now, graded: now ? null : readGraded(entry) }
+  })
+  const [questions, setQuestions] = useState<Question[] | null>(boot.now?.questions ?? boot.graded?.questions ?? null)
+  const [index, setIndex] = useState(boot.now?.index ?? boot.graded?.questions.length ?? 0)
+  const [selected, setSelected] = useState<string[]>(boot.now?.selected ?? [])
+  const [answers, setAnswers] = useState<Answer[]>(boot.now?.answers ?? boot.graded?.answers ?? [])
+  const [checked, setChecked] = useState(boot.now?.checked ?? false)
   /** fiche express ouverte depuis la correction (sans quitter la copie) */
   const [fiche, setFiche] = useState<string | null>(null)
   const [quitOpen, setQuitOpen] = useState(false)
-  // une copie laissée en route dans cet onglet (autre onglet, retour, rechargement) : proposée à la reprise
-  const [saved, setSaved] = useState(readCopy)
+  /** « Nouvelle copie » alors qu'une copie attend d'être reprise : elle se confirme, comme l'abandon */
+  const [replaceOpen, setReplaceOpen] = useState(false)
+  const [saved, setSaved] = useState(boot.now || boot.graded ? null : boot.kept)
   const nextRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
   const promptRef = useRef<HTMLHeadingElement>(null)
   const autoStarted = useRef(false)
-  // l'entrée de l'historique où la copie en cours a été distribuée (voir SavedCopy.entry)
-  const startedAt = useRef<string | undefined>(undefined)
 
   // les moins maîtrisées parmi les entités déjà travaillées ; sinon, les premières à découvrir
   const { weak, started } = useMemo(() => {
@@ -230,8 +258,9 @@ export function Quiz() {
 
   const start = (only?: QuizTopic[]) => {
     clearRun(COPY_KEY)
+    clearRun(GRADED_KEY)
     setSaved(null)
-    startedAt.current = entry
+    setReplaceOpen(false)
     // « Déjà étudiées » sans entité étudiée (réglage gardé d'une autre visite) : toutes
     const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : pool === 'studied' && studied.length ? studied : GHOSTS
     if (only) setTopics(only)
@@ -289,7 +318,8 @@ export function Quiz() {
       resume()
       return
     }
-    if (!QUICK_PARAMS.some((k) => params.has(k))) return
+    // rechargée en pleine copie, ou revenue sur son corrigé : la copie a déjà repris (voir boot)
+    if (boot.now || boot.graded || !QUICK_PARAMS.some((k) => params.has(k))) return
     // une copie est encore en cours (celle de ce raccourci, après un rechargement ou le bouton retour, ou une autre
     // laissée en route) : on ne la jette pas sans le demander. La page, réglée comme le demande le raccourci,
     // propose « Reprendre la copie » ; le bouton distribue la nouvelle
@@ -301,15 +331,17 @@ export function Quiz() {
 
   const q = questions?.[index]
 
-  // la copie en cours se garde à chaque réponse (rendue ou abandonnée, elle s'efface)
+  // la copie en cours se garde à chaque réponse (rendue ou abandonnée, elle s'efface), avec l'entrée de l'historique
+  // où elle s'affiche : celle où l'on arrive, ou celle qui la remplace (« Reprendre la copie », paramètre effacé)
   useEffect(() => {
     if (!questions || index >= questions.length || answers.length === 0) return
-    saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked, entry: startedAt.current })
-  }, [questions, index, answers, selected, checked])
+    saveRun<SavedCopy>(COPY_KEY, { questions, index, answers, selected, checked, entry })
+  }, [questions, index, answers, selected, checked, entry])
 
   const resume = () => {
     if (!saved) return
-    startedAt.current = saved.entry
+    clearRun(GRADED_KEY)
+    setReplaceOpen(false)
     setEmpty(false)
     setQuestions(saved.questions)
     setIndex(saved.index)
@@ -339,6 +371,8 @@ export function Quiz() {
     if (!questions) return
     if (index + 1 >= questions.length) {
       clearRun(COPY_KEY)
+      // le corrigé reste à cette entrée de l'historique : « Relire la fiche », puis « Précédent », le rouvre
+      saveRun<GradedCopy>(GRADED_KEY, { questions, answers, entry })
       const score = answers.filter((a) => a.correct).length
       dispatch({
         type: 'activity',
@@ -350,16 +384,28 @@ export function Quiz() {
     setIndex(index + 1)
     setSelected([])
     setChecked(false)
-  }, [questions, index, answers, dispatch])
+  }, [questions, index, answers, dispatch, entry])
 
-  /** « ‹ Quitter la copie » (ou Échap) : sans réponse, rien à perdre ; sinon, on le confirme. */
+  /** « Changer les réglages » du corrigé : la page de réglages revient, le focus sur son titre. */
+  const changeSettings = useCallback(() => {
+    clearRun(GRADED_KEY)
+    setQuestions(null)
+    requestAnimationFrame(focusPageTitle)
+  }, [])
+
+  /** Quitter la copie : la page de réglages revient, le focus sur son titre (pas sur la page entière). */
+  const leave = useCallback(() => {
+    clearRun(COPY_KEY)
+    setQuitOpen(false)
+    setQuestions(null)
+    requestAnimationFrame(focusPageTitle)
+  }, [])
+
+  /** « ‹ Quitter la copie » : sans réponse, rien à perdre ; sinon, on le confirme. */
   const askQuit = useCallback(() => {
     if (answers.length) setQuitOpen(true)
-    else {
-      clearRun(COPY_KEY)
-      setQuestions(null)
-    }
-  }, [answers.length])
+    else leave()
+  }, [answers.length, leave])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -376,9 +422,10 @@ export function Quiz() {
       const validates = e.key === 'Enter' && !!q?.multi && !checked && selected.length > 0
       if (ignoreKey(e, (el) => !!el.closest('.choice') && (e.key !== 'Enter' || validates))) return
       if (!q) return
+      // Échap ne quitte jamais d'elle-même : elle pose la question, comme dans les autres exercices
       if (e.key === 'Escape') {
         e.preventDefault()
-        askQuit()
+        setQuitOpen(true)
         return
       }
       if (e.key === 'Enter') {
@@ -395,7 +442,7 @@ export function Quiz() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [q, checked, selected, next, check, fiche, quitOpen, askQuit])
+  }, [q, checked, selected, next, check, fiche, quitOpen])
 
   // chaque question (la première aussi, en arrivant d'un onglet ou d'un lien) : le focus sur son énoncé, sans
   // contour ni défilement. Resté sur l'onglet ou le lien touché, il y garderait Entrée
@@ -415,11 +462,21 @@ export function Quiz() {
     wrap?.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
   }, [checked, index])
 
-  // présentation seulement : chaque nouvelle feuille (sujet, question, corrigé) s'ouvre par le haut
+  // présentation seulement : chaque nouvelle feuille (sujet, question, corrigé) s'ouvre par le haut. Pas à l'arrivée
+  // sur la page : elle s'ouvre en haut, ou là où on l'avait quittée en y revenant (voir ScrollMemory)
+  const arrived = useRef({ questions: false, index: false })
   useEffect(() => {
+    if (!arrived.current.questions) {
+      arrived.current.questions = true
+      return
+    }
     window.scrollTo({ top: 0 })
   }, [questions])
   useEffect(() => {
+    if (!arrived.current.index) {
+      arrived.current.index = true
+      return
+    }
     if (index === 0) return
     const el = sheetRef.current
     if (!el) window.scrollTo({ top: 0 })
@@ -469,12 +526,16 @@ export function Quiz() {
     const history = quizzes.slice(-5).reverse()
     // un seul libellé pour les deux boutons qui lancent la même copie
     const startLabel = `Commencer le quiz (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
+    // une copie laissée en route : la reprendre est l'action principale, une nouvelle copie se confirme
+    const newLabel = `Nouvelle copie (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
+    const startNew = () => (saved ? setReplaceOpen(true) : start())
     return (
+      <>
       <form
         className="qz qz-setup"
         onSubmit={(e) => {
           e.preventDefault()
-          start()
+          startNew()
         }}
       >
         <Notebook>
@@ -498,20 +559,31 @@ export function Quiz() {
                 déjà apprise la remet dans ta révision du jour.
               </p>
               {scope}
-              {saved && (
-                <p className="qz-resume">
-                  <span className="pencil-note">
+              {saved ? (
+                <div className="qz-quick qz-quick--resume">
+                  <p className="pencil-note qz-resume-note">
                     {`copie laissée en route${NNBSP}: ${saved.answers.length} ${plural(saved.answers.length, 'réponse')} sur ${saved.questions.length}`}
-                  </span>
-                  <TypedLink onClick={resume}>Reprendre la copie</TypedLink>
-                </p>
+                  </p>
+                  <TapeButton onClick={resume}>Reprendre la copie</TapeButton>
+                  <PaperButton type="submit" disabled={!topics.length}>
+                    {newLabel}
+                  </PaperButton>
+                  {topics.length > 0 ? (
+                    <p className="pencil-note qz-or">ou règle la nouvelle copie juste en dessous ↓</p>
+                  ) : (
+                    <span className="pencil-note btn-hint" role="note">
+                      coche au moins un thème ↓
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="qz-quick">
+                  <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème ↓">
+                    {startLabel}
+                  </TapeButton>
+                  {topics.length > 0 && <p className="pencil-note qz-or">ou règle la copie juste en dessous ↓</p>}
+                </div>
               )}
-              <div className="qz-quick">
-                <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème ↓">
-                  {startLabel}
-                </TapeButton>
-                {topics.length > 0 && <p className="pencil-note qz-or">ou règle la copie juste en dessous ↓</p>}
-              </div>
             </header>
 
             <fieldset className="qz-field">
@@ -540,7 +612,7 @@ export function Quiz() {
                 <span className="typed-label">
                   <span className="qz-step">2</span> Nombre de questions
                 </span>
-                <Seg label="Nombre de questions" value={count} onChange={setCount} options={COUNTS.map((n) => ({ value: n, label: String(n) }))} />
+                <Seg label="Nombre de questions" value={count} onChange={chooseCount} options={QUIZ_COUNTS.map((n) => ({ value: n, label: String(n) }))} />
               </div>
               <div>
                 <span className="typed-label">
@@ -635,9 +707,18 @@ export function Quiz() {
               </p>
             )}
             <div className="qz-go">
-              <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème dans la liste">
-                {startLabel}
-              </TapeButton>
+              {saved ? (
+                <>
+                  <TapeButton onClick={resume}>Reprendre la copie</TapeButton>
+                  <PaperButton type="submit" disabled={!topics.length}>
+                    {newLabel}
+                  </PaperButton>
+                </>
+              ) : (
+                <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème dans la liste">
+                  {startLabel}
+                </TapeButton>
+              )}
             </div>
 
             {history.length > 0 && (
@@ -668,6 +749,25 @@ export function Quiz() {
           </Page>
         </Notebook>
       </form>
+
+      {saved && (
+        <Modal
+          open={replaceOpen}
+          onClose={() => setReplaceOpen(false)}
+          title={`Abandonner la copie laissée en route${NNBSP}?`}
+          actions={
+            <>
+              <TypedLink onClick={resume}>Reprendre la copie</TypedLink>
+              <PaperButton onClick={() => start()}>Nouvelle copie</PaperButton>
+            </>
+          }
+        >
+          <p className="qz-quit-body">
+            {`Elle ne sera pas notée${NNBSP}: ${saved.answers.length > 1 ? `tes ${saved.answers.length} réponses seront effacées` : 'ta réponse sera effacée'}.`}
+          </p>
+        </Modal>
+      )}
+      </>
     )
   }
 
@@ -680,8 +780,9 @@ export function Quiz() {
       return { t, total: list.length, ok: list.filter((a) => a.correct).length }
     }).filter((x) => x.total > 0)
     const mistakes = answers.filter((a) => !a.correct)
-    // cartes réellement remises dans la révision du jour (déjà apprises), sans doublon
-    const requeued = new Set(mistakes.filter((a) => a.requeued).map((a) => a.q.cardId)).size
+    // cartes réellement remises dans la révision du jour (déjà apprises), sans doublon ; et pourquoi elles ne
+    // sont pas autant que les erreurs (carte pas encore apprise, question sans carte, même carte deux fois)
+    const { cards: requeued, link: requeueLink, note: requeueNote } = requeueSummary(mistakes)
     // le thème le plus fragile : plus faible taux de réussite, puis le plus d'erreurs
     const weakest = [...byTopic].sort((a, b) => a.ok / a.total - b.ok / b.total || b.total - b.ok - (a.total - a.ok))[0]
     const verdict =
@@ -742,15 +843,17 @@ export function Quiz() {
             </table>
           </Mimeo>
 
+          {requeueNote && <p className="pencil-note qz-requeue-note">{requeueNote}</p>}
           <EndActions className="qz-end-actions">
             <TapeButton onClick={() => start()}>Recommencer un quiz</TapeButton>
             {/* venu d'une fiche (« Me tester sur… ») : on y retourne, pas vers des exercices jamais ouverts */}
             {one && <TypedLink to={`/codex/${one.id}`}>Retour à la fiche {de(one.name)}</TypedLink>}
-            <TypedLink onClick={() => setQuestions(null)}>Changer les réglages</TypedLink>
+            <TypedLink onClick={changeSettings}>Changer les réglages</TypedLink>
             {!one && <TypedLink to="/entrainement">Retour aux exercices</TypedLink>}
-            {requeued > 0 ? (
+            {requeueLink ? (
               <TypedLink to={START_REVIEW}>
-                Revoir {requeued > 1 ? `mes ${requeued} erreurs` : 'mon erreur'} dans la révision{NBSP}→
+                {requeueLink}
+                {NBSP}→
               </TypedLink>
             ) : mistakes.length > 0 && weakest ? (
               <TypedLink onClick={() => start([weakest.t.id])}>Refaire un quiz sur {weakest.t.label.toLowerCase()}{NBSP}→</TypedLink>
@@ -820,7 +923,15 @@ export function Quiz() {
                         )}
                       </p>
                       <p className="qz-explain">{a.q.explain}</p>
-                      {a.requeued && <p className="pencil-note qz-requeued">carte remise dans la révision du jour</p>}
+                      {a.requeued ? (
+                        <p className="pencil-note qz-requeued">carte remise dans la révision du jour</p>
+                      ) : (
+                        requeued > 0 && (
+                          <p className="pencil-note qz-requeued">
+                            {a.q.cardId ? `carte pas encore apprise${NNBSP}: rien à remettre en révision` : 'pas de carte de révision pour cette question'}
+                          </p>
+                        )
+                      )}
                       {a.q.ghostId && (
                         <p className="qz-fix-more">
                           <TypedLink to={`/codex/${a.q.ghostId}`}>Relire la fiche</TypedLink>
@@ -840,11 +951,6 @@ export function Quiz() {
   /* ---------- question ---------- */
   const ok = checked && isCorrect(q, selected)
   const last = index + 1 >= questions.length
-  const quit = () => {
-    clearRun(COPY_KEY)
-    setQuitOpen(false)
-    setQuestions(null)
-  }
   return (
     <>
     <Notebook single className="qz qz-run">
@@ -853,7 +959,7 @@ export function Quiz() {
           Quiz{NNBSP}: question {index + 1} sur {questions.length}
         </h1>
         <FileHead>
-          <button type="button" className="link-btn qz-quit" onClick={askQuit} aria-keyshortcuts="Escape">
+          <button type="button" className="link-btn qz-quit" onClick={askQuit}>
             ‹ Quitter la copie
           </button>
           <span>Quiz · {topicLabel(q.topic)}</span>
@@ -1015,13 +1121,15 @@ export function Quiz() {
       actions={
         <>
           <TypedLink onClick={() => setQuitOpen(false)}>Continuer la copie</TypedLink>
-          <PaperButton onClick={quit}>Quitter</PaperButton>
+          <PaperButton onClick={leave}>Quitter</PaperButton>
         </>
       }
     >
       <p className="qz-quit-body">
-        Tu as répondu à {answers.length} {plural(answers.length, 'question')} sur {questions.length}. Si tu quittes, la copie ne sera pas
-        notée.
+        {answers.length
+          ? `Tu as répondu à ${answers.length} ${plural(answers.length, 'question')} sur ${questions.length}.`
+          : 'Tu n’as encore répondu à aucune question.'}{' '}
+        Si tu quittes, la copie ne sera pas notée.
       </p>
     </Modal>
     </>

@@ -25,7 +25,11 @@ import {
   buildQuiz,
   confusionWithoutEvidence,
   DEFAULT_TOPICS,
+  factKeys,
   homogeneous,
+  numericAsk,
+  signatureKeys,
+  SOFT_FACT,
   isCorrect,
   keepsSense,
   partnerClaim,
@@ -2297,6 +2301,174 @@ describe('Quiz : un même signe ne revient pas sous deux formes dans la copie', 
       expect(new Set(signs).size, `graine ${seed} : ${signs.join(', ')}`).toBe(signs.length)
     }
   })
+})
+
+describe('Quiz : un même fait d’une entité ne revient pas dans la copie', () => {
+  const names = new Set(GHOSTS.flatMap((g) => [g.name, `${g.name} (${g.nameEn})`]))
+  const values = (q: Question) => {
+    const right = q.choices.filter((c) => q.correct.includes(c.id) && !names.has(c.label)).map((c) => c.label)
+    // une question de vitesse ou de seuil demande la valeur de sa réponse ; son énoncé n'en donne que la condition
+    return [...[numericAsk(q.id) ? '' : q.prompt, q.quote ?? '', ...right].join(' ').matchAll(/(\d+(?:,\d+)?)\s?(%|m\/s|s)(?![\p{L}\d])/gu)].map((m) => `${q.ghostId}|${m[1]} ${m[2]}`)
+  }
+
+  it('l’encens de l’Esprit (180 s) : une seule fois par copie, qu’il revienne en signe, en départage ou en test', () => {
+    // la copie du juge : dix questions sur sept entités étudiées, l'Esprit la moins maîtrisée
+    const ids = ['spirit', 'demon', 'banshee', 'jinn', 'mare', 'hantu', 'wraith']
+    const ghosts = GHOSTS.filter((g) => ids.includes(g.id))
+    const mastery = Object.fromEntries(ids.map((id) => [id, id === 'spirit' ? 0 : 0.6]))
+    let asked = 0
+    for (let seed = 1; seed <= 300; seed++) {
+      const qs = buildQuiz({ topics: DEFAULT_TOPICS, ghosts, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed), mastery, onlyListed: true, fillUp: true })
+      expect(qs).toHaveLength(10)
+      const incense = qs.filter((q) => q.ghostId === 'spirit' && /180/.test([q.prompt, q.quote, ...q.choices.filter((c) => q.correct.includes(c.id)).map((c) => c.label)].join(' ')))
+      expect(incense.length, `graine ${seed} : ${incense.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(1)
+      if (incense.length) asked++
+      // et au plus deux questions par entité : sept entités suffisent pour dix questions
+      const per = new Map<string, number>()
+      for (const q of qs) if (q.ghostId) per.set(q.ghostId, (per.get(q.ghostId) ?? 0) + 1)
+      expect(Math.max(...per.values()), `graine ${seed}`).toBeLessThanOrEqual(2)
+    }
+    // le fait se demande toujours, une fois
+    expect(asked).toBeGreaterThan(50)
+  })
+
+  it('sur bien des tirages : jamais deux fois la même valeur, le même objet ou la ligne de vue d’une entité ; deux questions au plus par entité quand elles suffisent', () => {
+    for (const [size, count, topics] of [
+      [4, 10, DEFAULT_TOPICS],
+      [5, 10, DEFAULT_TOPICS],
+      [7, 10, DEFAULT_TOPICS],
+      [7, 5, DEFAULT_TOPICS],
+      [12, 20, DEFAULT_TOPICS],
+      [GHOSTS.length, 10, DEFAULT_TOPICS],
+      [GHOSTS.length, 30, QUIZ_TOPICS.map((t) => t.id)],
+    ] as [number, number, QuizTopic[]][]) {
+      for (let seed = 1; seed <= 40; seed++) {
+        const rng = createRng(seed * 7717 + size)
+        const ghosts = size === GHOSTS.length ? GHOSTS : shuffle(rng, GHOSTS).slice(0, size)
+        const listed = size < GHOSTS.length
+        const qs = buildQuiz({ topics, ghosts, allGhosts: GHOSTS, mechanics: MECHANICS, count, rng, onlyListed: listed, fillUp: listed })
+        const at = `${size} entités, ${count} questions, graine ${seed}`
+        expect(qs, at).toHaveLength(count)
+        // assez d'entités : ni la même valeur, ni le même objet ; trop peu, la même valeur jamais (voir SOFT_FACT)
+        const enough = size * 2 >= count * 1.4
+        const keys = qs.flatMap((q) => factKeys(q, names).filter((k) => !k.startsWith('carte:') && !/\|~(?:vitesse|seuil)$/.test(k) && (enough || !SOFT_FACT.test(k))))
+        expect(new Set(keys).size, `${at} : ${keys.filter((k, i) => keys.indexOf(k) !== i).join(', ')}`).toBe(keys.length)
+        const own = qs.flatMap((q) => [...new Set(values(q))])
+        expect(new Set(own).size, at).toBe(own.length)
+        // deux départages d'une même entité ; ou son résumé de vitesse, puis sa ligne de vue ou l'une de ses vitesses
+        const twice = (re: RegExp) => qs.filter((q) => re.test(q.id)).map((q) => q.ghostId)
+        expect(new Set(twice(/^q:dist:/)).size, `${at} : départages`).toBe(twice(/^q:dist:/).length)
+        const summed = new Set(twice(/^q:(?:spdsum|spdp):/))
+        expect(twice(/^q:(?:los|spd):/).filter((g) => summed.has(g)), `${at} : vitesse`).toEqual([])
+        if (enough) {
+          const per = new Map<string, number>()
+          for (const q of qs) if (q.ghostId) per.set(q.ghostId, (per.get(q.ghostId) ?? 0) + 1)
+          expect(Math.max(...per.values()), at).toBeLessThanOrEqual(2)
+        }
+      }
+    }
+  }, 60_000)
+
+  it('les clés d’un fait : la carte, les valeurs et les objets de l’énoncé et de la bonne réponse, pas des mauvaises', () => {
+    const q: Question = {
+      id: 'q:dist:wraith:spirit',
+      topic: 'zero',
+      ghostId: 'spirit',
+      prompt: 'Sans preuve, à quoi reconnais-tu l’Esprit plutôt que le Spectre ?',
+      multi: false,
+      choices: [
+        { id: 'spirit', label: 'L’Esprit perturbe le sel normalement et attend 180 s après l’encens avant de rechasser.' },
+        { id: 'mare', label: 'L’Esprit éteint aussitôt une lumière allumée près de lui.' },
+      ],
+      correct: ['spirit'],
+      explain: '',
+      cardId: 'g:spirit:tells',
+    }
+    expect(factKeys(q, names).sort()).toEqual(['carte:g:spirit:tells', 'spirit|180 s', 'spirit|départage', 'spirit|~encens', 'spirit|~sel'])
+    // une vitesse au froid : la valeur est le fait demandé, pas le froid (un signe sur le froid reste un autre fait)
+    const cold = { ...q, id: 'q:spd:hantu:2.7', ghostId: 'hantu', prompt: 'Quelle est la vitesse de chasse du Hantu dans le froid ?', choices: [{ id: 'a', label: '2,7 m/s' }], correct: ['a'], cardId: 'g:hantu:spd' }
+    expect(factKeys(cold, names).sort()).toEqual(['carte:g:hantu:spd', 'hantu|2,7', 'hantu|~vitesse'])
+    expect(['carte:g:hantu:spd', 'hantu|~vitesse', 'hantu|~seuil', 'hantu|~froid'].every((k) => SOFT_FACT.test(k))).toBe(true)
+    expect(['hantu|2,7', 'hantu|ligne de vue', 'spirit|départage', 'spirit|180 s'].some((k) => SOFT_FACT.test(k))).toBe(false)
+    // un résumé de vitesse : chaque nombre à virgule, même sans son unité
+    const sum = { ...cold, id: 'q:spdsum:gallu', ghostId: 'gallu', choices: [{ id: 'a', label: '1,7 m/s · 1,96 enragé · 1,36 affaibli' }] }
+    expect(factKeys(sum, names).filter((k) => /\d/.test(k)).sort()).toEqual(['gallu|1,36', 'gallu|1,7', 'gallu|1,96'])
+    expect(numericAsk('q:spd:obambo:1.96') && numericAsk('q:los:hantu') && !numericAsk('q:dist:wraith:spirit') && !numericAsk('q:abil:dayan:0')).toBe(true)
+    // « son humeur » n'est pas un son entendu ; une réponse qui n'est qu'un nom ne compte pas
+    const named: Question = { ...q, id: 'q:tell:spirit:0', prompt: 'Quelle entité change son humeur ?', choices: [{ id: 'spirit', label: 'Esprit' }], cardId: undefined }
+    expect(factKeys(named, names)).toEqual([])
+    expect(factKeys({ ...q, ghostId: undefined }, names)).toEqual([])
+    // une plage : chaque bout
+    expect(factKeys({ ...named, quote: 'attends 150 à 170 s' }, names).sort()).toEqual(['spirit|150 s', 'spirit|170 s'])
+  })
+
+  it('une durée a une seule clé, quelle que soit son écriture ; l’état d’une entité à deux états est un fait', () => {
+    const named: Question = { id: 'q:obs:spirit:1', topic: 'zero', ghostId: 'spirit', prompt: 'Quelle entité ?', multi: false, choices: [{ id: 'spirit', label: 'Esprit' }], correct: ['spirit'], explain: '' }
+    const keys = (quote: string, g = 'spirit') => factKeys({ ...named, ghostId: g, quote }, names).filter((k) => !k.includes('~')).sort()
+    // « 2 min 40 » comme « 160 s », « 3 minutes » comme « 180 s », « 30 secondes » comme « 30 s »
+    expect(keys('une seconde fois environ 2 min 40 plus tard')).toEqual(['spirit|160 s'])
+    expect(keys('elle attend 3 minutes')).toEqual(keys('elle attend 180 s'))
+    expect(keys('toutes les 2 min')).toEqual(['spirit|120 s'])
+    expect(keys('pendant 30 secondes')).toEqual(['spirit|30 s'])
+    // « entre 150 et 170 s » : chaque bout, comme « 150 à 170 s »
+    expect(keys('attends entre 150 et 170 s')).toEqual(['spirit|150 s', 'spirit|170 s'])
+    // un pourcentage après des minutes n'est pas des secondes
+    expect(keys('2 min 30 % du temps')).toEqual(['spirit|120 s', 'spirit|30 %'])
+    // l'Obambo calme ou agressif : le minuteur et la bascule sont le même fait
+    const obambo = (quote: string) => factKeys({ ...named, ghostId: 'obambo', quote }, names)
+    expect(obambo('L’Obambo alterne entre un état calme et un état agressif selon un minuteur')).toContain('obambo|~état')
+    expect(obambo('Commence la partie en état calme, passe en état agressif, puis change d’état toutes les 2 minutes')).toContain('obambo|~état')
+  })
+
+  it('la signature d’une entité : les objets et gestes de ses signes clés (l’encens de l’Esprit, le sel du Spectre)', () => {
+    const sig = (id: string) => [...signatureKeys(GHOSTS.find((g) => g.id === id)!)]
+    expect(sig('spirit')).toEqual(['spirit|~encens'])
+    expect(sig('wraith')).toContain('wraith|~sel')
+    expect(sig('poltergeist')).toContain('poltergeist|~objets')
+    expect(sig('obambo')).toContain('obambo|~état')
+    // jamais la vitesse ni le seuil (BROAD_FACT), toujours des clés souples (SOFT_FACT)
+    for (const g of GHOSTS) for (const k of signatureKeys(g)) expect(SOFT_FACT.test(k) && !/~(?:vitesse|seuil)$/.test(k), k).toBe(true)
+  })
+
+  it('cinq ou six entités étudiées, dix questions : l’encens de l’Esprit et le sel du Spectre une fois par copie, comme sur sept', () => {
+    const lists: [string[], string][] = [
+      // la copie du juge, sur cinq entités : l'Esprit la moins maîtrisée
+      [['spirit', 'demon', 'banshee', 'jinn', 'mare'], 'spirit'],
+      [['spirit', 'wraith', 'hantu', 'yurei', 'onryo'], 'spirit'],
+      [['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee'], 'wraith'],
+      [['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee', 'jinn'], 'spirit'],
+    ]
+    const right = (q: Question) => [q.prompt, q.quote ?? '', ...q.choices.filter((c) => q.correct.includes(c.id)).map((c) => c.label)].join(' ')
+    for (const [ids, weakest] of lists) {
+      const ghosts = GHOSTS.filter((g) => ids.includes(g.id))
+      const mastery = Object.fromEntries(ids.map((id) => [id, id === weakest ? 0 : 0.6]))
+      let beyond = 0
+      for (let seed = 1; seed <= 150; seed++) {
+        const qs = buildQuiz({ topics: DEFAULT_TOPICS, ghosts, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed), mastery, onlyListed: true, fillUp: true })
+        const at = `${ids.length} entités, graine ${seed}`
+        expect(qs, at).toHaveLength(10)
+        const incense = qs.filter((q) => q.ghostId === 'spirit' && /encens/i.test(right(q)))
+        expect(incense.map((q) => q.id), at).toHaveLength(Math.min(1, incense.length))
+        const salt = qs.filter((q) => q.ghostId === 'wraith' && /\bsel\b/i.test(right(q)))
+        expect(salt.map((q) => q.id), at).toHaveLength(Math.min(1, salt.length))
+        // aucune signature deux fois (voir signatureKeys)
+        const sigs = qs.flatMap((q) => {
+          const g = q.ghostId && GHOSTS.find((x) => x.id === q.ghostId)
+          return g ? factKeys(q, names).filter((k) => signatureKeys(g).has(k)) : []
+        })
+        expect(new Set(sigs).size, `${at} : ${sigs.join(', ')}`).toBe(sigs.length)
+        // six entités suffisent pour deux questions chacune
+        if (ids.length * 2 >= 12) {
+          const per = new Map<string, number>()
+          for (const q of qs) if (q.ghostId && !q.beyond) per.set(q.ghostId, (per.get(q.ghostId) ?? 0) + 1)
+          expect(Math.max(...per.values()), at).toBeLessThanOrEqual(2)
+        }
+        beyond += qs.filter((q) => q.beyond).length
+      }
+      // compléter hors de la liste reste rare
+      expect(beyond, `${ids.join(', ')} : ${beyond} questions hors de la liste sur 1500`).toBeLessThan(75)
+    }
+  }, 60_000)
 })
 
 describe('Quiz : une même question ne se pose qu’une fois par copie', () => {

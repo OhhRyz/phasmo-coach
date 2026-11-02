@@ -7,6 +7,7 @@ import { isRetained } from '../engine/cards'
 import { NNBSP } from '../engine/format'
 import { cardMastery } from '../engine/srs'
 import { useStore } from '../store/store'
+import { readQuizCount } from './quizRun'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
@@ -32,6 +33,18 @@ const HOW: Record<Mode, ReactNode> = {
       {NNBSP}: la réponse s’affiche, puis le fait.
     </>
   ),
+}
+
+/**
+ * « Me tester » ne note rien (on se corrige soi-même, sans réponse donnée) : la page le dit, et dit où une
+ * réponse compte.
+ */
+export const TEST_NOT_RECORDED = `Rien n’est noté ici${NNBSP}: pour que tes réponses comptent, passe par Réviser ou par le quiz vrai ou faux.`
+
+/** Le bouton du quiz vrai ou faux : la copie en tire `count` parmi les `total` affirmations (« 10 questions, tirées parmi 36 »). */
+export function trueFalseLabel(count: number, total: number): string {
+  if (total <= count) return `Quiz vrai ou faux · ${total} question${total > 1 ? 's' : ''}`
+  return `Quiz vrai ou faux · ${count} questions, tirées parmi ${total}`
 }
 
 /** « 1 fait à retenir », « 12 faits à retenir », « aucun fait à retenir ». */
@@ -83,6 +96,8 @@ export function MechanicsPage() {
   const totalLearned = topics.reduce((n, t) => n + learnedIn(t), 0)
   const hasAsides = topics.some((t) => t.facts.some((f) => !isRetained(f)))
   const trueFalse = MECHANICS.trueFalse.filter((tf) => !tf.evidence).length
+  // la copie du quiz vrai ou faux : autant de questions que la dernière copie choisie sur la page du quiz
+  const tfCount = readQuizCount()
   const idx = topics.findIndex((t) => t.id === active)
   const prev = idx > 0 ? topics[idx - 1] : null
   const next = idx >= 0 && idx < topics.length - 1 ? topics[idx + 1] : null
@@ -184,9 +199,7 @@ export function MechanicsPage() {
 
           {trueFalse > 0 && (
             <div className="mech-quiz">
-              <TapeButton to="/quiz?topic=mechanics">
-                Quiz vrai ou faux · {trueFalse} question{trueFalse > 1 ? 's' : ''}
-              </TapeButton>
+              <TapeButton to={`/quiz?topic=mechanics&n=${tfCount}`}>{trueFalseLabel(tfCount, trueFalse)}</TapeButton>
             </div>
           )}
         </div>
@@ -219,6 +232,7 @@ export function MechanicsPage() {
             <Seg label="Lire les faits ou me tester" value={mode} onChange={changeMode} options={MODES} />
           </div>
           <Consigne className="mech-how">{HOW[mode]}</Consigne>
+          {mode === 'test' && <p className="mech-hint pencil-note">{TEST_NOT_RECORDED}</p>}
           {topicAsides > 0 && (
             <p className="mech-hint pencil-note">
               «{NNBSP}bon à savoir{NNBSP}»{NNBSP}: sert à relever les preuves, pas à retenir par cœur.

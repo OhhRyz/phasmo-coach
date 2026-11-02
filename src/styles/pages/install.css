@@ -55,7 +55,9 @@
 .install-phone-text .install-copy { margin-top: 10px; }
 .install-message { height: 112px; word-break: normal; overflow-wrap: anywhere; }
 .page .install-phone .install-message-what { margin: 10px 0 0; font-size: 20px; line-height: 1.1; color: var(--pencil); }
+/* sur ordinateur : le choix du téléphone, juste au-dessus de la fiche des étapes qu'il change */
 .install-choose--open { margin-top: 30px; }
+.install-choose--open + .install-guide { margin-top: 26px; }
 
 /* « Ce n'est pas ton appareil ? » : discret, en bas de page, replié par défaut */
 .install-other { margin: 48px 0 0; }

@@ -39,12 +39,36 @@ import {
 } from './reviewSession'
 import { reviseLabel } from './exhibits'
 import { pageTitle } from '../components/Layout'
-import { criteriaText, exactName, keepsSearch, searchCodex, searchTarget } from './Codex'
-import { draftChanged, type NoteDraft } from '../components/NoteEditor'
-import { CONTRACT_KEY, readContract, validContract, type SavedContract } from './contractRun'
-import { saveRun } from './savedRun'
-import { copyMeta, defaultPool, quickQuizLabel, readCopy, RESUME_QUIZ, scopeLine, STUDIED_MIN, validCopy, COPY_KEY, type SavedCopy } from './quizRun'
+import { criteriaText, exactName, keepsSearch, searchCodex, searchSnippet, searchTarget, searchTexts } from './Codex'
+import { memoryKey, parseScrolls, rememberScroll, restoresScroll, SCROLL_MAX, scrollFor } from './scrollMemory'
+import { COACHING_SOLO_LEAD, steps as coachingSteps } from './Coaching'
+import { draftChanged, onlyAQuestion, titleHelp, type NoteDraft } from '../components/NoteEditor'
+import { CONTRACT_KEY, readContract, readVerdict, validContract, validVerdict, VERDICT_KEY, type ContractVerdict, type SavedContract } from './contractRun'
+import { reloadedPath, saveRun } from './savedRun'
+import {
+  copyMeta,
+  COUNT_KEY,
+  defaultPool,
+  quickQuizLabel,
+  readCopy,
+  readGraded,
+  readQuizCount,
+  rememberQuizCount,
+  requeueSummary,
+  RESUME_QUIZ,
+  scopeLine,
+  STUDIED_MIN,
+  validCopy,
+  validGraded,
+  GRADED_KEY,
+  type GradedCopy,
+  COPY_KEY,
+  type SavedCopy,
+} from './quizRun'
+import { TEST_NOT_RECORDED, trueFalseLabel } from './Mechanics'
+import { noteQuestion } from '../engine/cards'
 import { cameFromCodex, FROM_CODEX } from './codexReturn'
+import { confOpen } from './GhostPage'
 import { bareSpace, ignoreKey } from '../engine/keys'
 import { fr, NBSP as NBSP_, NNBSP } from '../engine/format'
 import { generateScenario } from '../engine/scenario'
@@ -713,6 +737,20 @@ describe('Révision : une séance laissée en route reprend où elle en était',
   it('une séance en cours n’est pas close', () => {
     expect(resumeSession(saved, deck, log, now)).toMatchObject({ finished: false, ended: null })
   })
+
+  it('minuit passé en pleine séance : rechargée trois minutes après une réponse, elle reprend ; le lendemain matin, non', () => {
+    const evening = new Date(2026, 10, 1, 23, 50).getTime()
+    const late = [0, 1, 2, 3].map((k) => ({ id: ids[k], t: evening + (k + 1) * 2 * 60_000, g: 3 as Grade, isNew: true }))
+    const night: SavedSession<{ cardId: string }> = { ...saved, day: dayKey(evening), since: evening, done: 4, good: 4, settled: 4, queue: ids.slice(4), outcome: null }
+    // dernière réponse à 23 h 58, rechargement à 0 h 01
+    const r = resumeSession(night, deck, late, new Date(2026, 10, 2, 0, 1).getTime())
+    expect(r).toMatchObject({ since: evening, day: dayKey(evening), done: 4 })
+    expect(r?.queue.map((c) => c.id)).toEqual(ids.slice(4))
+    // la même séance, laissée à 23 h, rouverte à 9 h le lendemain : séance neuve
+    const before = new Date(2026, 10, 1, 22, 50).getTime()
+    const old = late.map((l) => ({ ...l, t: l.t - 60 * 60_000 }))
+    expect(resumeSession({ ...night, day: dayKey(before), since: before }, deck, old, new Date(2026, 10, 2, 9, 0).getTime())).toBeNull()
+  })
 })
 
 describe('Révision : le bilan d’une séance close revient le jour même', () => {
@@ -867,6 +905,13 @@ describe('Codex : « ‹ Codex » sur une fiche ouverte depuis la recherche y re
     // fiche ouverte d'ailleurs (accueil, fiche voisine, mention) : le lien ouvre le Codex
     for (const st of [null, undefined, {}, { fromCodex: 'oui' }, 'fromCodex']) expect(cameFromCodex(st, 3)).toBe(false)
   })
+
+  it('« Voir les N autres » de « Ne pas confondre » suit l’entrée de l’historique, et garde le retour au Codex', () => {
+    expect(confOpen({ confOpen: true })).toBe(true)
+    // la liste dépliée garde la fiche « venue du Codex »
+    expect(confOpen({ ...FROM_CODEX, confOpen: true }) && cameFromCodex({ ...FROM_CODEX, confOpen: true }, 3)).toBe(true)
+    for (const st of [null, undefined, {}, FROM_CODEX, { confOpen: 'oui' }, { confOpen: false }]) expect(confOpen(st)).toBe(false)
+  })
 })
 
 describe('Codex : une vieille recherche ne trie pas la partie suivante en silence', () => {
@@ -926,6 +971,36 @@ describe('Mise en situation : le contrat en cours survit à un détour', () => {
     expect(readContract(now + 86_400_000)).toBeNull()
     sessionStorage.clear()
     expect(readContract(now)).toBeNull()
+  })
+
+  it('minuit passé en plein contrat : relu trois minutes après, il reprend ; le lendemain matin, non', () => {
+    sessionStorage.clear()
+    const evening = Date.parse('2026-11-01T23:58:00')
+    saveRun(CONTRACT_KEY, run, evening)
+    expect(readContract(Date.parse('2026-11-02T00:01:00'))).toEqual(roundTrip(run))
+    expect(readContract(Date.parse('2026-11-02T09:00:00'))).toBeNull()
+    // un contrat gardé avant cette version (sans heure) : le jour seul compte, comme avant
+    sessionStorage.setItem(CONTRACT_KEY, JSON.stringify({ day: dayKey(evening), run }))
+    expect(readContract(evening + 60_000)).toEqual(roundTrip(run))
+    expect(readContract(Date.parse('2026-11-02T00:01:00'))).toBeNull()
+    // une heure lue dans le futur ne prolonge rien
+    sessionStorage.setItem(CONTRACT_KEY, JSON.stringify({ day: dayKey(evening), t: evening + 86_400_000, run }))
+    expect(readContract(Date.parse('2026-11-02T00:01:00'))).toBeNull()
+    sessionStorage.clear()
+  })
+
+  it('le rapport de clôture reste à son entrée de l’historique, perdu à la deuxième erreur aussi', () => {
+    sessionStorage.clear()
+    const verdict: ContractVerdict = { ...run, wrong: ['wraith', 'spirit'], outcome: 'dead', entry: 'k1' }
+    saveRun(VERDICT_KEY, verdict, now)
+    expect(readVerdict('k1', now)).toEqual(JSON.parse(JSON.stringify(verdict)))
+    expect(readVerdict('k2', now)).toBeNull()
+    expect(readVerdict('k1', now + 86_400_000)).toBeNull()
+    for (const b of [{ ...verdict, outcome: 'nul' }, { ...verdict, entry: 3 }, { ...verdict, wrong: ['wraith', 'spirit', 'mare'] }, { ...verdict, wrong: ['personne'] }])
+      expect(validVerdict(JSON.parse(JSON.stringify(b))), JSON.stringify(b).slice(-60)).toBe(false)
+    // un contrat en cours n'a jamais deux erreurs, lui
+    expect(validContract(JSON.parse(JSON.stringify({ ...run, wrong: ['wraith', 'spirit'] })))).toBe(false)
+    sessionStorage.clear()
   })
 
   it('un contrat abîmé ou impossible ne se reprend pas', () => {
@@ -1070,6 +1145,23 @@ describe('Quiz : la copie en cours se reprend, d’ailleurs aussi', () => {
     ]
     for (const b of bad) expect(validCopy(roundTrip(b)), JSON.stringify(b).slice(0, 80)).toBe(false)
   })
+
+  it('le corrigé reste à son entrée de l’historique : « Relire la fiche », puis « Précédent », ou F5, le rouvre ; pas une autre arrivée', () => {
+    sessionStorage.clear()
+    const answers = qs.map((q) => ({ q, selected: [q.choices[0].id], correct: q.correct.includes(q.choices[0].id), requeued: false }))
+    const graded: GradedCopy = { questions: qs, answers, entry: 'abc123' }
+    saveRun(GRADED_KEY, graded, now)
+    expect(readGraded('abc123', now)).toEqual(JSON.parse(JSON.stringify(graded)))
+    // une autre entrée (onglet, lien) : la page de réglages
+    expect(readGraded('autre', now)).toBeNull()
+    expect(readGraded('abc123', now + 86_400_000)).toBeNull()
+    // une copie en cours n'est pas un corrigé, ni un corrigé à qui il manque des réponses
+    expect(validGraded(JSON.parse(JSON.stringify({ ...graded, answers: answers.slice(1) })))).toBe(false)
+    expect(validGraded(JSON.parse(JSON.stringify({ ...graded, entry: undefined })))).toBe(false)
+    // et la copie en cours, elle, reste à reprendre à part
+    expect(readCopy(now)).toBeNull()
+    sessionStorage.clear()
+  })
 })
 
 describe('Quiz : par défaut, la copie porte sur les entités déjà étudiées', () => {
@@ -1198,3 +1290,288 @@ function shuffleIds(rng: () => number): string[] {
   }
   return ids
 }
+
+describe('Rechargement (F5) : l’exercice en cours reprend sur la page rechargée', () => {
+  it('le chemin rechargé, adresse à paramètres comprise ; rien pour une ouverture ou un lien suivi', () => {
+    expect(reloadedPath('reload', '#/enquete')).toBe('/enquete')
+    expect(reloadedPath('reload', '#/quiz?topic=mechanics&n=10')).toBe('/quiz')
+    expect(reloadedPath('reload', '#/enquete?contrat=reprendre')).toBe('/enquete')
+    expect(reloadedPath('reload', '')).toBe('/')
+    expect(reloadedPath('navigate', '#/enquete')).toBeNull()
+    expect(reloadedPath('back_forward', '#/quiz')).toBeNull()
+    expect(reloadedPath(undefined, '#/quiz')).toBeNull()
+  })
+})
+
+describe('Quiz : le nombre de questions choisi reste après un rechargement', () => {
+  it('10 par défaut ; 5 une fois choisi ; une valeur inconnue ou illisible n’y change rien', () => {
+    localStorage.removeItem(COUNT_KEY)
+    expect(readQuizCount()).toBe(10)
+    rememberQuizCount(5)
+    expect(readQuizCount()).toBe(5)
+    rememberQuizCount(7)
+    expect(readQuizCount()).toBe(5)
+    localStorage.setItem(COUNT_KEY, 'beaucoup')
+    expect(readQuizCount()).toBe(10)
+    localStorage.removeItem(COUNT_KEY)
+  })
+})
+
+describe('Quiz : « Revoir … dans la révision » compte ce qu’il annonce', () => {
+  const m = (cardId: string | undefined, requeued: boolean) => ({ q: { cardId }, requeued })
+
+  it('le cas des juges : 4 erreurs, 3 cartes déjà apprises ; la 4e est dite', () => {
+    const r = requeueSummary([m('g:spirit:tells', true), m('g:demon:san', true), m('g:jinn:spd', true), m('g:mare:tells', false)])
+    expect(r.cards).toBe(3)
+    expect(r.link).toBe('Revoir ces 3 cartes dans la révision')
+    expect(r.note).toBe(
+      `3 de tes 4 erreurs portent sur 3 cartes déjà apprises, remises dans ta révision du jour${NNBSP}; l’autre porte sur une carte que tu n’as pas encore apprise.`,
+    )
+  })
+
+  it('autant de cartes que d’erreurs : « mes N erreurs », sans explication ; aucune carte : pas de lien', () => {
+    expect(requeueSummary([m('a', true), m('b', true)])).toEqual({ cards: 2, link: 'Revoir mes 2 erreurs dans la révision', note: null })
+    expect(requeueSummary([m('a', true)])).toEqual({ cards: 1, link: 'Revoir mon erreur dans la révision', note: null })
+    expect(requeueSummary([m('a', false), m(undefined, false)])).toEqual({ cards: 0, link: null, note: null })
+  })
+
+  it('deux erreurs sur la même carte, une question sans carte, des cartes pas encore apprises : chaque écart est dit', () => {
+    expect(requeueSummary([m('a', true), m('a', true)]).note).toBe(`Tes 2 erreurs portent sur la même carte déjà apprise, remise dans ta révision du jour.`)
+    expect(requeueSummary([m('a', true), m('a', true)]).link).toBe('Revoir cette carte dans la révision')
+    expect(requeueSummary([m('a', true), m(undefined, false)]).note).toBe(
+      `Une de tes 2 erreurs porte sur une carte déjà apprise, remise dans ta révision du jour${NNBSP}; l’autre n’a pas de carte de révision.`,
+    )
+    expect(requeueSummary([m('a', true), m('b', false), m('c', false)]).note).toContain('les 2 autres portent sur des cartes que tu n’as pas encore apprises')
+    expect(requeueSummary([m('a', true), m('b', false), m(undefined, false)]).note).toContain(
+      'parmi les 2 autres, une porte sur une carte que tu n’as pas encore apprise et une n’a pas de carte de révision',
+    )
+  })
+
+  it('sur des copies tirées au hasard : le lien compte les cartes remises, l’explication toutes les erreurs', () => {
+    const rng = createRng(11)
+    for (let k = 0; k < 300; k++) {
+      const list = Array.from({ length: 1 + Math.floor(rng() * 8) }, () => {
+        const r = rng()
+        return r < 0.5 ? m(`c${Math.floor(rng() * 4)}`, true) : r < 0.8 ? m(`d${k}`, false) : m(undefined, false)
+      })
+      const s = requeueSummary(list)
+      const cards = new Set(list.filter((a) => a.requeued).map((a) => a.q.cardId)).size
+      expect(s.cards).toBe(cards)
+      if (!cards) continue
+      expect(s.link).toContain(cards > 1 ? String(cards) : cards === list.length ? 'mon erreur' : 'cette carte')
+      // les comptes ne se contredisent pas : l'écart avec le nombre d'erreurs est toujours expliqué
+      if (s.note) expect(s.note).toMatch(list.length > 1 ? new RegExp(`${list.length} erreurs`) : /erreur/)
+      else expect(cards).toBe(list.length)
+    }
+  })
+})
+
+describe('Mécaniques : le quiz vrai ou faux annonce la copie qu’il distribue', () => {
+  it('« 10 questions, tirées parmi 36 », pas « 36 questions » pour une copie de dix', () => {
+    expect(trueFalseLabel(10, 36)).toBe('Quiz vrai ou faux · 10 questions, tirées parmi 36')
+    expect(trueFalseLabel(5, 36)).toBe('Quiz vrai ou faux · 5 questions, tirées parmi 36')
+    expect(trueFalseLabel(10, 8)).toBe('Quiz vrai ou faux · 8 questions')
+    expect(trueFalseLabel(10, 1)).toBe('Quiz vrai ou faux · 1 question')
+  })
+
+  it('« Me tester » dit qu’il ne note rien, et où une réponse compte', () => {
+    expect(TEST_NOT_RECORDED).toMatch(/^Rien n’est noté ici/)
+    expect(TEST_NOT_RECORDED).toContain('Réviser')
+  })
+})
+
+describe('Note : l’aide du titre, l’aperçu et l’enregistrement suivent la même règle', () => {
+  const T = new Date('2026-11-01T09:00:00').getTime()
+  const bodies = [
+    'L’encens bloque le Démon 60 s.',
+    'Encens et Démon\nIl rechasse 60 s après, pas 90.',
+    'Combien de temps l’encens bloque-t-il un Démon ?\n60 secondes au lieu de 90.',
+    'Plus rapide dans le froid, jusqu’à 2,7 m/s.\nPlus lent au chaud.',
+    '- souffle froid visible\n- chasse dès 50 %',
+    'Piège',
+  ]
+
+  it('sans titre : l’aide dit « la première ligne en sert » seulement quand la carte peut s’enregistrer, sinon elle demande un titre', () => {
+    for (const body of bodies) {
+      for (const ghostId of [null, 'demon']) {
+        const q = noteQuestion({ title: '', body, ghostId, createdAt: T }, GHOSTS)
+        const help = titleHelp(true, !!q.vague)
+        if (q.vague) {
+          expect(help, body).toMatch(/écris un titre/)
+          expect(help, body).not.toMatch(/en sert/)
+        } else {
+          expect(help, body).toMatch(/première ligne de la note en sert/)
+        }
+      }
+    }
+    // sans révision, un titre n'est jamais demandé
+    expect(titleHelp(false, false)).toBe('Sans titre, la première ligne de la note en sert.')
+    // une réponse écrite sans texte de note : pas de « première ligne » à invoquer
+    expect(titleHelp(true, true, false)).toBe('Écris un titre, il servira de question en révision.')
+  })
+
+  it('une question écrite à part : l’aide ne promet plus la première ligne comme question', () => {
+    // la carte pose la question écrite (noteQuestion), l'éditeur passe asCard && !question
+    const q = noteQuestion({ title: '', body: 'Démon\n60 s après l’encens', question: 'Quand le Démon peut-il rechasser ?', ghostId: 'demon', createdAt: T }, GHOSTS)
+    expect(q.front).toBe('Quand le Démon peut-il rechasser ?')
+    expect(titleHelp(false, false)).toBe('Sans titre, la première ligne de la note en sert.')
+  })
+
+  it('une seule ligne qui est une question : il manque la réponse, pas « ta première ligne dit déjà la réponse »', () => {
+    const body = 'Combien de temps l’encens bloque-t-il un Démon ?'
+    expect(noteQuestion({ title: '', body, ghostId: 'demon', createdAt: T }, GHOSTS).vague).toBe(true)
+    expect(onlyAQuestion(body)).toBe(true)
+    expect(onlyAQuestion(`${body}\n60 secondes`)).toBe(false)
+    expect(onlyAQuestion('L’encens bloque le Démon 60 s.')).toBe(false)
+    const help = titleHelp(true, true, true, onlyAQuestion(body))
+    expect(help).toMatch(/^Ajoute la réponse sur une ligne en dessous, ou écris un titre/)
+    expect(help).not.toMatch(/dit déjà la réponse/)
+  })
+})
+
+describe('« Précédent » ramène la page là où on l’avait quittée', () => {
+  it('une position par entrée d’historique, la dernière notée compte', () => {
+    let list = rememberScroll([], 'a', 2715)
+    list = rememberScroll(list, 'b', 0)
+    list = rememberScroll(list, 'a', 3491.6)
+    expect(scrollFor(list, 'a')).toBe(3492)
+    expect(scrollFor(list, 'b')).toBe(0)
+    expect(scrollFor(list, 'c')).toBeNull()
+    // une seule ligne par entrée, la plus récente à la fin
+    expect(list.map(([k]) => k)).toEqual(['b', 'a'])
+  })
+
+  it('l’onglet ne garde que les dernières entrées', () => {
+    let list: [string, number][] = []
+    for (let i = 0; i < SCROLL_MAX + 10; i++) list = rememberScroll(list, `k${i}`, i)
+    expect(list).toHaveLength(SCROLL_MAX)
+    expect(scrollFor(list, 'k0')).toBeNull()
+    expect(scrollFor(list, `k${SCROLL_MAX + 9}`)).toBe(SCROLL_MAX + 9)
+  })
+
+  it('une mémoire illisible ou abîmée ne ramène rien de faux', () => {
+    expect(parseScrolls(null)).toEqual([])
+    expect(parseScrolls('pas du json')).toEqual([])
+    expect(parseScrolls('{"a":1}')).toEqual([])
+    expect(parseScrolls('[["a",120],["b",-4],["c","x"],[3,4],["d",null],["e",80]]')).toEqual([
+      ['a', 120],
+      ['e', 80],
+    ])
+  })
+
+  it('la première entrée de l’onglet a sa place ; une adresse tapée à la main n’en a pas', () => {
+    expect(memoryKey('k7x2', { usr: null, key: 'k7x2', idx: 3 })).toBe('k7x2')
+    // « default » : le nom que le routeur donne aux entrées qu'il n'a pas créées
+    expect(memoryKey('default', { idx: 0 })).toBe('default@0')
+    expect(memoryKey('default', null)).toBeNull()
+    expect(memoryKey('default', {})).toBeNull()
+  })
+
+  it('une adresse tapée puis rechargée (numérotée 0 elle aussi) ne prend pas la place de la première page de l’onglet', () => {
+    const first = memoryKey('default', { idx: 0 }, '/codex/hantu')
+    const typed = memoryKey('default', { idx: 0 }, '/codex/spirit')
+    expect(first).not.toBeNull()
+    expect(typed).not.toBe(first)
+    // la même page, rechargée : sa place revient
+    expect(memoryKey('default', { idx: 0 }, '/codex/hantu')).toBe(first)
+    // une entrée créée par le routeur a déjà sa clé à elle
+    expect(memoryKey('k7x2', { idx: 3 }, '/codex/hantu')).toBe('k7x2')
+  })
+
+  it('seulement en revenant (« Précédent », « Suivant », rechargement), jamais sur un lien suivi', () => {
+    expect(restoresScroll('POP', false, 'navigate')).toBe(true)
+    expect(restoresScroll('PUSH', false, 'navigate')).toBe(false)
+    expect(restoresScroll('REPLACE', false, 'navigate')).toBe(false)
+    // premier affichage de l'onglet : un rechargement ou un retour d'historique, pas une ouverture à neuf
+    expect(restoresScroll('POP', true, 'reload')).toBe(true)
+    expect(restoresScroll('POP', true, 'back_forward')).toBe(true)
+    expect(restoresScroll('POP', true, 'navigate')).toBe(false)
+    expect(restoresScroll('POP', true, undefined)).toBe(false)
+  })
+})
+
+describe('Codex : chercher un comportement trouve aussi les tests et les observations des fiches', () => {
+  it('« montre » trouve l’Obambo (la montre du jeu, dans ses tests), avec la phrase où se trouve le mot', () => {
+    const { matching } = searchCodex(GHOSTS, 'montre', EMPTY_FILTER)
+    const ids = matching.map((g) => g.id)
+    expect(ids).toEqual(expect.arrayContaining(['obambo', 'shade', 'oni']))
+    const s = searchSnippet(getGhost('obambo')!, 'montre')!
+    expect(s.hit).toBe('montre')
+    expect(`${s.before}${s.hit}${s.after}`).toMatch(/montre du jeu/)
+    // chaque entité trouvée par le texte de sa fiche a son extrait
+    for (const g of matching) expect(searchSnippet(g, 'montre'), g.id).not.toBeNull()
+  })
+
+  it('les tests et les observations font partie du texte cherché, pas « Ne pas confondre » (d’autres entités)', () => {
+    const obambo = getGhost('obambo')!
+    const texts = searchTexts(obambo)
+    for (const t of obambo.confirmationTests) expect(texts).toContain(t.text)
+    for (const o of obambo.observations) expect(texts).toContain(o.text)
+    for (const c of obambo.confusions) expect(texts).not.toContain(c.why)
+  })
+
+  it('l’extrait garde le mot tel qu’il s’écrit (accents, majuscule) et coupe sur des mots entiers', () => {
+    const s = searchSnippet(getGhost('hantu')!, 'BUEE')!
+    expect(s.hit).toBe('buée')
+    expect(s.before === '' || /^…?\S/.test(s.before)).toBe(true)
+    expect(s.before.length + s.hit.length + s.after.length).toBeLessThan(140)
+  })
+
+  it('le mot entier d’abord : « sel » plutôt que « selon »', () => {
+    const s = searchSnippet(getGhost('wraith')!, 'sel')!
+    expect(s.hit).toBe('sel')
+    expect(s.after).not.toMatch(/^on/)
+  })
+
+  it('trouvée par son nom : pas d’extrait', () => {
+    expect(searchSnippet(getGhost('obambo')!, 'obam')).toBeNull()
+    expect(searchSnippet(getGhost('the-twins')!, 'twins')).toBeNull()
+    expect(searchSnippet(getGhost('demon')!, '   ')).toBeNull()
+  })
+
+  it('« coeur », « voeu », « oeil » tapés au clavier trouvent « cœur », « vœu », « œil »', () => {
+    const ids = (q: string) => searchCodex(GHOSTS, q, EMPTY_FILTER).matching.map((g) => g.id)
+    expect(ids('coeur')).toEqual(ids('cœur'))
+    expect(ids('coeur')).toEqual(expect.arrayContaining(['phantom', 'raiju']))
+    expect(ids('voeu')).toEqual(expect.arrayContaining(['banshee', 'goryo']))
+    expect(ids('oeil')).toEqual(expect.arrayContaining(['goryo', 'gallu']))
+    // l'extrait garde le mot tel qu'il s'écrit
+    expect(searchSnippet(getGhost('raiju')!, 'coeur')?.hit).toBe('cœur')
+  })
+
+  it('un mot court se cherche entier : « sel » ne trouve pas une fiche pour son « selon » ; à défaut, le début d’un mot', () => {
+    const ids = searchCodex(GHOSTS, 'sel', EMPTY_FILTER).matching.map((g) => g.id)
+    expect(ids).toEqual(expect.arrayContaining(['spirit', 'wraith', 'gallu', 'the-twins']))
+    for (const id of ['banshee', 'hantu', 'the-mimic', 'moroi']) expect(ids, id).not.toContain(id)
+    for (const id of ids) expect(searchSnippet(getGhost(id)!, 'sel')?.hit.toLowerCase(), id).toBe('sel')
+    // aucun mot entier « cach » : la cachette, caché, se cacher
+    expect(searchCodex(GHOSTS, 'cach', EMPTY_FILTER).matching.map((g) => g.id)).toEqual(expect.arrayContaining(['revenant', 'deogen', 'aswang']))
+  })
+
+  it('« montre » ne trouve pas une fiche pour une phrase sur la montre de l’Obambo', () => {
+    const ids = searchCodex(GHOSTS, 'montre', EMPTY_FILTER).matching.map((g) => g.id)
+    expect(ids).toContain('obambo')
+    for (const id of ['the-twins', 'moroi', 'hantu']) expect(ids, id).not.toContain(id)
+  })
+
+  it('dans le texte, le mot tapé commence un mot : « chant » ne trouve pas « en approchant »', () => {
+    const ids = searchCodex(GHOSTS, 'chant', EMPTY_FILTER).matching.map((g) => g.id)
+    expect(ids).toContain('banshee')
+    expect(ids).not.toContain('deogen')
+  })
+})
+
+describe('Coaching : seul·e, la page ne prend pas la personne pour un élève', () => {
+  it('l’entrée décrit le carnet à deux des deux côtés', () => {
+    expect(COACHING_SOLO_LEAD).toMatch(/coach/)
+    expect(COACHING_SOLO_LEAD).toMatch(/élève/)
+    expect(COACHING_SOLO_LEAD).not.toMatch(/\bte les envoie\b|\bta révision\b|tu lui envoies/)
+  })
+  it('le pas à pas aussi : ni « Tu l’ouvres » ni « Tu renvoies ta progression »', () => {
+    const solo = coachingSteps('solo', '')
+    expect(solo).toHaveLength(4)
+    for (const st of solo) expect(`${st.h} ${st.p}`).not.toMatch(/\b(?:Tu|tu|ta|ton|tes|t’)\b/)
+    // côté élève, rien ne change
+    expect(coachingSteps('student', 'Ryz').map((st) => st.h)).toEqual(['Ryz écrit', 'Ryz t’envoie un lien', 'Tu l’ouvres', 'Tu renvoies ta progression'])
+  })
+})

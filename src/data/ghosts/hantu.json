@@ -247,7 +247,7 @@
   ],
   "changes": [
     "Chronicle v0.13 (24 juin 2025) : correction d'un bug où la buée du Hantu restait visible après la mort du joueur quand l'option « les morts prolongent la chasse » était activée (sans effet sur l'identification).",
-    "Des changements de vitesse « au hasard » ne suffisent plus à reconnaître le Hantu : l'Obambo (décembre 2025) peut lui aussi changer de vitesse en pleine chasse. Le test sans preuve regarde donc si la vitesse suit la température des pièces traversées."
+    "Voir l'entité changer de vitesse en pleine chasse ne suffit plus à reconnaître le Hantu : depuis décembre 2025, l'Obambo le fait aussi. Pour le Hantu, regarde si sa vitesse suit la température : rapide dans sa pièce froide, plus lente dans les pièces plus chaudes."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",

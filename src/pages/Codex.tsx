@@ -13,6 +13,7 @@ import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, type FilterState } from '../engine/filter'
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
+import { entityMentions } from '../engine/mentions'
 import { useMastery } from '../store/hooks'
 
 const SPEEDS: { value: SpeedClass; label: string }[] = [
@@ -74,6 +75,7 @@ export function criteriaText(filter: FilterState): string {
   return fr(parts.join(' · '))
 }
 
+/** Un texte tel qu'on le tape : sans accents ni majuscules, « cœur » comme « coeur », « œil » comme « oeil ». */
 function normalizeText(s: string) {
   return s
     .normalize('NFD')
@@ -81,6 +83,8 @@ function normalizeText(s: string) {
     .replace(/[’‘ʼ]/g, "'")
     .replace(/[\u00a0\u202f]/g, ' ')
     .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
 }
 
 /** Choix multiple : chaque option retenue est entourée au stylo (comme Seg). */
@@ -148,19 +152,193 @@ export function exactName<T extends Pick<Ghost, 'name' | 'nameEn'>>(ghosts: read
 }
 
 /**
+ * Les textes d'une fiche où cherche le Codex, dans l'ordre où l'on en tire l'extrait : description, « À
+ * retenir », signes, tests, observations, vitesse et seuil. Pas « Ne pas confondre » : ces lignes décrivent
+ * d'autres entités.
+ */
+export function searchTexts(g: Ghost): string[] {
+  return [
+    g.summary,
+    ...g.keyTells,
+    ...g.tells.map((t) => t.text),
+    ...g.behaviors.map((t) => t.text),
+    ...g.abilities.map((t) => t.text),
+    ...g.confirmationTests.map((t) => t.text),
+    ...g.eliminationTests.map((t) => t.text),
+    ...g.observations.map((o) => o.text),
+    ...g.speed.details,
+    ...g.huntSanity.details,
+  ]
+}
+
+const WORD = /[\p{L}\d]/u
+
+/**
+ * Où le mot cherché commence un mot du texte (déjà sans accents ni majuscules) : « montre » trouve « la
+ * montre » et « se montrer », pas « démontre ». `whole` : le mot entier, ou son pluriel (« sel », « sels »,
+ * pas « selon »). -1 sinon.
+ */
+function wordAt(norm: string, q: string, whole = false, from = 0): number {
+  for (let j = norm.indexOf(q, from); j >= 0; j = norm.indexOf(q, j + 1)) {
+    if (j > 0 && WORD.test(norm[j - 1])) continue
+    if (whole && !wordEnds(norm, j + q.length)) continue
+    return j
+  }
+  return -1
+}
+
+/** Le mot finit là, ou après la marque du pluriel (« sel|s »). */
+function wordEnds(norm: string, at: number): boolean {
+  if (at >= norm.length || !WORD.test(norm[at])) return true
+  return (norm[at] === 's' || norm[at] === 'x') && (at + 1 >= norm.length || !WORD.test(norm[at + 1]))
+}
+
+/** Au plus autant de lettres, le mot tapé se cherche entier (« sel » ne trouve pas « selon »), tant qu'il se trouve. */
+const SHORT_QUERY = 4
+
+/** Un texte de fiche prêt pour la recherche : son texte cherché, la place de chaque caractère, ses noms d'entités et ses fins de phrase. */
+interface Prepared {
+  t: string
+  norm: string
+  at: number[]
+  names: { id: string; at: number }[]
+  stops: number[]
+}
+const PREPARED = new WeakMap<Ghost, Prepared[]>()
+
+/** Les textes d'une fiche (voir searchTexts), préparés une fois pour toutes les recherches. */
+function prepared(g: Ghost): Prepared[] {
+  let list = PREPARED.get(g)
+  if (!list) {
+    list = searchTexts(g).map((t) => {
+      const names: { id: string; at: number }[] = []
+      let pos = 0
+      for (const m of entityMentions(t, GHOSTS)) {
+        if (typeof m !== 'string') names.push({ id: m.id, at: pos })
+        pos += typeof m === 'string' ? m.length : m.text.length
+      }
+      const stops = [...t.matchAll(/[.!?;](?=\s)/gu)].map((m) => m.index + 1)
+      return { t, ...normalizedWithMap(t), names, stops }
+    })
+    PREPARED.set(g, list)
+  }
+  return list
+}
+
+/**
+ * Le passage parle d'une autre entité : dans la phrase du mot trouvé, le dernier nom cité avant lui est celui
+ * d'une autre entité (« …l'Obambo, qui suit la montre du jeu », sur la fiche des Jumeaux). `at` : la place du mot
+ * dans le texte d'origine.
+ */
+function aboutOther(p: Prepared, at: number, self: string): boolean {
+  let sentence = 0
+  for (const s of p.stops) if (s <= at) sentence = s
+  let last: string | null = null
+  for (const n of p.names) if (n.at >= sentence && n.at < at) last = n.id
+  return last != null && last !== self
+}
+
+interface TextHit {
+  p: Prepared
+  /** où commence le mot trouvé, dans le texte cherché */
+  j: number
+  whole: boolean
+  own: boolean
+}
+
+/** Chaque mot des textes de la fiche qui commence par ce qu'on a tapé (voir wordAt), et ce qu'on en sait. */
+function textHits(g: Ghost, q: string): TextHit[] {
+  const out: TextHit[] = []
+  for (const p of prepared(g))
+    for (let j = wordAt(p.norm, q); j >= 0; j = wordAt(p.norm, q, false, j + 1))
+      out.push({ p, j, whole: wordEnds(p.norm, j + q.length), own: !aboutOther(p, p.at[j], g.id) })
+  return out
+}
+
+/**
+ * Un mot trouvé qui parle bien de cette entité : le mot entier pour un mot court (voir SHORT_QUERY), un début de
+ * mot sinon ; et pas dans un passage sur une autre entité (voir aboutOther).
+ */
+const firstRate = (h: TextHit, q: string) => h.own && (h.whole || q.length > SHORT_QUERY)
+
+/**
  * Ce que trouve la recherche, et ce qu'en garde le carnet : `matching`, les entités qui collent ; `out`,
- * celles que la recherche trouve mais que le carnet écarte. Le nom exact d'une entité ne trouve qu'elle.
+ * celles que la recherche trouve mais que le carnet écarte. Le nom exact d'une entité ne trouve qu'elle. Un
+ * bout de nom suffit (« geist ») ; dans le texte des fiches, le mot tapé doit commencer un mot. Quand des fiches
+ * en parlent vraiment (voir firstRate), les autres ne viennent pas : « sel » ne trouve pas une fiche pour son
+ * « selon », « montre » pas les Jumeaux pour la montre de l'Obambo.
  */
 export function searchCodex(ghosts: readonly Ghost[], query: string, filter: FilterState): { matching: Ghost[]; out: Ghost[] } {
   const q = normalizeText(query.trim())
   const exact = exactName(ghosts, query)
-  const byQuery = exact
-    ? [exact]
-    : q
-      ? ghosts.filter((g) => [g.name, g.nameEn, g.summary, ...g.keyTells].some((t) => normalizeText(t).includes(q)))
-      : [...ghosts]
+  let byQuery: Ghost[]
+  if (exact) byQuery = [exact]
+  else if (!q) byQuery = [...ghosts]
+  else {
+    const rated = ghosts.map((g) => {
+      const named = [g.name, g.nameEn].some((t) => normalizeText(t).includes(q))
+      const hits = named ? [] : textHits(g, q)
+      return { g, named, first: hits.some((h) => firstRate(h, q)), any: hits.length > 0 }
+    })
+    const focused = rated.some((r) => r.first)
+    byQuery = rated.filter((r) => r.named || r.first || (!focused && r.any)).map((r) => r.g)
+  }
   const matching = filterGhosts(byQuery, filter)
   return { matching, out: byQuery.filter((g) => !matching.includes(g)) }
+}
+
+/** Un extrait de fiche autour du mot cherché : le mot trouvé, tel qu'il s'écrit, entre ce qui l'entoure. */
+export interface Snippet {
+  before: string
+  hit: string
+  after: string
+}
+
+/** Un texte sans accents ni majuscules, avec pour chaque caractère sa place dans le texte d'origine. */
+function normalizedWithMap(text: string): { norm: string; at: number[] } {
+  let norm = ''
+  const at: number[] = []
+  let i = 0
+  for (const ch of text) {
+    const n = normalizeText(ch)
+    norm += n
+    for (let k = 0; k < n.length; k++) at.push(i)
+    i += ch.length
+  }
+  return { norm, at }
+}
+
+/**
+ * Pourquoi la recherche a trouvé cette entité, quand ce n'est pas par son nom : un court extrait de sa fiche
+ * autour du mot (« … toutes les 2 minutes à la montre du jeu… »). Le mot entier sur cette entité de préférence
+ * (« sel » plutôt que « selon », pas une phrase sur une autre entité : voir firstRate), sinon le premier mot qui
+ * commence par ce qu'on a tapé ; null si le nom correspond, ou si rien ne correspond.
+ */
+export function searchSnippet(g: Ghost, query: string, room = { before: 42, after: 64 }): Snippet | null {
+  const q = normalizeText(query.trim())
+  if (!q || [g.name, g.nameEn].some((n) => normalizeText(n).includes(q))) return null
+  const hits = textHits(g, q)
+  const found = hits.find((h) => h.own && h.whole) ?? hits.find((h) => firstRate(h, q)) ?? hits.find((h) => h.whole) ?? hits[0]
+  if (!found) return null
+  const { j } = found
+  const x = found.p
+  const start = x.at[j]
+  const last = x.at[j + q.length - 1]
+  const end = last + (x.t.codePointAt(last)! > 0xffff ? 2 : 1)
+  // l'extrait s'arrête sur des mots entiers, avec « … » là où il coupe la phrase
+  let from = Math.max(0, start - room.before)
+  if (from > 0) {
+    const space = x.t.indexOf(' ', from)
+    from = space >= 0 && space < start ? space + 1 : start
+  }
+  let to = Math.min(x.t.length, end + room.after)
+  if (to < x.t.length) {
+    const space = x.t.lastIndexOf(' ', to)
+    to = space >= end ? space : end
+  }
+  const before = x.t.slice(from, start)
+  const after = x.t.slice(end, to).replace(/[\s,;:]+$/u, '')
+  return { before: (from > 0 ? '…' : '') + before, hit: x.t.slice(start, end), after: after + (to < x.t.length ? '…' : '') }
 }
 
 /**
@@ -224,11 +402,14 @@ export function Codex() {
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
 
-  // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées
+  // le registre garde l'ordre du journal du jeu ; les éliminées y restent, barrées. Trouvée par un mot de sa
+  // fiche (pas par son nom) : un extrait montre le mot dans sa phrase
   const rows = useMemo(() => {
     const keep = new Set([...matching, ...(showOut ? out : [])])
-    return GHOSTS.map((g, i) => ({ g, n: i + 1 })).filter(({ g }) => keep.has(g))
-  }, [matching, out, showOut])
+    return GHOSTS.map((g, i) => ({ g, n: i + 1 }))
+      .filter(({ g }) => keep.has(g))
+      .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
+  }, [matching, out, showOut, query])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
   const stickyRef = useRef<HTMLDivElement>(null)
@@ -612,8 +793,16 @@ export function Codex() {
                 <span>Vitesse · seuil</span>
               </div>
               <ol className="cx-reg">
-                {rows.map(({ g, n }) => (
-                  <GhostRow key={g.id} ghost={g} n={n} mastery={mastery[g.id] ?? 0} dimmed={!matching.includes(g)} circled={deduced && only === g} />
+                {rows.map(({ g, n, snippet }) => (
+                  <GhostRow
+                    key={g.id}
+                    ghost={g}
+                    n={n}
+                    mastery={mastery[g.id] ?? 0}
+                    dimmed={!matching.includes(g)}
+                    circled={deduced && only === g}
+                    snippet={snippet}
+                  />
                 ))}
               </ol>
             </>

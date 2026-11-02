@@ -13,6 +13,35 @@ export const RESUME_QUIZ = '/quiz?copie=reprendre'
 /** Le paramètre de RESUME_QUIZ, effacé une fois servi (il ne distribue pas de copie neuve, voir QuizRoute). */
 export const RESUME_PARAM = 'copie'
 
+/** Les longueurs de copie proposées sur la page du quiz. */
+export const QUIZ_COUNTS = [5, 10, 20, 30]
+/** La longueur d'une copie tant qu'on n'en a pas choisi une autre. */
+export const DEFAULT_COUNT = 10
+/** Le nombre de questions choisi la dernière fois sur la page du quiz, gardé sur l'appareil. */
+export const COUNT_KEY = 'phasmo-coach/quiz-questions'
+
+/**
+ * Le nombre de questions choisi la dernière fois (« 5 questions » le reste après un rechargement ou le
+ * lendemain) ; 10 tant qu'on n'en a pas choisi d'autre, ou si le stockage est bloqué.
+ */
+export function readQuizCount(): number {
+  try {
+    const n = Number(localStorage.getItem(COUNT_KEY))
+    return QUIZ_COUNTS.includes(n) ? n : DEFAULT_COUNT
+  } catch {
+    return DEFAULT_COUNT
+  }
+}
+
+export function rememberQuizCount(n: number): void {
+  if (!QUIZ_COUNTS.includes(n)) return
+  try {
+    localStorage.setItem(COUNT_KEY, String(n))
+  } catch {
+    /* navigation privée : on reproposera 10 questions */
+  }
+}
+
 /** Une réponse de la copie. */
 export interface Answer {
   q: Question
@@ -29,9 +58,10 @@ export interface SavedCopy {
   selected: string[]
   checked: boolean
   /**
-   * L'entrée de l'historique où la copie a été distribuée. Venue d'un raccourci (« quiz rapide », « Me tester
-   * sur… »), son adresse le redemande à chaque retour sur cette entrée : un rechargement ou le bouton retour ne
-   * distribue pas une copie neuve par-dessus celle-ci, la page propose de la reprendre.
+   * L'entrée de l'historique où la copie s'affiche (distribuée ou reprise). Un rechargement (F5) sur cette entrée
+   * la reprend d'elle-même (voir reloadedOn) ; ailleurs, la page propose de la reprendre. Venue d'un raccourci
+   * (« quiz rapide », « Me tester sur… »), son adresse redemande une copie à chaque retour : la copie en cours
+   * n'est jamais remplacée sans le demander.
    */
   entry?: string
 }
@@ -61,6 +91,70 @@ export function validCopy(c: SavedCopy): boolean {
 
 export function readCopy(now = Date.now()): SavedCopy | null {
   return readRun<SavedCopy>(COPY_KEY, validCopy, now)
+}
+
+/**
+ * La copie rendue (note et corrigé), gardée pour l'entrée de l'historique où elle s'affiche : revenir sur cette
+ * entrée (« Précédent » depuis « Relire la fiche », rechargement) rouvre le corrigé, à l'endroit qu'on avait
+ * quitté, au lieu de la page de réglages. Arriver sur la page par un autre chemin (onglet, lien) repart des réglages.
+ */
+export const GRADED_KEY = 'phasmo-coach/copie-rendue'
+
+export interface GradedCopy {
+  questions: Question[]
+  answers: Answer[]
+  entry: string
+}
+
+/** Une copie rendue relue telle quelle : des questions lisibles, une réponse à chacune, son entrée. */
+export function validGraded(c: GradedCopy): boolean {
+  if (!c || typeof c.entry !== 'string' || !Array.isArray(c.questions) || !c.questions.length || !c.questions.every(validQuestion)) return false
+  return Array.isArray(c.answers) && c.answers.length === c.questions.length && c.answers.every((a) => a && validQuestion(a.q) && strings(a.selected) && typeof a.correct === 'boolean')
+}
+
+/** La copie rendue sur cette entrée de l'historique, ou null (autre entrée, autre jour, copie abîmée). */
+export function readGraded(entry: string, now = Date.now()): GradedCopy | null {
+  const c = readRun<GradedCopy>(GRADED_KEY, validGraded, now)
+  return c && c.entry === entry ? c : null
+}
+
+/** « une », « 2 », « 3 » : un compte qui ouvre une phrase (« une porte sur… », « 2 portent sur… »). */
+const some = (n: number) => (n === 1 ? 'une' : String(n))
+
+/**
+ * Le lien de fin de copie vers la révision, et pourquoi il ne compte pas toutes les erreurs. Seule une carte
+ * déjà apprise revient dans la révision du jour (Answer.requeued) ; une erreur peut aussi porter sur une carte
+ * pas encore apprise, sur une question sans carte (question rédigée, vrai ou faux), ou sur la même carte
+ * qu'une autre. `cards` : les cartes remises en révision ; `link` : le libellé du lien (null sans carte
+ * remise) ; `note` : la phrase qui explique l'écart avec le nombre d'erreurs (null s'il n'y en a pas).
+ */
+export function requeueSummary(mistakes: readonly { q: { cardId?: string }; requeued: boolean }[]): {
+  cards: number
+  link: string | null
+  note: string | null
+} {
+  const back = mistakes.filter((a) => a.requeued)
+  const cards = new Set(back.map((a) => a.q.cardId)).size
+  if (!cards) return { cards, link: null, note: null }
+  const total = mistakes.length
+  if (back.length === total && cards === total)
+    return { cards, link: `Revoir ${cards > 1 ? `mes ${cards} erreurs` : 'mon erreur'} dans la révision`, note: null }
+  const link = `Revoir ${cards > 1 ? `ces ${cards} cartes` : 'cette carte'} dans la révision`
+  const onCards = cards === 1 ? (back.length > 1 ? 'la même carte déjà apprise, remise' : 'une carte déjà apprise, remise') : `${cards} cartes déjà apprises, remises`
+  const head =
+    back.length === total
+      ? `Tes ${total} erreurs portent sur ${onCards} dans ta révision du jour`
+      : `${back.length === 1 ? 'Une' : back.length} de tes ${total} erreurs ${back.length > 1 ? 'portent' : 'porte'} sur ${onCards} dans ta révision du jour`
+  const unlearned = mistakes.filter((a) => !a.requeued && a.q.cardId).length
+  const loose = mistakes.filter((a) => !a.q.cardId).length
+  const others = unlearned + loose
+  const toLearn = (n: number) => (n > 1 ? 'portent sur des cartes que tu n’as pas encore apprises' : 'porte sur une carte que tu n’as pas encore apprise')
+  const noCard = (n: number) => (n > 1 ? 'n’ont pas de carte de révision' : 'n’a pas de carte de révision')
+  let tail = ''
+  if (others === 1) tail = `l’autre ${unlearned ? toLearn(1) : noCard(1)}`
+  else if (others > 1 && (!unlearned || !loose)) tail = `les ${others} autres ${unlearned ? toLearn(others) : noCard(others)}`
+  else if (others > 1) tail = `parmi les ${others} autres, ${some(unlearned)} ${toLearn(unlearned)} et ${some(loose)} ${noCard(loose)}`
+  return { cards, link, note: fr(tail ? `${head} ; ${tail}.` : `${head}.`) }
 }
 
 /** Ce que dit l'enveloppe du quiz d'une copie en cours (« 3 réponses sur 5 »), à la place de « 10 questions · ≈ 3 min ». */

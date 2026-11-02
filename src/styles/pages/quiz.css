@@ -77,10 +77,9 @@
 .qz-scope .link { white-space: nowrap; }
 /* commencer tout de suite, avec les réglages par défaut : le bouton juste sous l'intro */
 .qz-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 22px; }
-/* une copie laissée en route : on la reprend, ou on en commence une autre */
-.qz-resume { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 18px; margin: 18px 0 -6px; }
-.qz-resume .pencil-note { font-size: 21px; }
-.qz-resume .link { display: inline-flex; align-items: center; min-height: 40px; }
+/* une copie laissée en route : la reprendre est l'action principale, en commencer une autre passe après */
+.qz-quick--resume { margin-top: 16px; }
+.qz-resume-note { flex-basis: 100%; margin: 0 !important; font-size: 21px; }
 .qz-quick .btn-hint { flex-basis: 100%; margin-top: 0; }
 .qz-or { margin: 0 !important; font-size: 21px; transform: rotate(-1.5deg); }
 
@@ -121,7 +120,7 @@
 
 .qz-empty { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; max-width: 460px; margin: 26px 0 0 !important; font-size: 16.5px; color: var(--ink-2); }
 .qz-empty .stamp { margin-top: 3px; }
-.qz-go { margin-top: 30px; }
+.qz-go { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 30px; }
 .qz-history { margin-top: 56px; }
 .qz-libcard { max-width: 320px; margin-top: 4px; }
 .qz-libcard .cols, .qz-libcard li { grid-template-columns: 1fr auto; }
@@ -258,6 +257,8 @@ html.js .qz-bar::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) both; 
 }
 .qz-end-actions { margin-top: 38px; }
 .qz-end-actions .link { display: inline-flex; align-items: center; min-height: 44px; text-align: left; }
+/* pourquoi « Revoir ces cartes » n'en compte pas autant que d'erreurs */
+.qz-requeue-note { max-width: 26em; margin: 30px 0 -14px !important; font-size: 20px; line-height: 1.25; }
 
 /* le corrigé */
 .qz-fixes { list-style: none; margin: 0; padding: 0; }

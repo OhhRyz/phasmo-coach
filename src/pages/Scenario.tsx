@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { UvPrint } from '../components/journal/Charts'
 import {
@@ -19,7 +19,7 @@ import {
   TapeButton,
   TypedLink,
 } from '../components/journal/Journal'
-import { GhostEvidence, Modal, Seg } from '../components/ui'
+import { focusPageTitle, GhostEvidence, Modal, Seg } from '../components/ui'
 import { GHOSTS, getGhost } from '../data'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost, ObservationStrength } from '../data/types'
@@ -43,12 +43,11 @@ import {
 import { useMastery } from '../store/hooks'
 import { useStore } from '../store/store'
 import { NoteText } from './Notebook'
-import { CONTRACT_KEY, readContract, type SavedContract } from './contractRun'
-import { clearRun, saveRun } from './savedRun'
+import { CONTRACT_KEY, MAX_WRONG, readContract, readVerdict, VERDICT_KEY, type ContractVerdict, type SavedContract } from './contractRun'
+import { clearRun, reloadedOn, saveRun } from './savedRun'
 
 type Style = CSSProperties & Record<`--${string}`, string | number>
 
-const MAX_WRONG = 1
 
 const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -101,12 +100,23 @@ export function Scenario() {
     state.activity.filter((a) => a.kind === 'scenario').length >= BEGINNER_CONTRACTS ? (lastDifficulty() ?? 'pro') : 'pro',
   )
   const [pool, setPool] = useState<'all' | 'weak'>('all')
-  const [scenario, setScenario] = useState<S | null>(null)
-  const [revealed, setRevealed] = useState(1)
-  const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER)
-  const [struck, setStruck] = useState<string[]>([])
-  const [wrong, setWrong] = useState<string[]>([])
-  const [outcome, setOutcome] = useState<'solved' | 'dead' | null>(null)
+  const { key: entry } = useLocation()
+  // un contrat laissé en route dans cet onglet aujourd'hui (détour par le codex, autre onglet…) : à reprendre.
+  // La page rechargée en plein contrat (F5, tirer pour rafraîchir), là où il s'affichait, le reprend d'elle-même,
+  // là où il en était. Un contrat terminé sur cette entrée de l'historique (retour depuis « Relire la fiche »,
+  // rechargement) rouvre son rapport de clôture
+  const [boot] = useState(() => {
+    const kept = readContract()
+    const now = kept && reloadedOn('/enquete') && (kept.entry === undefined || kept.entry === entry) ? kept : null
+    return { kept, now, done: now ? null : readVerdict(entry) }
+  })
+  const shown0 = boot.now ?? boot.done
+  const [scenario, setScenario] = useState<S | null>(shown0?.scenario ?? null)
+  const [revealed, setRevealed] = useState(shown0?.revealed ?? 1)
+  const [filter, setFilter] = useState<FilterState>(shown0?.filter ?? EMPTY_FILTER)
+  const [struck, setStruck] = useState<string[]>(shown0?.struck ?? [])
+  const [wrong, setWrong] = useState<string[]>(shown0?.wrong ?? [])
+  const [outcome, setOutcome] = useState<'solved' | 'dead' | null>(boot.done?.outcome ?? null)
   const [guessOpen, setGuessOpen] = useState(false)
   const [guess, setGuess] = useState<string>('')
   /** la fiche « Quelle est l'entité ? » propose toutes les entités, et non plus seulement celles du carnet */
@@ -114,8 +124,8 @@ export function Scenario() {
   const [quitOpen, setQuitOpen] = useState(false)
   /** « Commencer le contrat » alors qu'un contrat attend d'être repris : il se confirme, comme l'abandon */
   const [replaceOpen, setReplaceOpen] = useState(false)
-  /** un contrat laissé en route dans cet onglet aujourd'hui (détour par le codex, rechargement…) : à reprendre */
-  const [saved, setSaved] = useState(readContract)
+  /** le contrat laissé en route, tant qu'il n'est pas repris (voir boot) */
+  const [saved, setSaved] = useState(boot.now || boot.done ? null : boot.kept)
   const [playing, setPlaying] = useState(false)
   /** téléphone : le carnet de preuves se replie en volet au-dessus des onglets */
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -151,17 +161,30 @@ export function Scenario() {
     if (revealed > 2) nextArea.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [revealed])
 
-  // nouveau contrat, abandon ou verdict : on referme le volet et on remonte en haut du carnet
+  // nouveau contrat, abandon ou verdict : on referme le volet et on remonte en haut du carnet. Pas à l'arrivée sur
+  // la page : elle s'ouvre en haut, ou là où on l'avait quittée en y revenant (voir ScrollMemory)
+  const arrived = useRef(false)
   useEffect(() => {
+    if (!arrived.current) {
+      arrived.current = true
+      return
+    }
     setSheetOpen(false)
     window.scrollTo({ top: 0 })
   }, [scenario, outcome])
+  // Échap : le volet du carnet ouvert se referme ; sinon, en plein contrat, la question de l'abandon se pose (comme
+  // au quiz et à l'oreille), sans jamais abandonner d'elle-même. Une fiche posée (désigner, abandonner) se ferme seule
+  const running = !!scenario && !outcome
   useEffect(() => {
-    if (!sheetOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheetOpen(false)
+    if (!sheetOpen && !running) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || guessOpen || quitOpen) return
+      if (sheetOpen) setSheetOpen(false)
+      else setQuitOpen(true)
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [sheetOpen])
+  }, [sheetOpen, running, guessOpen, quitOpen])
 
   const ghost: Ghost | undefined = scenario ? getGhost(scenario.ghostId) : undefined
   /** les entités les moins maîtrisées (seulement parmi celles déjà travaillées) */
@@ -170,11 +193,12 @@ export function Scenario() {
   // le contrat en cours se garde à chaque geste (rapport lu, preuve notée, nom barré, erreur) ; verdict ou abandon l'effacent
   useEffect(() => {
     if (!scenario || outcome) return
-    saveRun<SavedContract>(CONTRACT_KEY, { scenario, revealed, filter, struck, wrong })
-  }, [scenario, outcome, revealed, filter, struck, wrong])
+    saveRun<SavedContract>(CONTRACT_KEY, { scenario, revealed, filter, struck, wrong, entry })
+  }, [scenario, outcome, revealed, filter, struck, wrong, entry])
 
   const resume = () => {
     if (!saved) return
+    clearRun(VERDICT_KEY)
     steps.current?.stop()
     autoOpened.current = false
     setScenario(saved.scenario)
@@ -199,6 +223,7 @@ export function Scenario() {
 
   const start = (difficulty: Difficulty = chosen) => {
     clearRun(CONTRACT_KEY)
+    clearRun(VERDICT_KEY)
     setSaved(null)
     setReplaceOpen(false)
     const rng = createRng((Date.now() ^ 0x5bd1e995) >>> 0)
@@ -221,6 +246,16 @@ export function Scenario() {
     setOutcome(null)
     setGuess('')
     setQuitOpen(false)
+    // le contrat s'ouvre : le focus sur son lieu (le titre du rapport de terrain), pas sur la page entière
+    requestAnimationFrame(focusPageTitle)
+  }
+
+  /** « Changer les réglages » du rapport de clôture : l'ordre de mission revient, le focus sur son titre. */
+  const changeSettings = () => {
+    clearRun(VERDICT_KEY)
+    setScenario(null)
+    setOutcome(null)
+    requestAnimationFrame(focusPageTitle)
   }
 
   const possibleGhosts = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
@@ -276,9 +311,12 @@ export function Scenario() {
     }
   }, [scenario, outcome, revealed, firstPending])
 
-  const finish = (result: 'solved' | 'dead', wrongCount: number) => {
+  const finish = (result: 'solved' | 'dead', wrongList: string[]) => {
     if (!scenario || !ghost) return
+    const wrongCount = wrongList.length
     clearRun(CONTRACT_KEY)
+    // le rapport de clôture reste à cette entrée de l'historique : « Relire la fiche », puis « Précédent », le rouvre
+    saveRun<ContractVerdict>(VERDICT_KEY, { scenario, revealed, filter, struck, wrong: wrongList, outcome: result, entry })
     setOutcome(result)
     steps.current?.stop()
     const score = scoreScenario(revealed, scenario.clues.length, wrongCount, result === 'solved')
@@ -308,12 +346,12 @@ export function Scenario() {
     if (!scenario || !guess || !guessList.some((g) => g.id === guess)) return
     setGuessOpen(false)
     if (guess === scenario.ghostId) {
-      finish('solved', wrong.length)
+      finish('solved', wrong)
     } else {
       const w = [...wrong, guess]
       setWrong(w)
       setStruck((s) => (s.includes(guess) ? s : [...s, guess]))
-      if (w.length > MAX_WRONG) finish('dead', w.length)
+      if (w.length > MAX_WRONG) finish('dead', w)
     }
     setGuess('')
   }
@@ -350,12 +388,12 @@ export function Scenario() {
                 désigne la bonne au plus vite.
               </p>
               {saved && (
-                <p className="sc-resume">
-                  <span className="pencil-note">
+                <div className="sc-resume">
+                  <p className="pencil-note">
                     {`contrat laissé en route${NNBSP}: ${plural(saved.revealed - 1, 'rapport')} ${saved.revealed - 1 > 1 ? 'lus' : 'lu'} sur ${saved.scenario.clues.length - 1}`}
-                  </span>
-                  <TypedLink onClick={resume}>Reprendre le contrat</TypedLink>
-                </p>
+                  </p>
+                  <TapeButton onClick={resume}>Reprendre le contrat</TapeButton>
+                </div>
               )}
             </header>
 
@@ -432,11 +470,23 @@ export function Scenario() {
             </div>
 
             <div className="sc-go">
-              <Consigne>
-                choisis une difficulté, puis <span className="on-mouse">clique sur</span>
-                <span className="on-touch">touche</span> <b>Commencer le contrat</b>. Tu liras les rapports un par un.
-              </Consigne>
-              <TapeButton onClick={() => (saved ? setReplaceOpen(true) : start())}>Commencer le contrat</TapeButton>
+              {saved ? (
+                <>
+                  <Consigne>
+                    pour un autre contrat, choisis une difficulté, puis <span className="on-mouse">clique sur</span>
+                    <span className="on-touch">touche</span> <b>Nouveau contrat</b>{NNBSP}: celui laissé en route sera abandonné.
+                  </Consigne>
+                  <PaperButton onClick={() => setReplaceOpen(true)}>Nouveau contrat</PaperButton>
+                </>
+              ) : (
+                <>
+                  <Consigne>
+                    choisis une difficulté, puis <span className="on-mouse">clique sur</span>
+                    <span className="on-touch">touche</span> <b>Commencer le contrat</b>. Tu liras les rapports un par un.
+                  </Consigne>
+                  <TapeButton onClick={() => start()}>Commencer le contrat</TapeButton>
+                </>
+              )}
               <p className="sc-rules-link">
                 <TypedLink onClick={() => document.getElementById('h-rules')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
                   Lire les règles d’abord ↓
@@ -688,7 +738,7 @@ export function Scenario() {
 
           <EndActions className="sc-end-actions">
             <TapeButton onClick={() => start(scenario.difficulty)}>Recommencer un contrat</TapeButton>
-            <TypedLink onClick={() => setScenario(null)}>Changer les réglages</TypedLink>
+            <TypedLink onClick={changeSettings}>Changer les réglages</TypedLink>
             <TypedLink to="/entrainement">Retour aux exercices</TypedLink>
             {solved && wrong.length === 0 && harder ? (
               <TypedLink
@@ -756,6 +806,8 @@ export function Scenario() {
     clearRun(CONTRACT_KEY)
     setQuitOpen(false)
     setScenario(null)
+    // l'ordre de mission revient : le focus sur son titre, pas sur la page entière
+    requestAnimationFrame(focusPageTitle)
   }
   const nextReport = () => setRevealed((r) => Math.min(scenario.clues.length, r + 1))
   // la fiche « Quelle est l'entité ? » : les entités du carnet, ou toutes (moins les fausses pistes) si le carnet se trompe

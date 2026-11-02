@@ -2,6 +2,13 @@
 .ghost-file .lines { list-style: none; margin: 0; padding: 0; }
 .ghost-file .lines li { padding: 9px 0 10px; border-bottom: 1px solid var(--rule); font-size: 16.5px; line-height: 1.5; }
 .ghost-file .zero-mark { font-size: 20px; white-space: nowrap; }
+/* la même ligne redite pour la partie sans preuve : rangée dessous, annoncée au crayon (pas un doublon) */
+.ghost-file .zero-variant { display: block; margin-top: 4px; padding-left: 14px; border-left: 1.5px dashed color-mix(in srgb, var(--ink) 28%, transparent); color: var(--ink-2); }
+.ghost-file .zero-variant-k { font-size: 20px; color: var(--pencil); }
+/* un test définitif qui nomme lui-même une exception : le tampon reste, l'exception s'écrit à côté au crayon */
+.ghost-file .protocol-top h3 { flex: none; white-space: nowrap; }
+.ghost-file .protocol-verdict { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 2px 10px; text-align: right; }
+.ghost-file .protocol-except { font-size: 19px; line-height: 1.1; color: var(--pencil); }
 .ghost-file .shared { display: inline-flex; gap: 10px; margin-left: 6px; font-family: "Courier Prime", monospace; font-size: 13px; }
 .ghost-file .conf li p { display: block; margin-top: 4px; }
 .ghost-file .mimic-note { margin-top: 18px; font-size: 14.5px; font-style: italic; color: var(--ink-3); }
@@ -67,6 +74,11 @@
 .ghost-file .gh-mention { color: inherit; text-decoration: underline; text-decoration-color: var(--red-pen); text-decoration-thickness: 1.2px; text-underline-offset: 3px; }
 @media (hover: hover) { .ghost-file .gh-mention:hover { color: var(--red-pen); } }
 .ghost-file .gh-mention:focus-visible { outline: 2px dashed var(--red-pen); outline-offset: 2px; }
+/* au doigt : une cible d'environ 44 px de haut et un peu plus large que le mot, sans rien déplacer (la marge
+   négative rend la place prise par le rembourrage) ; au-dessus du texte voisin pour recevoir le toucher */
+@media (hover: none), (pointer: coarse) {
+  .ghost-file .gh-mention { position: relative; padding: 12px 6px; margin: -12px -6px; -webkit-tap-highlight-color: transparent; }
+}
 .ghost-file .sources { margin-top: 30px; font-size: 13px; }
 .ghost-file .gh-report { margin: 4px 0 0; }
 .ghost-file .gh-report .link { display: inline-flex; align-items: center; min-height: 40px; font-size: 14.5px; }

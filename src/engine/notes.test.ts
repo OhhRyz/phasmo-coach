@@ -4,7 +4,7 @@ import { GHOSTS, MECHANICS } from '../data'
 import { initialState, sanitizeNotes, type Profile } from '../store/schema'
 import { buildDeck, firstLineTitle, noteCards, noteQuestion, writtenTitle, type CoachNote } from './cards'
 import { NNBSP } from './format'
-import { reviewNotes, skipsOwnReview } from './notes'
+import { keepNoteAsCard, noteAsCard, reviewNotes, skipsOwnReview } from './notes'
 import { buildReviewQueue } from './progress'
 import { reportIssueUrl, reportText, reportTitle, WHOLE_FICHE } from './report'
 
@@ -138,5 +138,28 @@ describe('signaler une erreur sur une fiche', () => {
     expect(url.href.startsWith(`${SOURCE_REPO_URL}/issues/new?`)).toBe(true)
     expect(url.searchParams.get('title')).toBe(reportTitle(r))
     expect(url.searchParams.get('body')).toBe(reportText(r))
+  })
+})
+
+describe('nouvelle note : la case de révision garde le dernier choix, rôle par rôle', () => {
+  it('cochée tant qu’on ne l’a jamais décochée ; décochée, elle le reste pour la note suivante', () => {
+    const settings = initialState(T0).settings
+    expect(noteAsCard(settings, 'solo')).toBe(true)
+    const off = keepNoteAsCard(settings, 'coach', false)!
+    expect(off).toEqual({ noteAsCard: { coach: false } })
+    const next = { ...settings, ...off }
+    expect(noteAsCard(next, 'coach')).toBe(false)
+    // un autre rôle garde le sien
+    expect(noteAsCard(next, 'student')).toBe(true)
+    // rien à enregistrer si le choix ne change pas ; recochée, elle repart cochée
+    expect(keepNoteAsCard(next, 'coach', false)).toBeNull()
+    expect(keepNoteAsCard(settings, 'solo', true)).toBeNull()
+    expect(noteAsCard({ ...next, ...keepNoteAsCard(next, 'coach', true)! }, 'coach')).toBe(true)
+  })
+
+  it('une valeur illisible (fichier importé) laisse la case cochée', () => {
+    for (const junk of ['non', 0, null, { coach: 'false' }, ['coach']]) {
+      expect(noteAsCard({ noteAsCard: junk as never }, 'coach')).toBe(true)
+    }
   })
 })

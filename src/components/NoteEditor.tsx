@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEv
 import { GHOSTS } from '../data'
 import { firstLineTitle, noteQuestion, type CoachNote } from '../engine/cards'
 import { NNBSP } from '../engine/format'
-import { makesCard, skipsOwnReview } from '../engine/notes'
+import { keepNoteAsCard, makesCard, noteAsCard, skipsOwnReview } from '../engine/notes'
 import { newId, useStore } from '../store/store'
 import { CheckLine, PaperButton, TapeButton, TypedLink } from './journal/Journal'
 import { useToast } from './Toast'
@@ -15,6 +15,29 @@ const WRONG_EXAMPLES = ['ex. 90 secondes, comme les autres', 'ex. 180 secondes',
 /** Le titre d'une note : celui qui a été écrit, sinon la première ligne du texte. Jamais un titre inventé. */
 export function noteTitle(title: string, body: string): string {
   return title.trim() || firstLineTitle(body)
+}
+
+/**
+ * La ligne d'aide sous le titre : la règle du titre, telle qu'elle s'applique à la note en cours. Sans titre, la
+ * première ligne en sert, et sert aussi de question en révision ; quand elle dit déjà la réponse (une phrase
+ * chiffrée, une note d'une seule ligne : voir noteQuestion, `vague`), la note a besoin d'un titre pour devenir
+ * une question, et l'aide dit pourquoi. Une seule ligne qui est une question (`askedLine`) : il lui manque la
+ * réponse, dessous. `asCard` est faux aussi quand la question de la carte est écrite à part : c'est elle qui est
+ * posée, pas la première ligne. L'aide ne promet jamais ce que l'enregistrement refuse.
+ */
+export function titleHelp(asCard: boolean, needsTitle: boolean, hasBody = true, askedLine = false): string {
+  if (needsTitle) {
+    if (!hasBody) return 'Écris un titre, il servira de question en révision.'
+    if (askedLine) return `Ajoute la réponse sur une ligne en dessous, ou écris un titre${NNBSP}: il servira de question en révision.`
+    return `Ta première ligne dit déjà la réponse${NNBSP}: écris un titre, il servira de question en révision.`
+  }
+  return asCard ? 'Sans titre, la première ligne de la note en sert, et sert aussi de question en révision.' : 'Sans titre, la première ligne de la note en sert.'
+}
+
+/** Une note d'une seule ligne qui est une question (« Combien de temps l'encens bloque-t-il un Démon ? ») : la réponse manque. */
+export function onlyAQuestion(body: string): boolean {
+  const [lead, ...more] = body.trim().split('\n')
+  return !!lead.trim() && /\?$/u.test(lead.trim()) && !more.join('').trim()
 }
 
 /** Ce que contient le formulaire d'une note, pour savoir si quelque chose a été écrit ou changé depuis l'ouverture. */
@@ -72,7 +95,9 @@ export function NoteEditor({
   const [title, setTitle] = useState(note && note.title !== noteTitle('', note.body) ? note.title : '')
   const [body, setBody] = useState(note?.body ?? '')
   const [ghost, setGhost] = useState<string | null>(note?.ghostId ?? ghostId)
-  const [asCard, setAsCard] = useState(note?.asCard ?? true)
+  // une nouvelle note part du choix laissé à la dernière note écrite dans ce rôle (voir noteAsCard)
+  const keptAsCard = noteAsCard(state.settings, state.profile.role)
+  const [asCard, setAsCard] = useState(note?.asCard ?? keptAsCard)
   const [question, setQuestion] = useState(note?.question ?? '')
   // la question de révision est facultative : repliée tant qu'on ne la personnalise pas
   const [custom, setCustom] = useState(!!(note?.question || note?.answer || note?.wrong?.length))
@@ -108,17 +133,18 @@ export function NoteEditor({
     setOpen(false)
   }
 
-  const reset = () => {
+  /** Vide le formulaire ; la case de révision reste comme on l'a laissée (`keep`), ou revient au dernier choix. */
+  const reset = (keep = keptAsCard) => {
     setTitle('')
     setBody('')
     setQuestion('')
     setAnswer('')
     setWrong(['', '', ''])
-    setAsCard(true)
+    setAsCard(keep)
     setCustom(false)
     setGhost(ghostId)
     setAsking(false)
-    setOpened({ title: '', body: '', ghost: ghostId, asCard: true, question: '', answer: '', wrong: ['', '', ''] })
+    setOpened({ title: '', body: '', ghost: ghostId, asCard: keep, question: '', answer: '', wrong: ['', '', ''] })
   }
 
   // la question posée : le curseur va sur « Continuer à écrire » (le choix sans perte)
@@ -150,8 +176,11 @@ export function NoteEditor({
       pinned: note?.pinned,
     }
     dispatch({ type: 'note:upsert', note: n })
+    // la case reste comme on l'a laissée pour la note suivante, ici et à la prochaine visite (dans ce rôle)
+    const kept = note ? null : keepNoteAsCard(state.settings, state.profile.role, asCard)
+    if (kept) dispatch({ type: 'settings', settings: kept })
     toast(note ? 'Note mise à jour' : makesCard(n) && !skipsOwnReview(n, state.profile, state.settings) ? 'Note ajoutée à la révision' : 'Note enregistrée')
-    if (!note) reset()
+    if (!note) reset(asCard)
     if (compact && !note) fold()
     // note suivante : le curseur repart dans le titre du formulaire vidé (le bouton, lui, se désactive)
     else if (!note) titleRef.current?.focus()
@@ -206,6 +235,7 @@ export function NoteEditor({
   // « Que retenir de la note du 1er novembre ? » ne dit pas ce qu'on demande : pour en faire une carte, un titre
   // (ou une question écrite) d'abord
   const needsTitle = !!derived?.vague
+  const askedLine = needsTitle && onlyAQuestion(body)
 
   if (!open) {
     return (
@@ -222,7 +252,7 @@ export function NoteEditor({
       type="submit"
       disabled={empty || needsTitle}
       arrow={false}
-      disabledHint={empty ? 'écris ta note pour l’enregistrer' : `donne-lui un titre${NNBSP}: il servira de question`}
+      disabledHint={empty ? 'écris ta note pour l’enregistrer' : askedLine ? 'ajoute la réponse, ou un titre' : 'écris un titre pour l’enregistrer'}
     >
       {note ? 'Enregistrer' : 'Enregistrer la note'}
     </TapeButton>
@@ -237,8 +267,8 @@ export function NoteEditor({
       style={bare ? undefined : ({ '--r': note ? '0deg' : '-.4deg' } as Style)}
     >
       <label className="field">
-        {/* une carte qui ne dirait que « la note du 1er novembre » : le titre devient la question, il n’est plus facultatif */}
-        <span>{needsTitle ? 'Titre (il servira de question)' : 'Titre (facultatif)'}</span>
+        {/* une carte qui ne dirait que « la note du 1er novembre » : le titre n’est plus facultatif (l’aide dessous dit pourquoi) */}
+        <span>{needsTitle ? 'Titre' : 'Titre (facultatif)'}</span>
         <input
           ref={titleRef}
           className="input"
@@ -248,7 +278,8 @@ export function NoteEditor({
           maxLength={120}
           autoFocus={autoFocus && !note}
         />
-        <small>Sans titre, la première ligne de la note en sert.</small>
+        {/* une question écrite à part : c'est elle qui est posée en révision, pas la première ligne */}
+        <small>{titleHelp(asCard && !question.trim(), needsTitle, !!body.trim(), askedLine)}</small>
       </label>
       <label className="field">
         <span>Entité concernée</span>
@@ -287,12 +318,12 @@ export function NoteEditor({
           {coach ? 'En faire une question de révision' : 'Me la reposer en révision'}
         </CheckLine>
         {asCard && noBack && !!title.trim() && <p className="pencil-note note-card-hint">écris un texte ou une réponse pour en faire une carte</p>}
-        {preview && (
+        {/* seulement une question qui sera vraiment posée : sans titre, « Que retenir de la note du 1er novembre ? » ne l'est pas */}
+        {preview && !needsTitle && (
           <p className="note-card-preview">
             <span className="typed-label">Question posée</span> {preview}
           </p>
         )}
-        {needsTitle && <p className="pencil-note note-card-hint">donne-lui un titre{NNBSP}: il servira de question</p>}
       </div>
       {asCard && !custom && (
         <p className="note-custom">

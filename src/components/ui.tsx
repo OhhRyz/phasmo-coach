@@ -92,6 +92,18 @@ export function Seg<T extends string | number>({
   )
 }
 
+/**
+ * Le focus sur le titre de la page, sans contour ni défilement : après avoir quitté un exercice (la page de
+ * réglages revient), ou à la fermeture d'une fiche dont le déclencheur a disparu. Sinon il tomberait sur la page
+ * entière, et Tab repartirait du haut de l'écran.
+ */
+export function focusPageTitle(): void {
+  const h1 = document.querySelector<HTMLElement>('main h1')
+  if (!h1) return
+  if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1')
+  h1.focus({ preventScroll: true })
+}
+
 export function Modal({
   open,
   onClose,
@@ -149,13 +161,7 @@ export function Modal({
       // le déclencheur a pu disparaître (note supprimée) : on rend le focus au titre de la page, sans remonter
       // en haut de la page
       if (back?.isConnected) back.focus({ preventScroll: true })
-      else {
-        const h1 = document.querySelector<HTMLElement>('main h1')
-        if (h1) {
-          if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1')
-          h1.focus({ preventScroll: true })
-        }
-      }
+      else focusPageTitle()
     }
   }, [open])
   if (!open) return null

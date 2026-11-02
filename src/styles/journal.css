@@ -386,6 +386,9 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 3px 0 -2px var(--paper), 0 4px 0 -2px var(--ink-3);
 }
 .filehead a { text-decoration: none; display: inline-flex; align-items: center; min-height: 40px; margin: -12px 0; }
+/* un en-tête qui passe sur deux lignes (téléphone, nom long) : la zone de toucher d'un lien (40 px, dont 12 au-dessus
+   et 12 au-dessous) ne déborde pas sur le lien de la ligne voisine (« ‹ Codex » ouvrait la fiche d'avant) */
+.filehead:has(a) { row-gap: 24px; }
 @media (hover: hover) { .filehead a:hover { color: var(--red-pen); } }
 .filehead b { color: var(--ink); font-weight: 700; }
 

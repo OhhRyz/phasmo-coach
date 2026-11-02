@@ -450,7 +450,7 @@
         },
         {
           "id": "encens-04",
-          "text": "Après avoir été encensée, n'importe quelle entité peut mettre 180 s avant de chasser à nouveau, mais l'Esprit doit obligatoirement attendre tout ce délai.",
+          "text": "Après avoir été encensée, une entité standard ne peut pas rechasser avant 90 s (le Démon, dès 60 s), mais n'importe quelle entité peut attendre plus longtemps, 180 s ou davantage. Seul l'Esprit est obligé d'attendre 180 s.",
           "q": "Combien de temps un Esprit doit-il attendre avant de rechasser après avoir été encensé ?",
           "a": "180 secondes.",
           "choices": [
@@ -1544,7 +1544,7 @@
       "id": "tf-18",
       "claim": "Seul un Esprit peut attendre 180 secondes avant de rechasser après avoir été encensé.",
       "answer": false,
-      "explain": "Toute entité peut attendre 180 s ; la différence est que l'Esprit doit obligatoirement attendre ce délai."
+      "explain": "Toute entité peut attendre 180 s ou davantage (une entité standard peut rechasser dès 90 s) ; la différence est que l'Esprit est obligé d'attendre ce délai."
     },
     {
       "id": "tf-19",
