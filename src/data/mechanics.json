@@ -59,8 +59,8 @@
         },
         {
           "id": "chasses-05",
-          "text": "Le paramètre Mourir augmente la durée des chasses est désactivé par défaut en Amateur, Intermédiaire et Professionnel : un meurtre termine alors la chasse. En Cauchemar et Démence (réglage Faible par défaut), chaque meurtre prolonge la chasse en cours de 15 s, 20 s ou 25 s selon la taille de la carte.",
-          "q": "En Cauchemar ou Démence (réglage Faible), de combien un meurtre prolonge-t-il la chasse sur petite carte ?",
+          "text": "Le paramètre Mourir augmente la durée des chasses est désactivé par défaut en Amateur, Intermédiaire et Professionnel : la mort d'un joueur termine alors la chasse. En Cauchemar et Démence (réglage Faible par défaut), chaque mort d'un joueur prolonge la chasse en cours de 15 s, 20 s ou 25 s selon la taille de la carte.",
+          "q": "En Cauchemar ou Démence (réglage Faible), de combien la mort d'un joueur prolonge-t-elle la chasse sur petite carte ?",
           "a": "15 secondes (20 s en carte moyenne, 25 s en grande carte).",
           "choices": [
             "15 s",
@@ -72,8 +72,8 @@
         },
         {
           "id": "chasses-06",
-          "text": "Avec le paramètre Mourir augmente la durée des chasses réglé sur Élevé, chaque meurtre prolonge la chasse de 35 s, 40 s ou 45 s selon la taille de la carte (petite, moyenne, grande). Le réglage Moyen donne +25 s, +30 s ou +35 s.",
-          "q": "Avec le réglage Élevé, de combien un meurtre prolonge-t-il une chasse sur grande carte ?",
+          "text": "Avec le paramètre Mourir augmente la durée des chasses réglé sur Élevé, chaque mort d'un joueur prolonge la chasse de 35 s, 40 s ou 45 s selon la taille de la carte (petite, moyenne, grande). Le réglage Moyen donne +25 s, +30 s ou +35 s.",
+          "q": "Avec le réglage Élevé, de combien la mort d'un joueur prolonge-t-elle une chasse sur grande carte ?",
           "a": "45 secondes.",
           "choices": [
             "25 s",
@@ -163,7 +163,7 @@
         },
         {
           "id": "chasses-13",
-          "text": "Face à un Aswang, le voir entrer dans une cachette ne suffit pas à finir la chasse : il doit atteindre ou entrer dans la même cachette que le joueur détecté pour que la chasse s'arrête.",
+          "text": "Face à un Aswang, il ne suffit pas qu'il te voie entrer dans une cachette pour que la chasse s'arrête : il doit atteindre la cachette où se trouve le joueur détecté, ou y entrer.",
           "q": "Que doit faire un Aswang pour que sa chasse s'arrête après avoir vu un joueur se cacher ?",
           "a": "Atteindre ou entrer dans la même cachette que ce joueur.",
           "choices": [
@@ -176,7 +176,7 @@
         },
         {
           "id": "chasses-14",
-          "text": "La Lune de sang a 2 % de chances d'apparaître sur n'importe quelle carte et ne peut être ni choisie ni demandée à la patte de singe. Elle rend l'entité 15 % plus rapide en chasse, augmente le drain passif de santé mentale de 100 %, multiplie les événements et augmente la paie du contrat de 10 %.",
+          "text": "La Lune de sang a 2 % de chances d'apparaître sur n'importe quelle carte et ne peut être ni choisie ni demandée à la patte de singe. Elle rend l'entité 15 % plus rapide en chasse, augmente le drain passif de santé mentale de 100 %, augmente le nombre d'événements et augmente la paie du contrat de 10 %.",
           "q": "De combien la Lune de sang accélère-t-elle l'entité pendant les chasses ?",
           "a": "De 15 %.",
           "choices": [
@@ -189,8 +189,8 @@
         },
         {
           "id": "chasses-15",
-          "text": "Pendant une chasse, utiliser la radio globale alerte l'entité uniquement à ta position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
-          "q": "Utiliser la radio globale en chasse révèle-t-il ta position ?",
+          "text": "Pendant une chasse, utiliser la radio (talkie-walkie) n'alerte l'entité qu'à ta position, car cela compte comme allumer un appareil électronique tenu en main. Par ailleurs, le brouillard ne gêne pas la vision de l'entité.",
+          "q": "Utiliser la radio (talkie-walkie) pendant une chasse révèle-t-il ta position ?",
           "a": "Oui, mais seulement la tienne (c'est un appareil électronique tenu en main).",
           "choices": [
             "Oui, la tienne et celle de toute l'équipe",
@@ -235,8 +235,8 @@
         },
         {
           "id": "vitesses-03",
-          "text": "Toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. S'y ajoutent le Deildegast (vitesse verrouillée pendant la chasse) et le Kormos (LdV seulement si tu bouges à moins de 5 m) ; les Jumeaux ont une LdV particulière.",
-          "q": "En dehors du Deildegast et du Kormos, quelles entités n'accélèrent jamais en LdV ?",
+          "text": "Toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. Le Deildegast n'accélère pas non plus en LdV (vitesse verrouillée pendant la chasse). Le Kormos, lui, ne gagne de la vitesse en LdV que si tu bouges à moins de 5 m de lui ; les Jumeaux ont une LdV particulière.",
+          "q": "En dehors du Deildegast, quelles entités n'accélèrent jamais en LdV ?",
           "a": "Revenant, Hantu, Deogen et Thayé.",
           "choices": [
             "Revenant, Hantu, Deogen et Thayé",
@@ -287,7 +287,7 @@
         },
         {
           "id": "vitesses-07",
-          "text": "Le Hantu n'a pas d'accélération en LdV : sa vitesse dépend de la température de sa pièce, de 1,4 m/s au-dessus de 15 °C à 2,7 m/s sous 0 °C (1,75 m/s entre 12 et 15 °C, 2,5 m/s entre 0 et 3 °C).",
+          "text": "Le Hantu n'a pas d'accélération en LdV : sa vitesse dépend de la température de la pièce où il se trouve, de 1,4 m/s au-dessus de 15 °C à 2,7 m/s sous 0 °C (1,75 m/s entre 12 et 15 °C, 2,5 m/s entre 0 et 3 °C).",
           "q": "Quelle est la vitesse d'un Hantu dans une pièce sous 0 °C ?",
           "a": "2,7 m/s.",
           "choices": [
@@ -378,14 +378,14 @@
         },
         {
           "id": "vitesses-14",
-          "text": "Le Deildegast commence à 3,0 m/s et perd 0,1 m/s par objet hors équipement utilisé ou ramassé depuis la dernière chasse, jusqu'à un minimum de 0,4 m/s (26 actions). Sa vitesse est verrouillée pendant la chasse, puis revient à 3,0 m/s après chaque chasse ou tentative de chasse.",
-          "q": "Combien d'actions faut-il pour ramener un Deildegast à sa vitesse minimale de 0,4 m/s ?",
-          "a": "26 actions (−0,1 m/s chacune depuis 3,0 m/s).",
+          "text": "Le Deildegast commence à 3,0 m/s et perd 0,1 m/s par objet différent (hors équipement) utilisé ou ramassé depuis la dernière chasse ou tentative de chasse, jusqu'à un minimum de 0,4 m/s (26 objets). Un même objet ne compte qu'une fois. Sa vitesse est verrouillée pendant la chasse, puis revient à 3,0 m/s après chaque chasse ou tentative de chasse.",
+          "q": "Combien d'objets différents faut-il utiliser ou ramasser pour ramener un Deildegast à sa vitesse minimale de 0,4 m/s ?",
+          "a": "26 objets (−0,1 m/s chacun depuis 3,0 m/s).",
           "choices": [
-            "10 actions",
-            "13 actions",
-            "26 actions",
-            "30 actions"
+            "10 objets",
+            "13 objets",
+            "26 objets",
+            "30 objets"
           ],
           "answer": 2
         },
@@ -502,9 +502,9 @@
         },
         {
           "id": "encens-08",
-          "text": "Après avoir marché dans le sel, une entité laisse entre 0 et 4 bruits de pas. Si elle s'arrête, les pas cessent et ne reprennent pas quand elle repart.",
-          "q": "Combien de bruits de pas une entité laisse-t-elle après avoir marché dans le sel ?",
-          "a": "Entre 0 et 4.",
+          "text": "Après avoir marché dans le sel, une entité laisse entre 0 et 4 bruits de pas ; seul le Gallu peut en faire plus de 4 (5 ou 6). Si elle s'arrête, les pas cessent et ne reprennent pas quand elle repart.",
+          "q": "Hors Gallu, combien de bruits de pas une entité laisse-t-elle après avoir marché dans le sel ?",
+          "a": "Entre 0 et 4 (seul le Gallu peut en faire plus).",
           "choices": [
             "Entre 1 et 5",
             "Entre 2 et 6",
@@ -567,7 +567,7 @@
         },
         {
           "id": "encens-13",
-          "text": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée. S'il est encensé après que le compteur a atteint 3 mais avant d'utiliser sa capacité, celle-ci est retardée et non réinitialisée, ce qui permet de la repousser de plusieurs minutes.",
+          "text": "L'Onryo tente de chasser après chaque 3e flamme soufflée, sauf si son compteur est réinitialisé. Le compteur est réinitialisé quand une tentative de chasse due à la capacité a lieu, ou quand il atteint 3 pendant qu'un minuteur d'encens est actif ou que la flamme est soufflée pendant une chasse. S'il est encensé après que le compteur a atteint 3 mais avant d'utiliser sa capacité, celle-ci est retardée et non réinitialisée : en l'encensant à répétition, tu peux la repousser de plusieurs minutes.",
           "q": "Que se passe-t-il si on encense un Onryo juste après sa 3e flamme soufflée ?",
           "a": "Sa chasse liée à la capacité est retardée, pas annulée : le compteur ne repart pas de zéro.",
           "choices": [
@@ -660,21 +660,21 @@
         },
         {
           "id": "equipement-07",
-          "text": "Les questions de localisation à la Spirit Box (« Où êtes-vous ? », « Êtes-vous proche ? », « Donnez-nous un signe. », « Êtes-vous ici ? »…) renseignent sur la distance. Des mots comme close ou behind indiquent moins de 2 m, away ou far entre 2 et 5 m dans la même pièce.",
+          "text": "Les questions de localisation à la Spirit Box (« Où êtes-vous ? », « Êtes-vous proche ? », « Donnez-nous un signe. », « Êtes-vous ici ? »… ; formules du jeu en anglais : \"Where are you?\", \"Are you close?\", \"Give us a sign.\", \"Are you here?\") renseignent sur la distance. Dans les réponses en anglais, des mots comme close ou behind indiquent moins de 2 m, away ou far entre 2 et 5 m dans la même pièce.",
           "q": "À la Spirit Box, à quelle distance correspond une réponse contenant close ou behind ?",
           "a": "Moins de 2 m (away ou far : entre 2 et 5 m, même pièce).",
           "evidence": true
         },
         {
           "id": "equipement-08",
-          "text": "Les questions d'agressivité à la Spirit Box (« Êtes-vous amical ? », « Que voulez-vous ? », « Pourquoi êtes-vous ici ? », « Voulez-vous nous blesser ? », « Devrions-nous partir ? ») renvoient une réponse agressive choisie au hasard.",
+          "text": "Les questions d'agressivité à la Spirit Box (« Êtes-vous amical ? », « Que voulez-vous ? », « Pourquoi êtes-vous ici ? », « Voulez-vous nous blesser ? », « Devrions-nous partir ? » ; formules du jeu en anglais : \"Are you friendly?\", \"What do you want?\", \"Why are you here?\", \"Do you want to hurt us?\", \"Should we leave?\") renvoient une réponse agressive choisie au hasard.",
           "q": "Que renvoie une question d'agressivité comme « Êtes-vous amical ? » à la Spirit Box ?",
           "a": "Une réponse agressive choisie au hasard.",
           "evidence": true
         },
         {
           "id": "equipement-09",
-          "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? ») renvoient un âge qui n'est pas corrélé au modèle de l'entité.",
+          "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? » ; formules du jeu en anglais : \"How old are you?\", \"Are you a child?\", \"Are you young?\", \"Are you old?\") renvoient un âge qui n'est pas corrélé au modèle de l'entité.",
           "q": "L'âge donné par la Spirit Box correspond-il au modèle de l'entité ?",
           "a": "Non, il n'est pas corrélé au modèle.",
           "evidence": true
@@ -741,8 +741,8 @@
         },
         {
           "id": "preuves-16",
-          "text": "Pas besoin d'attendre que le thermomètre passe sous 0 °C : dès qu'il affiche 0,quelque chose dans la pièce favorite (par exemple 0,6 °C), tu peux déjà compter les températures glaciales.",
-          "q": "À partir de quelle température au thermomètre peux-tu compter les températures glaciales ?",
+          "text": "Astuce du coach : pas besoin d'attendre que le thermomètre passe sous 0 °C. Dès qu'il affiche 0,quelque chose dans la pièce favorite (par exemple 0,6 °C), tu peux déjà compter les températures glaciales.",
+          "q": "D'après l'astuce du coach, à partir de quelle température au thermomètre peux-tu compter les températures glaciales ?",
           "a": "Dès 0,quelque chose (par exemple 0,6 °C), sans attendre de passer sous 0 °C.",
           "evidence": true
         },
@@ -801,7 +801,7 @@
         },
         {
           "id": "preuves-07",
-          "text": "L'Obake a 25 % de chances de ne pas laisser de preuve UV et fait disparaître les UV plus vite. Il peut laisser des empreintes uniques : main à 6 doigts (portes, fenêtres, glacières), double empreinte (interrupteurs), 5 empreintes de doigts (claviers, portes de cellule).",
+          "text": "L'Obake a 25 % de chances de ne pas laisser de preuve UV et peut faire disparaître les UV plus vite. Il peut laisser des empreintes uniques : main à 6 doigts (portes, fenêtres, glacières), double empreinte (interrupteurs), 5 empreintes de doigts (claviers, portes de cellule).",
           "q": "Quelle empreinte unique un Obake peut-il laisser sur un interrupteur ?",
           "a": "Une double empreinte de doigt.",
           "evidence": true
@@ -835,27 +835,27 @@
             "Sur toutes les photos où il apparaît",
             "Sur les photos prises pendant une chasse",
             "Sur les photos prises de très près",
-            "Sur les photos qui comptent pour l'entité"
+            "Sur les photos que le journal attribue à l'entité"
           ],
           "answer": 3
         },
         {
           "id": "preuves-11",
-          "text": "Par temps de neige, les flocons peuvent être confondus avec des orbes. La température ambiante de 5 °C permet aussi de voir sa respiration dans les pièces refroidies, voire partout si le disjoncteur est coupé, ce qui masque la pièce de l'entité.",
+          "text": "Par temps de neige, les flocons peuvent être confondus avec des orbes. La température ambiante n'est que de 5 °C : si le disjoncteur est coupé, tu vois ta respiration dans toute pièce qui a eu le temps de refroidir, et dans toutes les pièces quand la difficulté démarre disjoncteur coupé ou cassé. La pièce où se trouve l'entité devient alors plus difficile à repérer.",
           "q": "Avec quelle preuve risque-t-on de confondre la neige qui tombe ?",
           "a": "Avec les orbes fantomatiques.",
           "evidence": true
         },
         {
           "id": "preuves-12",
-          "text": "Un souffle entendu lors d'un événement ne prouve pas une bulle d'air ou un brouillard fantomatique : l'apparition en marche peut produire le même son. Il faut avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni.",
-          "q": "Un souffle entendu pendant un événement suffit-il pour écarter l'Oni ?",
-          "a": "Non, il faut avoir vu la bulle d'air ou le brouillard.",
+          "text": "Un sifflement entendu pendant un événement ne prouve pas que c'était l'événement « Forme de Brume » (la bulle d'air) : l'apparition qui marche peut produire le même son. Il faut avoir vu la bulle d'air avant d'écarter l'Oni.",
+          "q": "Un sifflement entendu pendant un événement suffit-il pour écarter l'Oni ?",
+          "a": "Non, il faut avoir vu la bulle d'air elle-même (l'événement « Forme de Brume »).",
           "choices": [
-            "Oui, un seul souffle entendu suffit à l'écarter",
-            "Oui, si le souffle vient de sa pièce favorite",
+            "Oui, un seul sifflement entendu suffit à l'écarter",
+            "Oui, si le sifflement vient de sa pièce favorite",
             "Non, il faut l'avoir entendu deux fois de suite",
-            "Non, il faut avoir vu la bulle d'air ou le brouillard"
+            "Non, il faut avoir vu la bulle d'air elle-même"
           ],
           "answer": 3
         },
@@ -865,23 +865,23 @@
           "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
           "a": "N'importe quel joueur.",
           "choices": [
-            "Sa cible, quand elle tient le micro",
-            "Tout joueur qui écoute au micro",
-            "L'hôte, quand il tient le micro",
-            "Le joueur le plus proche d'elle"
+            "Seulement la cible de la Banshee",
+            "Tout joueur, et pas seulement sa cible",
+            "Seulement l'hôte de la partie",
+            "Seulement le joueur le plus proche"
           ],
           "answer": 1
         },
         {
           "id": "preuves-14",
-          "text": "L'Ombre est la seule entité pouvant apparaître en silhouette noire et floue (modèle d'ombre) pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
-          "q": "Quelle entité peut apparaître en silhouette noire et floue pendant l'événement d'un objet maudit ?",
-          "a": "L'Ombre.",
+          "text": "L'Ombre est la seule entité pouvant apparaître sous forme d'ombre pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
+          "q": "Pendant les événements de quels objets maudits l'Ombre est-elle la seule à pouvoir apparaître sous forme d'ombre ?",
+          "a": "Patte de singe, boîte à musique et cercle d'invocation.",
           "choices": [
-            "L'Ombre",
-            "Le Fantôme",
-            "Le Cauchemar",
-            "Le Démon"
+            "Patte de singe, boîte à musique et cercle d'invocation",
+            "Planche Ouija, miroir hanté et cartes de tarot",
+            "Poupée vaudou, planche Ouija et miroir hanté",
+            "Cartes de tarot, poupée vaudou et patte de singe"
           ],
           "answer": 0
         },
@@ -907,7 +907,7 @@
       "facts": [
         {
           "id": "portees-01",
-          "text": "La portée d'interaction d'une entité est une boîte centrée sur elle, qui pivote avec ses mouvements. Elle crée ainsi un rayon d'interaction effectif.",
+          "text": "La portée d'interaction d'une entité est une boîte centrée sur elle, qui pivote avec ses mouvements. Elle crée ainsi un rayon d'interaction effectif. D'après tybayn, ces chiffres ne sont pas vérifiés officiellement, ou seulement en partie : ils viennent de recherches de la communauté.",
           "q": "Quelle forme a la portée d'interaction d'une entité ?",
           "a": "Une boîte centrée sur l'entité qui pivote avec elle.",
           "choices": [
@@ -933,8 +933,8 @@
         },
         {
           "id": "portees-03",
-          "text": "Sur les cartes petites et moyennes, la boîte d'interaction des Jumeaux mesure 6 m du centre au bord, soit un rayon effectif de 8,48 m.",
-          "q": "Quel est le rayon d'interaction effectif des Jumeaux sur une carte petite ou moyenne ?",
+          "text": "Sur les cartes petites et moyennes, la boîte de la portée étendue des Jumeaux mesure 6 m du centre au bord, soit un rayon effectif de 8,48 m (leur portée standard reste de 2,12 m).",
+          "q": "Sur une carte petite ou moyenne, quel est le rayon effectif de la portée étendue des Jumeaux ?",
           "a": "8,48 m.",
           "choices": [
             "2,12 m",
@@ -1011,8 +1011,8 @@
         },
         {
           "id": "portees-09",
-          "text": "Le Myling peut émettre des sons vocaux en chasse comme toute entité, mais ses sons ne s'entendent que jusqu'à 12 m au lieu de 20 m, ce qui le rend un peu plus discret.",
-          "q": "Jusqu'à quelle distance entend-on les sons du Myling ?",
+          "text": "Le Myling peut émettre des sons vocaux en chasse comme toute entité, mais en chasse ses pas et sa voix ne s'entendent que jusqu'à 12 m au lieu de 20 m, ce qui le rend un peu plus discret.",
+          "q": "En chasse, jusqu'à quelle distance entend-on les pas et la voix du Myling ?",
           "a": "12 m, au lieu de 20 m pour une entité normale.",
           "choices": [
             "5 m",
@@ -1042,8 +1042,8 @@
           "a": "Non, mais elle peut chasser depuis une pièce adjacente.",
           "choices": [
             "Oui, elle chasse comme n'importe quelle autre entité",
-            "Non, jamais tant qu'il reste un joueur dedans",
-            "Oui, mais seulement quand la santé est basse",
+            "Non, jamais, ni dedans ni depuis une pièce voisine",
+            "Oui, mais seulement quand la santé mentale est basse",
             "Non, mais depuis une pièce voisine, c'est possible"
           ],
           "answer": 3
@@ -1074,7 +1074,7 @@
           "q": "Quand le miroir hanté se brise-t-il ?",
           "a": "Quand l'utilisateur tombe à court de santé mentale ou l'utilise sous 20 %.",
           "choices": [
-            "Après 10 s d'utilisation, quelle que soit ta santé",
+            "Après 10 s d'usage, quelle que soit ta santé mentale",
             "Utilisé sous 50 % de santé mentale",
             "Quand l'entité passe à moins de 5 m du miroir",
             "À court de santé mentale, ou utilisé sous 20 %"
@@ -1083,9 +1083,9 @@
         },
         {
           "id": "maudits-03",
-          "text": "À moins de 20 m de l'entité, la boîte à musique la fait chanter, ce qui révèle sa position sans la rendre visible. À moins de 5 m, l'entité démarre un événement où elle devient visible et marche vers la boîte.",
+          "text": "À moins de 20 m de l'entité, la boîte à musique la fait chanter, ce qui révèle sa position sans la rendre visible. À moins de 5 m (2,5 m pour un Yokai), l'entité démarre un événement où elle devient visible et marche vers la boîte.",
           "q": "Jusqu'à quelle distance de l'entité la boîte à musique la fait-elle chanter ?",
-          "a": "Moins de 20 m (moins de 5 m : elle apparaît et marche vers la boîte).",
+          "a": "Moins de 20 m (moins de 5 m, ou 2,5 m pour un Yokai : elle apparaît et marche vers la boîte).",
           "choices": [
             "À moins de 3 m",
             "À moins de 5 m",
@@ -1109,7 +1109,7 @@
         },
         {
           "id": "maudits-05",
-          "text": "À la planche Ouija, « Où êtes-vous ? » donne la pièce actuelle de l'entité, pas sa pièce favorite, pour 50 % de santé mentale. Seul le miroir montre la pièce favorite.",
+          "text": "À la planche Ouija, « Où êtes-vous ? » (formule du jeu en anglais : \"Where are you?\") donne la pièce actuelle de l'entité, pas sa pièce favorite, pour 50 % de santé mentale. Seul le miroir montre la pièce favorite.",
           "q": "Que donne la question « Où êtes-vous ? » à la planche Ouija ?",
           "a": "La pièce actuelle de l'entité (pas la favorite), pour 50 % de santé mentale.",
           "choices": [
@@ -1122,7 +1122,7 @@
         },
         {
           "id": "maudits-06",
-          "text": "À la planche Ouija, « Cache-cache ? » lance un compte à rebours depuis 5 puis une chasse. Cette question ne coûte pas de santé mentale mais brise la planche.",
+          "text": "À la planche Ouija, « Cache-cache ? » (formule du jeu en anglais : \"Hide and seek?\") lance un compte à rebours depuis 5 puis une chasse. Cette question ne coûte pas de santé mentale mais brise la planche.",
           "q": "Que se passe-t-il après « Cache-cache ? » à la planche Ouija ?",
           "a": "Compte à rebours depuis 5, puis chasse ; la planche se brise.",
           "choices": [
@@ -1148,7 +1148,7 @@
         },
         {
           "id": "maudits-08",
-          "text": "À la planche Ouija, « Quel âge avez-vous ? » renvoie l'âge actuel de l'entité pour 5 % de santé mentale. Si le nombre change, l'entité est un Thayé.",
+          "text": "À la planche Ouija, « Quel âge avez-vous ? » (formule du jeu en anglais : \"How old are you?\") renvoie l'âge actuel de l'entité pour 5 % de santé mentale. Si le nombre change, l'entité est un Thayé.",
           "q": "Quelle entité trahit un âge qui change à la planche Ouija ?",
           "a": "Le Thayé.",
           "choices": [
@@ -1200,7 +1200,7 @@
         },
         {
           "id": "maudits-12",
-          "text": "Le vœu « Je souhaite partir » déverrouille toutes les portes de sortie, même pendant une chasse. En contrepartie, le joueur est ralenti et sa vision est obscurcie pendant 5 s.",
+          "text": "Le vœu « Je souhaite partir » (formule du jeu en anglais : \"I wish to leave\") déverrouille toutes les portes de sortie, même pendant une chasse. En contrepartie, le joueur est ralenti et sa vision est obscurcie pendant 5 s.",
           "q": "Le vœu « Je souhaite partir » fonctionne-t-il pendant une chasse ?",
           "a": "Oui, il déverrouille toutes les sorties (avec 5 s de lenteur et de vision obscurcie).",
           "choices": [
@@ -1213,7 +1213,7 @@
         },
         {
           "id": "maudits-13",
-          "text": "« Je souhaite que le fantôme soit emprisonné » bloque l'entité dans sa pièce 1 min, sans chasse, déplacement ni capacité. Ensuite, les portes de la pièce du joueur se verrouillent et une chasse démarre, avec 25 % de chances qu'elles se déverrouillent après la période de grâce.",
+          "text": "« Je souhaite que le fantôme soit emprisonné » (formule du jeu en anglais : \"I wish the ghost was trapped\") bloque l'entité dans sa pièce 1 min, sans chasse, déplacement ni capacité. En contrepartie, les portes de la pièce du joueur sont verrouillées et une chasse démarre à la fin de cette minute. Tybayn indique « 25 % » pour le déverrouillage des portes après la période de grâce (25 % de chances ou 25 % des portes : à vérifier).",
           "q": "Combien de temps le vœu « emprisonné » bloque-t-il l'entité ?",
           "a": "1 minute, avant une chasse avec les portes du joueur verrouillées.",
           "choices": [
@@ -1226,14 +1226,14 @@
         },
         {
           "id": "maudits-14",
-          "text": "« Je souhaite avoir de l'information » retire 1 preuve incorrecte du journal et barre les entités associées. En contrepartie, une chasse démarre près du joueur, dont la vision et l'ouïe restent réduites jusqu'à sa mort ou la fin de la partie.",
+          "text": "« Je souhaite avoir de l'information » (formule du jeu en anglais : \"I wish for knowledge\") retire 1 preuve incorrecte du journal et barre les entités associées. En contrepartie, une chasse démarre près du joueur, dont la vision et l'ouïe restent réduites jusqu'à sa mort ou la fin de la partie.",
           "q": "Quel est l'avantage du vœu « Je souhaite avoir de l'information » ?",
           "a": "Il retire 1 preuve incorrecte du journal.",
           "evidence": true
         },
         {
           "id": "maudits-15",
-          "text": "Un paquet de tarot contient 10 cartes aléatoires. La Mort (Death, 10 %) déclenche une chasse maudite, Le Pendu (The Hanged Man, 1 %) tue le joueur, L'Ermite (The Hermit, 10 %) enferme l'entité 90 s dans sa pièce favorite sans effet sur les chasses, et Le Fou (The Fool, 17 %) n'a aucun effet et sort à 100 % pendant les chasses.",
+          "text": "Un paquet de tarot contient 10 cartes aléatoires. La Mort (Death, 10 %) déclenche une chasse maudite, Le Pendu (The Hanged Man, 1 %) tue le joueur, L'Ermite (The Hermit, 10 %) renvoie l'entité dans sa pièce favorite et l'y enferme 90 s, sans effet sur les chasses ni sur les événements, et Le Fou (The Fool, 17 %) n'a aucun effet et sort à 100 % pendant les chasses.",
           "q": "Quelle carte de tarot sort à coup sûr si on tire pendant une chasse ?",
           "a": "Le Fou (The Fool), qui n'a aucun effet.",
           "choices": [
@@ -1266,7 +1266,7 @@
         },
         {
           "id": "sante-02",
-          "text": "La cible de la Banshee est tirée au hasard au début du contrat et reste la même jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La suivante est le premier joueur vivant dans l'ordre du lobby (à partir de l'hôte) ; en solo, c'est toujours l'hôte.",
+          "text": "La cible de la Banshee est tirée au hasard au début du contrat et reste la même jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La suivante est le premier joueur vivant dans l'ordre du lobby (à partir de l'hôte) qui n'était pas la cible précédente, sauf s'il ne reste qu'un joueur. En solo, c'est toujours l'hôte.",
           "q": "Quand la cible de la Banshee change-t-elle ?",
           "a": "Quand un joueur meurt ou quand la cible quitte la partie.",
           "choices": [
@@ -1279,8 +1279,8 @@
         },
         {
           "id": "sante-03",
-          "text": "Bug de la Banshee : si la cible meurt en utilisant « Je souhaite être en vie » à la patte de singe, elle reste la cible une fois morte. Si sa santé mentale dépassait 50 %, la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas.",
-          "q": "Que se passe-t-il si la cible de la Banshee meurt via « Je souhaite être en vie » avec plus de 50 % de santé ?",
+          "text": "Bug de la Banshee : si la cible meurt en utilisant « Je souhaite être en vie » (formule du jeu en anglais : \"I wish for life\") à la patte de singe, elle reste la cible une fois morte. Si sa santé mentale dépassait 50 %, la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas.",
+          "q": "Que se passe-t-il si la cible de la Banshee meurt via « Je souhaite être en vie » avec plus de 50 % de santé mentale ?",
           "a": "Elle reste la cible et la Banshee ne chasse plus tant qu'un autre joueur ne meurt pas.",
           "choices": [
             "La cible passe aussitôt au joueur suivant",
@@ -1344,7 +1344,7 @@
         },
         {
           "id": "sante-08",
-          "text": "Coûts à la planche Ouija : « Où êtes-vous ? » 50 % ; « Êtes-vous ici ? / Êtes-vous proche ? », « Où est l'os ? » et « Répondez-vous à tout le monde ? » 20 % ; « Cache-cache ? » 0 % (brise la planche) ; la plupart des autres questions 5 %.",
+          "text": "Coûts à la planche Ouija : « Où êtes-vous ? » 50 % ; « Êtes-vous ici ? / Êtes-vous proche ? », « Où est l'os ? » et « Répondez-vous à tout le monde ? » 20 % ; « Cache-cache ? » 0 % (brise la planche) ; la plupart des autres questions 5 %. Formules du jeu en anglais : \"Where are you?\", \"Are you here? / Are you close?\", \"Where is the bone?\", \"Do you respond to everyone?\", \"Hide and seek?\".",
           "q": "Combien de santé mentale coûte « Où est l'os ? » à la planche Ouija ?",
           "a": "20 %.",
           "choices": [
@@ -1357,7 +1357,7 @@
         },
         {
           "id": "sante-09",
-          "text": "À la planche Ouija, « Quelle est ma santé mentale ? » répond Healthy (plus de 80 %), Good (60–80 %), Average (40–60 %), Bad (20–40 %) ou Awful (moins de 20 %), pour 5 %.",
+          "text": "À la planche Ouija, « Quelle est ma santé mentale ? » (formule du jeu en anglais : \"What is my sanity?\") répond Healthy (plus de 80 %), Good (60–80 %), Average (40–60 %), Bad (20–40 %) ou Awful (moins de 20 %), pour 5 %.",
           "q": "Quelle réponse donne la planche Ouija à « Quelle est ma santé mentale ? » sous 20 % ?",
           "a": "Awful.",
           "choices": [
@@ -1370,7 +1370,7 @@
         },
         {
           "id": "sante-10",
-          "text": "À la planche Ouija, « Suis-je fou ? » répond No (plus de 90 %), Maybe (20–90 %) ou Yes (moins de 20 %). « À quel point suis-je fou ? » (How insane am I?) répond Not Very (plus de 50 %), Very (25–50 %) ou Insane (moins de 25 %).",
+          "text": "À la planche Ouija, « Suis-je fou ? » (formule du jeu en anglais : \"Am I insane?\") répond No (plus de 90 %), Maybe (20–90 %) ou Yes (moins de 20 %). « À quel point suis-je fou ? » (formule du jeu en anglais : \"How insane am I?\") répond Not Very (plus de 50 %), Very (25–50 %) ou Insane (moins de 25 %).",
           "q": "Sous quel seuil la planche Ouija répond-elle Yes à « Suis-je fou ? » ?",
           "a": "Sous 20 % de santé mentale.",
           "choices": [
@@ -1383,20 +1383,20 @@
         },
         {
           "id": "sante-11",
-          "text": "Le vœu « Je souhaite être sain d'esprit » ramène la santé mentale de tous à la moyenne de 50 %. En contrepartie, la pièce favorite devient une pièce aléatoire et le drain de santé mentale augmente de 50 %.",
+          "text": "Le vœu « Je souhaite être sain d'esprit » (formule du jeu en anglais : \"I wish for sanity\") ramène la santé mentale de tous à la moyenne de 50 %. En contrepartie, la pièce favorite devient une pièce aléatoire et le drain de santé mentale augmente de 50 %.",
           "q": "Quel est l'inconvénient du vœu « Je souhaite être sain d'esprit » ?",
           "a": "Pièce favorite aléatoire et drain de santé mentale augmenté de 50 %.",
           "choices": [
             "Chasse immédiate et portes de la pièce verrouillées",
-            "Pièce favorite aléatoire et drain de santé +50 %",
+            "Pièce favorite aléatoire et drain de santé mentale +50 %",
             "Vision et ouïe réduites jusqu'à la fin de la partie",
-            "Drain de santé +100 % jusqu'à la fin de la partie"
+            "Drain de santé mentale +100 % jusqu'à la fin de la partie"
           ],
           "answer": 1
         },
         {
           "id": "sante-12",
-          "text": "Le vœu « Je souhaite avoir [météo] » change la météo pour celle demandée, au prix de 25 % de santé mentale.",
+          "text": "Le vœu « Je souhaite avoir [météo] » (formule du jeu en anglais : \"I wish for [weather]\") change la météo pour celle demandée, au prix de 25 % de santé mentale.",
           "q": "Combien de santé mentale coûte un vœu de météo à la patte de singe ?",
           "a": "25 %.",
           "choices": [
@@ -1505,7 +1505,7 @@
     },
     {
       "id": "tf-12",
-      "claim": "Les sons du Myling cessent d'être audibles à 12 m au lieu de 20 m pour une entité normale.",
+      "claim": "Pendant une chasse, les pas et la voix du Myling ne s'entendent plus au-delà de 12 m, contre 20 m pour une entité normale.",
       "answer": true,
       "explain": "C'est ce qui le rend un peu plus discret. Il peut toutefois émettre des sons vocaux en chasse comme les autres."
     },
@@ -1518,9 +1518,9 @@
     },
     {
       "id": "tf-14",
-      "claim": "Un souffle entendu pendant un événement prouve que c'était une bulle d'air ou un brouillard fantomatique.",
+      "claim": "Un sifflement entendu pendant un événement prouve que c'était l'événement « Forme de Brume » (la bulle d'air).",
       "answer": false,
-      "explain": "L'apparition en marche peut produire le même son. Il faut voir la bulle d'air ou le brouillard avant d'écarter l'Oni."
+      "explain": "L'apparition qui marche peut produire le même sifflement. Assure-toi d'avoir vu la bulle d'air avant d'écarter l'Oni."
     },
     {
       "id": "tf-15",
@@ -1617,15 +1617,15 @@
     },
     {
       "id": "tf-30",
-      "claim": "Utiliser la radio globale pendant une chasse fait détecter les autres joueurs par l'entité.",
+      "claim": "Utiliser la radio (talkie-walkie) pendant une chasse fait détecter les autres joueurs par l'entité.",
       "answer": false,
-      "explain": "Elle n'alerte l'entité qu'à ta propre position, car cela compte comme allumer un appareil électronique tenu."
+      "explain": "La radio n'alerte l'entité qu'à ta propre position, car cela compte comme allumer un appareil électronique tenu en main."
     },
     {
       "id": "tf-31",
-      "claim": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée.",
+      "claim": "L'Onryo tente de chasser après chaque 3e flamme soufflée, sauf si son compteur est réinitialisé.",
       "answer": true,
-      "explain": "La chasse est mise en file après la 3e extinction ; une chasse en cours ou un temps de recharge (y compris d'encens) peut seulement la retarder."
+      "explain": "C'est sa capacité. Le compteur est réinitialisé quand une tentative de chasse due à la capacité a lieu, ou quand il atteint 3 pendant qu'un minuteur d'encens est actif ou que la flamme est soufflée pendant une chasse. Une flamme soufflée pendant un temps de recharge de chasse, ou un encens utilisé une fois le compteur à 3, ne fait que retarder la tentative."
     },
     {
       "id": "tf-32",
@@ -1653,21 +1653,21 @@
     },
     {
       "id": "tf-36",
-      "claim": "Un Kormos ne peut pas détecter un joueur parfaitement immobile et silencieux.",
+      "claim": "Un Kormos ne peut pas te détecter si tu restes parfaitement immobile, sans parler et sans appareil électronique allumé.",
       "answer": true,
-      "explain": "Il ne te détecte pas, mais il peut quand même te tuer s'il passe par hasard sur toi."
+      "explain": "Il détecte la voix et l'électronique à portée normale, plus tes déplacements. Immobile et silencieux, il ne te détecte pas, mais il peut quand même te tuer s'il passe par hasard sur toi."
     },
     {
       "id": "tf-37",
       "claim": "Les portées d'interaction des entités sont deux fois plus grandes sur les grandes cartes.",
       "answer": true,
-      "explain": "Rayon effectif de 4,24 m au lieu de 2,12 m pour une entité standard, et 16,97 m au lieu de 8,48 m pour les Jumeaux."
+      "explain": "Rayon effectif de 4,24 m au lieu de 2,12 m pour une entité standard, et 16,97 m au lieu de 8,48 m pour la portée étendue des Jumeaux. D'après tybayn, ces chiffres ne sont pas vérifiés officiellement, ou seulement en partie : ils viennent de recherches de la communauté."
     },
     {
       "id": "tf-38",
       "claim": "Pendant une Lune de sang, l'entité est 15 % plus rapide en chasse.",
       "answer": true,
-      "explain": "La Lune de sang double aussi le drain passif de santé mentale (+100 %) et augmente le nombre d'événements."
+      "explain": "La Lune de sang ajoute aussi +100 % au réglage de drain passif de santé mentale et augmente le nombre d'événements."
     },
     {
       "id": "tf-39",

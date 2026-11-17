@@ -16,6 +16,7 @@ import {
   standardSanity,
   standardSpeed,
   TESTS_PER_GHOST,
+  tellNumbers,
   thresholds,
   withoutEvidenceAsides,
   zeroTests,
@@ -636,13 +637,22 @@ function conditionalValues(summary: string, unit: '%' | 'm/s', own: ReadonlySet<
   return out
 }
 
+/**
+ * Dans un énoncé qui nomme déjà l'entité, « près de l'entité » se dit « près d'elle » ou « près de lui » : les
+ * résumés des fiches écrivent « l'entité » (ils se citent aussi là où un pronom soufflerait la réponse).
+ */
+function selfRef(condition: string, g: Ghost): string {
+  const fem = isFeminine(g.name)
+  return condition.replace(/(?<!\p{L})de l['’]entité(?!\p{L})/gu, fem ? 'd’elle' : 'de lui').replace(/(?<!\p{L})que l['’]entité(?!\p{L})/gu, fem ? 'qu’elle' : 'que lui')
+}
+
 /** La fin d'un énoncé pour une condition du résumé (« enragé » → « en état enragé », « immobile » → « si tu restes immobile près d'elle »). */
 function askWhen(condition: string, g: Ghost): string {
-  const c = condition.trim()
+  const c = selfRef(condition.trim(), g)
   if (/^(?:normal|enragé|affaibli|calme|agressif)$/u.test(c)) return ` en état ${c}`
   if (c === 'jeune') return ' encore jeune'
   if (c === 'vieux') return ' devenu vieux'
-  if (/^(?:si\s+)?immobile$/u.test(c)) return ` si tu restes immobile près ${isFeminine(g.name) ? 'd’elle' : 'de lui'}`
+  if (/^(?:si\s+)?immobile(?: près (?:d’elle|de lui))?$/u.test(c)) return ` si tu restes immobile près ${isFeminine(g.name) ? 'd’elle' : 'de lui'}`
   if (c === 'loin' || c === 'près') return ` ${c} de sa cible`
   if (/^vers\s/u.test(c)) return ` quand ${isFeminine(g.name) ? 'elle' : 'il'} se dirige ${c}`
   if (/^(?:si|près|en|dans|quand|lorsqu|sous|sur)(?!\p{L})/u.test(c)) return ` ${c}`
@@ -661,7 +671,7 @@ const sanityAsks = perGhost((g): NumberAsk[] => {
       .replace(/^\d+\s?%\s*/u, '')
       .trim()
     // « 50 % normal » (le Gallu) : un seul mot, c'est un état
-    const precise = !condition || /^d(?:e|u|es)\s/u.test(condition) ? '' : /^\p{L}+$/u.test(condition) ? ` (en état ${condition})` : ` (${condition})`
+    const precise = !condition || /^d(?:e|u|es)\s/u.test(condition) ? '' : /^\p{L}+$/u.test(condition) ? ` (en état ${condition})` : ` (${selfRef(condition, g)})`
     out.push({
       key: `q:san:${g.id}`,
       kind: 'san',
@@ -1167,12 +1177,14 @@ const speedProfile: Gen = (g, ctx) => {
 
 // les signes clés résument parfois des propriétés partagées (« vitesse standard ») : on n'utilise ici
 // que les signes « 0 preuve » de tybayn, propres à l'entité (k : rang parmi eux)
-const tellQuotes = perGhost((g) =>
-  g.tells
+// k : numéro de carte du signe (le même que sa carte « signe à reconnaître », quand il en a une)
+const tellQuotes = perGhost((g) => {
+  const numbers = tellNumbers(g)
+  return g.tells
     .filter((t) => t.zeroEvidence)
-    .map((t, k) => ({ quote: quoteFor(t.text, g), k }))
-    .filter((t): t is { quote: string; k: number } => t.quote != null),
-)
+    .map((t) => ({ quote: quoteFor(t.text, g), k: numbers.get(t)! }))
+    .filter((t): t is { quote: string; k: number } => t.quote != null)
+})
 
 const whichGhostTell: Gen = (g, ctx) => {
   // le Mimic n'est jamais une mauvaise réponse (il copie tout) : parmi les choix, il serait toujours la bonne
@@ -2594,8 +2606,10 @@ function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: 
   ).filter((v) => !nameless || !namesAny(v, all))
   const position = zeroTests(g).findIndex((x) => x.k === k)
   const that = /^Les\s/u.test(g.name) ? `que ce sont ${le(g.name)}` : `que c’est ${le(g.name)}`
-  // sans nom d'entité, les mauvaises réponses longues manquent : la bonne réponse finirait trop souvent la plus longue
-  const order = nameless ? longestByChance(ctx.rng) : undefined
+  // les mauvaises réponses longues manquent (sans nom d'entité sur une carte ; et partout depuis que les tests
+  // déduits, souvent longs, ont quitté les fiches) : essayée en dernier recours, « la bonne est la plus longue »
+  // passerait le plus souvent pour un test long, et la plus longue serait trop souvent la bonne
+  const order = longestByChance(ctx.rng)
   return byRank(ctx.rng, (ranks) => {
     for (const right of versions) {
       if (hintAlone(g, right, pool.map((o) => o.label))) continue

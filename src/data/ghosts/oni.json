@@ -15,7 +15,7 @@
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
       "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue.",
-      "Sa vitesse est normale, mais il est plus visible pendant les chasses : son clignotement le laisse apparent plus longtemps que les autres entités."
+      "Sa vitesse est normale, mais l'entité clignote plus fréquemment pendant les chasses, ce qui la rend plus visible."
     ]
   },
   "huntSanity": {
@@ -25,28 +25,31 @@
     "summary": "50 %",
     "details": [
       "Seuil de chasse standard : 50 % de santé mentale moyenne.",
-      "Ses événements drainent 20 % de santé mentale au lieu de 10 %, ce qui fait souvent atteindre le seuil plus vite."
+      "Ses événements drainent 20 % de santé mentale au lieu de 10 %."
     ]
   },
-  "summary": "Une entité démonstrative, très active près des groupes, qui se montre beaucoup pendant les chasses et dont les événements coûtent deux fois plus de santé mentale, mais qui ne fait jamais le brouillard fantomatique.",
+  "summary": "Une entité démonstrative, très active près des groupes, qui se montre beaucoup pendant les chasses et dont les événements coûtent deux fois plus de santé mentale, mais qui ne fait jamais l'événement « Forme de Brume » (la bulle d'air).",
   "keyTells": [
-    "Plus visible en chasse : reste apparent plus longtemps entre deux clignotements",
+    "Plus visible en chasse : clignote plus fréquemment",
     "Événement : −20 % de santé mentale au lieu de −10 %",
-    "Ne fait jamais l'événement bulle d'air / brouillard fantomatique",
+    "Ne fait jamais l'événement « Forme de Brume » (la bulle d'air)",
     "Plus actif quand plusieurs joueurs sont à proximité"
   ],
   "tells": [
     {
       "text": "Draine 20 % de santé mentale lors des événements (au lieu des 10 % standard).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
-      "text": "Ne fait jamais l'événement « brouillard fantomatique » (bulle d'air), tout en restant plus visible que la normale en chasse.",
-      "zeroEvidence": true
+      "text": "Ne fait jamais l'événement « Forme de Brume » (la bulle d'air), tout en restant plus visible que la normale en chasse.",
+      "zeroEvidence": true,
+      "card": 1
     },
     {
-      "text": "Est plus visible pendant les chasses : reste visible plus longtemps que les autres entités à chaque clignotement.",
-      "zeroEvidence": true
+      "text": "Clignote plus fréquemment pendant les chasses, ce qui rend l'entité plus visible.",
+      "zeroEvidence": true,
+      "card": 2
     }
   ],
   "behaviors": [
@@ -63,16 +66,18 @@
   "confirmationTests": [
     {
       "text": "Observe l'entité pendant une chasse : si l'entité est plus visible que la normale tout en gardant une vitesse standard, c'est un Oni (le Deogen aussi est plus visible en chasse, mais sa vitesse est complètement différente).",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Si l'affichage de la santé mentale est activé, relève ta santé mentale juste avant et juste après un événement : une baisse de 20 % au lieu de 10 % désigne un Oni.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     }
   ],
   "eliminationTests": [
     {
-      "text": "Si tu vois un événement « brouillard fantomatique » (bulle d'air), ce n'est pas un Oni. Attention : l'événement de l'apparition en marche peut produire le même « souffle » ; assure-toi d'avoir vu la bulle d'air ou le brouillard avant d'écarter l'Oni."
+      "text": "Si tu vois un événement « Forme de Brume » (la bulle d'air), ce n'est pas un Oni. Attention : l'événement où l'entité apparaît en marchant peut produire le même « sifflement » ; assure-toi d'avoir vu la bulle d'air ou la brume avant d'écarter l'Oni."
     }
   ],
   "confusions": [
@@ -82,15 +87,15 @@
     },
     {
       "with": "phantom",
-      "why": "Clignotement opposé : le Fantôme est invisible plus longtemps pendant les chasses, l'Oni visible plus longtemps."
+      "why": "Clignotement opposé : le Fantôme reste invisible plus longtemps pendant les chasses, l'Oni est plus visible."
     },
     {
       "with": "jinn",
-      "why": "Mêmes EMF 5 et températures glaciales. Le Djinn fonce à 2,5 m/s en LdV quand le disjoncteur est allumé et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF au disjoncteur)."
+      "why": "Mêmes EMF 5 et températures glaciales. Disjoncteur allumé, le Djinn passe à 2,5 m/s quand il te voit à plus de 3 m (1,7 m/s sinon) et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF 2 ou 5 au disjoncteur)."
     },
     {
       "with": "shade",
-      "why": "Mêmes EMF 5 et températures glaciales, mais tempérament opposé : l'Ombre ne fait rien quand tu es dans sa pièce et ne chasse pas avant 35 %."
+      "why": "Mêmes EMF 5 et températures glaciales, mais tempérament opposé : l'Ombre ne chasse pas, ne fait pas d'événement et ne fait pas d'interaction à EMF 2, 3 ou 5 tant qu'elle est dans la même pièce qu'un joueur, et elle ne chasse pas avant 35 %."
     },
     {
       "with": "the-twins",
@@ -110,7 +115,7 @@
     },
     {
       "with": "deildegast",
-      "why": "Mêmes EMF 5 et D.O.T.S. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet utilisé avant la chasse."
+      "why": "Mêmes EMF 5 et D.O.T.S. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet différent, hors équipement, ramassé ou manipulé par les joueurs depuis la dernière chasse."
     },
     {
       "with": "yurei",
@@ -122,7 +127,7 @@
     },
     {
       "with": "obake",
-      "why": "L'Obake se reconnaît lui aussi à son clignotement en chasse : il change de modèle le temps d'un clignotement, alors que l'Oni reste simplement visible plus longtemps. Une seule preuve en commun (EMF 5)."
+      "why": "L'Obake se reconnaît lui aussi à son clignotement en chasse : il change de modèle le temps d'un clignotement, alors que l'Oni est simplement plus visible. Une seule preuve en commun (EMF 5)."
     }
   ],
   "observations": [
@@ -132,17 +137,17 @@
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et son pas reste normal, sans ralentir une fois sur toi.",
+      "text": "Pendant la chasse, l'entité est nettement plus visible que d'habitude (clignotement plus fréquent), et son pas reste normal, sans ralentir une fois sur toi.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Pendant la chasse, tu suis facilement l'entité des yeux : entre deux clignotements, elle reste visible nettement plus longtemps qu'une entité ordinaire.",
+      "text": "Pendant la chasse, tu suis facilement l'entité des yeux : elle est nettement plus visible qu'une entité ordinaire (elle clignote plus fréquemment).",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Lors des événements, l'entité apparaît plus souvent avec son apparence complète qu'en silhouette noire.",
+      "text": "Lors des événements, l'entité apparaît avec son modèle complet plus souvent que ne le ferait une autre entité.",
       "kind": "event",
       "strength": "hint"
     },
@@ -167,7 +172,7 @@
         "Quand un appareil électronique est allumé près de lui"
       ],
       "answer": 2,
-      "explain": "L'Oni est plus actif quand plusieurs personnes sont près de lui. C'est la voix qui attire le Yokai, la lumière allumée qui fait errer le Cauchemar, et l'électronique active qui accélère le Raiju."
+      "explain": "L'Oni est plus actif quand plusieurs personnes sont près de lui. C'est la voix qui rend le Yokai plus actif, la lumière allumée qui fait errer le Cauchemar, et l'électronique active qui accélère le Raiju."
     },
     {
       "q": "Combien de santé mentale un événement d'Oni draine-t-il ?",
@@ -183,24 +188,24 @@
     {
       "q": "Quel type d'événement un Oni ne fait-il jamais ?",
       "choices": [
-        "Le brouillard fantomatique",
+        "L'événement Forme de Brume",
         "L'événement de poursuite",
         "L'apparition éclair devant toi",
         "L'événement de chant"
       ],
       "answer": 0,
-      "explain": "L'Oni ne fait pas le brouillard fantomatique (la bulle d'air). Il apparaît au contraire volontiers avec son modèle complet, peut faire la poursuite, l'apparition éclair ou le chant, et ses événements coûtent 20 % de santé mentale."
+      "explain": "L'Oni ne fait pas l'événement « Forme de Brume » (la bulle d'air). Il apparaît au contraire plus volontiers avec son modèle complet, et ses événements coûtent 20 % de santé mentale au lieu de 10 %."
     },
     {
-      "q": "Pendant un événement, tu entends un « souffle » sans rien voir. Peux-tu exclure l'Oni ?",
+      "q": "Pendant un événement, tu entends un « sifflement » sans rien voir. Peux-tu exclure l'Oni ?",
       "choices": [
-        "Oui, ce souffle est propre au brouillard fantomatique",
-        "Non, l'apparition en marche peut faire ce souffle",
+        "Oui, ce sifflement est propre à la « Forme de Brume »",
+        "Non, l'entité qui apparaît en marchant peut faire ce sifflement",
         "Oui, l'Oni ne fait aucun bruit pendant ses événements",
-        "Non, l'Oni peut faire le brouillard fantomatique"
+        "Non, l'Oni peut faire la « Forme de Brume »"
       ],
       "answer": 1,
-      "explain": "Attention : l'apparition en marche peut faire le même « souffle ». Il faut avoir vu la bulle d'air ou le brouillard pour écarter l'Oni, qui ne fait jamais le brouillard fantomatique."
+      "explain": "Attention : l'événement où l'entité apparaît en marchant peut produire le même « sifflement ». Il faut avoir vu la bulle d'air ou la brume pour écarter l'Oni, qui ne fait jamais la « Forme de Brume »."
     },
     {
       "q": "Quelles entités sont plus visibles que la normale pendant une chasse ?",
@@ -214,7 +219,7 @@
       "explain": "Au clignotement, l'Oni et le Deogen sont plus visibles en chasse, alors que le Fantôme reste invisible plus longtemps."
     },
     {
-      "q": "Pendant la chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, et elle avance à un pas normal qui ne ralentit pas en arrivant sur toi. Qui est-ce ?",
+      "q": "Pendant la chasse, l'entité est nettement plus visible que d'habitude (elle clignote plus fréquemment), et elle avance à un pas normal qui ne ralentit pas en arrivant sur toi. Qui est-ce ?",
       "choices": [
         "Le Deogen",
         "Le Fantôme",
@@ -225,11 +230,9 @@
       "explain": "L'Oni et le Deogen sont tous deux plus visibles en chasse, mais le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de toi ; l'Oni garde une vitesse normale. Le Fantôme est presque invisible, et l'Obake change de modèle le temps d'un clignotement."
     }
   ],
-  "changes": [
-    "v0.19.0.0 (25 août 2026) : correction d'un bug où l'événement de chant de l'Oni ne drainait que 10 % de santé mentale au lieu des 20 % prévus."
-  ],
+  "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_flickering_p1",
     "tybayn wiki: wiki_flickering_p2",
     "tybayn wiki: wiki_misconceptions_oni_1_c",

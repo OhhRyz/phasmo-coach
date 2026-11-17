@@ -3,11 +3,19 @@ export type EvidenceId = 'emf' | 'dots' | 'uv' | 'freezing' | 'orbs' | 'writing'
 export interface TextItem {
   text: string
   zeroEvidence?: boolean
+  /**
+   * Numéro de carte, écrit une fois pour toutes (signes « 0 preuve » de `tells` : carte `g:<entité>:rev:<card>`).
+   * La progression d'un carnet est rangée sous cet identifiant : le numéro ne change plus, ne passe jamais à un
+   * autre texte et ne resert pas une fois son texte supprimé (voir cardNumbers et src/data/cardIds.test.ts).
+   */
+  card?: number
 }
 
 export interface ConfirmationTest {
   text: string
   definitive: boolean
+  /** numéro de carte, écrit une fois pour toutes (carte `g:<entité>:test:<card>`, voir TextItem.card) */
+  card?: number
   /**
    * Pourquoi le test désigne l'entité, dit simplement avec les faits de la fiche : la correction d'une question
    * qui le cite (sinon, le résumé de la fiche). Pour un test dont la conclusion ne va pas de soi.

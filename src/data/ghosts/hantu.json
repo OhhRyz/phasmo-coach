@@ -32,7 +32,7 @@
       "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
     ]
   },
-  "summary": "Une entité frileuse : plus la pièce est froide, plus elle est rapide en chasse, et elle souffle une buée glacée quand le disjoncteur est coupé.",
+  "summary": "Une entité du froid : plus la pièce est froide, plus elle est rapide en chasse, et sa buée glacée se voit pendant les chasses quand le disjoncteur est éteint ou cassé.",
   "keyTells": [
     "Buée glacée visible en chasse quand le disjoncteur est éteint ou cassé",
     "1,4 à 2,7 m/s selon la température de la pièce, aucune accélération en LdV",
@@ -42,19 +42,23 @@
   "tells": [
     {
       "text": "Laisse échapper une buée glacée visible pendant les chasses quand le disjoncteur est éteint ou cassé.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Ne peut pas rallumer le disjoncteur.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "A plus de chances d'éteindre le disjoncteur.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "Est plus rapide dans les pièces froides pendant les chasses.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
     }
   ],
   "behaviors": [
@@ -67,11 +71,13 @@
   "confirmationTests": [
     {
       "text": "Assure-toi que le disjoncteur est éteint ou cassé, puis observe l'entité pendant qu'elle chasse. Si tu vois une buée sortir de l'entité, c'est un Hantu.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Pendant une chasse, si l'entité est rapide dans sa pièce (la plus froide) et ralentit dans les pièces plus chaudes, c'est un Hantu : sa vitesse suit la température de chaque pièce traversée. L'Obambo change aussi de vitesse en pleine chasse, mais d'un coup, à heure fixe (toutes les 2 minutes à la montre du jeu), quelle que soit la pièce.",
-      "definitive": true
+      "text": "Pendant une chasse, si l'entité change de vitesse sans que ton équipement ni toi n'y soyez pour rien, c'est un Hantu : sa vitesse suit la température de chaque pièce traversée (rapide dans sa pièce, la plus froide, plus lente dans les pièces plus chaudes). L'Obambo change aussi de vitesse en pleine chasse, mais d'un coup (de 1,45 à 1,96 m/s ou l'inverse), à heure fixe (toutes les 2 minutes à la montre du jeu), quelle que soit la pièce.",
+      "definitive": true,
+      "card": 1
     }
   ],
   "eliminationTests": [
@@ -85,7 +91,7 @@
       "text": "Si l'entité accélère en LdV, ce n'est pas un Hantu."
     },
     {
-      "text": "En difficulté Cauchemar ou Démence, si tu as exclu les températures glaciales, ce n'est pas un Hantu."
+      "text": "Dans une difficulté qui donne au moins 1 preuve (Cauchemar, Démence…), les températures glaciales sont garanties : si tu les as exclues, ce n'est pas un Hantu."
     }
   ],
   "confusions": [
@@ -123,7 +129,7 @@
     },
     {
       "with": "kormos",
-      "why": "Même UV + orbes, mais le Kormos a la Spirit Box ; quasi aveugle, il te repère surtout à tes pas et peut chasser plus tôt si un joueur sprinte près de lui."
+      "why": "Même UV + orbes, mais le Kormos a la Spirit Box ; quasi aveugle, il détecte surtout tes déplacements et peut chasser jusqu'à 70 % si un joueur sprinte dans la même pièce que lui."
     },
     {
       "with": "thaye",
@@ -131,12 +137,12 @@
     },
     {
       "with": "mare",
-      "why": "Le Cauchemar éteint lui aussi beaucoup de lumières, mais interrupteur par interrupteur, et ne peut jamais en rallumer ; son seuil dépend de la lumière de sa pièce (60 % éteinte, 40 % allumée). Une seule preuve en commun (orbes)."
+      "why": "Le Cauchemar éteint lui aussi beaucoup de lumières, mais interrupteur par interrupteur, et ne peut jamais en rallumer ; son seuil dépend de la lumière de la pièce où il se trouve (60 % éteinte, 40 % allumée). Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [
     {
-      "text": "Pendant une chasse, alors que le disjoncteur est coupé, tu vois une buée blanche s'échapper de l'entité à intervalles réguliers.",
+      "text": "Pendant une chasse, alors que le disjoncteur est éteint ou cassé, tu vois une buée s'échapper de l'entité.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -176,7 +182,7 @@
         "Le Revenant"
       ],
       "answer": 2,
-      "explain": "La vitesse du Hantu dépend de la température de la pièce où il se trouve : 1,4 m/s au-dessus de 15 °C, jusqu'à 2,7 m/s sous 0 °C. Le Raiju accélère près de l'électronique active, le Djinn quand il te voit de loin disjoncteur allumé, le Revenant quand il te détecte."
+      "explain": "La vitesse du Hantu dépend de la température de la pièce où il se trouve : 1,4 m/s au-dessus de 15 °C, jusqu'à 2,7 m/s sous 0 °C. Le Raiju accélère près de l'électronique active, le Djinn quand il te voit à plus de 3 m disjoncteur allumé, le Revenant quand il te détecte."
     },
     {
       "q": "Dans quelle condition peux-tu voir la buée glacée du Hantu ?",
@@ -246,11 +252,10 @@
     }
   ],
   "changes": [
-    "Chronicle v0.13 (24 juin 2025) : correction d'un bug où la buée du Hantu restait visible après la mort du joueur quand l'option « les morts prolongent la chasse » était activée (sans effet sur l'identification).",
-    "Voir l'entité changer de vitesse en pleine chasse ne suffit plus à reconnaître le Hantu : depuis décembre 2025, l'Obambo le fait aussi. Pour le Hantu, regarde si sa vitesse suit la température : rapide dans sa pièce froide, plus lente dans les pièces plus chaudes."
+    "Voir l'entité changer de vitesse en pleine chasse ne suffit plus à reconnaître le Hantu : l'Obambo le fait aussi. Pour le Hantu, regarde si sa vitesse suit la température : rapide dans sa pièce froide, plus lente dans les pièces plus chaudes."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_hantu_p1",
     "tybayn wiki: tableau « Hantu Speeds » (wiki-v21.html, wiki_ghost_speed_h1)",
     "tybayn wiki: wiki_los_p2",

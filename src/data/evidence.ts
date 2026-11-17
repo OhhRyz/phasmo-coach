@@ -32,8 +32,8 @@ const RAW_EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
     label: 'Projecteur D.O.T.S',
     short: 'D.O.T.S',
     color: 'var(--ev-dots)',
-    howTo: 'Une silhouette traverse le champ du projecteur D.O.T.S (souvent visible à la caméra).',
-    found: 'Une silhouette verte traverse le champ du projecteur D.O.T.S.',
+    howTo: 'Une silhouette traverse le champ du projecteur D.O.T.S.',
+    found: 'Une silhouette traverse le champ du projecteur D.O.T.S.',
     notFound: 'Le projecteur D.O.T.S tourne depuis longtemps dans la pièce : aucune silhouette.',
     side: 'silhouette au projecteur',
   },
@@ -52,11 +52,12 @@ const RAW_EVIDENCE: Record<EvidenceId, EvidenceInfo> = {
     label: 'Températures glaciales',
     short: 'Glacial',
     color: 'var(--ev-freezing)',
-    // astuce du coach : dès 0,quelque chose °C au thermomètre, c'est déjà glacial (pas besoin d'attendre sous 0)
-    howTo: 'Le thermomètre affiche moins de 1 °C dans la pièce favorite : dès 0,quelque chose (par exemple 0,6 °C), compte déjà les températures glaciales, sans attendre de passer sous 0.',
-    found: 'Le thermomètre affiche 0,6 °C dans la pièce favorite : c’est déjà glacial.',
+    // astuce du coach (absente de la fiche de tybayn) : dès 0,quelque chose °C au thermomètre, c'est déjà glacial
+    // (pas besoin d'attendre sous 0). Partout où elle s'affiche, elle est présentée comme l'astuce du coach.
+    howTo: 'Le thermomètre affiche moins de 1 °C dans la pièce favorite. Astuce du coach : dès 0,quelque chose (par exemple 0,6 °C), compte déjà les températures glaciales, sans attendre de passer sous 0.',
+    found: 'Le thermomètre affiche 0,6 °C dans la pièce favorite : d’après l’astuce du coach, c’est déjà glacial.',
     notFound: 'La pièce favorite est froide, mais le thermomètre ne descend jamais sous 1 °C.',
-    side: 'moins de 1 °C (0,x °C suffit)',
+    side: 'moins de 1 °C (astuce du coach : 0,x °C suffit)',
   },
   orbs: {
     id: 'orbs',

@@ -55,6 +55,7 @@ import {
 } from './progress'
 import { createRng, shuffle } from './random'
 import { clock, DIFFICULTIES, generateScenario, pickVisibleEvidence, scoreScenario } from './scenario'
+import { hasSpeed, realSpeeds } from './speeds'
 import {
   decodePayload,
   encodePayload,
@@ -688,6 +689,44 @@ describe('mise en situation', () => {
   it('formate les minutes sans « :60 »', () => {
     expect(clock(2.9999)).toBe('03:00')
     expect(clock(1.5)).toBe('01:30')
+  })
+
+  it('n’annonce jamais une vitesse qui n’existe pas pour l’entité', () => {
+    // paliers du tableau de tybayn (v0.19.1.0) : pas de valeur intermédiaire
+    const hantu = getGhost('hantu')!
+    expect(realSpeeds(hantu)).toEqual([1.4, 1.75, 2.1, 2.3, 2.4, 2.5, 2.7])
+    expect(realSpeeds(getGhost('thaye')!)).toHaveLength(11)
+    expect(realSpeeds(getGhost('moroi')!)).toHaveLength(10)
+    expect(realSpeeds(getGhost('deildegast')!)).toHaveLength(27)
+    expect(realSpeeds(getGhost('deildegast')!)).toContain(0.4)
+    expect(hasSpeed(hantu, 1.75)).toBe(true)
+    expect(hasSpeed(hantu, 1.9)).toBe(false)
+    expect(hasSpeed(getGhost('revenant')!, 2)).toBe(false)
+    for (const g of GHOSTS) {
+      const real = realSpeeds(g)
+      const s = g.speed
+      // les bornes de la fiche font partie des vitesses réelles, et aucune vitesse réelle ne sort des bornes
+      if (s.min > 0) expect(real, g.id).toContain(s.min)
+      if (s.max != null) expect(real, g.id).toContain(s.max)
+      const bounds = [s.min, s.max, s.alt].filter((v): v is number => v != null && v > 0)
+      for (const v of real) {
+        expect(v, g.id).toBeGreaterThanOrEqual(Math.min(...bounds))
+        expect(v, g.id).toBeLessThanOrEqual(Math.max(...bounds))
+      }
+      const seen = new Set<number>()
+      for (let seed = 1; seed <= 120; seed++) {
+        const sc = generateScenario(g, DIFFICULTIES[seed % DIFFICULTIES.length].id, createRng(seed * 17), GHOSTS)
+        for (const c of sc.clues.filter((x) => x.kind === 'hunt-speed')) {
+          expect(real, `${g.id} : ${c.speed} m/s`).toContain(c.speed)
+          seen.add(c.speed!)
+          // le texte annonce la même vitesse, arrondie au centième
+          const shown = Number(/environ (\d+(?:,\d+)?)/u.exec(c.text)![1].replace(',', '.'))
+          expect(Math.abs(shown - c.speed!), `${g.id} : ${c.text}`).toBeLessThanOrEqual(0.005 + 1e-9)
+        }
+      }
+      // le Hantu ne sort jamais de son tableau (ni 1,9 ni 2,0 m/s, par exemple)
+      if (g.id === 'hantu') for (const v of seen) expect([1.4, 1.75, 2.1, 2.3, 2.4, 2.5, 2.7]).toContain(v)
+    }
   })
 
   it('pickVisibleEvidence garde la preuve forcée', () => {

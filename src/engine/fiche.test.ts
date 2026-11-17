@@ -55,13 +55,27 @@ describe('Fiche : l’exception que nomme un test définitif', () => {
     const wraith = GHOSTS.find((g) => g.id === 'wraith')!
     const [t1, t2] = wraith.confirmationTests
     expect(t1.definitive && t2.definitive).toBe(true)
+    // audit de véracité (nov. 2026) : les fiches disent « Un Gallu enragé fait pareil » / « ferait pareil » (plus « Seul un… »)
+    expect(t1.text).toMatch(/Un Gallu enragé fait pareil/u)
+    expect(t2.text).toMatch(/Un Gallu enragé ferait pareil/u)
     expect(testException(t1.text, GHOSTS)).toBe('Gallu enragé')
     expect(testException(t2.text, GHOSTS)).toBe('Gallu enragé')
+    // l'ancienne tournure, avec ou sans aparté, se lit toujours
+    expect(testException('C’est un Spectre. Seul un Gallu enragé (juste après encens, sel ou crucifix) fait pareil, mais plus vite.', GHOSTS)).toBe('Gallu enragé')
+    expect(testException('C’est un Spectre. Seul un Gallu enragé ferait pareil : laisse l’hôte observer.', GHOSTS)).toBe('Gallu enragé')
+    // « Un … fait pareil » sans entité : pas d'exception, et la suite du texte se lit quand même
+    expect(testException('Un joueur attentif fait pareil.', GHOSTS)).toBeNull()
+    expect(testException('Un joueur attentif fait pareil. C’est un Obake (ou un Mimic en train de l’imiter).', GHOSTS)).toBe('Mimic')
   })
 
   it('« (ou un Mimic en train de l’imiter) », « (à Sunny Meadows, un Onryo peut chasser tôt) » : aussi une exception', () => {
     const test = (id: string, k: number) => GHOSTS.find((g) => g.id === id)!.confirmationTests[k].text
-    expect(testException(test('obake', 1), GHOSTS)).toBe('Mimic')
+    // le test des empreintes de l'Obake, qui portait cette parenthèse, a quitté la fiche (audit de véracité, nov. 2026 :
+    // tybayn ne le donne pas comme test) ; la tournure reste reconnue, sur son ancien texte
+    const fingerprints =
+      'Passe la lampe UV sur les portes, fenêtres, glacières, interrupteurs et claviers touchés par l’entité. Une main à 6 doigts, une double empreinte sur un interrupteur (au lieu d’une) ou 5 empreintes sur un clavier ou une porte de cellule (au lieu de 4) désignent l’Obake (ou un Mimic en train de l’imiter, qui a lui aussi l’UV).'
+    expect(testException(fingerprints, GHOSTS)).toBe('Mimic')
+    for (const t of GHOSTS.find((g) => g.id === 'obake')!.confirmationTests) expect(testException(t.text, GHOSTS), t.text).toBeNull()
     expect(testException(test('demon', 2), GHOSTS)).toBe('Onryo à Sunny Meadows')
     // une parenthèse qui départage deux entités n'est pas une exception
     expect(testException(test('oni', 0), GHOSTS)).toBeNull()
@@ -69,7 +83,7 @@ describe('Fiche : l’exception que nomme un test définitif', () => {
     expect(testException('C’est un Démon (à Sunny Meadows, un joueur peut se tromper).', GHOSTS)).toBeNull()
     // sur toutes les fiches, les tests définitifs qui nomment une exception
     const named = GHOSTS.flatMap((g) => g.confirmationTests.flatMap((t, k) => (t.definitive && testException(t.text, GHOSTS) ? [`${g.id} ${k + 1}`] : [])))
-    expect(named).toEqual(['wraith 1', 'wraith 2', 'demon 3', 'obake 2'])
+    expect(named).toEqual(['wraith 1', 'wraith 2', 'demon 3'])
   })
 
   it('rien quand le texte ne nomme pas d’exception, ou pas une entité', () => {

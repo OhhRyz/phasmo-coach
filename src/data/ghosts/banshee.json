@@ -38,28 +38,33 @@
     "Cri unique au microphone parabolique (33 % de chances)",
     "Chasse selon la santé de sa cible (≤ 50 %), pas selon la moyenne de l'équipe",
     "En chasse, ne poursuit que sa cible si celle-ci est à l'intérieur",
-    "Toujours féminine (prénom et modèle) depuis décembre 2025"
+    "Toujours féminine (prénom et modèle)"
   ],
   "tells": [
     {
       "text": "33 % de chances de produire l'un des 20 cris uniques au microphone parabolique ou à l'enregistreur de son.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Chasse en fonction de la santé mentale de sa cible plutôt que de la moyenne de l'équipe.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Ne poursuit que sa cible pendant une chasse (si la cible est à l'intérieur).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "La cible perd 15 % de santé mentale au lieu de 10 % en touchant l'entité pendant un événement de chant.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
     },
     {
-      "text": "Depuis la v0.15.1.0 (décembre 2025), la Banshee ne se présente plus que comme féminine : prénom et modèle féminins.",
-      "zeroEvidence": true
+      "text": "Uniquement féminine : le prénom et le modèle de l'entité le montrent.",
+      "zeroEvidence": true,
+      "card": 4
     }
   ],
   "behaviors": [
@@ -72,7 +77,7 @@
       "zeroEvidence": false
     },
     {
-      "text": "En état D.O.T.S, ne peut pas rester visible plus de 1,76 s si sa cible n'est pas à l'intérieur.",
+      "text": "Son état D.O.T.S ne peut pas durer plus de 1,76 s si sa cible n'est pas à l'intérieur.",
       "zeroEvidence": false
     },
     {
@@ -80,12 +85,16 @@
       "zeroEvidence": false
     },
     {
-      "text": "Ciblage : un joueur est choisi au hasard en début de contrat et reste la cible jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La cible suivante est le premier joueur vivant dans l'ordre du lobby (en commençant par l'hôte) qui n'était pas la cible précédente. En solo, c'est toujours l'hôte.",
+      "text": "Ciblage : un joueur est choisi au hasard en début de contrat et reste la cible jusqu'à ce qu'un joueur meure ou que la cible quitte la partie. La cible suivante est le premier joueur vivant dans l'ordre du lobby (en commençant par l'hôte) qui n'était pas la cible précédente (sauf s'il ne reste qu'un seul joueur). En solo, c'est toujours l'hôte.",
       "zeroEvidence": true
     },
     {
       "text": "Bizarrerie connue : si la cible meurt en faisant le vœu de vie de la patte de singe (« Je souhaite être en vie » : ce vœu ranime un joueur mort, avec 50 % de risque de mort pour celui qui le fait), ce joueur reste la cible, même mort. Si sa santé était au-dessus de 50 %, la Banshee ne chasse plus tant qu'un autre joueur n'est pas mort (à 2 joueurs, plus aucune chasse), sauf si d'autres objets maudits font baisser la santé de ce joueur mort ou s'il quitte la partie.",
       "zeroEvidence": true
+    },
+    {
+      "text": "Comme l'entité traque sa cible, d'autres pièces peuvent se refroidir et une chasse peut partir loin de sa pièce : ça ne prouve pas un changement de pièce. Seuls des orbes dans une autre pièce, ou le miroir hanté qui montre une nouvelle pièce, le confirment.",
+      "zeroEvidence": false
     }
   ],
   "abilities": [
@@ -97,11 +106,13 @@
   "confirmationTests": [
     {
       "text": "Écoute l'entité au microphone parabolique : si tu entends le cri unique, c'est une Banshee. N'importe quel joueur peut l'entendre, pas seulement la cible.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "En multijoueur, que tout le monde soit à l'intérieur quand l'entité chasse. Si l'entité ne poursuit pas les joueurs qui ne sont pas sa cible, ou si ceux-ci peuvent la toucher sans mourir, c'est une Banshee.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Le cri de la Banshee peut être enregistré à l'enregistreur de son, comme média « Cri paranormal ». Pratique pour garder une trace du cri.",
@@ -114,17 +125,17 @@
   ],
   "eliminationTests": [
     {
-      "text": "Si le prénom de l'entité est masculin ou si son modèle est masculin, ce n'est pas une Banshee (uniquement féminine depuis la v0.15.1.0)."
+      "text": "Si le prénom de l'entité est masculin ou si son modèle est masculin, ce n'est pas une Banshee."
     }
   ],
   "confusions": [
     {
       "with": "phantom",
-      "why": "UV + D.O.T.S en commun. Le Fantôme disparaît quand tu le prends en photo et reste presque invisible en chasse ; il ne cible pas un joueur en particulier. 3e preuve : Spirit Box vs orbes."
+      "why": "UV + D.O.T.S en commun. Le Fantôme disparaît quand tu le prends en photo et reste invisible plus longtemps entre deux clignotements en chasse ; il ne cible pas un joueur en particulier. 3e preuve : Spirit Box vs orbes."
     },
     {
       "with": "goryo",
-      "why": "UV + D.O.T.S en commun. Le Goryo ne change jamais de pièce favorite (la Banshee le peut depuis juin 2025) et son D.O.T.S n'est visible qu'à la caméra vidéo, jamais avec un joueur dans la pièce. 3e preuve : EMF 5 vs orbes."
+      "why": "UV + D.O.T.S en commun. Le Goryo ne change jamais de pièce favorite et son D.O.T.S n'est visible qu'à la caméra vidéo, jamais avec un joueur dans la pièce. 3e preuve : EMF 5 vs orbes."
     },
     {
       "with": "yurei",
@@ -132,7 +143,7 @@
     },
     {
       "with": "yokai",
-      "why": "Orbes + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce (la Banshee jusqu'à 87 % via sa cible) ; en chasse, il ne te détecte qu'à 2,5 m. 3e preuve : Spirit Box vs UV."
+      "why": "Orbes + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce (la Banshee jusqu'à 87 % via sa cible) ; en chasse, il n'entend ta voix et ton électronique qu'à 2,5 m. 3e preuve : Spirit Box vs UV."
     },
     {
       "with": "raiju",
@@ -234,7 +245,7 @@
     {
       "q": "Quel outil permet d'entendre le cri unique de la Banshee ?",
       "choices": [
-        "La radio globale",
+        "Le talkie-walkie",
         "Le microphone parabolique",
         "La caméra vidéo frontale",
         "Le détecteur de mouvement"
@@ -273,7 +284,7 @@
         "Yurei"
       ],
       "answer": 0,
-      "explain": "Depuis la mise à jour Winter's Jest v0.15.1.0 (décembre 2025), la Banshee ne se présente plus que comme féminine (prénom et modèle)."
+      "explain": "La Banshee est uniquement féminine (prénom et modèle)."
     },
     {
       "q": "En solo, qui est la cible de la Banshee ?",
@@ -288,13 +299,12 @@
     }
   ],
   "changes": [
-    "Winter's Jest v0.15.1.0 (16 décembre 2025) : la Banshee ne se présente plus que comme féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
-    "Depuis la refonte des médias (Chronicle, juin 2025), le cri peut être enregistré à l'enregistreur de son comme média « Cri paranormal ».",
-    "Nouvelles entités partageant deux preuves : Obambo (UV + D.O.T.S, décembre 2025) et Kormos (UV + orbes, mai 2026).",
-    "Chronicle v0.13.0 (24 juin 2025) : la Banshee peut désormais changer de pièce favorite (notes de patch) ; un changement de pièce ne l'élimine plus."
+    "La Banshee est uniquement féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
+    "Le cri peut être enregistré à l'enregistreur de son.",
+    "Entités partageant deux preuves : Obambo (UV + D.O.T.S) et Kormos (UV + orbes)."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_banshee_target_p1",
     "tybayn wiki: wiki_banshee_target_p2",
     "tybayn wiki: wiki_banshee_target_p3",
@@ -314,7 +324,7 @@
   ],
   "uncertain": [
     "Nom exact du média « Cri paranormal » dans la version française du jeu : non vérifié.",
-    "« Toujours féminine » depuis la v0.15.1.0 : connu par des résumés de patch, pas par les notes officielles.",
+    "Version et date du passage en « toujours féminine » (v0.15.1.0, décembre 2025) : absentes de tybayn, qui confirme seulement que la Banshee est uniquement féminine.",
     "Bug connu : elle change de cible à la mort de n'importe quel joueur ; une fois corrigé, elle n'en changerait qu'à la mort de sa cible."
   ]
 }

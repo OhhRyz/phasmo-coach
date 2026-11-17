@@ -20,7 +20,7 @@
       "Vitesse de chasse standard : 1,7 m/s.",
       "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "N'est pas ralenti par le sel de rang 3 pendant une chasse, contrairement aux entités standard (cas du Gallu enragé inconnu).",
-      "Il traque et se déplace exactement comme les autres entités : il ne traverse pas les murs."
+      "Pendant les chasses, l'entité traque et se déplace exactement comme les autres : elle ne traverse pas les murs et ne voit pas à travers les portes."
     ]
   },
   "huntSanity": {
@@ -41,11 +41,13 @@
   "tells": [
     {
       "text": "Ne touche pas au sel et n'interagit d'aucune façon avec le sel.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Le sel de rang 3 ne ralentit pas l'entité pendant une chasse.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [],
@@ -61,16 +63,14 @@
   ],
   "confirmationTests": [
     {
-      "text": "Si tu vois l'entité traverser un tas de sel sans le perturber, pendant un événement ou une chasse, c'est un Spectre. Seul un Gallu enragé (juste après encens, sel ou crucifix) fait pareil, mais en chasse le Gallu enragé file nettement plus vite : 1,96 m/s au lieu de 1,7 hors ligne de vue. Fais faire l'observation par l'hôte : à cause d'un bug, seul l'hôte voit parfois un Gallu perturber le sel.",
-      "definitive": true
+      "text": "Si tu vois l'entité traverser un tas de sel sans le perturber, pendant un événement ou une chasse, c'est un Spectre. Un Gallu enragé fait pareil : depuis son état normal, le Gallu passe enragé en marchant dans du sel (après 2 s), en étant encensé ou en utilisant un crucifix, et le reste jusqu'à la fin d'une chasse. En chasse, le Gallu enragé va nettement plus vite : 1,96 m/s au lieu de 1,7. Fais faire l'observation par l'hôte : à cause d'un bug, seul l'hôte voit parfois un Gallu perturber le sel.",
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre. Seul un Gallu enragé ferait pareil : fais ce test quand ni encens, ni sel, ni crucifix n'a servi depuis la dernière chasse, et laisse l'hôte observer.",
-      "definitive": true
-    },
-    {
-      "text": "Pour écarter le Gallu : à la fin d'une chasse, un Gallu n'est jamais enragé (il passe en affaibli ou reste normal), et dans ces deux états il perturbe le premier sel qu'il touche. Si, après une chasse et sans encens ni crucifix utilisé entre-temps, l'entité traverse ton sel sans le perturber (constaté par l'hôte), ce n'est pas un Gallu : avec EMF 5 + Spirit Box, il ne reste que le Spectre.",
-      "definitive": false
+      "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre. Un Gallu enragé ferait pareil : fais ce test quand ni encens, ni sel, ni crucifix n'a servi depuis la dernière chasse, et laisse l'hôte observer.",
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Si, pendant ton enquête, tu obtiens un EMF 2 sans aucune interaction près de toi, c'est peut-être le Spectre qui s'est téléporté.",
@@ -105,7 +105,7 @@
     },
     {
       "with": "oni",
-      "why": "EMF 5 + D.O.T.S en commun. L'Oni est plus visible en chasse (il reste visible plus longtemps à chaque clignotement), draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
+      "why": "EMF 5 + D.O.T.S en commun. L'Oni clignote plus souvent en chasse, ce qui le rend plus visible, draine 20 % de santé mentale pendant ses événements et ne fait jamais l'événement de brume fantomatique ; il perturbe le sel. 3e preuve : températures glaciales vs Spirit Box."
     },
     {
       "with": "goryo",
@@ -117,7 +117,7 @@
     },
     {
       "with": "yokai",
-      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce et ne te détecte qu'à 2,5 m pendant une chasse. 3e preuve : orbes vs EMF 5."
+      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce et, pendant une chasse, n'entend la voix et ne détecte l'électronique qu'à 2,5 m ou moins. 3e preuve : orbes vs EMF 5."
     },
     {
       "with": "deogen",
@@ -129,7 +129,7 @@
     },
     {
       "with": "the-mimic",
-      "why": "Le Mimic peut imiter le comportement du Spectre ; par prudence, considère qu'il peut aussi laisser le sel intact. Ses orbes fantomatiques, présents même à 0 preuve, le trahissent ; ses vraies preuves sont Spirit Box, UV et températures glaciales."
+      "why": "D'après tybayn, le Mimic prend tous les comportements, indices et capacités de l'entité imitée (sauf les preuves) : quand il imite un Spectre, attends-toi à ce qu'il laisse lui aussi le sel intact. Vérifie les orbes dans sa pièce : s'il y en a à 0 preuve, c'est un Mimic. Ses vraies preuves sont Spirit Box, UV et températures glaciales."
     }
   ],
   "observations": [
@@ -189,7 +189,7 @@
       "explain": "Le Spectre peut se téléporter près d'un joueur pris au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Son accélération en ligne de vue est standard et ne laisse aucun EMF ; le drain soudain de 25 % est celui du Djinn."
     },
     {
-      "q": "Pendant une chasse, l'entité traverse du sel de rang 3 sans ralentir le moins du monde. Quelle entité est-ce ?",
+      "q": "Laquelle de ces entités n'est pas ralentie par le sel de rang 3 pendant une chasse ?",
       "choices": [
         "Le Spectre",
         "L'Esprit",
@@ -197,10 +197,10 @@
         "Les Jumeaux"
       ],
       "answer": 0,
-      "explain": "Le Spectre n'est pas ralenti par le sel de rang 3 pendant les chasses, contrairement aux autres entités (on ignore encore si c'est aussi le cas d'un Gallu enragé)."
+      "explain": "Le Spectre n'est pas ralenti par le sel de rang 3 pendant une chasse : c'est un indice, pas un test de confirmation."
     },
     {
-      "q": "Depuis fin 2025, quelle autre entité que le Spectre peut traverser du sel sans le perturber ?",
+      "q": "Quelle autre entité que le Spectre peut traverser du sel sans le perturber ?",
       "choices": [
         "L'Obambo en état agressif",
         "Le Gallu en état enragé",
@@ -208,7 +208,7 @@
         "La Dayan quand tu restes immobile"
       ],
       "answer": 1,
-      "explain": "Le Gallu, ajouté le 16 décembre 2025, ne perturbe pas le sel en état enragé (après encens, sel ou crucifix). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre. L'Obambo, le Thayé et la Dayan perturbent le sel normalement, quels que soient leur état, leur âge ou tes mouvements."
+      "explain": "Le Gallu ne perturbe pas le sel en état enragé (état déclenché depuis l'état normal par le sel, l'encens ou un crucifix, et qui dure jusqu'à la fin d'une chasse). En état normal ou affaibli, il le perturbe : c'est ce qui le distingue du Spectre. Chez tybayn, seuls le Spectre et le Gallu enragé laissent le sel intact : rien de tel pour l'Obambo, le Thayé ou la Dayan."
     },
     {
       "q": "Vrai ou faux : le Spectre traverse les murs pendant les chasses.",
@@ -234,11 +234,11 @@
     }
   ],
   "changes": [
-    "Le Gallu (Winter's Jest v0.15.1.0, 16 décembre 2025 ; EMF 5 + UV + Spirit Box) ne perturbe pas le sel en état enragé : les tests du sel, autrefois définitifs, ne sont plus strictement propres au Spectre.",
-    "Nouvelles entités partageant deux preuves : Gallu et Dayan (EMF 5 + Spirit Box, décembre 2025), Deildegast (EMF 5 + D.O.T.S, v0.18.0.0, 21 juillet 2026)."
+    "Le Gallu ne perturbe pas le sel en état enragé : les tests du sel ne sont plus strictement propres au Spectre (tybayn les classe toujours Définitifs).",
+    "Entités partageant deux preuves avec le Spectre : Gallu et Dayan (EMF 5 + Spirit Box), Deildegast (EMF 5 + D.O.T.S)."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_misconceptions_wraith_1_c",
     "tybayn wiki: wiki_misconceptions_wraith_1_r",
     "tybayn wiki: wiki_known_bugs_wraith",
@@ -253,7 +253,6 @@
   ],
   "uncertain": [
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu : ce n'est peut-être pas propre au Spectre.",
-    "« Un Gallu n'est jamais enragé juste après la fin d'une chasse » : déduit de son cycle d'états, non vérifié en jeu.",
-    "Le Mimic reproduit-il le sel intact du Spectre ? Aucune source ne le dit."
+    "« Un Gallu n'est jamais enragé juste après la fin d'une chasse » : déduit de son cycle d'états, non vérifié en jeu."
   ]
 }

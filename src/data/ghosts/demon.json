@@ -27,7 +27,7 @@
       "Grâce à son pouvoir, il peut lancer une chasse à n'importe quel niveau de santé mentale, même à 100 %."
     ]
   },
-  "summary": "L'entité la plus agressive : elle chasse tôt (70 %), voire à n'importe quelle santé mentale, et se remet plus vite que les autres après l'encens, une chasse ou un crucifix.",
+  "summary": "Entité qui chasse tôt (70 %), voire à n'importe quelle santé mentale, et qui peut rechasser plus vite que les autres après l'encens, une chasse ou un crucifix.",
   "keyTells": [
     "Peut rechasser 60 s après l'encens (au lieu de 90 s)",
     "Peut rechasser 20 s après une chasse ou un crucifix (au lieu de 25 s)",
@@ -37,16 +37,18 @@
   "tells": [
     {
       "text": "Peut chasser 60 s après un encens, au lieu des 90 s standard.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Peut chasser 20 s après la fin de la chasse précédente ou après avoir utilisé un crucifix, au lieu des 25 s standard.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [
     {
-      "text": "La portée du crucifix est augmentée de 50 % à chaque niveau (respectivement 4,5 m, 6 m et 7,5 m).",
+      "text": "La portée du crucifix est augmentée de 50 % quel que soit son rang : 4,5 m (rang 1), 6 m (rang 2), 7,5 m (rang 3).",
       "zeroEvidence": true
     }
   ],
@@ -58,16 +60,19 @@
   ],
   "confirmationTests": [
     {
-      "text": "Lance un chronomètre après avoir encensé l'entité. Si l'entité chasse de nouveau avant 90 s (chasse naturelle, sans objet maudit), c'est un Démon.",
-      "definitive": true
+      "text": "Lance un chronomètre après avoir encensé l'entité. Si l'entité chasse de nouveau avant 90 s, c'est un Démon.",
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Lance un chronomètre à la fin d'une chasse ou après l'utilisation d'un crucifix. Si l'entité chasse de nouveau avant 25 s (chasse naturelle, sans objet maudit), c'est un Démon.",
-      "definitive": true
+      "text": "Lance un chronomètre à la fin d'une chasse ou après l'utilisation d'un crucifix. Si l'entité chasse de nouveau avant 25 s, c'est un Démon.",
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Si une entité chasse naturellement (sans objet maudit) au-dessus de 80 % de santé mentale, qu'aucun joueur n'a individuellement moins de 50 % et qu'aucune bougie n'a été allumée, c'est un Démon (à Sunny Meadows, un Onryo peut chasser tôt car les bougies de la chapelle sont déjà allumées).",
-      "definitive": true
+      "definitive": true,
+      "card": 2
     }
   ],
   "eliminationTests": [],
@@ -135,22 +140,22 @@
   ],
   "observations": [
     {
-      "text": "Une chasse démarre environ une minute après que tu as encensé l'entité, bien avant les 90 secondes habituelles, sans qu'aucun objet maudit ait été utilisé.",
+      "text": "Une chasse démarre environ une minute après que tu as encensé l'entité, bien avant les 90 secondes habituelles.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Une nouvelle chasse commence à peine 20 secondes après la fin de la précédente, sans qu'aucun objet maudit ait été utilisé.",
+      "text": "Une nouvelle chasse commence à peine 20 secondes après la fin de la précédente.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Ton crucifix vient de brûler en empêchant une chasse, et une chasse démarre à peine 20 secondes plus tard, sans objet maudit.",
+      "text": "Ton crucifix vient de brûler en empêchant une chasse, et une chasse démarre à peine 20 secondes plus tard.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "L'entité chasse alors que chaque membre de l'équipe est encore au-dessus de 80 % de santé mentale, sans qu'aucune flamme (bougie, briquet, lumière à feu) ait brûlé de la partie ni qu'aucun objet maudit ait été utilisé.",
+      "text": "L'entité chasse au-dessus de 80 % de santé mentale, sans objet maudit, alors qu'aucun joueur n'est sous 50 % et qu'aucune bougie n'a été allumée (hors Sunny Meadows, où les bougies de la chapelle sont déjà allumées).",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -175,7 +180,7 @@
         "Un Yokai"
       ],
       "answer": 2,
-      "explain": "Contre le Démon, la portée du crucifix est augmentée de 50 % à chaque rang : 4,5 m au rang 1, 6 m au rang 2 et 7,5 m au rang 3, au lieu de 3, 4 et 5 m."
+      "explain": "Contre le Démon, la portée du crucifix est augmentée de 50 % quel que soit son rang : 4,5 m au rang 1, 6 m au rang 2 et 7,5 m au rang 3, au lieu de 3, 4 et 5 m."
     },
     {
       "q": "Combien de temps après l'encens un Démon peut-il chasser de nouveau ?",
@@ -200,7 +205,7 @@
       "explain": "Le Démon peut rechasser 20 s après la fin d'une chasse (ou après avoir utilisé un crucifix), contre 25 s pour les autres entités."
     },
     {
-      "q": "Quelle est la portée d'un crucifix de niveau 2 contre un Démon ?",
+      "q": "Quelle est la portée d'un crucifix de rang 2 contre un Démon ?",
       "choices": [
         "4 m",
         "6 m",
@@ -208,7 +213,7 @@
         "7,5 m"
       ],
       "answer": 1,
-      "explain": "La portée est augmentée de 50 % à chaque niveau : 4,5 m (niveau 1), 6 m (niveau 2), 7,5 m (niveau 3). 4 m est la portée standard d'un crucifix de niveau 2."
+      "explain": "La portée est augmentée de 50 % quel que soit le rang : 4,5 m (rang 1), 6 m (rang 2), 7,5 m (rang 3). 4 m est la portée standard d'un crucifix de rang 2."
     },
     {
       "q": "Une entité chasse à 85 % de santé mentale moyenne, sans objet maudit. Parmi ces entités, laquelle est-ce ?",
@@ -235,7 +240,7 @@
   ],
   "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_known_bugs_demon",
     "tybayn wiki: wiki_xp_grinding_p10",
     "tybayn wiki: wiki_los_p1",
@@ -245,7 +250,6 @@
   ],
   "uncertain": [
     "Fréquence de son pouvoir de chasse à toute santé mentale : non chiffrée.",
-    "Délais d'encens et entre deux chasses des entités ajoutées en 2025–2026 : non documentés, les tests de 60 s et de 20 s n'ont pas été revérifiés face à elles.",
-    "Test « chasse au-dessus de 80 % » : pas revérifié face aux entités ajoutées depuis 2025 ; le Mimic peut aussi copier le Démon."
+    "Le Mimic peut copier le Démon."
   ]
 }

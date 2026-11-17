@@ -32,10 +32,10 @@
     "summary": "50 %",
     "details": [
       "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
-      "Sa capacité (−25 % de santé à un joueur proche, disjoncteur allumé) peut faire baisser la moyenne très vite et avancer ses chasses."
+      "Sa capacité fait perdre 25 % de santé mentale à un joueur proche, disjoncteur allumé."
     ]
   },
-  "summary": "Entité liée au disjoncteur : tant que le courant est allumé, le Djinn fonce vers toi quand il te voit de loin et peut te faire perdre 25 % de santé mentale d'un coup.",
+  "summary": "Entité liée au disjoncteur : tant que le courant est allumé, le Djinn fonce vers toi en chasse quand il te voit à plus de 3 m, et peut faire perdre d'un coup 25 % de santé mentale à un joueur proche.",
   "keyTells": [
     "Disjoncteur allumé : fonce à 2,5 m/s quand il te voit à plus de 3 m",
     "Reprend une vitesse normale une fois à moins de 3 m de toi",
@@ -45,7 +45,8 @@
   "tells": [
     {
       "text": "Disjoncteur allumé, le Djinn accélère pendant une chasse si un joueur est dans sa ligne de vue et à plus de 3 m.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     }
   ],
   "behaviors": [
@@ -60,14 +61,15 @@
       "zeroEvidence": false
     },
     {
-      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale des joueurs proches (à moins de 3 m ou dans la même pièce), avec un EMF 2 au disjoncteur.",
+      "text": "Disjoncteur allumé, peut faire chuter de 25 % la santé mentale d'un joueur proche (à moins de 3 m ou dans la même pièce), avec un EMF 2 au disjoncteur.",
       "zeroEvidence": true
     }
   ],
   "confirmationTests": [
     {
       "text": "Pendant une chasse (disjoncteur allumé), place-toi à plus de 3 m de l'entité. Si l'entité passe de 1,7 m/s à 2,5 m/s en te voyant, puis ralentit une fois à moins de 3 m de toi, c'est un Djinn. Méfie-toi de l'électronique allumée, pour ne pas confondre avec l'accélération du Raiju.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     }
   ],
   "eliminationTests": [
@@ -94,7 +96,7 @@
     },
     {
       "with": "oni",
-      "why": "EMF 5 + températures glaciales en commun. L'Oni est plus visible en chasse, draine 20 % de santé pendant ses événements et ne fait jamais l'événement de brouillard fantomatique. 3e preuve : D.O.T.S vs UV."
+      "why": "EMF 5 + températures glaciales en commun. L'Oni est plus visible en chasse, draine 20 % de santé pendant ses événements et ne fait jamais l'événement « Forme de Brume » (la bulle d'air). 3e preuve : D.O.T.S vs UV."
     },
     {
       "with": "the-twins",
@@ -131,9 +133,9 @@
   ],
   "observations": [
     {
-      "text": "Disjoncteur allumé, l'entité qui te voit de loin passe d'un coup à une allure très rapide (environ 2,5 m/s), puis reprend une allure normale une fois à moins de 3 m de toi.",
+      "text": "Disjoncteur allumé et sans électronique allumée à proximité, l'entité qui te voit à plus de 3 m passe d'un coup de 1,7 à 2,5 m/s, puis ralentit une fois à moins de 3 m de toi.",
       "kind": "hunt",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
       "text": "Disjoncteur allumé, l'entité qui te voit depuis l'autre bout d'un long couloir garde une allure rapide et constante tant qu'elle reste à distance, sans accélérer davantage.",
@@ -141,9 +143,9 @@
       "strength": "hint"
     },
     {
-      "text": "Courant allumé, tu perds d'un coup environ 25 points de santé mentale alors que l'entité est proche, et un lecteur EMF posé au disjoncteur affiche au même moment un niveau 2, sans que personne y ait touché.",
+      "text": "Courant allumé, tu perds d'un coup 25 % de santé mentale alors que l'entité est proche, et un lecteur EMF posé au disjoncteur affiche au même moment un niveau 2.",
       "kind": "behavior",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Alors que le courant est allumé, qu'aucune chasse ni aucun événement n'est en cours et que personne n'utilise d'objet maudit, tu perds d'un coup environ 25 points de santé mentale près de l'entité.",
@@ -231,10 +233,10 @@
     }
   ],
   "changes": [
-    "Nouvelle entité partageant deux preuves : Gallu (EMF 5 + UV, Winter's Jest v0.15.1.0, 16 décembre 2025)."
+    "Le Gallu partage deux preuves avec le Djinn (EMF 5 + UV)."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_jinn_p1",
     "tybayn wiki: wiki_los_jinn_p2",
     "tybayn wiki: wiki_known_bugs_jinn",
@@ -244,6 +246,6 @@
     "https://phasmophobia.fandom.com/wiki/Jinn"
   ],
   "uncertain": [
-    "Le disjoncteur peut-il quand même sauter avec un Djinn ? Oui, selon une source : seule une coupure directe par l'entité l'éliminerait."
+    "tybayn précise seulement que le Djinn ne coupe pas le disjoncteur directement ; il ne dit pas si le disjoncteur peut sauter autrement."
   ]
 }

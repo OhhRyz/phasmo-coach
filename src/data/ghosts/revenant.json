@@ -34,7 +34,7 @@
       "Aucun pouvoir connu ne modifie ce seuil."
     ]
   },
-  "summary": "Une entité qui rampe à 1,0 m/s tant qu'elle ne te détecte pas, puis fonce à 3,0 m/s dès qu'elle te repère : face à elle, c'est la cachette qui te sauve, pas la course.",
+  "summary": "Une entité qui avance à 1,0 m/s tant qu'elle ne te détecte pas, puis fonce à 3,0 m/s dès qu'elle te repère.",
   "keyTells": [
     "En chasse : 1,0 m/s sans cible, 3,0 m/s dès qu'il te détecte",
     "Accélération instantanée, jamais progressive (pas de LdV standard)",
@@ -43,7 +43,8 @@
   "tells": [
     {
       "text": "Pendant une chasse, avance lentement (1,0 m/s) jusqu'à détecter un joueur (voix, équipement électronique actif ou ligne de vue) : passe alors immédiatement à 3,0 m/s et garde cette vitesse jusqu'à la dernière position connue du joueur, avant de ralentir progressivement.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     }
   ],
   "behaviors": [],
@@ -51,7 +52,8 @@
   "confirmationTests": [
     {
       "text": "Pendant une chasse, écoute la vitesse de l'entité. Si l'entité est lente, accélère brusquement dès que tu te laisses détecter, puis ralentit ensuite, c'est un Revenant : l'entité est alors bien plus rapide qu'un Djinn ou un Raiju (3,0 m/s au lieu de 2,5 m/s).",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     }
   ],
   "eliminationTests": [
@@ -110,7 +112,7 @@
     },
     {
       "with": "deildegast",
-      "why": "Le Deildegast peut chasser à 3,0 m/s, mais à vitesse figée pendant toute la chasse, même sans te détecter ; elle baisse de 0,1 m/s par objet utilisé avant la chasse."
+      "why": "Le Deildegast peut chasser à 3,0 m/s, mais à vitesse figée pendant toute la chasse, même sans te détecter ; elle baisse de 0,1 m/s par objet différent (hors équipement) pris ou manipulé par les joueurs depuis la fin de la dernière chasse ou tentative de chasse."
     },
     {
       "with": "dayan",
@@ -127,7 +129,7 @@
   ],
   "observations": [
     {
-      "text": "En chasse, l'entité erre loin de toi à pas très lents (environ 1 m/s), puis passe d'un coup à une allure très rapide (environ 3 m/s) à l'instant même où tu es repéré, sans aucune montée progressive.",
+      "text": "En chasse, l'entité erre loin de toi à pas très lents (environ 1 m/s), passe d'un coup à une allure très rapide (environ 3 m/s) à l'instant même où tu es repéré, sans aucune montée progressive, puis ralentit peu à peu une fois arrivée à ta dernière position connue.",
       "kind": "hunt",
       "strength": "definitive"
     },
@@ -167,7 +169,7 @@
         "Il réagit au disjoncteur qu'on vient de rallumer"
       ],
       "answer": 2,
-      "explain": "Le Revenant passe instantanément de 1,0 à 3,0 m/s dès qu'il détecte un joueur, par la vue, la voix ou un appareil électronique actif. Il n'a pas d'accélération en ligne de vue, et ni le temps écoulé ni le disjoncteur ne changent sa vitesse. Face à lui, la cachette et le silence te sauvent, pas la course."
+      "explain": "Le Revenant passe instantanément de 1,0 à 3,0 m/s dès qu'il détecte un joueur, par la vue, la voix ou un appareil électronique actif. Il n'a pas d'accélération en ligne de vue, et ni le temps écoulé ni le disjoncteur ne changent sa vitesse."
     },
     {
       "q": "À quelle vitesse se déplace un Revenant en chasse tant qu'il n'a détecté aucun joueur ?",
@@ -233,12 +235,12 @@
         "Ce n'est pas un Esprit"
       ],
       "answer": 3,
-      "explain": "Une entité standard comme l'Esprit chasse à 1,7 m/s : une chasse entière à 1,0 m/s l'élimine. Le Revenant qui ne t'a pas détecté avance justement à 1,0 m/s, le Thayé y descend en vieillissant et le Deildegast quand une vingtaine d'objets ont été utilisés : tous trois restent possibles."
+      "explain": "Une entité standard comme l'Esprit chasse à 1,7 m/s : une chasse entière à 1,0 m/s l'élimine. Le Revenant qui ne t'a pas détecté avance justement à 1,0 m/s, le Thayé y descend en vieillissant et le Deildegast quand les joueurs ont pris ou manipulé 20 objets différents (hors équipement) depuis la fin de la dernière chasse ou tentative de chasse : tous trois restent possibles."
     }
   ],
   "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_p1",
     "tybayn wiki: wiki_los_p2",
     "tybayn wiki: wiki_los_revenant_p1",

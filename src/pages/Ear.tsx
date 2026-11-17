@@ -20,6 +20,7 @@ import { GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { platform } from '../engine/device'
 import { NBSP, NNBSP, fr, num } from '../engine/format'
+import { hasSpeed } from '../engine/speeds'
 import { ignoreKey } from '../engine/keys'
 import { createRng } from '../engine/random'
 import { useStore } from '../store/store'
@@ -57,11 +58,9 @@ const CLASS_PLURAL = { slow: 'Plus lentes', normal: `Normales (1,7${NBSP}m/s)`, 
 const ms = (v: number) => `${num(v)}${NBSP}m/s`
 const IOS_HINT = `Pas de son${NNBSP}? Vérifie que le bouton silencieux est désactivé.`
 
+/** Les entités qui peuvent avoir cette vitesse de base : une valeur de leur fiche, ou un palier du tableau de tybayn à ± 0,05 m/s. */
 function ghostsAt(v: number): string[] {
-  return GHOSTS.filter((g) =>
-    [g.speed.min, g.speed.max, g.speed.alt].some((s) => s != null && Math.abs(s - v) < 0.01) ||
-    (g.speed.isRange && g.speed.max != null && v >= g.speed.min && v <= g.speed.max),
-  ).map((g) => g.name)
+  return GHOSTS.filter((g) => hasSpeed(g, v, g.speed.isRange ? 0.05 : 0.01)).map((g) => g.name)
 }
 
 /* ------------------------------------------------------------------ la bande de papier */
@@ -529,7 +528,7 @@ export function Ear() {
             </section>
 
             <p className="ear-small">
-              Les pas sont générés par l’app, pas enregistrés dans le jeu{NNBSP}: la cadence est fidèle, le son est simplifié.{' '}
+              Les pas sont générés par l’app, pas enregistrés dans le jeu{NNBSP}: le rythme est une approximation, le son est simplifié.{' '}
               <span className="pencil-note">Un casque aide beaucoup.</span>
             </p>
           </Page>
@@ -865,7 +864,7 @@ export function Ear() {
                   </p>
                 </div>
                 <p className="ear-ghosts">
-                  <span className="typed-label">Entités concernées</span>
+                  <span className="typed-label">Entités à cette vitesse</span>
                   <span className="ear-names">{names.join(', ') || 'vitesse de référence'}</span>
                 </p>
                 <div className="ear-next-row">

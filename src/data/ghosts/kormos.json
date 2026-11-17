@@ -12,10 +12,10 @@
     "isRange": false,
     "los": true,
     "losVaries": true,
-    "summary": "1,7 m/s · 2,21 m/s vers un bruit · accélère en LdV à < 5 m",
+    "summary": "1,7 m/s · 2,21 m/s si un joueur est détecté à plus de 5 m · LdV seulement si tu bouges à moins de 5 m",
     "details": [
       "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
-      "S'il te détecte à plus de 5 m (bruit de pas, voix, électronique), il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",
+      "S'il te détecte à plus de 5 m, il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",
       "Pseudo-LdV : il ne te voit, et ne gagne de la vitesse en LdV, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
       "Si tu sors de ces 5 m et qu'il ne te détecte plus, il arrête d'accélérer et perd peu à peu la vitesse accumulée.",
       "La vitesse de LdV accumulée se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
@@ -26,44 +26,43 @@
     "normal": 50,
     "low": 50,
     "high": 70,
-    "summary": "50 % · 70 % si quelqu'un sprinte dans sa pièce",
+    "summary": "50 % · 70 % si quelqu'un sprinte dans la même pièce que l'entité",
     "details": [
       "Seuil de chasse standard : 50 % de santé mentale moyenne.",
       "Le seuil monte à 70 % si un joueur sprinte dans la même pièce que lui."
     ]
   },
-  "summary": "Entité quasi aveugle qui chasse à l'oreille : elle entend tes pas de loin mais ne te voit que si tu bouges tout près d'elle.",
+  "summary": "Entité presque aveugle : elle détecte tes déplacements de loin mais ne te voit que si tu bouges à moins de 5 m d'elle.",
   "keyTells": [
     "Immobile et silencieux, il ne te détecte pas (sauf s'il te percute par hasard)",
-    "Entend tes pas : 10 m accroupi, 15 m en marchant, 30 m en sprintant",
+    "Détecte tes déplacements : 10 m accroupi, 15 m en marchant, 30 m en sprintant",
     "Ne te voit que si tu bouges à moins de 5 m de lui",
-    "Peut chasser dès 70 % si quelqu'un sprinte dans sa pièce"
+    "Peut chasser dès 70 % si quelqu'un sprinte dans la même pièce que lui"
   ],
   "tells": [
     {
       "text": "Presque aveugle : en chasse, ne voit un joueur (et ne gagne de la vitesse en LdV) que si ce joueur bouge à moins de 5 m.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
-      "text": "Détecte la voix et les appareils électroniques à portée normale, et entend en plus les déplacements : 10 m si tu bouges accroupi, 15 m en marchant normalement, 30 m en sprintant.",
-      "zeroEvidence": true
+      "text": "Détecte la voix et les appareils électroniques à portée normale, et repère en plus les déplacements : 10 m si tu bouges accroupi, 15 m en marchant normalement, 30 m en sprintant.",
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Ne peut pas te détecter si tu restes complètement immobile sans faire de bruit au micro (tu peux quand même mourir si l'entité passe sur toi par hasard).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     }
   ],
   "behaviors": [
     {
-      "text": "Après avoir détecté un joueur à plus de 5 m (bruit de pas, voix, électronique), file à 2,21 m/s vers la dernière position connue de ce joueur, jusqu'à l'atteindre.",
+      "text": "Après avoir détecté un joueur à plus de 5 m, file à 2,21 m/s vers la dernière position connue de ce joueur, jusqu'à l'atteindre.",
       "zeroEvidence": true
     },
     {
-      "text": "Ne fait jamais l'événement de poursuite (l'entité apparaît et marche vers un joueur) ni l'événement « brouillard fantomatique » (bulle d'air).",
-      "zeroEvidence": true
-    },
-    {
-      "text": "Ne peut faire que des événements de chant ou d'apparition éclair (une seule image) dans les pièces aux lumières cassées.",
+      "text": "Ne fait pas les événements « Forme de Brume » (bulle d'air) ni « Poursuite ».",
       "zeroEvidence": true
     }
   ],
@@ -75,11 +74,7 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse, avant d'être repéré, reste totalement immobile et silencieux (micro coupé, aucun appareil électronique actif) dans un endroit dégagé. Si l'entité passe à proximité sans se diriger vers toi, puis te trouve dès que tu te remets à marcher, c'est un Kormos.",
-      "definitive": true
-    },
-    {
-      "text": "Si une chasse démarre juste après qu'un joueur a sprinté dans la pièce de l'entité, alors que la santé moyenne est entre 50 % et 70 %, ça peut être un Kormos.",
+      "text": "Si une chasse démarre alors qu'un joueur sprinte dans la même pièce que l'entité, avec une santé moyenne entre 50 % et 70 %, ça peut être un Kormos.",
       "definitive": false
     },
     {
@@ -89,16 +84,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Si tu trouves les Températures glaciales, ce n'est pas un Kormos (mais ça peut être le Mimic, qui montre aussi Orbes, Spirit Box et UV)."
-    },
-    {
-      "text": "Si l'entité te repère et te prend en chasse alors que tu étais déjà immobile, silencieux, sans électronique active et à plus de 5 m d'elle, ce n'est pas un Kormos."
-    },
-    {
-      "text": "Si l'entité fait l'événement de poursuite (elle apparaît et marche vers un joueur) ou un « brouillard fantomatique » (bulle d'air), ce n'est pas un Kormos."
-    },
-    {
-      "text": "Si l'entité tente de chasser au-dessus de 70 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Kormos."
+      "text": "Avec les preuves : si tu trouves les Températures glaciales, ce n'est pas un Kormos (mais ça peut être le Mimic)."
     }
   ],
   "confusions": [
@@ -112,11 +98,11 @@
     },
     {
       "with": "yokai",
-      "why": "Yokai : Orbes + Spirit Box, mais D.O.T.S au lieu de l'UV. Lui aussi entend mal en chasse (voix et électronique à 2,5 m seulement), mais il te voit normalement : immobile en pleine vue, il te poursuit. Il peut chasser à 80 % si tu parles près de lui."
+      "why": "Yokai : Orbes + Spirit Box, mais D.O.T.S au lieu de l'UV. Lui aussi entend mal en chasse (voix et électronique à 2,5 m seulement), mais il te voit normalement : immobile en pleine vue, il te poursuit. Il peut chasser jusqu'à 80 % si tu parles dans la même pièce que lui."
     },
     {
       "with": "mare",
-      "why": "Cauchemar : Orbes + Spirit Box, mais Écriture au lieu de l'UV ; chasse à 60 % lumière éteinte dans sa pièce et te voit normalement."
+      "why": "Cauchemar : Orbes + Spirit Box, mais Écriture au lieu de l'UV ; chasse dès 60 % quand la lumière est éteinte dans la pièce où il se trouve, et te voit normalement."
     },
     {
       "with": "onryo",
@@ -155,7 +141,7 @@
     {
       "text": "Pendant une chasse, tu restes figé et silencieux en pleine vue : l'entité passe tout près de toi sans réagir, puis fonce sur toi dès que tu fais un pas.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Pendant une chasse, un coéquipier silencieux, sans appareil allumé, sprinte à une vingtaine de mètres, hors de vue de l'entité : elle se précipite vers l'endroit où il courait.",
@@ -168,17 +154,17 @@
       "strength": "strong"
     },
     {
-      "text": "Quelqu'un sprinte dans la pièce de l'entité et une chasse démarre peu après, alors que la santé mentale moyenne est encore vers 65 %, sans objet maudit.",
+      "text": "Quelqu'un sprinte dans la pièce où se trouve l'entité et une chasse démarre peu après, alors que la santé mentale moyenne est encore vers 65 %, sans objet maudit.",
       "kind": "hunt",
       "strength": "hint"
     },
     {
-      "text": "Quand elle fonce vers un bruit lointain, l'entité avance plus vite que la normale (environ 2,2 m/s), puis reprend son allure habituelle une fois sur place.",
+      "text": "Quand elle fonce vers un joueur détecté à plus de 5 m, l'entité avance plus vite que la normale (environ 2,2 m/s), puis reprend son allure habituelle une fois sur place.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Malgré plusieurs événements, l'entité n'apparaît jamais pour marcher vers toi.",
+      "text": "Malgré plusieurs événements, l'entité n'a jamais fait l'événement « Poursuite » ni l'événement « Forme de Brume ».",
       "kind": "event",
       "strength": "hint"
     }
@@ -193,10 +179,10 @@
         "Quand ta lampe torche est allumée"
       ],
       "answer": 0,
-      "explain": "Le Kormos est presque aveugle : il ne voit un joueur, et ne gagne de la vitesse en ligne de vue, que si ce joueur bouge à moins de 5 m de lui. Le reste du temps, il chasse à l'oreille (pas, voix, électronique)."
+      "explain": "Le Kormos est presque aveugle : il ne voit un joueur, et ne gagne de la vitesse en ligne de vue, que si ce joueur bouge à moins de 5 m de lui. Le reste du temps, il te détecte à ta voix, à ton électronique et à tes déplacements."
     },
     {
-      "q": "À quelle distance le Kormos entend-il un joueur qui sprinte ?",
+      "q": "À quelle distance le Kormos détecte-t-il un joueur qui sprinte ?",
       "choices": [
         "5 m",
         "30 m",
@@ -207,7 +193,7 @@
       "explain": "30 m en sprintant, 15 m en marchant normalement, 10 m en se déplaçant accroupi. Les 5 m correspondent à sa vue."
     },
     {
-      "q": "Quel est le seuil de chasse du Kormos si un joueur sprinte dans sa pièce ?",
+      "q": "Quel est le seuil de chasse du Kormos si un joueur sprinte dans la même pièce que lui ?",
       "choices": [
         "50 %",
         "40 %",
@@ -226,18 +212,18 @@
         "Tu t'immobilises en silence et tu éteins tout"
       ],
       "answer": 3,
-      "explain": "Il entend tes pas (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux : arrête-toi, coupe ton micro et éteins ton électronique."
+      "explain": "Il détecte tes déplacements (jusqu'à 30 m en sprint), ta voix et ton électronique, mais ne détecte pas un joueur immobile et silencieux : arrête-toi, coupe ton micro et éteins ton électronique."
     },
     {
       "q": "Quel événement un Kormos ne fait-il jamais ?",
       "choices": [
-        "L'apparition qui marche vers toi",
-        "L'apparition qui chante",
-        "L'apparition éclair devant toi",
+        "L'événement de poursuite",
+        "L'événement de chant",
+        "L'événement d'apparition éclair",
         "Aucun, il les fait tous"
       ],
       "answer": 0,
-      "explain": "Le Kormos ne fait jamais l'événement de poursuite (l'entité apparaît et marche vers un joueur) ni le brouillard fantomatique (bulle d'air) : s'il en fait un, ce n'est pas un Kormos. Dans les pièces aux lumières cassées, il ne fait que le chant ou l'apparition éclair."
+      "explain": "Le Kormos ne fait pas les événements « Poursuite » ni « Forme de Brume »."
     },
     {
       "q": "À quelle vitesse le Kormos file-t-il vers un joueur qu'il a détecté à plus de 5 m (sans bonus de LdV) ?",
@@ -251,12 +237,7 @@
       "explain": "2,21 m/s, soit 1,3 × sa vitesse de base de 1,7 m/s ; avec un bonus de LdV accumulé, ça peut monter à 3,65 m/s."
     }
   ],
-  "changes": [
-    "Nouvelle entité ajoutée avec l'Aswang lors de la mise à jour « Phasmophobia by Alan Wake » (v0.17.1.0, vers le 12 mai 2026).",
-    "Hotfix v0.17.1.1 (13 mai 2026) : ne détecte plus et ne tente plus de tuer les joueurs déjà morts.",
-    "v0.17.1.4 (2 juin 2026) : ne peut plus tuer à travers les sols ni tuer des joueurs à l'extérieur ; annulation du ralentissement de l'accélération en LdV introduit en v0.17.0.0.",
-    "v0.18.0.0 (21 juillet 2026) : ne peut plus entendre les joueurs pendant la période de grâce après une chasse, ni tuer à travers les murs ou de plus loin que prévu."
-  ],
+  "changes": [],
   "sources": [
     "tybayn wiki: wiki_kormos_detection_*",
     "tybayn wiki: wiki_kormos_pseudo_los_*",
@@ -273,12 +254,8 @@
     "https://kineticgames.co.uk/news/phasmophobia-v01800-patch-notes"
   ],
   "uncertain": [
-    "Version exacte d'ajout (v0.17.1.0, mai 2026) : non confirmée par les notes officielles.",
-    "Portée de mise à mort : 0,5 m sans LdV pour la plupart des sources, 1,5 m à travers les obstacles pour d'anciennes (sans doute corrigé).",
-    "Poursuit-il toujours en priorité un joueur qui sprinte ? Une seule source.",
-    "Effet de l'encens (aveuglement standard de 5 s ?) : non documenté.",
-    "Événements possibles : ni poursuite ni brouillard fantomatique, et seulement le chant ou l'apparition éclair dans les pièces aux lumières cassées ; le reste n'est pas documenté.",
-    "Classé tantôt avec, tantôt sans accélération en LdV, alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère.",
-    "Condition exacte du seuil de 70 % : un joueur qui sprinte dans la même pièce, ou simplement près de lui ? Les sources divergent."
+    "Portée de mise à mort, priorité au joueur qui sprinte et effet de l'encens : non documentés par tybayn.",
+    "Événements : pas de « Forme de Brume » ni de « Poursuite » ; le reste n'est pas documenté par tybayn.",
+    "Classé tantôt avec, tantôt sans accélération en LdV, alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère."
   ]
 }

@@ -19,7 +19,7 @@
     "details": [
       "Pas d'accélération en LdV : il sait en permanence où se trouve sa cible.",
       "Il fonce à 3,0 m/s tant qu'il est loin du joueur ciblé, puis ralentit jusqu'à 0,4 m/s quand il arrive tout près de lui.",
-      "Conséquence : impossible de te cacher, mais une fois sur toi il est très lent. Fais-le tourner autour d'un obstacle (table, îlot, meuble) plutôt que de courir en ligne droite."
+      "Conséquence : impossible de te cacher, mais une fois sur toi il est très lent."
     ]
   },
   "huntSanity": {
@@ -36,7 +36,7 @@
   "keyTells": [
     "Fonce à 3,0 m/s puis ralentit à 0,4 m/s en arrivant sur toi",
     "Te trouve toujours en chasse : se cacher ne sert à rien",
-    "Aucune accélération en LdV ; une fois sur toi, tu le tiens à distance en tournant autour d'une table ou d'un meuble",
+    "Aucune accélération en LdV",
     "Seuil de chasse 40 % · plus visible que la normale pendant les chasses"
   ],
   "tells": [
@@ -46,11 +46,13 @@
     },
     {
       "text": "Vitesse de chasse très élevée, qui chute fortement en approchant du joueur ciblé.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Plus visible pendant les chasses, et ralentit à 0,4 m/s une fois sur toi.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [
@@ -63,20 +65,19 @@
   "confirmationTests": [
     {
       "text": "Si, pendant une chasse, tu entends l'entité foncer vers toi puis ralentir nettement une fois près de toi alors que tu continues de bouger, c'est un Deogen (une Dayan ne ralentit que si tu restes immobile).",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Pose des questions à la Spirit Box à moins d'1 m de l'entité : si tu entends une respiration lourde au lieu d'une réponse, c'est un Deogen.",
-      "definitive": true,
-      "requires": "spiritbox"
+      "text": "À la Spirit Box, à moins d'1 m de l'entité, tu as 33 % de chances d'entendre une respiration lourde : c'est un indice du Deogen.",
+      "definitive": false,
+      "requires": "spiritbox",
+      "card": 1
     }
   ],
   "eliminationTests": [
     {
       "text": "Si l'entité tente de chasser au-dessus de 40 % de santé mentale moyenne, ce n'est pas un Deogen."
-    },
-    {
-      "text": "Si l'entité accélère progressivement quand elle te garde en LdV, ce n'est pas un Deogen."
     }
   ],
   "confusions": [
@@ -149,11 +150,6 @@
       "strength": "strong"
     },
     {
-      "text": "Une fois l'entité tout près de toi, tu la tiens facilement à distance en tournant autour d'une table ou d'un meuble.",
-      "kind": "hunt",
-      "strength": "strong"
-    },
-    {
       "text": "Pendant la chasse, l'entité reste visible nettement plus longtemps que d'habitude entre deux clignotements : tu la suis facilement des yeux.",
       "kind": "hunt",
       "strength": "strong"
@@ -164,9 +160,9 @@
       "strength": "hint"
     },
     {
-      "text": "À la Spirit Box, à moins d'un mètre de l'entité, tu entends une respiration lourde au lieu d'une réponse.",
+      "text": "À la Spirit Box, à moins d'un mètre de l'entité, tu entends une respiration lourde.",
       "kind": "tell",
-      "strength": "definitive",
+      "strength": "strong",
       "requires": "spiritbox"
     }
   ],
@@ -191,7 +187,7 @@
         "1,7 m/s, puis plus vite en ligne de vue"
       ],
       "answer": 1,
-      "explain": "Il fonce à 3,0 m/s vers sa cible et ralentit à 0,4 m/s tout près. Le premier choix décrit le Revenant, le deuxième le Thayé."
+      "explain": "Il fonce à 3,0 m/s vers sa cible et ralentit à 0,4 m/s tout près. 1,0 puis 3,0 m/s dès qu'il te détecte, c'est le Revenant ; 2,75 m/s puis plus lent d'une chasse à l'autre, c'est le Thayé."
     },
     {
       "q": "Pendant une chasse, l'entité reste visible bien plus longtemps que d'habitude entre deux clignotements, fonce sur toi de loin puis avance presque au ralenti une fois tout près. De quelle entité s'agit-il ?",
@@ -202,18 +198,7 @@
         "Le Revenant"
       ],
       "answer": 2,
-      "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en LdV ; le Fantôme est au contraire presque invisible, et le Revenant accélère quand il te détecte au lieu de ralentir."
-    },
-    {
-      "q": "Quelle est la meilleure façon de survivre à une chasse de Deogen ?",
-      "choices": [
-        "Te cacher dans un placard ou un casier",
-        "Rester immobile et silencieux dans un coin",
-        "Courir en ligne droite jusqu'au camion",
-        "Tourner autour d'un meuble quand il arrive"
-      ],
-      "answer": 3,
-      "explain": "Il te trouve toujours, donc te cacher ou rester immobile ne sert à rien, et de loin il fonce à 3,0 m/s. Tout près, il tombe à 0,4 m/s : en tournant autour d'un obstacle, tu le tiens à distance."
+      "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en LdV ; le Fantôme reste au contraire invisible plus longtemps entre deux clignotements, et le Revenant accélère quand il te détecte au lieu de ralentir."
     },
     {
       "q": "Pendant la chasse, l'entité fonce sur toi de loin, puis avance presque au ralenti une fois arrivée sur toi. Peut-il s'agir d'un Deogen ?",
@@ -235,12 +220,12 @@
         "Ce n'est pas un Cauchemar"
       ],
       "answer": 1,
-      "explain": "L'Ombre ne chasse pas avant 35 % : une tentative à 38 % l'élimine. Le Deogen, qui chasse sous 40 %, reste possible, comme la Dayan (45 % si le joueur le plus proche reste immobile) et le Cauchemar (40 % lumière allumée). Au-dessus de 40 %, tu aurais aussi écarté le Deogen."
+      "explain": "L'Ombre ne chasse pas avant 35 % : une tentative à 38 % l'élimine. Le Deogen, qui chasse sous 40 %, reste possible, comme la Dayan (45 % si un joueur reste immobile près d'elle) et le Cauchemar (40 % lumière allumée). Au-dessus de 40 %, tu aurais aussi écarté le Deogen."
     }
   ],
   "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_deogen_p1",
     "tybayn wiki: wiki_los_p2",
     "tybayn wiki: wiki_flickering_p1",

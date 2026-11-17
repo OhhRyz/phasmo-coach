@@ -42,20 +42,23 @@
   "tells": [
     {
       "text": "Attend 180 s après un encens avant de tenter une nouvelle chasse, au lieu des 90 s standard.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     }
   ],
-  "behaviors": [],
+  "behaviors": [
+    {
+      "text": "Idée reçue : n'importe quelle entité peut attendre 180 s avant de rechasser après un encens ; seul l'Esprit y est obligé. Une attente de 180 s ne prouve donc rien.",
+      "zeroEvidence": false
+    }
+  ],
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Après avoir encensé l'entité une première fois, attends 150 à 170 s puis encense-la de nouveau (ce qui lance un nouveau minuteur d'encens). Si l'entité chasse dans les 60 s qui suivent le second encensement (le plus tôt qu'un Démon pourrait chasser), c'est un Esprit. Attention : ce test peut échouer si l'entité n'a pas vraiment été touchée par l'encens la seconde fois.",
+      "text": "Après avoir encensé l'entité une première fois, attends 150 à 170 s puis encense-la de nouveau (ce qui lance un nouveau minuteur d'encens). Si l'entité chasse dans les 60 s qui suivent la seconde utilisation de l'encens (le plus tôt qu'un Démon pourrait chasser), c'est un Esprit. Attention : ce test peut échouer si l'entité n'a pas vraiment été touchée par l'encens la seconde fois.",
       "definitive": true,
-      "why": "Le second encensement lance un nouveau minuteur d'encens : après lui, une entité standard ne peut pas rechasser avant 90 s, ni un Démon, le plus rapide, avant 60 s. Une chasse dans les 60 s qui suivent, sans objet maudit, désigne donc l'Esprit."
-    },
-    {
-      "text": "Si l'entité ne rechasse pas pendant 180 s après l'encens, c'est compatible avec un Esprit, mais ça ne prouve rien : n'importe quelle entité peut attendre aussi longtemps, seul l'Esprit y est obligé.",
-      "definitive": false
+      "why": "Le second encensement lance un nouveau minuteur d'encens : après lui, une entité standard ne peut pas rechasser avant 90 s, ni un Démon, le plus rapide, avant 60 s. Une chasse dans les 60 s qui suivent, sans objet maudit, désigne donc l'Esprit.",
+      "card": 0
     }
   ],
   "eliminationTests": [
@@ -78,7 +81,7 @@
     },
     {
       "with": "mare",
-      "why": "Spirit Box + écriture en commun. Le Cauchemar chasse dès 60 % quand sa pièce est dans le noir (40 % lumière allumée) et éteint aussitôt une lumière que tu allumes près de lui ; l'Esprit chasse à 50 % quelle que soit la lumière. 3e preuve : orbes vs EMF 5."
+      "why": "Spirit Box + écriture en commun. Le Cauchemar chasse dès 60 % quand la lumière de la pièce où il se trouve est éteinte (40 % si elle est allumée) et a une chance d'éteindre aussitôt une lumière que tu allumes à moins de 4 m de lui ; l'Esprit chasse à 50 % quelle que soit la lumière. 3e preuve : orbes vs EMF 5."
     },
     {
       "with": "shade",
@@ -110,7 +113,7 @@
     },
     {
       "with": "deildegast",
-      "why": "EMF 5 + écriture en commun. Le Deildegast chasse jusqu'à 3,0 m/s et ralentit de 0,1 m/s par objet différent manipulé par les joueurs depuis la dernière chasse ; l'Esprit reste à 1,7 m/s. 3e preuve : D.O.T.S vs Spirit Box."
+      "why": "EMF 5 + écriture en commun. Le Deildegast chasse jusqu'à 3,0 m/s et ralentit de 0,1 m/s par objet différent (hors équipement) pris ou manipulé par les joueurs depuis la fin de la dernière chasse ou tentative de chasse ; l'Esprit reste à 1,7 m/s. 3e preuve : D.O.T.S vs Spirit Box."
     }
   ],
   "observations": [
@@ -227,10 +230,10 @@
     }
   ],
   "changes": [
-    "Nouvelles entités partageant deux preuves avec l'Esprit : Gallu et Dayan (EMF 5 + Spirit Box, Winter's Jest v0.15.1.0, 16 décembre 2025) et Deildegast (EMF 5 + écriture, v0.18.0.0, 21 juillet 2026)."
+    "Entités partageant deux preuves avec l'Esprit : Gallu et Dayan (EMF 5 + Spirit Box) et Deildegast (EMF 5 + écriture)."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_misconceptions_spirit_1_c",
     "tybayn wiki: wiki_misconceptions_spirit_1_r",
     "tybayn wiki: wiki_xp_grinding_p10",
@@ -240,7 +243,5 @@
     "https://kineticgames.co.uk/news/phasmophobia-winters-jest-v01510",
     "https://patched.gg/games/phasmophobia/phasmophobia-v01800-13-willow-street-rework-quality-of-life-1"
   ],
-  "uncertain": [
-    "Délais après encens des entités ajoutées en 2025–2026 : non documentés ; le double encensement n'a pas été revérifié face à elles."
-  ]
+  "uncertain": []
 }

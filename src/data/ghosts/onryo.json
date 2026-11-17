@@ -43,15 +43,17 @@
   "tells": [
     {
       "text": "Tentera de chasser à n'importe quel niveau de santé mentale après avoir éteint 3 flammes ou plus depuis sa dernière tentative de chasse due à sa capacité.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Seule entité qui peut éteindre la même lumière à feu deux fois en moins de 20 s.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
-      "text": "Comme toutes les entités, ne peut pas allumer de source de feu.",
-      "zeroEvidence": false
+      "text": "Ne peut pas allumer les sources de feu.",
+      "zeroEvidence": true
     }
   ],
   "behaviors": [
@@ -76,7 +78,11 @@
       "zeroEvidence": false
     },
     {
-      "text": "Souffler une lumière à feu produit un EMF 2 (ou 5) et un bruit d'extinction ; les rangs I et II dégagent aussi de la fumée. Les flammes soufflées pendant une chasse comptent aussi pour le compteur de l'Onryo. Les entités ne peuvent pas rallumer une lumière à feu.",
+      "text": "Souffler une lumière à feu produit un EMF 2 (ou 5) et un bruit d'extinction ; les rangs I et II dégagent aussi de la fumée. Les flammes soufflées pendant une chasse comptent aussi pour le compteur de l'Onryo. Les entités ne peuvent pas rallumer une lumière à feu. Une lumière à feu s'éteint aussi d'elle-même quand sa durée est écoulée (durée selon le rang), avec de la fumée pour les rangs I et II. Une lumière à feu de rang III met en pause le délai en cours si tu l'éteins toi-même ou si la capacité de l'Onryo l'interrompt.",
+      "zeroEvidence": false
+    },
+    {
+      "text": "Sur Sunny Meadows, les bougies de la chapelle sont déjà allumées : un Onryo peut donc y chasser tôt sans que tu aies allumé la moindre flamme.",
       "zeroEvidence": false
     }
   ],
@@ -105,14 +111,15 @@
   "confirmationTests": [
     {
       "text": "Si l'entité éteint deux fois la même flamme en moins de 20 s, c'est un Onryo.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Si ta santé mentale est au-dessus de 75 % : pose une bougie sur un crucifix de rang 1 ou 2. Si le crucifix est utilisé après que la bougie a été éteinte 3 fois, ça pourrait être un Onryo.",
+      "text": "Si la santé mentale est au-dessus de 75 % : pose une bougie sur un crucifix de rang 1 ou 2. Si le crucifix est utilisé après que la bougie a été éteinte au moins 3 fois, ça pourrait être un Onryo.",
       "definitive": false
     },
     {
-      "text": "Si ta santé mentale est sous 35 % : place une ou plusieurs bougies dans la pièce de l'entité et garde-les allumées en permanence. Si l'entité n'a ni chassé ni utilisé de crucifix au bout d'un long moment, ça pourrait être un Onryo.",
+      "text": "Si la santé mentale est sous 35 % : place une ou plusieurs bougies dans la pièce de l'entité et garde-les allumées en permanence. Si l'entité n'a ni chassé ni utilisé de crucifix au bout d'un long moment, ça pourrait être un Onryo.",
       "definitive": false
     }
   ],
@@ -135,7 +142,7 @@
     },
     {
       "with": "yokai",
-      "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu des glaciales ; il peut chasser jusqu'à 80 % si tu parles dans sa pièce et, en chasse, ne t'entend qu'à 2,5 m."
+      "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu des glaciales ; il peut chasser jusqu'à 80 % si tu parles dans la même pièce que lui et, en chasse, ne t'entend qu'à 2,5 m."
     },
     {
       "with": "dayan",
@@ -151,7 +158,7 @@
     },
     {
       "with": "moroi",
-      "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu des orbes ; il maudit ceux qui l'entendent au micro parabolique et devient plus rapide quand la santé mentale baisse."
+      "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu des orbes ; il maudit ceux qui entendent une réponse à la Spirit Box, un son au micro parabolique ou un son enregistré à l'enregistreur, et devient plus rapide quand la santé mentale baisse."
     },
     {
       "with": "hantu",
@@ -167,7 +174,7 @@
     },
     {
       "with": "demon",
-      "why": "Le Démon peut lui aussi chasser très tôt, dès 70 % (et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo."
+      "why": "Le Démon peut lui aussi chasser très tôt, dès 70 % (et à n'importe quel niveau grâce à sa capacité), mais sans lien avec les flammes ; ses preuves (UV, écriture, glaciales) ne partagent que les glaciales avec l'Onryo. Sur Sunny Meadows, les bougies de la chapelle sont déjà allumées : un Onryo peut y chasser tôt sans que tu aies allumé la moindre flamme."
     }
   ],
   "observations": [
@@ -212,7 +219,7 @@
         "Une seule fois, après la 5e flamme éteinte"
       ],
       "answer": 0,
-      "explain": "L'Onryo tente toujours de chasser après chaque 3e flamme soufflée, puis le compteur repart. Ce n'est ni toutes les 5 flammes ni une seule fois dans la partie."
+      "explain": "Le plus souvent, l'Onryo tente de chasser après chaque 3e flamme soufflée, puis le compteur repart. Ce n'est ni toutes les 5 flammes ni une seule fois dans la partie."
     },
     {
       "q": "Quel est le seuil de chasse normal de l'Onryo ?",
@@ -272,7 +279,7 @@
   ],
   "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_onryo_ability_p1 à p9",
     "tybayn wiki: wiki_misconceptions_onryo_1_r",
     "tybayn wiki: wiki_misconceptions_onryo_2_r",

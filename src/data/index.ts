@@ -70,7 +70,12 @@ export function getGhost(id: string): Ghost | undefined {
 
 export const MECHANICS = typeset(mechanicsJson as Mechanics)
 
+const TYBAYN_VERSION = 'v0.19.1.0'
+
 export const DATA_INFO = {
   ghostCount: GHOSTS.length,
-  gameVersionNote: 'Données à jour d’octobre 2026',
+  /** version de la fiche de tybayn à laquelle les données ont été comparées */
+  tybaynVersion: TYBAYN_VERSION,
+  gameVersionNote: `Données comparées à la fiche de tybayn ${TYBAYN_VERSION} (novembre 2026)`,
+  comparedShort: `Comparé à la fiche de tybayn ${TYBAYN_VERSION} (nov. 2026)`,
 }

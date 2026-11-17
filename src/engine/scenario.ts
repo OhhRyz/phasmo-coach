@@ -3,9 +3,14 @@ import type { EvidenceId, Ghost, Observation, ObservationStrength } from '../dat
 import { EMPTY_FILTER, filterGhosts, type FilterState } from './filter'
 import { fr, num, redactGhostName } from './format'
 import { pick, randInt, shuffle, weightedPick, type Rng } from './random'
+import { realSpeeds } from './speeds'
 
 export type Difficulty = 'pro' | 'nightmare' | 'insanity' | 'apocalypse'
 
+/**
+ * Nombre de preuves par difficulté : règle de base du jeu (écran de difficulté), dont l'app a besoin.
+ * Elle ne vient pas de la fiche de tybayn, qui ne la donne pas.
+ */
 export const DIFFICULTIES: { id: Difficulty; label: string; count: 0 | 1 | 2 | 3; description: string }[] = [
   { id: 'pro', label: 'Professionnel', count: 3, description: '3 preuves visibles' },
   { id: 'nightmare', label: 'Cauchemar', count: 2, description: '2 preuves, 1 cachée' },
@@ -144,7 +149,7 @@ export function generateScenario(g: Ghost, difficulty: Difficulty, rng: Rng, gho
           }
         : {
             kind: 'hunt-sanity',
-            text: `Première chasse : la santé mentale moyenne de l’équipe était d’environ ${v} % quand les lumières ont commencé à clignoter.`,
+            text: `Première chasse : la santé mentale moyenne de l’équipe était d’environ ${v} % quand elle a démarré.`,
           }
   }
 
@@ -158,10 +163,11 @@ export function generateScenario(g: Ghost, difficulty: Difficulty, rng: Rng, gho
         : 'Même quand elle t’a en ligne de vue, elle ne semble pas accélérer comme d’habitude.'
       speedClue = { kind: 'hunt-speed', speed: s.min, text: `Pendant la chasse, tu entends ses pas : environ ${num(s.min)} m/s au départ. ${los}` }
     } else {
-      // vitesse variable : une valeur réellement possible, sans affirmer de condition
-      const options = [s.min, s.max, s.alt].filter((v): v is number => v != null && v > 0)
-      const v = s.isRange && s.max != null ? Math.round((s.min + rng() * (s.max - s.min)) * 10) / 10 : pick(rng, options)
-      speedClue = { kind: 'hunt-speed', speed: v, text: `À un moment de la chasse, tu entends ses pas : environ ${num(v)} m/s.` }
+      // vitesse variable : une valeur qui existe vraiment pour cette entité (palier du tableau de tybayn
+      // ou valeur de sa fiche), jamais une valeur interpolée, et sans affirmer de condition
+      const v = pick(rng, realSpeeds(g))
+      const shown = Math.round(v * 100 + 1e-6) / 100
+      speedClue = { kind: 'hunt-speed', speed: v, text: `À un moment de la chasse, tu entends ses pas : environ ${num(shown)} m/s.` }
     }
   }
 

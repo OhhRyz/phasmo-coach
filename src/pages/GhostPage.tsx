@@ -24,7 +24,7 @@ import { NoteEditor } from '../components/NoteEditor'
 import { ReportDialog } from '../components/ReportDialog'
 import { NoteText } from './Notebook'
 import { Empty, useMedia } from '../components/ui'
-import { GHOSTS, getGhost } from '../data'
+import { DATA_INFO, GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
@@ -87,8 +87,10 @@ const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' 
 /** Un mot tamponné qui résume l'entité, tiré de ses données. */
 function stampFor(g: Ghost): string | null {
   if (g.id === 'the-mimic') return 'Imitateur'
+  // le Thayé chasse à 75 % jeune mais seulement à 15 % une fois vieux : « très tôt » serait faux la moitié du temps
+  if (g.id === 'thaye') return 'Tôt, puis tard'
   if (g.huntSanity.high >= 70 && g.huntSanity.normal >= 60) return 'Chasse très tôt'
-  if (g.forcedEvidence) return 'Preuve forcée'
+  if (g.forcedEvidence) return 'Preuve garantie'
   if (!g.speed.los && !g.speed.losVaries) return 'Vitesse spéciale'
   if (g.huntSanity.high > 50) return 'Chasse tôt'
   if (g.huntSanity.normal >= 0 && g.huntSanity.normal < 50) return 'Chasse tard'
@@ -359,10 +361,10 @@ export function GhostPage() {
               </Stamp>
             )}
             {/* le tampon s'explique en une ligne : le terme reste, le débutant sait ce qu'il veut dire */}
-            {stamp === 'Preuve forcée' && ghost.forcedEvidence && (
+            {stamp === 'Preuve garantie' && ghost.forcedEvidence && (
               <p className="gh-stamp-why">
                 {fr(
-                  `${ghost.name.startsWith('Les ') ? 'Leur' : 'Sa'} preuve ${EVIDENCE[ghost.forcedEvidence].label} fait toujours partie des preuves visibles, même en difficulté Cauchemar ou Démence.`,
+                  `${ghost.name.startsWith('Les ') ? 'Leur' : 'Sa'} preuve ${EVIDENCE[ghost.forcedEvidence].label} fait partie des preuves visibles dès que la difficulté en donne au moins une (Cauchemar, Démence…). En partie à 0 preuve, elle n'apparaît pas.`,
                 )}
               </p>
             )}
@@ -425,7 +427,7 @@ export function GhostPage() {
                         </span>
                         {has && (
                           <span className="side">
-                            {ghost.forcedEvidence === e ? 'toujours visible, même en difficulté Cauchemar' : ev.side}
+                            {ghost.forcedEvidence === e ? 'garantie dès qu’il y a au moins 1 preuve' : ev.side}
                           </span>
                         )}
                         {fake && <span className="side">fausse preuve, toujours présente</span>}
@@ -489,7 +491,7 @@ export function GhostPage() {
         <Page side="right" section="3" label="À retenir et tests sans preuve">
           <FileHead>
             <span>{ghost.name} · sur le terrain</span>
-            <span>Vérifié en oct. 2026</span>
+            <span>{DATA_INFO.comparedShort}</span>
           </FileHead>
 
           {!stacked && tells}

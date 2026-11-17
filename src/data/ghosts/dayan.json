@@ -15,7 +15,7 @@
     "summary": "1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile",
     "details": [
       "À plus de 10 m de tout joueur : 1,7 m/s avec une accélération en LdV standard.",
-      "À moins de 10 m d'un joueur, sa vitesse devient fixe et dépend des mouvements de ce joueur : 2,25 m/s s'il se déplace, 1,2 m/s s'il reste immobile.",
+      "Dès qu'un joueur est à moins de 10 m d'elle, sa vitesse dépend du joueur le plus proche : 2,25 m/s s'il marche, 1,2 m/s s'il ne bouge pas.",
       "Dans ce rayon de 10 m, l'accélération en LdV ne s'applique plus, mais elle continue de s'accumuler en arrière-plan et s'applique dès que la Dayan ressort du rayon de 10 m."
     ]
   },
@@ -23,49 +23,46 @@
     "normal": 50,
     "low": 45,
     "high": 65,
-    "summary": "50 % · 65 % si tu bouges à moins de 10 m · 45 % immobile",
+    "summary": "50 % loin de l'entité · 65 % si tu marches près de l'entité · 45 % immobile près de l'entité",
     "details": [
-      "Seuil standard de 50 % quand aucun joueur n'est à moins de 10 m d'elle.",
-      "Si le joueur le plus proche, à moins de 10 m, se déplace, le seuil monte à 65 % ; s'il reste immobile, il descend à 45 %."
+      "Seuil standard de 50 % quand les joueurs sont loin d'elle.",
+      "Près d'elle, si un joueur marche, le seuil monte à 65 % ; s'il reste immobile, il descend à 45 %."
     ]
   },
   "summary": "Une entité toujours féminine qui réagit à tes mouvements : près d'elle, bouger la rend plus rapide et plus agressive, rester immobile la ralentit.",
   "keyTells": [
     "À moins de 10 m : 2,25 m/s si tu bouges, 1,2 m/s si tu restes immobile",
     "Chasse dès 65 % si tu bouges près d'elle, seulement à 45 % si tu restes immobile",
-    "Toujours de sexe féminin : une entité masculine n'est pas une Dayan",
+    "Toujours féminine (nom et modèle)",
     "À moins de 10 m de toi, sa vitesse devient fixe : plus d'accélération en LdV"
   ],
   "tells": [
-    { "text": "Pendant une chasse, à moins de 10 m d'un joueur, l'entité se déplace à 2,25 m/s si ce joueur bouge et à 1,2 m/s s'il reste immobile.", "zeroEvidence": true },
-    { "text": "Toujours de sexe féminin (nom et modèle) : une entité masculine n'est pas une Dayan. Attention, la Banshee aussi est exclusivement féminine depuis décembre 2025.", "zeroEvidence": true }
+    { "text": "Pendant une chasse, dès qu'un joueur est à moins de 10 m, l'entité se déplace à 2,25 m/s si le joueur le plus proche marche et à 1,2 m/s si ce joueur ne bouge pas.", "zeroEvidence": true, "card": 0 },
+    { "text": "Uniquement féminine : le nom et le modèle de l'entité le montrent. Attention, la Banshee aussi est uniquement féminine.", "zeroEvidence": true, "card": 1 }
   ],
   "behaviors": [
-    { "text": "Chasse plus tôt (65 %) quand le joueur le plus proche (à moins de 10 m) bouge, et plus tard (45 %) quand ce joueur reste immobile.", "zeroEvidence": true }
+    { "text": "Chasse plus tôt (65 %) quand un joueur marche près de l'entité, et plus tard (45 %) quand ce joueur reste immobile près de l'entité.", "zeroEvidence": true }
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Pendant une chasse, quand l'entité est à moins de 10 m de toi, alterne entre rester parfaitement immobile et marcher. Si sa vitesse bascule entre un pas lent et fixe (~1,2 m/s) et un pas rapide et fixe (~2,25 m/s) au rythme de tes mouvements, c'est une Dayan.", "definitive": true },
+    { "text": "Pendant une chasse, quand l'entité est à moins de 10 m de toi, alterne entre rester parfaitement immobile et marcher. Si sa vitesse bascule entre un pas lent et fixe (~1,2 m/s) et un pas rapide et fixe (~2,25 m/s) au rythme de tes mouvements, c'est une Dayan.", "definitive": true, "card": 0 },
     { "text": "Pendant une chasse, si l'entité ralentit soudainement en arrivant près de toi (même sans LdV), ça pourrait être une Dayan.", "definitive": false },
     { "text": "Si l'entité chasse alors que l'équipe est encore entre 50 % et 65 % de santé mentale, juste au moment où quelqu'un se déplaçait près d'elle, ça pourrait être une Dayan.", "definitive": false }
   ],
-  "eliminationTests": [
-    { "text": "Si l'entité est de sexe masculin (nom ou modèle), ce n'est pas une Dayan." },
-    { "text": "Si, en chasse et à moins de 10 m de toi, l'entité garde une vitesse normale et accélère en LdV alors que tu restes immobile, ce n'est pas une Dayan." }
-  ],
+  "eliminationTests": [],
   "confusions": [
     { "with": "spirit", "why": "Même EMF 5 + Spirit Box, mais l'Esprit a l'écriture au lieu des orbes ; vitesse standard et 180 s sans chasse après un encens (au lieu de 90 s)." },
     { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des orbes ; il ne perturbe jamais le sel et se téléporte vers les joueurs." },
-    { "with": "the-twins", "why": "Même EMF 5 + Spirit Box, mais les Jumeaux ont des glaciales au lieu des orbes ; leur vitesse change d'une chasse à l'autre (~1,5 ou ~1,9 m/s), pas selon tes mouvements." },
+    { "with": "the-twins", "why": "Même EMF 5 + Spirit Box, mais les Jumeaux ont des glaciales au lieu des orbes ; leur vitesse peut changer d'une chasse à l'autre (~1,5 ou ~1,9 m/s), pas selon tes mouvements." },
     { "with": "gallu", "why": "Même EMF 5 + Spirit Box, mais le Gallu a l'UV au lieu des orbes ; ses changements de vitesse (1,96 m/s enragé, 1,36 m/s affaibli) viennent du sel, de l'encens et des crucifix." },
     { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu de la Spirit Box ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse." },
     { "with": "raiju", "why": "Même EMF 5 + orbes, mais le Raiju a le D.O.T.S au lieu de la Spirit Box ; il accélère à 2,5 m/s près de l'électronique active, pas selon tes mouvements, et peut chasser dès 65 % près d'un appareil allumé." },
     { "with": "mare", "why": "Même Spirit Box + orbes, mais le Cauchemar a l'écriture au lieu de l'EMF ; son seuil dépend de la lumière de la pièce où il se trouve (60 % éteinte, 40 % allumée), pas de tes mouvements." },
     { "with": "yokai", "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu de l'EMF ; c'est parler près de lui (jusqu'à 80 %) qui le fait chasser tôt, et en chasse il ne t'entend qu'à 2,5 m." },
     { "with": "onryo", "why": "Même Spirit Box + orbes, mais l'Onryo a des glaciales au lieu de l'EMF ; il chasse dès 60 % et tente une chasse après chaque 3e flamme soufflée." },
-    { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu de l'EMF. Lui aussi réagit à tes déplacements : quasi aveugle, il te repère à tes pas (jusqu'à 30 m en sprint) et accélère quand il te détecte au-delà de 5 m. Immobile et silencieux, tu deviens indétectable pour lui, mais il ne ralentit pas à 1,2 m/s." },
+    { "with": "kormos", "why": "Même Spirit Box + orbes, mais le Kormos a l'UV au lieu de l'EMF. Lui aussi réagit à tes déplacements : quasi aveugle, il détecte tes déplacements (jusqu'à 30 m en sprint) et accélère quand il te détecte au-delà de 5 m. Immobile et silencieux, tu deviens indétectable pour lui, mais il ne ralentit pas à 1,2 m/s." },
     { "with": "the-mimic", "why": "Le Mimic affiche de faux orbes, en plus de la Spirit Box, de l'UV et des glaciales : Spirit Box + orbes peut venir d'un Mimic. L'EMF 5 l'exclut." },
-    { "with": "banshee", "why": "La Banshee est elle aussi toujours féminine depuis Winter's Jest (décembre 2025) : une entité féminine ne confirme donc pas la Dayan. La Banshee a UV, orbes et D.O.T.S." },
+    { "with": "banshee", "why": "La Banshee est elle aussi toujours féminine : une entité féminine ne confirme donc pas la Dayan. La Banshee a UV, orbes et D.O.T.S." },
     { "with": "deogen", "why": "Le Deogen ralentit lui aussi près des joueurs (jusqu'à 0,4 m/s), quoi que tu fasses, et fonce à 3,0 m/s de loin ; il ne partage que la Spirit Box." },
     { "with": "jinn", "why": "Le Djinn change aussi de vitesse d'un coup selon la distance : disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m, que tu bouges ou non. Une seule preuve en commun (EMF 5)." },
     { "with": "revenant", "why": "Le Revenant change aussi de vitesse d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, que tu bouges ou non. Une seule preuve en commun (orbes)." }
@@ -104,10 +101,10 @@
   ],
   "quiz": [
     {
-      "q": "En chasse, l'entité est à moins de 10 m de toi. Tu restes immobile, mais elle garde une vitesse normale puis accélère en te voyant. Que peux-tu en conclure ?",
-      "choices": ["Ce n'est pas une Dayan", "Ce n'est pas une Banshee", "Ce n'est pas un Oni", "Ce n'est pas un Obake"],
+      "q": "En chasse, l'entité est à moins de 10 m de toi : elle accélère dès que tu marches et ralentit dès que tu t'arrêtes. Que peux-tu en conclure ?",
+      "choices": ["C'est une Dayan", "C'est une Banshee", "C'est un Oni", "C'est un Obake"],
       "answer": 0,
-      "explain": "À moins de 10 m d'un joueur immobile, la Dayan passe à une vitesse fixe de 1,2 m/s et son accélération en ligne de vue ne s'applique plus. Une entité qui garde une vitesse normale et accélère dans ces conditions n'est pas une Dayan. La Banshee, l'Oni ou l'Obake, à vitesse standard avec l'accélération habituelle, correspondent au contraire à ce que tu observes."
+      "explain": "À moins de 10 m, si l'entité accélère quand tu bouges et ralentit quand tu t'arrêtes, c'est une Dayan : c'est son test de confirmation définitif."
     },
     {
       "q": "En chasse, à moins de 10 m de toi, à quelle vitesse va une Dayan si tu restes immobile ?",
@@ -116,22 +113,16 @@
       "explain": "Immobile, tu la ralentis à 1,2 m/s ; en bougeant, elle passe à 2,25 m/s. 1,7 m/s est sa vitesse au-delà de 10 m, et 0,4 m/s la vitesse minimale du Deogen."
     },
     {
-      "q": "Quel est le seuil de chasse de la Dayan si le joueur le plus proche bouge à moins de 10 m d'elle ?",
+      "q": "Quel est le seuil de chasse de la Dayan quand un joueur marche près d'elle ?",
       "choices": ["50 %", "45 %", "65 %", "40 %"],
       "answer": 2,
-      "explain": "Bouger près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % sans joueur à moins de 10 m, et à 45 % si le joueur le plus proche reste immobile. 40 % est le seuil du Deogen."
+      "explain": "Marcher près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % quand les joueurs sont loin d'elle, et à 45 % si le joueur près d'elle reste immobile. 40 % est le seuil du Deogen."
     },
     {
-      "q": "L'entité porte un nom masculin. Que peux-tu éliminer ?",
+      "q": "Quelles sont les deux entités uniquement féminines (nom et modèle) ?",
       "choices": ["Raiju et Onryo", "Yurei et Yokai", "Hantu et Goryo", "Dayan et Banshee"],
       "answer": 3,
-      "explain": "La Dayan est toujours féminine, et la Banshee aussi depuis décembre 2025 : un nom masculin élimine les deux. Les autres entités, comme le Raiju, l'Onryo, le Yurei, le Yokai, le Hantu ou le Goryo, peuvent être masculines ou féminines."
-    },
-    {
-      "q": "Avec quelle mise à jour la Dayan a-t-elle été ajoutée ?",
-      "choices": ["Winter's Jest (décembre 2025)", "Chronicle (juin 2025)", "Alan Wake (mai 2026)", "Willow Rework (juillet 2026)"],
-      "answer": 0,
-      "explain": "La Dayan est arrivée avec Winter's Jest (v0.15.1.0) le 16 décembre 2025, avec le Gallu et l'Obambo. L'Aswang et le Kormos sont arrivés en mai 2026 avec Phasmophobia by Alan Wake (v0.17.1.0), le Deildegast en juillet 2026 avec le Willow Rework (v0.18.0)."
+      "explain": "La Dayan est uniquement féminine : le nom et le modèle de l'entité le montrent. La Banshee aussi."
     },
     {
       "q": "Pourquoi l'accélération en LdV semble-t-elle disparaître quand la Dayan est à moins de 10 m de toi ?",
@@ -141,8 +132,7 @@
     }
   ],
   "changes": [
-    "Nouvelle entité ajoutée avec Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que le Gallu et l'Obambo.",
-    "Même mise à jour : la Banshee ne se présente plus que sous une forme féminine, ce qui rend le critère « entité féminine » non exclusif à la Dayan."
+    "La Banshee est elle aussi uniquement féminine : le critère « entité féminine » n'est pas exclusif à la Dayan."
   ],
   "sources": [
     "tybayn wiki: wiki_los_dayan_p1",
@@ -158,9 +148,7 @@
     "https://phasmopedia.com/en/ghosts/dayan/"
   ],
   "uncertain": [
-    "Seuil quand un joueur bouge près d'elle : 65 % pour la plupart des sources, 60 % pour une autre.",
     "Le seuil (65 % / 45 % / 50 %) dépend-il du « joueur le plus proche », comme sa vitesse ? Seules certaines sources l'affirment.",
-    "Aucune preuve garantie connue en difficulté Cauchemar et Démence (une seule source l'affirme).",
     "Ce qui compte comme « bouger » (s'accroupir, marcher accroupi, tourner sur place) : non vérifié."
   ]
 }
