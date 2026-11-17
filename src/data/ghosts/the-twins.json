@@ -14,7 +14,8 @@
     "summary": "1,5 ou 1,9 m/s selon la chasse · accélère en LdV",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
-      "À chaque chasse, c'est une chance sur deux d'avoir le jumeau lent ou le rapide : rien ne l'oblige à alterner, tu peux tomber 3 ou 4 fois de suite sur le lent avant de voir le rapide.",
+      "D'après le coach : à chaque chasse, c'est une chance sur deux d'avoir le jumeau lent ou le rapide : rien ne l'oblige à alterner, tu peux tomber 3 ou 4 fois de suite sur le lent avant de voir le rapide.",
+      "D'après tybayn : 1,5 m/s quand l'entité chasse depuis sa portée standard, 1,9 m/s quand elle chasse depuis sa portée étendue.",
       "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
       "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer les Jumeaux."
     ]
@@ -31,7 +32,7 @@
   "summary": "Une seule entité dotée de deux portées d'interaction, capable d'agir à deux endroits presque en même temps et de chasser tantôt lentement, tantôt vite.",
   "keyTells": [
     "Deux interactions quasi simultanées, dont une loin de l'entité",
-    "Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse (une chance sur deux)",
+    "Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse (une chance sur deux, d'après le coach)",
     "Capteurs de mouvement et sel ne réagissent qu'à sa position réelle"
   ],
   "tells": [
@@ -45,12 +46,10 @@
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Si la vitesse de l'entité alterne entre 1,5 m/s et 1,9 m/s d'une chasse à l'autre, ça pourrait être les Jumeaux. La même vitesse plusieurs chasses de suite ne les écarte pas : c'est une chance sur deux à chaque chasse, tu peux avoir 3 ou 4 fois le lent avant le rapide. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s), qui suit la montre du jeu et peut changer de vitesse en pleine chasse.", "definitive": false },
+    { "text": "Si la vitesse de l'entité alterne entre 1,5 m/s et 1,9 m/s d'une chasse à l'autre, ça pourrait être les Jumeaux. La même vitesse plusieurs chasses de suite ne les écarte pas : d'après le coach, c'est une chance sur deux à chaque chasse, tu peux avoir 3 ou 4 fois le lent avant le rapide. En 0 preuve, méfie-toi de l'Obambo (1,45 / 1,96 m/s), qui suit la montre du jeu et peut changer de vitesse en pleine chasse.", "definitive": false },
     { "text": "Si des interactions ont souvent lieu loin de la pièce de l'entité, ça pourrait être les Jumeaux.", "definitive": false }
   ],
-  "eliminationTests": [
-    { "text": "Si l'entité chasse avec une vitesse de base standard de 1,7 m/s (avant toute accélération en LdV), ce ne sont pas les Jumeaux." }
-  ],
+  "eliminationTests": [],
   "confusions": [
     { "with": "spirit", "why": "Même EMF 5 + Spirit Box, mais l'Esprit a l'écriture au lieu des glaciales ; vitesse standard de 1,7 m/s et 180 s sans chasse après un encens." },
     { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des glaciales ; il ne perturbe jamais le sel et peut se téléporter vers un joueur en laissant de l'EMF." },
@@ -58,7 +57,7 @@
     { "with": "dayan", "why": "Même EMF 5 + Spirit Box, mais la Dayan a les orbes au lieu des glaciales ; à moins de 10 m, sa vitesse dépend de tes mouvements (2,25 m/s si tu marches, 1,2 m/s si tu restes immobile). Elle est toujours de sexe féminin." },
     { "with": "jinn", "why": "Même EMF 5 + glaciales, mais le Djinn a l'UV au lieu de la Spirit Box ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m." },
     { "with": "shade", "why": "Même EMF 5 + glaciales, mais l'Ombre a l'écriture au lieu de la Spirit Box ; elle ne chasse pas au-dessus de 35 % de santé mentale moyenne, ni quand un joueur est dans la même pièce qu'elle." },
-    { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il est plus visible en chasse (il reste visible plus longtemps à chaque clignotement) et ne fait jamais l'événement « brouillard fantomatique »." },
+    { "with": "oni", "why": "Même EMF 5 + glaciales, mais l'Oni a le D.O.T.S au lieu de la Spirit Box ; il clignote plus souvent en chasse, ce qui le rend plus visible, et ne fait jamais l'événement « brouillard fantomatique »." },
     { "with": "onryo", "why": "Même Spirit Box + glaciales, mais l'Onryo a les orbes au lieu de l'EMF ; il chasse dès 60 % et tente une chasse après chaque 3e flamme soufflée." },
     { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors dépasser 1,9 m/s." },
     { "with": "the-mimic", "why": "Le Mimic a Spirit Box + glaciales (+ UV et de faux orbes) et copie la vitesse de l'entité qu'il imite : trouver de l'UV ou des orbes exclut les Jumeaux." },
@@ -85,7 +84,7 @@
       "q": "Une chasse se déroule à environ 1,9 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
       "choices": ["Non, ils chassent tous deux à 2,5 m/s", "Oui, si c'est le jumeau principal qui chasse", "Oui, si c'est le jumeau errant qui chasse", "Non, ils chassent tous deux à 1,7 m/s"],
       "answer": 2,
-      "explain": "Oui : à environ 1,9 m/s, c'est le jumeau errant, le plus rapide, qui chasse ; le jumeau principal chasse à environ 1,5 m/s. Les Jumeaux ne chassent jamais à la vitesse standard de 1,7 m/s, qui les éliminerait. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
+      "explain": "Oui : à environ 1,9 m/s, c'est le jumeau errant, le plus rapide, qui chasse ; le jumeau principal chasse à environ 1,5 m/s. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
     },
     {
       "q": "Vrai ou faux : les Jumeaux ne forment en réalité qu'une entité.",
@@ -113,14 +112,13 @@
     }
   ],
   "changes": [
-    "Vitesses précisées : 1,5 / 1,9 m/s (±0,2 m/s), au lieu des 1,53 / 1,87 m/s (±10 %) longtemps cités ; simple affinage des mesures, aucun patch identifié.",
+    "Vitesses : 1,5 ou 1,9 m/s.",
     "Accélération en LdV particulière, désormais précisée : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
-    "Portées d'interaction précisées : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte (on citait autrefois 8 m / 16 m, avec les cartes moyennes groupées avec les grandes).",
-    "Winter's Jest v0.15.1.0 (16 décembre 2025) a ajouté l'Obambo (1,45 / 1,96 m/s) et le Gallu : le test de vitesse alternée n'est plus strictement définitif en 0 preuve.",
-    "Player Character Update v0.17.0.0 (2026) : l'accélération en LdV des entités a été modifiée, puis remise à son état d'origine par le patch v0.17.1.4 (2 juin 2026)."
+    "Portées d'interaction précisées : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte.",
+    "Le test de vitesse alternée n'est pas définitif : l'Obambo a des vitesses très proches."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_the_twins_los_p1 à p11",
     "tybayn wiki: wiki_los_twins_p1 à p3",
     "tybayn wiki: wiki_interaction_p1 à p6",
@@ -133,6 +131,7 @@
     "Retour du coach (700 h de jeu), novembre 2026"
   ],
   "uncertain": [
-    "Portées d'interaction : en partie non vérifiées."
+    "Portées d'interaction : en partie non vérifiées.",
+    "Accélération en LdV particulière des Jumeaux (environ 2,6 et 3,0 m/s au maximum) : en partie non vérifiée officiellement, d'après tybayn."
   ]
 }

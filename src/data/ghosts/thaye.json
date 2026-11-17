@@ -19,25 +19,25 @@
     "details": [
       "Ne prend jamais de vitesse en LdV.",
       "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
-      "Repères par vieillissement : +1 an 2,575 · +2 2,4 · +3 2,225 · +4 2,05 · +5 1,875 · +6 1,7 · +7 1,525 · +8 1,35 · +9 1,175 · +10 1,0 m/s.",
-      "Sa vitesse est constante pendant une chasse et ne peut que baisser d'une chasse à l'autre : il ralentit à chaque chasse s'il a été exposé aux joueurs.",
-      "Compte environ 1 à 2 min de présence dans sa pièce par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
+      "Repères par vieillissement : +1 → 2,575 · +2 → 2,4 · +3 → 2,225 · +4 → 2,05 · +5 → 1,875 · +6 → 1,7 · +7 → 1,525 · +8 → 1,35 · +9 → 1,175 · +10 → 1,0 m/s.",
+      "Il n'accélère jamais en LdV et ralentit d'une chasse à l'autre s'il a été exposé aux joueurs.",
+      "Compte environ 1 à 2 min passées dans la même pièce que l'entité par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
     ]
   },
   "huntSanity": {
     "normal": 75,
     "low": 15,
     "high": 75,
-    "summary": "75 % jeune → 15 % vieux · −6 % par âge",
+    "summary": "75 % jeune → 15 % vieux",
     "details": [
-      "Seuil de 75 % au plus jeune âge, qui baisse de 6 points à chaque vieillissement, jusqu'à 15 % au plus vieux.",
+      "Chasse à 75 % au plus jeune, 15 % au plus vieux.",
       "Bug connu : chaque seuil est en réalité 1 % plus bas que prévu (74 % jeune, 14 % vieux).",
       "Plus il vieillit, plus ses chasses arrivent tard dans la partie."
     ]
   },
   "summary": "Entité qui vieillit au contact des joueurs : très active, précoce et rapide au début, elle s'affaiblit et ralentit au fil de la partie.",
   "keyTells": [
-    "N'accélère jamais en LdV ; plus lent à chaque chasse (2,75 → 1,0 m/s)",
+    "N'accélère jamais en LdV ; plus lent à chaque chasse s'il a été exposé aux joueurs (2,75 → 1,0 m/s)",
     "Au Ouija, l'âge annoncé augmente au fil de la partie (90 ans ou plus : signe certain)",
     "Chasse dès 75 % quand il est jeune, de plus en plus tard en vieillissant",
     "Très actif au début, de plus en plus calme quand tu restes près de lui"
@@ -67,7 +67,7 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé dans sa pièce, repose la question. Si le nombre a augmenté, c'est un Thayé.",
+      "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé dans la même pièce que l'entité, repose la question. Si le nombre a augmenté, c'est un Thayé.",
       "definitive": true,
       "card": 0
     },
@@ -88,9 +88,6 @@
   "eliminationTests": [
     {
       "text": "Pendant une chasse, si l'entité accélère en LdV, ce n'est pas un Thayé."
-    },
-    {
-      "text": "Si l'entité redevient plus rapide qu'à la chasse précédente, ce n'est pas un Thayé : il ne rajeunit jamais."
     }
   ],
   "confusions": [
@@ -120,7 +117,7 @@
     },
     {
       "with": "mare",
-      "why": "Cauchemar : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % lumière éteinte dans sa pièce, avec une vitesse standard et l'accélération en LdV."
+      "why": "Cauchemar : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % quand la lumière de la pièce où il se trouve est éteinte, avec une vitesse standard et l'accélération en LdV."
     },
     {
       "with": "revenant",
@@ -159,7 +156,7 @@
       "strength": "strong"
     },
     {
-      "text": "Alors que l'équipe ne touche à aucun objet, interrupteur, disjoncteur ni robinet entre les chasses, chaque nouvelle chasse est plus lente que la précédente, à allure constante du début à la fin et sans jamais accélérer quand l'entité te voit.",
+      "text": "Alors que l'équipe ne touche à aucun objet, interrupteur, disjoncteur ni robinet entre les chasses, chaque nouvelle chasse est plus lente que la précédente, sans jamais accélérer quand l'entité te voit.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -174,7 +171,7 @@
       "strength": "strong"
     },
     {
-      "text": "Une chasse se fait à une allure très rapide (environ 2,75 m/s) qui ne change pas d'un bout à l'autre, même quand l'entité te garde longtemps en vue.",
+      "text": "Une chasse se fait à une allure très rapide (environ 2,75 m/s), sans aucune accélération même quand l'entité te garde longtemps en vue.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -194,7 +191,7 @@
         "60 %"
       ],
       "answer": 2,
-      "explain": "75 % jeune, puis −6 points par vieillissement jusqu'à 15 %. 70 % est le seuil du Démon, 60 % celui du Cauchemar lumière éteinte."
+      "explain": "75 % au plus jeune, 15 % au plus vieux. 70 % est le seuil du Démon, 60 % celui du Cauchemar lumière éteinte."
     },
     {
       "q": "Quelle description correspond à la vitesse de chasse du Thayé ?",
@@ -249,14 +246,14 @@
         "10 fois"
       ],
       "answer": 3,
-      "explain": "10 vieillissements : 2,75 → 1,0 m/s (−0,175 par âge) et 75 % → 15 % (−6 points par âge)."
+      "explain": "10 vieillissements : 2,75 → 1,0 m/s (−0,175 par vieillissement) ; le seuil passe de 75 % à 15 %."
     }
   ],
   "changes": [
     "Bugs connus : seuil de chasse 1 % plus bas que prévu ; il peut vieillir à cause d'un joueur situé à l'étage du dessous, car la portée de 3 m traverse le sol."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_thaye_p1, wiki_los_thaye_p2, wiki_los_thaye_p3",
     "tybayn wiki: wiki_ghost_speed_h10 (tableau des vitesses du Thayé)",
     "tybayn wiki: wiki_ouija_board_h8, wiki_ouija_board_p12, wiki_ouija_board_p13",

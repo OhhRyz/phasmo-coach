@@ -19,7 +19,7 @@
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
       "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue.",
-      "Sa vue est normale en chasse : seules son ouïe et sa détection des appareils électroniques sont réduites (2,5 m ou moins)."
+      "Pendant les chasses, seule sa détection de la voix et des appareils électroniques est réduite (2,5 m ou moins) ; l'entité accélère en ligne de vue comme une entité standard."
     ]
   },
   "huntSanity": {
@@ -32,7 +32,7 @@
       "Parler dans la même pièce que le Yokai peut le faire chasser jusqu'à 80 % de santé mentale moyenne."
     ]
   },
-  "summary": "Une entité attirée par la voix, qui peut chasser très tôt si tu parles près d'elle, mais qui est presque sourde pendant les chasses.",
+  "summary": "Une entité plus active quand on parle près d'elle, qui peut chasser jusqu'à 80 % si l'on parle dans sa pièce, mais qui n'entend la voix et ne détecte l'électronique qu'à 2,5 m ou moins pendant les chasses.",
   "keyTells": [
     "En chasse, n'entend la voix et ne détecte l'électronique qu'à 2,5 m ou moins",
     "Peut chasser jusqu'à 80 % si l'on parle dans sa pièce",
@@ -41,7 +41,7 @@
   ],
   "tells": [
     {
-      "text": "Pendant les chasses, sa distance d'écoute et de détection est de 2,5 m ou moins.",
+      "text": "Pendant les chasses, l'entité n'entend la voix et ne détecte les appareils électroniques qu'à 2,5 m ou moins.",
       "zeroEvidence": true,
       "card": 0
     },
@@ -70,25 +70,25 @@
   ],
   "confirmationTests": [
     {
-      "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue, et regarde si l'entité vient vers toi : si ce n'est pas le cas, c'est un Yokai.",
+      "text": "Pendant une chasse, parle (ou appuie sur la touche de ta radio) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, et regarde si l'entité vient vers toi : si ce n'est pas le cas, c'est un Yokai.",
       "definitive": true,
       "card": 0
     },
     {
-      "text": "Après avoir repéré la zone de l'entité, localise-la précisément (capteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si l'entité s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : l'entité doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, la boîte peut se retrouver hors de portée de toutes les entités.",
+      "text": "Après avoir repéré la zone de l'entité, localise-la précisément (détecteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si l'entité s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : l'entité doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, la boîte peut se retrouver hors de portée de toutes les entités.",
       "definitive": true,
       "card": 1
     }
   ],
   "eliminationTests": [
     {
-      "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue. Si elle te détecte, ce n'est pas un Yokai."
+      "text": "Pendant une chasse, parle (ou appuie sur la touche de ta radio) à une distance où une entité normale pourrait t'entendre mais pas un Yokai. Si elle te détecte, ce n'est pas un Yokai."
     }
   ],
   "confusions": [
     {
       "with": "kormos",
-      "why": "Mêmes Spirit Box et orbes, et ouïe particulière, mais à l'inverse : le Kormos est presque aveugle (il ne te voit que si tu bouges à moins de 5 m) tout en entendant la voix à distance normale et tes déplacements (10 m accroupi, 15 m en marchant, 30 m en sprintant). Le Yokai voit normalement mais n'entend qu'à 2,5 m."
+      "why": "Mêmes Spirit Box et orbes, et ouïe particulière, mais à l'inverse : le Kormos est presque aveugle (il ne te voit que si tu bouges à moins de 5 m) tout en entendant la voix à distance normale et tes déplacements (10 m accroupi, 15 m en marchant, 30 m en sprintant). Le Yokai, lui, n'entend la voix qu'à 2,5 m ou moins en chasse."
     },
     {
       "with": "mare",
@@ -112,7 +112,7 @@
     },
     {
       "with": "phantom",
-      "why": "Mêmes Spirit Box et D.O.T.S. Le Fantôme n'apparaît pas en photo, disparaît quand on le photographie et reste invisible plus longtemps en chasse."
+      "why": "Mêmes Spirit Box et D.O.T.S. Le Fantôme disparaît quand on le photographie et n'apparaît pas sur la photo si elle est classée photo de l'entité (« Ghost ») dans le journal ; l'entité reste invisible plus longtemps en chasse."
     },
     {
       "with": "deogen",
@@ -146,17 +146,17 @@
       "strength": "strong"
     },
     {
-      "text": "Pendant une chasse, caché hors de sa vue, tu parles à voix haute à environ 4 m de l'entité : pas de réaction, son chemin continue ; un peu plus tard, l'entité t'aperçoit au bout d'un couloir et fonce aussitôt sur toi.",
+      "text": "Pendant une chasse, caché hors de sa vue, tu parles à voix haute à une distance où une entité normale t'entendrait, nettement à plus de 2,5 m : pas de réaction, son chemin continue.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Pendant une chasse, l'entité passe à environ 4 m de ta cachette, sans te voir, et n'est pas attirée par l'appareil électronique allumé que tu tiens en main.",
+      "text": "Pendant une chasse, l'entité passe nettement à plus de 2,5 m de ta cachette, à une distance où une entité normale détecterait l'appareil électronique allumé que tu tiens en main, sans te voir : l'appareil ne l'attire pas.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "Pendant une chasse, hors de vue de l'entité, ton coéquipier appuie sur le bouton de sa radio et parle à environ 4 m d'elle : elle ne se tourne pas vers lui et poursuit son chemin.",
+      "text": "Pendant une chasse, hors de vue de l'entité, ton coéquipier appuie sur le bouton de sa radio et parle à une distance où une entité normale l'entendrait, nettement à plus de 2,5 m : elle ne se tourne pas vers lui et poursuit son chemin.",
       "kind": "hunt",
       "strength": "strong"
     },
@@ -219,29 +219,18 @@
         "Ce n'est pas un Yokai"
       ],
       "answer": 3,
-      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Le Kormos, qui chasse à l'oreille, le Myling et le Raiju entendent ta voix à cette distance : ils restent possibles."
-    },
-    {
-      "q": "Pendant une chasse, comment le Yokai te repère-t-il ?",
-      "choices": [
-        "Il te voit normalement, mais t'entend mal",
-        "Il est presque aveugle et ne te voit que de près",
-        "Il ne repère que les joueurs qui bougent",
-        "Il sait où tu es, même caché et silencieux"
-      ],
-      "answer": 0,
-      "explain": "Le Yokai voit normalement : s'il te voit, il te poursuit. Seules son ouïe et sa détection des appareils électroniques sont réduites (2,5 m). C'est le Kormos qui est presque aveugle et repère les joueurs qui bougent."
+      "explain": "À 5 m, un Yokai ne t'entendrait pas (2,5 m maximum) : s'il te détecte, ce n'est pas un Yokai. Ce test n'élimine que le Yokai."
     },
     {
       "q": "Quand un Yokai est-il plus actif ?",
       "choices": [
         "Quand plusieurs joueurs sont dans sa pièce",
-        "Quand quelqu'un parle dans sa pièce",
+        "Quand quelqu'un parle près de l'entité",
         "Quand le disjoncteur est coupé",
         "Quand une bougie brûle dans sa pièce"
       ],
       "answer": 1,
-      "explain": "Le Yokai est attiré par la voix : il est plus actif quand on parle près de lui et peut chasser jusqu'à 80 % si l'on parle dans sa pièce. C'est l'Oni qui s'agite quand plusieurs joueurs sont à proximité."
+      "explain": "Le Yokai est plus actif quand quelqu'un parle à proximité, et peut chasser jusqu'à 80 % si l'on parle dans sa pièce. C'est l'Oni qui est plus actif quand plusieurs joueurs sont à proximité."
     },
     {
       "q": "Pendant une chasse, tu es déjà immobile et silencieux, sans électronique allumée, à 8 m de l'entité, quand elle te repère et fonce sur toi. Que peux-tu en conclure ?",
@@ -252,12 +241,10 @@
         "Ce n'est pas un Aswang"
       ],
       "answer": 1,
-      "explain": "Le Kormos est presque aveugle : il ne voit un joueur que s'il bouge à moins de 5 m, et ne détecte pas un joueur immobile et silencieux. S'il te repère dans ces conditions, ce n'est pas un Kormos. Le Yokai voit normalement (seule son ouïe est réduite) : il reste possible, comme le Fantôme ou l'Aswang."
+      "explain": "Le Kormos est presque aveugle : il ne voit un joueur que s'il bouge à moins de 5 m, et ne détecte pas un joueur immobile et silencieux. S'il te repère dans ces conditions, ce n'est pas un Kormos. Le Yokai reste possible, comme le Fantôme ou l'Aswang."
     }
   ],
-  "changes": [
-    "v0.17.0.0 (Player Character Update, 5 mai 2026) : correction d'un bug qui permettait au Yokai d'entendre la boîte à musique de trop loin."
-  ],
+  "changes": [],
   "sources": [
     "tybayn backup b0.11.1.1",
     "tybayn wiki: wiki_known_bugs_yokai",

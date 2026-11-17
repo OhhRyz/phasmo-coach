@@ -24,10 +24,10 @@
     "summary": "50 %",
     "details": [
       "Seuil de chasse standard : 50 % de santé mentale moyenne.",
-      "Son pouvoir ne déclenche pas de chasse, mais il fait baisser la santé mentale des joueurs proches, ce qui rapproche l'équipe du seuil."
+      "Son pouvoir fait baisser de 15 % la santé mentale des joueurs proches, ce qui rapproche l'équipe du seuil de chasse."
     ]
   },
-  "summary": "Une entité qui referme les portes d'un coup pour drainer ta santé mentale, la seule capable de toucher à une porte de sortie hors chasse, et que l'encens enferme dans sa pièce.",
+  "summary": "Une entité qui referme les portes d'un coup en drainant ta santé mentale, la seule capable de toucher à une porte de sortie hors chasse et hors événement, et que l'encens enferme dans sa pièce pendant 90 s.",
   "keyTells": [
     "Seule à fermer ou toucher une porte de sortie hors chasse et hors événement",
     "Pouvoir : ferme une porte et fait perdre 15 % de santé mentale aux joueurs proches",
@@ -65,19 +65,13 @@
       "zeroEvidence": true
     }
   ],
-  "confirmationTests": [
-    {
-      "text": "Si une porte de sortie se ferme ou bouge alors qu'aucune chasse ni aucun événement n'est en cours, c'est un Yurei (c'est la seule entité capable de le faire).",
-      "definitive": true,
-      "card": 0
-    }
-  ],
+  "confirmationTests": [],
   "eliminationTests": [
     {
       "text": "Si, à un moment, l'entité interagit avec une porte (en dehors d'une chasse) et que la porte ne s'ouvre pas ou ne se ferme pas complètement, ce n'est pas un Yurei (attention au bug connu des portes de casier, qu'il peut ouvrir partiellement)."
     },
     {
-      "text": "Place des capteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei (sans compter un événement, pendant lequel une entité peut se téléporter jusqu'à un joueur)."
+      "text": "Place des détecteurs de mouvement (ou du sel) aux entrées de la pièce et encense l'entité. Si elle quitte la pièce avant 90 s, ce n'est pas un Yurei."
     },
     {
       "text": "Encense l'entité et surveille attentivement sa pièce : si, à un moment pendant les 90 s de l'encens, l'entité passe en état D.O.T.S, ce n'est pas un Yurei."
@@ -129,12 +123,12 @@
     {
       "text": "La porte principale par laquelle l'équipe est entrée se referme toute seule, alors qu'aucune chasse ni aucun événement n'est en cours.",
       "kind": "interaction",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Tu regardes la porte de sortie, restée grande ouverte : la porte pivote toute seule et se referme complètement, d'un seul mouvement, alors qu'aucune chasse ni aucun événement n'est en cours.",
       "kind": "interaction",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Une porte de la pièce de l'entité se referme complètement d'un seul coup et, au même instant, ta santé mentale chute d'environ 15 points.",
@@ -147,7 +141,7 @@
       "strength": "strong"
     },
     {
-      "text": "Tu encenses l'entité dans sa pièce : pendant une minute et demie, les capteurs de mouvement placés à toutes ses entrées restent muets.",
+      "text": "Tu encenses l'entité dans sa pièce : pendant une minute et demie, les détecteurs de mouvement placés à toutes ses entrées restent muets.",
       "kind": "behavior",
       "strength": "hint"
     },
@@ -197,7 +191,7 @@
       "explain": "Il lui faut une porte dans la pièce. Le disjoncteur concerne le Djinn, la voix le Yokai, et les flammes l'Onryo."
     },
     {
-      "q": "Tu encenses l'entité ; 40 s plus tard, un capteur de mouvement placé à la porte de sa pièce se déclenche, sans aucun événement en cours. Qu'en conclus-tu ?",
+      "q": "Tu encenses l'entité ; 40 s plus tard, un détecteur de mouvement placé à la porte de sa pièce se déclenche. Qu'en conclus-tu ?",
       "choices": [
         "Ce n'est pas un Esprit",
         "Ce n'est pas un Onryo",
@@ -205,7 +199,7 @@
         "Ce n'est pas un Yurei"
       ],
       "answer": 3,
-      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant (hors événement), ce n'est pas un Yurei. Ce test ne dit rien des autres : l'Esprit, l'Onryo ou l'Oni peuvent quitter leur pièce juste après l'encens."
+      "explain": "Un Yurei encensé reste bloqué dans sa pièce pendant 90 s. S'il en sort avant, ce n'est pas un Yurei. Ce test ne dit rien des autres : l'Esprit, l'Onryo ou l'Oni peuvent quitter leur pièce juste après l'encens."
     },
     {
       "q": "Laquelle de ces observations est un signe quasi certain de Yurei ?",
@@ -227,13 +221,10 @@
         "5 s"
       ],
       "answer": 1,
-      "explain": "Encensé, le Yurei reste bloqué dans sa pièce pendant toute la durée de l'effet de l'encens (90 s). Si des capteurs placés à ses entrées se déclenchent avant, hors événement, ce n'est pas un Yurei."
+      "explain": "Encensé, le Yurei reste bloqué dans sa pièce pendant toute la durée de l'effet de l'encens (90 s). Si des détecteurs placés à ses entrées se déclenchent avant, ce n'est pas un Yurei."
     }
   ],
-  "changes": [
-    "v0.17.1.0 (mai 2026) : correction d'un bug qui empêchait le Yurei de fermer complètement les portes.",
-    "v0.19.0.0 (25 août 2026) : correction d'un son de fermeture de porte joué bien après la fin de l'animation, qui faisait croire à tort à la présence d'un Yurei. Ne prends plus un bruit de porte isolé pour une preuve."
-  ],
+  "changes": [],
   "sources": [
     "tybayn backup b0.11.1.1",
     "tybayn wiki: wiki_known_bugs_yurei",
