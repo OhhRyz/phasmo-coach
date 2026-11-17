@@ -11,12 +11,12 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,5 ou 1,9 m/s selon la chasse · accélère en LdV",
+    "summary": "1,5 ou 1,9 m/s selon la chasse · accélère en ligne de vue",
     "details": [
       "Chaque chasse se fait à l'une de deux vitesses de base : environ 1,5 m/s (jumeau principal, plus lent qu'une entité standard) ou environ 1,9 m/s (jumeau « errant », plus rapide), soit ±0,2 m/s autour des 1,7 m/s standard.",
       "D'après le coach, à chaque chasse, c'est une chance sur deux d'avoir le jumeau lent ou le rapide : rien ne l'oblige à alterner, tu peux tomber 3 ou 4 fois de suite sur le lent avant de voir le rapide.",
       "D'après tybayn : 1,5 m/s quand l'entité chasse depuis sa portée standard, 1,9 m/s quand elle chasse depuis sa portée étendue.",
-      "Accélération en LdV particulière : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
+      "Accélération particulière en ligne de vue : elle est calculée à partir de la vitesse standard (1,7 × 1,65) puis le modificateur de ±0,2 m/s est appliqué, soit environ 2,6 m/s (jumeau lent) et 3,0 m/s (jumeau rapide) au maximum, au lieu des 2,48 et 3,14 m/s qu'on attendrait.",
       "Compare le rythme des pas d'une chasse à l'autre : une vitesse de base différente entre deux chasses peut indiquer les Jumeaux."
     ]
   },
@@ -33,14 +33,14 @@
   "keyTells": [
     "Deux interactions quasi simultanées, dont une loin de l'entité",
     "Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse (une chance sur deux, d'après le coach)",
-    "Capteurs de mouvement et sel ne réagissent qu'à sa position réelle"
+    "Détecteurs de mouvement et sel ne réagissent qu'à sa position réelle"
   ],
   "tells": [
     { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true, "card": 0 },
     { "text": "En chasse, sa vitesse sera soit de 1,5 m/s, soit de 1,9 m/s (0,2 m/s de moins ou de plus que la vitesse normale de 1,7 m/s).", "zeroEvidence": true, "card": 1 }
   ],
   "behaviors": [
-    { "text": "Le déclenchement des capteurs de mouvement, les pas dans le sel et les réponses à la Spirit Box ne se produisent qu'à sa position physique réelle.", "zeroEvidence": false },
+    { "text": "Le déclenchement des détecteurs de mouvement, les pas dans le sel et les réponses à la Spirit Box ne se produisent qu'à sa position physique réelle.", "zeroEvidence": false },
     { "text": "Ce n'est pas deux entités distinctes : c'est une seule entité avec deux portées d'interaction, une grande et une petite.", "zeroEvidence": false },
     { "text": "Portées d'interaction (boîte centrée sur l'entité) : standard 1,5 m de demi-côté (rayon effectif ~2,12 m) sur petite et moyenne carte, 3 m (~4,24 m) sur grande carte ; portée étendue des Jumeaux 6 m (~8,48 m) sur petite et moyenne carte, 12 m (~16,97 m) sur grande carte.", "zeroEvidence": true }
   ],
@@ -62,7 +62,7 @@
     { "with": "moroi", "why": "Même Spirit Box + glaciales, mais le Moroi a l'écriture au lieu de l'EMF ; il devient plus rapide quand la santé mentale moyenne baisse et peut alors dépasser 1,9 m/s." },
     { "with": "the-mimic", "why": "Le Mimic a Spirit Box + glaciales (+ UV et de faux orbes) et copie la vitesse de l'entité qu'il imite : trouver de l'UV ou des orbes exclut les Jumeaux." },
     { "with": "obambo", "why": "L'Obambo (écriture, UV, D.O.T.S) a un duo de vitesses qui ressemble beaucoup à celui des Jumeaux en 0 preuve. L'Obambo alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif) selon un minuteur, parfois en pleine chasse, et chasse à 10 % (calme) ou 65 % (agressif)." },
-    { "with": "aswang", "why": "L'Aswang (D.O.T.S, écriture, glaciales) chasse toujours à 1,53 m/s, comme un jumeau lent, mais sa vitesse de base ne change jamais d'une chasse à l'autre et il accélère bien plus vite en LdV." },
+    { "with": "aswang", "why": "L'Aswang (D.O.T.S, écriture, glaciales) chasse toujours à 1,53 m/s, comme un jumeau lent, mais sa vitesse de base ne change jamais d'une chasse à l'autre et il accélère bien plus vite en ligne de vue." },
     { "with": "poltergeist", "why": "L'explosion du Poltergeist projette plusieurs objets d'un coup autour d'un même point, alors que les Jumeaux agissent à deux endroits éloignés. Une seule preuve en commun (Spirit Box)." }
   ],
   "observations": [
@@ -70,7 +70,7 @@
     { "text": "Un interrupteur bascule à côté de toi et, à la même seconde, ton coéquipier voit une porte bouger dans la pièce voisine, à six ou sept mètres de là.", "kind": "interaction", "strength": "strong" },
     { "text": "Une chasse se fait à environ 1,5 m/s, une autre à environ 1,9 m/s : la vitesse de base change d'une chasse à l'autre, et l'entité accélère chaque fois qu'elle te voit.", "kind": "hunt", "strength": "strong" },
     { "text": "Beaucoup d'interactions (portes, objets, lumières) ont lieu dans les pièces voisines de sa pièce favorite, à plusieurs mètres de l'endroit où l'entité semble se tenir.", "kind": "behavior", "strength": "hint" },
-    { "text": "Tes capteurs de mouvement ne se déclenchent qu'autour de sa pièce, alors que des objets bougent à plusieurs mètres de là, hors de leur champ.", "kind": "behavior", "strength": "hint" },
+    { "text": "Tes détecteurs de mouvement ne se déclenchent qu'autour de sa pièce, alors que des objets bougent à plusieurs mètres de là, hors de leur champ.", "kind": "behavior", "strength": "hint" },
     { "text": "Une chasse se déroule à environ 1,9 m/s, un peu plus vite qu'une entité normale, et l'entité accélère encore quand elle te voit.", "kind": "hunt", "strength": "hint" }
   ],
   "quiz": [
@@ -81,7 +81,7 @@
       "explain": "Les Jumeaux chassent à ±0,2 m/s autour des 1,7 m/s standard. 1,7/2,5 m/s évoque le Raiju ou le Djinn, 1,45/1,96 m/s l'Obambo et 1,0/3,0 m/s le Revenant."
     },
     {
-      "q": "Une chasse se déroule à environ 1,9 m/s avant toute accélération en LdV. Peut-il s'agir des Jumeaux ?",
+      "q": "Une chasse se déroule à environ 1,9 m/s avant toute accélération en ligne de vue. Peut-il s'agir des Jumeaux ?",
       "choices": ["Non, ils chassent tous deux à 2,5 m/s", "Oui, si c'est le jumeau principal qui chasse", "Oui, si c'est le jumeau errant qui chasse", "Non, ils chassent tous deux à 1,7 m/s"],
       "answer": 2,
       "explain": "Oui : à environ 1,9 m/s, c'est le jumeau errant, le plus rapide, qui chasse ; le jumeau principal chasse à environ 1,5 m/s. Si la vitesse alterne entre environ 1,5 et 1,9 m/s, pense aussi à l'Obambo (1,45 / 1,96 m/s)."
@@ -90,19 +90,19 @@
       "q": "Vrai ou faux : les Jumeaux ne forment en réalité qu'une entité.",
       "choices": ["Faux : deux entités qui chassent chacune leur tour", "Vrai : une entité qui se téléporte à chaque interaction", "Faux : deux entités qui peuvent chasser en même temps", "Vrai : une seule entité qui agit sur deux portées"],
       "answer": 3,
-      "explain": "Vrai : c'est une seule entité, qui peut interagir dans une petite et une grande portée, parfois presque en même temps. Les capteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
+      "explain": "Vrai : c'est une seule entité, qui peut interagir dans une petite et une grande portée, parfois presque en même temps. Les détecteurs de mouvement et le sel ne réagissent qu'à sa vraie position."
     },
     {
-      "q": "Avec les Jumeaux, où les capteurs de mouvement se déclenchent-ils et où le sel est-il perturbé ?",
+      "q": "Avec les Jumeaux, où les détecteurs de mouvement se déclenchent-ils et où le sel est-il perturbé ?",
       "choices": ["Aux deux endroits où elle interagit", "À l'endroit exact où elle se trouve", "À la limite de la portée où elle agit", "Dans toute la pièce où elle interagit"],
       "answer": 1,
-      "explain": "Seules les interactions profitent de la portée étendue ; capteurs de mouvement et sel ne réagissent qu'à l'endroit où se trouve réellement l'entité."
+      "explain": "Seules les interactions profitent de la portée étendue ; détecteurs de mouvement et sel ne réagissent qu'à l'endroit où se trouve réellement l'entité."
     },
     {
-      "q": "En LdV continue, quelle vitesse maximale atteint le jumeau rapide ?",
+      "q": "En ligne de vue continue, quelle vitesse maximale atteint le jumeau rapide ?",
       "choices": ["Environ 3,14 m/s", "Environ 2,8 m/s", "Environ 3,0 m/s", "Environ 3,7 m/s"],
       "answer": 2,
-      "explain": "Pour les Jumeaux, l'accélération en LdV part de la vitesse standard : (1,7 × 1,65) + 0,2 ≈ 3,0 m/s. 3,14 m/s serait le calcul « attendu », 2,8 m/s le maximum d'une entité normale et 3,71 m/s celui du Moroi."
+      "explain": "Pour les Jumeaux, l'accélération en ligne de vue part de la vitesse standard : (1,7 × 1,65) + 0,2 ≈ 3,0 m/s. 3,14 m/s serait le calcul « attendu », 2,8 m/s le maximum d'une entité normale et 3,71 m/s celui du Moroi."
     },
     {
       "q": "Une courbe « Twinteraction » sur le tableau d'activité prouve-t-elle qu'il s'agit des Jumeaux ?",
@@ -113,7 +113,7 @@
   ],
   "changes": [
     "Vitesses : 1,5 ou 1,9 m/s.",
-    "Accélération en LdV particulière, désormais précisée : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
+    "Accélération particulière en ligne de vue, désormais précisée : (1,7 × 1,65) ± 0,2, soit ~2,6 et ~3,0 m/s au maximum.",
     "Portées d'interaction précisées : rayon effectif 8,48 m sur petite et moyenne carte et 16,97 m sur grande carte.",
     "Le test de vitesse alternée n'est pas définitif : l'Obambo a des vitesses très proches."
   ],
@@ -132,6 +132,6 @@
   ],
   "uncertain": [
     "Portées d'interaction : en partie non vérifiées.",
-    "Accélération en LdV particulière des Jumeaux (environ 2,6 et 3,0 m/s au maximum) : en partie non vérifiée officiellement, d'après tybayn."
+    "Accélération particulière en ligne de vue des Jumeaux (environ 2,6 et 3,0 m/s au maximum) : en partie non vérifiée officiellement, d'après tybayn."
   ]
 }

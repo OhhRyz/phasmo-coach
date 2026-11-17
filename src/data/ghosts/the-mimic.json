@@ -19,7 +19,7 @@
     "summary": "Copie la vitesse de l'entité imitée",
     "details": [
       "Copie la vitesse de chasse de l'entité qu'il imite : le Mimic est capable de N'IMPORTE quel schéma de chasse.",
-      "La valeur de base (1,7 m/s avec accélération en LdV) n'est qu'un repère : ne l'élimine jamais sur sa vitesse.",
+      "La valeur de base (1,7 m/s avec accélération en ligne de vue) n'est qu'un repère : ne l'élimine jamais sur sa vitesse.",
       "C'est d'une chasse à l'autre que son comportement change : une chasse très rapide sans accélération, puis une chasse standard, doit te faire penser à lui (un Djinn disjoncteur allumé puis coupé, ou un Raiju près puis loin de l'électronique, peut donner la même impression)."
     ]
   },
@@ -226,7 +226,7 @@
         "Ils suivent l'entité au lieu de rester dans sa pièce",
         "Ils restent dans la pièce favorite de l'entité",
         "Ils sont d'une couleur différente des vrais orbes",
-        "Ils n'apparaissent qu'en partie sans preuve"
+        "Ils n'apparaissent qu'en partie à 0 preuve"
       ],
       "answer": 1,
       "explain": "L'idée d'orbes qui suivent l'entité est une rumeur : ils restent dans la pièce favorite, sans différence visuelle, et apparaissent dans toutes les difficultés."
@@ -249,7 +249,7 @@
   "uncertain": [
     "Bornes du seuil (10 à 100 %) : elles dépendent des entités qu'il peut imiter (10 % = Obambo calme) et peuvent évoluer avec les prochaines entités.",
     "Peut-il imiter chacune des entités de 2025–2026 ? Une seule source le confirme, et seulement pour le Kormos et le Deildegast.",
-    "Un Mimic au modèle masculin peut-il imiter la Banshee ou la Dayan (entités féminines) ? Non vérifié.",
+    "Un Mimic à l'apparence masculine peut-il imiter la Banshee ou la Dayan (entités féminines) ? Non vérifié.",
     "Commence-t-il comme une entité standard, avec un 1er changement 1 min après l'ouverture de la porte et aucun changement en chasse ? Une seule source."
   ]
 }

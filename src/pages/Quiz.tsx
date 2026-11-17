@@ -24,7 +24,7 @@ import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
 import { de, le } from '../engine/cards'
 import { buildQuiz, DEFAULT_TOPICS, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
-import { NBSP, NNBSP, safeDate, spellLdV } from '../engine/format'
+import { NBSP, NNBSP, safeDate } from '../engine/format'
 import { studiedGhosts, WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
 import { bareSpace, ignoreKey } from '../engine/keys'
@@ -82,8 +82,6 @@ const SHORT_ANSWER = 22
 
 const topicLabel = (id: QuizTopic) => QUIZ_TOPICS.find((t) => t.id === id)?.label ?? ''
 const plural = (n: number, one: string, many = one + 's') => (n > 1 ? many : one)
-/** Les abréviations des fiches, en toutes lettres sur la copie (« LdV » → « ligne de vue »). */
-const spell = spellLdV
 /** À la première question qui complète une copie sur les entités étudiées (voir QuizOptions.fillUp). */
 const fillNote = (themes: number) =>
   `Plus de question sur tes entités étudiées pour ${themes > 1 ? 'ces thèmes' : 'ce thème'}${NNBSP}: la fin de la copie porte aussi sur les autres entités.`
@@ -289,17 +287,7 @@ export function Quiz() {
       return
     }
     setEmpty(false)
-    // la copie s'écrit en toutes lettres : énoncé, réponses et corrigé
-    setQuestions(
-      qs.map((x) => ({
-        ...x,
-        prompt: spell(x.prompt),
-        quote: x.quote && spell(x.quote),
-        note: x.note && spell(x.note),
-        explain: spell(x.explain),
-        choices: x.choices.map((c) => ({ ...c, label: spell(c.label) })),
-      })),
-    )
+    setQuestions(qs)
     setIndex(0)
     setAnswers([])
     setSelected([])

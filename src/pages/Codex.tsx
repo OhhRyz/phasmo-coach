@@ -1,8 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
+import { useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
-import { GhostRow } from '../components/GhostRow'
-import { FROM_CODEX } from './codexReturn'
+import { GhostRow, GroupRow } from '../components/GhostRow'
+import { FROM_CODEX, wantsRegistry } from './codexReturn'
 import { useToast } from '../components/Toast'
 import { UvPrint } from '../components/journal/Charts'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
@@ -13,6 +13,20 @@ import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, type FilterState } from '../engine/filter'
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
+import {
+  losEntryText,
+  rankFromSearch,
+  SANITY_COPY,
+  sanityEntryText,
+  sanityGroups,
+  SPEED_COPY,
+  speedEntryText,
+  speedGroups,
+  withRank,
+  type GroupCopy,
+  type GroupEntry,
+  type Rank,
+} from '../engine/groups'
 import { entityMentions } from '../engine/mentions'
 import { useMastery } from '../store/hooks'
 
@@ -62,6 +76,15 @@ function loadSession(): SavedCodex {
  */
 export function keepsSearch(saved: Pick<SavedCodex, 'query' | 'key'>, navigationType: string, key: string): boolean {
   return saved.query !== '' && navigationType === 'POP' && saved.key === key
+}
+
+/**
+ * La recherche à noter avec le carnet. Une page du codex ouverte à neuf (le lien d'une fiche, l'onglet) n'a pas de
+ * recherche : elle n'efface pas celle qui a été tapée sur une autre entrée de l'historique, qu'un retour arrière
+ * doit retrouver (« ‹ Codex » d'une fiche). Vidée sur sa propre entrée, ou remplacée par une autre, elle s'efface.
+ */
+export function searchToSave(prev: Pick<SavedCodex, 'query' | 'key'>, query: string, key: string): Pick<SavedCodex, 'query' | 'key'> {
+  return query === '' && prev.query !== '' && prev.key !== key ? { query: prev.query, key: prev.key } : { query, key }
 }
 
 const SPEED_WORD: Record<SpeedClass, string> = { slow: 'lente', normal: 'normale', fast: 'rapide' }
@@ -352,11 +375,56 @@ export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | 
 
 const PHONE = '(max-width: 759px)'
 
+/** « Ranger par » : l'ordre du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
+const RANKS: { value: Rank; label: string }[] = [
+  { value: 'numero', label: 'numéro' },
+  { value: 'vitesse', label: 'vitesse' },
+  { value: 'seuil', label: 'seuil de chasse' },
+]
+const RANK_HEAD: Record<Rank, string> = {
+  numero: 'Ordre du journal du jeu',
+  vitesse: 'Rangé par vitesse',
+  seuil: 'Rangé par seuil de chasse',
+}
+/** Sous le sélecteur : ce que mesure le classement, et pourquoi un nom revient dans plusieurs colonnes. */
+const RANK_HINT: Record<Exclude<Rank, 'numero'>, string> = {
+  vitesse: 'vitesses de la fiche, hors accélération en ligne de vue · une entité qui change de vitesse figure dans chaque colonne où elle peut se trouver',
+  seuil: 'santé mentale moyenne à partir de laquelle une chasse peut démarrer · une entité qui change de seuil figure dans chaque colonne où elle peut se trouver',
+}
+
+/** Une colonne du registre rangé : son titre, et ses lignes telles qu'elles s'écrivent. */
+export interface LedgerColumn {
+  id: string
+  copy: GroupCopy
+  lines: { entry: GroupEntry; value: string; los: string | null; note: string | null }[]
+}
+
+/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans toutes celles où elle peut se trouver. */
+export function ledgerColumns(ghosts: readonly Ghost[], rank: Exclude<Rank, 'numero'>): LedgerColumn[] {
+  if (rank === 'vitesse')
+    return speedGroups(ghosts).map((grp) => ({
+      id: grp.id,
+      copy: SPEED_COPY[grp.id],
+      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost), note: entry.several ? 'change de vitesse' : null })),
+    }))
+  return sanityGroups(ghosts).map((grp) => ({
+    id: grp.id,
+    copy: SANITY_COPY[grp.id],
+    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null, note: entry.several ? 'change de seuil' : null })),
+  }))
+}
+
 export function Codex() {
   const mastery = useMastery()
   const navigate = useNavigate()
   const location = useLocation()
   const navigationType = useNavigationType()
+  // l'ordre du registre vit dans l'adresse (?rang=vitesse) : il tient au rechargement et au retour arrière, et se
+  // donne en lien. Le changer remplace l'entrée d'historique sans en ajouter : la page ne bouge pas, et la
+  // recherche tapée reste liée à cette entrée (sa nouvelle clé est notée par l'effet plus bas, voir keepsSearch)
+  const [params, setParams] = useSearchParams()
+  const rank = rankFromSearch(params)
+  const setRank = (next: Rank) => setParams(withRank(params, next), { replace: true })
   const toast = useToast()
   const searchId = useId()
   const searchRef = useRef<HTMLInputElement>(null)
@@ -368,19 +436,22 @@ export function Codex() {
   const [query, setQuery] = useState(initial.query)
   // sur ordinateur, les éliminées restent dans le registre, barrées au crayon (on peut les masquer) ; tant
   // qu'on n'a rien choisi, elles s'effacent d'elles-mêmes quand il n'en reste que trois ou moins. Sur
-  // téléphone, le registre est loin sous les preuves : on n'y montre d'emblée que ce qui reste possible.
-  const [outPref, setOutPref] = useState<boolean | null>(null)
+  // téléphone, le registre est loin sous les preuves : on n'y montre d'emblée que ce qui reste possible. Venu
+  // d'une fiche par « voir les entités par vitesse », on les garde, barrées : l'entité qu'on vient de quitter
+  // reste dans la liste demandée (au retour arrière sur cette entrée aussi : la liste ne change pas de longueur).
+  const [outPref, setOutPref] = useState<boolean | null>(() => (wantsRegistry(location.state) ? true : null))
   const phone = useMedia(PHONE)
   const regRef = useRef<HTMLElement>(null)
-  // partie sans preuve : seuls la vitesse, le seuil et la ligne de vue trient, ils sont dépliés d'office
+  // partie à 0 preuve : seuls la vitesse, le seuil et la ligne de vue trient, ils sont dépliés d'office
   const [showMore, setShowMore] = useState(
     initial.filter.speed.length > 0 || initial.filter.huntAbove != null || initial.filter.los !== null || initial.filter.evidenceCount === 0,
   )
 
-  // les filtres survivent à l'ouverture d'une fiche puis au retour (la recherche, au seul retour arrière : keepsSearch)
+  // les filtres survivent à l'ouverture d'une fiche puis au retour (la recherche, au seul retour arrière : keepsSearch,
+  // et sans qu'une page du codex ouverte entre-temps ne l'efface : searchToSave)
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ filter, query, key: location.key }))
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ filter, ...searchToSave(loadSession(), query, location.key) }))
     } catch {
       /* stockage indisponible */
     }
@@ -410,6 +481,25 @@ export function Codex() {
       .filter(({ g }) => keep.has(g))
       .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
   }, [matching, out, showOut, query])
+
+  // rangé par vitesse ou par seuil : les mêmes lignes (ce qui reste, et les éliminées si on les montre), en trois
+  // colonnes ; l'extrait d'une recherche ne s'écrit qu'une fois, à la première ligne de l'entité
+  const ledger = useMemo(() => {
+    if (rank === 'numero') return null
+    const shown = new Map(rows.map((r) => [r.g, r.snippet]))
+    const quoted = new Set<Ghost>()
+    return ledgerColumns(GHOSTS, rank).map((col) => ({
+      ...col,
+      lines: col.lines
+        .filter((l) => shown.has(l.entry.ghost))
+        .map((l) => {
+          const g = l.entry.ghost
+          const snippet = quoted.has(g) ? null : (shown.get(g) ?? null)
+          quoted.add(g)
+          return { ...l, snippet }
+        }),
+    }))
+  }, [rank, rows])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
   const stickyRef = useRef<HTMLDivElement>(null)
@@ -477,6 +567,16 @@ export function Codex() {
   const ticked = found + excluded > 0
   // une preuve encore non testée mais impossible avec les entités qui restent : grisée dans le carnet
   const greyed = ticked && EVIDENCE_IDS.some((id) => (filter.evidence[id] ?? 'unknown') === 'unknown' && !possible.has(id))
+
+  // venu d'une fiche par « voir les entités par vitesse » : sur téléphone le registre est loin sous le carnet de
+  // preuves, on l'amène sous les yeux (pas au retour arrière ni au rechargement : la page reprend sa place)
+  useEffect(() => {
+    const el = regRef.current
+    if (!el || navigationType === 'POP' || !wantsRegistry(location.state)) return
+    if (el.getBoundingClientRect().top < window.innerHeight / 2) return
+    el.scrollIntoView({ block: 'start' })
+    el.focus({ preventScroll: true })
+  }, []) // à l'arrivée seulement
 
   /** « voir la liste » : amène le registre sous les yeux et y place le focus (lecteurs d'écran, clavier). */
   const toRegistry = () => {
@@ -570,7 +670,7 @@ export function Codex() {
           </div>
           {filter.evidenceCount === 0 && (
             <p className="pencil-note cx-zero">
-              {fr('partie sans preuve : seul le Mimic montre encore des orbes, les autres cases sont grisées exprès. Trie avec la vitesse, le seuil et la ligne de vue (plus bas), puis lis les tests « Sans preuve » de chaque fiche.')}
+              {fr('partie à 0 preuve : seul le Mimic montre encore des orbes, les autres cases sont grisées exprès. Trie avec la vitesse, le seuil et la ligne de vue (plus bas), puis lis les tests « Sans preuve » de chaque fiche.')}
             </p>
           )}
 
@@ -705,7 +805,7 @@ export function Codex() {
         <UvPrint style={{ right: 2, top: 150, width: 104, transform: 'rotate(14deg)', ['--ur' as string]: '200px' }} />
         <FileHead>
           <span>Registre</span>
-          <span>Ordre du journal du jeu</span>
+          <span>{RANK_HEAD[rank]}</span>
         </FileHead>
 
         <section aria-labelledby="cx-h-reg" className="cx-reg-section" ref={regRef} tabIndex={-1}>
@@ -786,7 +886,45 @@ export function Codex() {
             ))
           )}
 
-          {rows.length > 0 && (
+          {/* l'ordre du registre : celui du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse */}
+          <div className="cx-rank">
+            <span className="typed-label">Ranger par</span>
+            <Seg label="Ranger le registre par" value={rank} onChange={setRank} options={RANKS} />
+            {rank !== 'numero' && <p className="pencil-note cx-rank-hint">{fr(RANK_HINT[rank])}</p>}
+          </div>
+
+          {rows.length > 0 && ledger && (
+            <div className="cx-ledger">
+              {ledger.map((col) => (
+                <div key={col.id} className="cx-grp" role="group" aria-label={col.copy.label}>
+                  <h3 className="cx-grp-h">{col.copy.title}</h3>
+                  <p className="cx-grp-def">{col.copy.def}</p>
+                  <p className="cx-grp-play pencil-note">{col.copy.play}</p>
+                  {col.lines.length > 0 ? (
+                    <ul className="cx-reg cx-grp-list">
+                      {col.lines.map(({ entry, value, los, note, snippet }) => (
+                        <GroupRow
+                          key={entry.ghost.id}
+                          seed={col.id}
+                          ghost={entry.ghost}
+                          value={value}
+                          los={los}
+                          note={note}
+                          dimmed={!matching.includes(entry.ghost)}
+                          circled={deduced && only === entry.ghost}
+                          snippet={snippet}
+                        />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="cx-grp-none pencil-note">aucune ici</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {rows.length > 0 && !ledger && (
             <>
               <div className="cx-cols" aria-hidden>
                 <span>N°</span>

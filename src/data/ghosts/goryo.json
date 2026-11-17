@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard de 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue."
     ]
   },
   "huntSanity": {
@@ -48,12 +48,12 @@
   "eliminationTests": [
     { "text": "Si l'entité change de pièce favorite, ce n'est pas un Goryo. Prudence si quelqu'un a fait le vœu « Je souhaite être sain d'esprit » à la patte de singe : ce vœu place la pièce favorite dans une pièce aléatoire, et tybayn ne dit pas si le Goryo y échappe." },
     { "text": "Avec la preuve D.O.T.S : si tu vois la silhouette D.O.T.S à l'œil nu, sans caméra vidéo, ce n'est pas un Goryo." },
-    { "text": "Dans une difficulté qui donne au moins 1 preuve (Cauchemar, Démence…), le D.O.T.S du Goryo est garanti : ne l'exclus qu'après l'avoir cherché à la caméra vidéo, sans aucun joueur dans la pièce." }
+    { "text": "Dans une difficulté qui donne au moins 1 preuve (Cauchemar, Démence…), le D.O.T.S du Goryo est obligatoire : ne l'exclus qu'après l'avoir cherché à la caméra vidéo, sans aucun joueur dans la pièce." }
   ],
   "confusions": [
     { "with": "jinn", "why": "Même EMF 5 + UV, mais le Djinn a des températures glaciales au lieu du D.O.T.S ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m et peut faire chuter ta santé mentale de 25 %." },
     { "with": "myling", "why": "Même EMF 5 + UV, mais le Myling a l'écriture au lieu du D.O.T.S ; en chasse, ses pas ne s'entendent qu'à 12 m (au lieu de 20 m)." },
-    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu du D.O.T.S ; il peut laisser des empreintes à 6 doigts et change de modèle le temps d'un clignotement en chasse." },
+    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu du D.O.T.S ; il peut laisser des empreintes à 6 doigts et change d'apparence le temps d'un clignotement en chasse." },
     { "with": "gallu", "why": "Même EMF 5 + UV, mais le Gallu a la Spirit Box au lieu du D.O.T.S ; le sel, l'encens ou un crucifix le font passer en état enragé (1,96 m/s), puis affaibli (1,36 m/s)." },
     { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu de l'UV ; il ne perturbe jamais le sel et peut se téléporter vers un joueur en laissant de l'EMF." },
     { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu de l'UV ; il est plus visible pendant les chasses et ne fait jamais l'événement « Forme de Brume » (la bulle d'air)." },

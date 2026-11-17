@@ -117,9 +117,9 @@ export function withoutEvidenceAsides(text: string): string {
   return text.replace(/\s*\([^()]*\)/gu, (m) => (needsEvidence(m) ? '' : m))
 }
 
-/** Combinaison de preuves ou preuve forcée (« Seule entité avec EMF 5 + orbes… », « UV garanti en Cauchemar ») : rien à apprendre. */
+/** Combinaison de preuves ou preuve obligatoire (« Seule entité avec EMF 5 + orbes… », « UV obligatoire en Cauchemar ») : rien à apprendre. */
 export function isEvidenceList(text: string): boolean {
-  return evidenceIn(text).length >= 2 || (/\bgaranti/iu.test(text) && /Cauchemar|Démence/u.test(text))
+  return evidenceIn(text).length >= 2 || (/\b(?:obligatoire|garanti)/iu.test(text) && /Cauchemar|Démence/u.test(text))
 }
 
 /**

@@ -59,7 +59,7 @@ export function evidenceCountOf(d: Difficulty): 0 | 1 | 2 | 3 {
   return DIFFICULTIES.find((x) => x.id === d)!.count
 }
 
-/** Choisit les preuves visibles en respectant la preuve forcée. */
+/** Choisit les preuves visibles en respectant la preuve obligatoire. */
 export function pickVisibleEvidence(g: Ghost, count: number, rng: Rng): EvidenceId[] {
   if (count >= 3) return [...g.evidence]
   if (count === 0) return []
@@ -73,7 +73,7 @@ export function clock(minutes: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }
 
-/** Preuves forcées des autres entités : leur absence élimine beaucoup de monde. */
+/** Preuves obligatoires des autres entités : leur absence élimine beaucoup de monde. */
 const FORCED_BY_OTHERS = (g: Ghost, ghosts: Ghost[]) =>
   new Set(ghosts.filter((o) => o.id !== g.id && o.forcedEvidence).map((o) => o.forcedEvidence!))
 

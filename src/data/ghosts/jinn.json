@@ -16,12 +16,12 @@
     "isRange": false,
     "los": true,
     "losVaries": true,
-    "summary": "1,7 m/s · 2,5 m/s si disjoncteur allumé, LdV et > 3 m",
+    "summary": "1,7 m/s · 2,5 m/s si disjoncteur allumé, ligne de vue et > 3 m",
     "details": [
-      "Par défaut, le Djinn chasse à 1,7 m/s avec une accélération en LdV standard.",
+      "Par défaut, le Djinn chasse à 1,7 m/s avec une accélération standard en ligne de vue.",
       "Si le disjoncteur est allumé, qu'il a un joueur en ligne de vue et qu'il est à plus de 3 m de lui, il passe immédiatement à 2,5 m/s.",
       "Une fois à moins de 3 m de ce joueur, il reprend son comportement de chasse normal.",
-      "Pendant ces phases à 2,5 m/s, l'accélération en LdV ne s'applique pas, mais elle continue de s'accumuler en arrière-plan : la vitesse accumulée s'applique dès qu'il perd la LdV ou passe à moins de 3 m du joueur ciblé.",
+      "Pendant ces phases à 2,5 m/s, l'accélération en ligne de vue ne s'applique pas, mais elle continue de s'accumuler en arrière-plan : la vitesse accumulée s'applique dès qu'il perd la ligne de vue ou passe à moins de 3 m du joueur ciblé.",
       "Disjoncteur coupé, il chasse comme une entité standard."
     ]
   },
@@ -80,11 +80,11 @@
   "confusions": [
     {
       "with": "raiju",
-      "why": "Le Raiju chasse aussi à 2,5 m/s, mais près de l'équipement électronique allumé (posé ou tenu), sans condition de distance ni de LdV ; le Djinn dépend du disjoncteur allumé, de la LdV et des 3 m. Une seule preuve en commun (EMF 5) : le Raiju a orbes et D.O.T.S."
+      "why": "Le Raiju chasse aussi à 2,5 m/s, mais près de l'équipement électronique allumé (posé ou tenu), sans condition de distance ni de ligne de vue ; le Djinn dépend du disjoncteur allumé, de la ligne de vue et des 3 m. Une seule preuve en commun (EMF 5) : le Raiju a orbes et D.O.T.S."
     },
     {
       "with": "hantu",
-      "why": "UV + températures glaciales en commun. Le Hantu n'accélère pas en LdV, va plus vite dans les pièces froides, coupe le disjoncteur plus souvent que les autres et ne peut jamais le rallumer ; le Djinn ne le coupe jamais lui-même. 3e preuve : orbes vs EMF 5."
+      "why": "UV + températures glaciales en commun. Le Hantu n'accélère pas en ligne de vue, va plus vite dans les pièces froides, coupe le disjoncteur plus souvent que les autres et ne peut jamais le rallumer ; le Djinn ne le coupe jamais lui-même. 3e preuve : orbes vs EMF 5."
     },
     {
       "with": "shade",
@@ -112,7 +112,7 @@
     },
     {
       "with": "obake",
-      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : orbes vs températures glaciales."
+      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change d'apparence le temps d'un clignotement en chasse. 3e preuve : orbes vs températures glaciales."
     },
     {
       "with": "gallu",
@@ -128,7 +128,7 @@
     },
     {
       "with": "revenant",
-      "why": "Le Revenant accélère lui aussi d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, sans lien avec le disjoncteur, et sans accélération standard en LdV. Une seule preuve en commun (températures glaciales)."
+      "why": "Le Revenant accélère lui aussi d'un coup, mais de 1,0 à 3,0 m/s dès qu'il te détecte, sans lien avec le disjoncteur, et sans accélération standard en ligne de vue. Une seule preuve en commun (températures glaciales)."
     }
   ],
   "observations": [
@@ -174,7 +174,7 @@
         "Disjoncteur coupé, hors de vue et plus de 3 m"
       ],
       "answer": 2,
-      "explain": "Il faut les trois conditions : disjoncteur allumé, LdV et plus de 3 m. 2,5 m/s près de l'électronique allumée, c'est le Raiju."
+      "explain": "Il faut les trois conditions : disjoncteur allumé, ligne de vue et plus de 3 m. 2,5 m/s près de l'électronique allumée, c'est le Raiju."
     },
     {
       "q": "Que ne fait jamais un Djinn ?",
@@ -229,7 +229,7 @@
         "D'allumer de l'électronique près de l'entité"
       ],
       "answer": 3,
-      "explain": "Le Raiju accélère près de l'électronique allumée. Le disjoncteur allumé, la distance de plus de 3 m et la LdV sont justement nécessaires pour déclencher l'accélération du Djinn."
+      "explain": "Le Raiju accélère près de l'électronique allumée. Le disjoncteur allumé, la distance de plus de 3 m et la ligne de vue sont justement nécessaires pour déclencher l'accélération du Djinn."
     }
   ],
   "changes": [

@@ -44,7 +44,7 @@ describe('Fiche : la variante « sans preuve » d’une ligne reconnue et rangé
     expect(pairs.sort()).toEqual(['jinn/abilities', 'moroi/tells', 'shade/behaviors', 'wraith/abilities'])
   })
 
-  it('la variante se lit à la suite de « en partie sans preuve : »', () => {
+  it('la variante se lit à la suite de « en partie à 0 preuve : »', () => {
     expect(lowerFirst('Peut se téléporter')).toBe('peut se téléporter')
     expect(lowerFirst('Disjoncteur allumé, peut faire chuter')).toBe('disjoncteur allumé, peut faire chuter')
   })

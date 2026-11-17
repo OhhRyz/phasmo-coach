@@ -15,10 +15,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "En chasse, elle ne poursuit que sa cible (si la cible est à l'intérieur), même si d'autres joueurs sont plus proches."
     ]
   },
@@ -38,7 +38,7 @@
     "Cri unique au microphone parabolique (33 % de chances)",
     "Chasse selon la santé de sa cible (≤ 50 %), pas selon la moyenne de l'équipe",
     "En chasse, ne poursuit que sa cible si celle-ci est à l'intérieur",
-    "Toujours féminine (prénom et modèle)"
+    "Toujours féminine (prénom et apparence)"
   ],
   "tells": [
     {
@@ -62,7 +62,7 @@
       "card": 3
     },
     {
-      "text": "Uniquement féminine : le prénom et le modèle de l'entité le montrent.",
+      "text": "Uniquement féminine : le prénom et l'apparence de l'entité le montrent.",
       "zeroEvidence": true,
       "card": 4
     }
@@ -125,7 +125,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Si le prénom de l'entité est masculin ou si son modèle est masculin, ce n'est pas une Banshee."
+      "text": "Si le prénom de l'entité est masculin ou si son apparence est masculine, ce n'est pas une Banshee."
     }
   ],
   "confusions": [
@@ -151,15 +151,15 @@
     },
     {
       "with": "thaye",
-      "why": "Orbes + D.O.T.S en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : écriture vs UV."
+      "why": "Orbes + D.O.T.S en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en ligne de vue, puis vieillit et ralentit. 3e preuve : écriture vs UV."
     },
     {
       "with": "hantu",
-      "why": "UV + orbes en commun. Le Hantu n'accélère pas en LdV, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé. 3e preuve : températures glaciales vs D.O.T.S."
+      "why": "UV + orbes en commun. Le Hantu n'accélère pas en ligne de vue, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé. 3e preuve : températures glaciales vs D.O.T.S."
     },
     {
       "with": "obake",
-      "why": "UV + orbes en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : EMF 5 vs D.O.T.S."
+      "why": "UV + orbes en commun. L'Obake peut laisser des empreintes à six doigts et change d'apparence le temps d'un clignotement en chasse. 3e preuve : EMF 5 vs D.O.T.S."
     },
     {
       "with": "the-mimic",
@@ -179,7 +179,7 @@
     },
     {
       "with": "dayan",
-      "why": "La Dayan est elle aussi toujours féminine : un prénom ou un modèle féminin ne confirme pas la Banshee. Une seule preuve en commun (orbes)."
+      "why": "La Dayan est elle aussi toujours féminine : un prénom féminin ou une apparence féminine ne confirme pas la Banshee. Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [
@@ -219,7 +219,7 @@
       "strength": "hint"
     },
     {
-      "text": "Le modèle de l'entité est féminin, et son prénom aussi.",
+      "text": "L'apparence de l'entité est féminine, et son prénom aussi.",
       "kind": "tell",
       "strength": "hint"
     },
@@ -256,9 +256,9 @@
     {
       "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
       "choices": [
-        "Sa cible, quand elle tient le micro",
-        "L'hôte, quand il tient le micro",
-        "Tout joueur qui écoute au micro",
+        "Sa cible, quand elle tient le micro parabolique",
+        "L'hôte, quand il tient le micro parabolique",
+        "Tout joueur qui écoute au micro parabolique",
         "Les joueurs qui sont près d'elle"
       ],
       "answer": 2,
@@ -284,7 +284,7 @@
         "Yurei"
       ],
       "answer": 0,
-      "explain": "La Banshee est uniquement féminine (prénom et modèle)."
+      "explain": "La Banshee est uniquement féminine (prénom et apparence)."
     },
     {
       "q": "En solo, qui est la cible de la Banshee ?",
@@ -299,7 +299,7 @@
     }
   ],
   "changes": [
-    "La Banshee est uniquement féminine (prénom et modèle). Un prénom ou un modèle masculin l'élimine.",
+    "La Banshee est uniquement féminine (prénom et apparence). Un prénom masculin ou une apparence masculine l'élimine.",
     "Le cri peut être enregistré à l'enregistreur de son.",
     "Entités partageant deux preuves : Obambo (UV + D.O.T.S) et Kormos (UV + orbes)."
   ],

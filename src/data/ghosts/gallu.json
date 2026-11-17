@@ -15,12 +15,12 @@
     "alt": 1.7,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · 1,96 enragé · 1,36 affaibli · accélère en LdV",
+    "summary": "1,7 m/s · 1,96 enragé · 1,36 affaibli · accélère en ligne de vue",
     "details": [
       "État normal (état de départ) : 1,7 m/s pendant les chasses.",
       "État enragé : 1,96 m/s.",
       "État affaibli : 1,36 m/s.",
-      "Il accélère en LdV ; comme pour les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
+      "Il accélère en ligne de vue ; comme pour les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
       "Sa vitesse change avec son état, y compris en pleine chasse : 2 s (depuis l'état normal) ou 3 s (depuis l'état affaibli) après le sel, tout de suite après un encens ou un crucifix.",
       "L'état enragé dure jusqu'à la fin d'une chasse, puis l'entité passe en état affaibli (1,36 m/s)."
     ]
@@ -162,7 +162,7 @@
     },
     {
       "with": "obake",
-      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change de modèle le temps d'un clignotement en chasse. 3e preuve : orbes vs Spirit Box."
+      "why": "EMF 5 + UV en commun. L'Obake peut laisser des empreintes à six doigts et change d'apparence le temps d'un clignotement en chasse. 3e preuve : orbes vs Spirit Box."
     },
     {
       "with": "kormos",
@@ -308,7 +308,7 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Vitesse maximale en LdV dans chaque état : non chiffrée (l'accélération semble partir de sa vitesse du moment).",
+    "Vitesse maximale en ligne de vue dans chaque état : non chiffrée (l'accélération semble partir de sa vitesse du moment).",
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu.",
     "Délai après l'encens et délai entre deux chasses : supposés standard, non vérifiés.",
     "Passage en affaibli à la fin de la chasse même où il s'est enragé : déduit de sa description, non testé en jeu."

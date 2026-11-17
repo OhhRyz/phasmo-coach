@@ -18,7 +18,7 @@ import { FicheExpress } from '../components/FicheExpress'
 import { ProgressBar } from '../components/ui'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { namesGhost, type Card, type CardKind, type CoachNote } from '../engine/cards'
-import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate, spellLdV } from '../engine/format'
+import { dayKey, fr, NBSP, NNBSP, relativeDays, safeDate } from '../engine/format'
 import { isCoachNote, isOwnNote } from '../engine/notes'
 import { buildReviewQueue, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
 import { questionForCard, type Question } from '../engine/quiz'
@@ -825,8 +825,8 @@ export function Review() {
   const note = isNote ? state.notes.find((n) => `n:${n.id}` === card.id) : undefined
   // seules les vraies notes du coach sont au stylo rouge ; une note de l'élève reste à l'encre
   const hand = isNote ? handOf(note, state.profile) : undefined
-  // le texte d'une note reste tel qu'il a été écrit ; le reste reçoit la typographie française, « LdV » en toutes lettres
-  const text = (s: string) => (isNote ? s : fr(spellLdV(s)))
+  // le texte d'une note reste tel qu'il a été écrit ; le reste reçoit la typographie française
+  const text = (s: string) => (isNote ? s : fr(s))
   const answered = !!outcome
   const shown = answered || revealed
   // l'en-tête ne souffle jamais la réponse : l'entité n'y paraît qu'une fois nommée par la question, ou après la réponse

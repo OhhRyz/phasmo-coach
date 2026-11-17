@@ -12,14 +12,14 @@
     "isRange": false,
     "los": true,
     "losVaries": true,
-    "summary": "1,7 m/s · 2,21 m/s si un joueur est détecté à plus de 5 m · LdV seulement si tu bouges à moins de 5 m",
+    "summary": "1,7 m/s · 2,21 m/s si un joueur est détecté à plus de 5 m · ligne de vue seulement si tu bouges à moins de 5 m",
     "details": [
       "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
       "S'il te détecte à plus de 5 m, il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",
-      "Pseudo-LdV : il ne te voit, et ne gagne de la vitesse en LdV, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
+      "Pseudo-ligne de vue : il ne te voit, et ne gagne de la vitesse en ligne de vue, que si tu bouges à moins de 5 m de lui ; il peut ainsi monter jusqu'à 2,81 m/s.",
       "Si tu sors de ces 5 m et qu'il ne te détecte plus, il arrête d'accélérer et perd peu à peu la vitesse accumulée.",
-      "La vitesse de LdV accumulée se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
-      "Il compte parmi les entités qui accélèrent en LdV, mais seulement quand tu bouges à moins de 5 m de lui : ne l'élimine jamais sur ce seul critère, qu'il accélère ou non."
+      "La vitesse accumulée en ligne de vue se transfère entre ses deux allures : s'il est à 2,81 m/s et te détecte ensuite à plus de 5 m, il passe aussitôt à 3,65 m/s.",
+      "Il compte parmi les entités qui accélèrent en ligne de vue, mais seulement quand tu bouges à moins de 5 m de lui : ne l'élimine jamais sur ce seul critère, qu'il accélère ou non."
     ]
   },
   "huntSanity": {
@@ -41,7 +41,7 @@
   ],
   "tells": [
     {
-      "text": "Presque aveugle : en chasse, ne voit un joueur (et ne gagne de la vitesse en LdV) que si ce joueur bouge à moins de 5 m.",
+      "text": "Presque aveugle : en chasse, ne voit un joueur (et ne gagne de la vitesse en ligne de vue) que si ce joueur bouge à moins de 5 m.",
       "zeroEvidence": true,
       "card": 0
     },
@@ -110,7 +110,7 @@
     },
     {
       "with": "obake",
-      "why": "Obake : Orbes + UV, mais EMF 5 au lieu de la Spirit Box ; vitesse standard avec LdV et changement de modèle pendant les chasses."
+      "why": "Obake : Orbes + UV, mais EMF 5 au lieu de la Spirit Box ; vitesse standard avec accélération en ligne de vue et changement d'apparence pendant les chasses."
     },
     {
       "with": "banshee",
@@ -118,7 +118,7 @@
     },
     {
       "with": "hantu",
-      "why": "Hantu : Orbes + UV, mais Températures glaciales au lieu de la Spirit Box ; plus rapide dans le froid, sans accélération en LdV."
+      "why": "Hantu : Orbes + UV, mais Températures glaciales au lieu de la Spirit Box ; plus rapide dans le froid, sans accélération en ligne de vue."
     },
     {
       "with": "phantom",
@@ -226,7 +226,7 @@
       "explain": "Le Kormos ne fait pas les événements « Poursuite » ni « Forme de Brume »."
     },
     {
-      "q": "À quelle vitesse le Kormos file-t-il vers un joueur qu'il a détecté à plus de 5 m (sans bonus de LdV) ?",
+      "q": "À quelle vitesse le Kormos file-t-il vers un joueur qu'il a détecté à plus de 5 m (sans bonus de ligne de vue) ?",
       "choices": [
         "1,7 m/s",
         "2,21 m/s",
@@ -234,7 +234,7 @@
         "1,96 m/s"
       ],
       "answer": 1,
-      "explain": "2,21 m/s, soit 1,3 × sa vitesse de base de 1,7 m/s ; avec un bonus de LdV accumulé, ça peut monter à 3,65 m/s."
+      "explain": "2,21 m/s, soit 1,3 × sa vitesse de base de 1,7 m/s ; avec un bonus de ligne de vue accumulé, ça peut monter à 3,65 m/s."
     }
   ],
   "changes": [],
@@ -242,7 +242,7 @@
     "tybayn wiki: wiki_kormos_detection_*",
     "tybayn wiki: wiki_kormos_pseudo_los_*",
     "tybayn wiki: wiki_known_bugs_kormos",
-    "tybayn wiki: tableau de simulation LdV (Kormos 1,7 / 2,21 m/s, sans LdV standard)",
+    "tybayn wiki: tableau de simulation de ligne de vue (Kormos 1,7 / 2,21 m/s, sans accélération standard en ligne de vue)",
     "https://phasmophobia.wiki.fextralife.com/Kormos",
     "https://phasmopedia.com/en/ghosts/kormos/",
     "https://phasmophobia.fandom.com/wiki/Kormos",
@@ -256,6 +256,6 @@
   "uncertain": [
     "Portée de mise à mort, priorité au joueur qui sprinte et effet de l'encens : non documentés par tybayn.",
     "Événements : pas de « Forme de Brume » ni de « Poursuite » ; le reste n'est pas documenté par tybayn.",
-    "Classé tantôt avec, tantôt sans accélération en LdV, alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère."
+    "Classé tantôt avec, tantôt sans accélération en ligne de vue, alors qu'elle ne s'applique que si tu bouges à moins de 5 m : ne l'élimine pas sur ce seul critère."
   ]
 }

@@ -680,7 +680,7 @@ html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) 
 .ghost-name { margin: 0; font-family: "Fell", serif; font-weight: 400; font-size: 112px; line-height: .86; letter-spacing: -.03em; }
 .ghost-alias { grid-column: 1; margin-top: 10px; font-family: "Courier Prime", monospace; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .ghost-head .stamp { align-self: start; margin-top: 14px; --r: 7deg; font-size: 17px; }
-/* ce que veut dire le tampon (« Preuve forcée »), en une ligne sous le nom */
+/* ce que veut dire le tampon (« Preuve obligatoire »), en une ligne sous le nom */
 .ghost-head .gh-stamp-why { grid-column: 1 / -1; margin: 10px 0 0; font-family: "Caslon", serif; font-style: italic; font-size: 16px; line-height: 1.35; color: var(--ink-2); }
 
 .ghost-hero { display: grid; grid-template-columns: 236px 1fr; gap: 28px; align-items: start; }
@@ -710,6 +710,9 @@ html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) 
 .measure-head .val { font-family: "Fell", serif; font-size: 30px; line-height: 1; }
 .measure-head .val small { font-family: "Caslon", serif; font-size: 16px; color: var(--ink-2); }
 .measure p { margin: 2px 0 0; font-size: 16px; color: var(--ink-2); }
+/* à côté de la mesure : le registre du Codex rangé par ce critère (un lien tapé, discret) */
+.measure p.measure-see { margin: 0 0 2px; text-align: right; }
+.measure-see .link { display: inline-flex; align-items: center; min-height: 40px; font-size: 13px; color: var(--ink-2); }
 .chart { display: block; width: 100%; height: auto; overflow: visible; color: var(--ink); }
 .chart .axis { stroke: var(--ink); stroke-width: 1.3; fill: none; }
 .chart .tick { stroke: var(--ink-2); stroke-width: 1; }
@@ -971,6 +974,7 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
 .page > .folio {
   position: absolute; left: 0; right: 0; bottom: 22px; text-align: center;
   font-family: "Courier Prime", monospace; font-size: 12px; letter-spacing: .2em; color: var(--ink-3);
+  pointer-events: none; /* un décor : il ne prend jamais le clic d'un lien en bas de page */
 }
 .notebook--cont { margin-top: -20px; }
 .notebook--cont .page { border-top: 0; }

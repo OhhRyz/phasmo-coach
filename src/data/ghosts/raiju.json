@@ -12,12 +12,12 @@
     "isRange": false,
     "los": true,
     "losVaries": true,
-    "summary": "1,7 m/s · accélère en LdV · 2,5 m/s près de l'électronique",
+    "summary": "1,7 m/s · accélère en ligne de vue · 2,5 m/s près de l'électronique",
     "details": [
-      "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération en LdV standard.",
+      "Loin de l'électronique : vitesse standard de 1,7 m/s avec accélération standard en ligne de vue.",
       "Près d'un équipement électronique actif du joueur, posé ou tenu en main (à moins de 6 m, 8 m ou 10 m sur petite, moyenne ou grande carte), il passe aussitôt à une vitesse fixe de 2,5 m/s (à 100 % de vitesse d'entité).",
-      "Il a l'accélération en LdV tant qu'il n'est pas à portée d'un équipement électronique actif. Une fois à portée, l'accélération en LdV ne s'applique plus, mais elle continue de s'accumuler en arrière-plan.",
-      "Sur un relevé de vitesse, cela donne des « plateaux » plats autour de 2,5 m/s qui interrompent une courbe de chasse standard : c'est son plus gros indice. En quittant la zone, il reprend la vitesse de son accélération en LdV et peut continuer d'accélérer jusqu'à son maximum."
+      "Il a l'accélération en ligne de vue tant qu'il n'est pas à portée d'un équipement électronique actif. Une fois à portée, l'accélération en ligne de vue ne s'applique plus, mais elle continue de s'accumuler en arrière-plan.",
+      "Sur un relevé de vitesse, cela donne des « plateaux » plats autour de 2,5 m/s qui interrompent une courbe de chasse standard : c'est son plus gros indice. En quittant la zone, il reprend la vitesse de son accélération en ligne de vue et peut continuer d'accélérer jusqu'à son maximum."
     ]
   },
   "huntSanity": {
@@ -55,7 +55,7 @@
     { "text": "Si l'entité n'accélère pas près de l'électronique pendant une chasse, ce n'est pas un Raiju." }
   ],
   "confusions": [
-    { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu du D.O.T.S ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse, sans lien avec l'électronique." },
+    { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu du D.O.T.S ; empreintes à 6 doigts possibles et changement d'apparence le temps d'un clignotement en chasse, sans lien avec l'électronique." },
     { "with": "dayan", "why": "Même EMF 5 + orbes, mais la Dayan a la Spirit Box au lieu du D.O.T.S ; elle accélère (2,25 m/s) quand tu bouges à moins de 10 m et ralentit (1,2 m/s) quand tu restes immobile, appareils allumés ou non." },
     { "with": "wraith", "why": "Même EMF 5 + D.O.T.S, mais le Spectre a la Spirit Box au lieu des orbes ; il ne perturbe jamais le sel et se téléporte vers les joueurs." },
     { "with": "oni", "why": "Même EMF 5 + D.O.T.S, mais l'Oni a des températures glaciales au lieu des orbes ; plus visible pendant les chasses, il ne fait jamais l'événement « Forme de Brume » (la bulle d'air)." },
@@ -64,7 +64,7 @@
     { "with": "banshee", "why": "Mêmes orbes + D.O.T.S, mais la Banshee a l'UV au lieu de l'EMF ; elle ne poursuit que sa cible et peut pousser un cri unique au micro parabolique." },
     { "with": "yurei", "why": "Mêmes orbes + D.O.T.S, mais le Yurei a des températures glaciales au lieu de l'EMF ; il peut claquer une porte en faisant perdre 15 % de santé mentale." },
     { "with": "yokai", "why": "Mêmes orbes + D.O.T.S, mais le Yokai a la Spirit Box au lieu de l'EMF ; il peut chasser jusqu'à 80 % si tu parles dans la même pièce que lui et, en chasse, ne t'entend qu'à 2,5 m." },
-    { "with": "thaye", "why": "Mêmes orbes + D.O.T.S, mais le Thayé a l'écriture au lieu de l'EMF ; très rapide quand il est jeune (2,75 m/s), il n'accélère jamais en LdV et ralentit en vieillissant." },
+    { "with": "thaye", "why": "Mêmes orbes + D.O.T.S, mais le Thayé a l'écriture au lieu de l'EMF ; très rapide quand il est jeune (2,75 m/s), il n'accélère jamais en ligne de vue et ralentit en vieillissant." },
     { "with": "jinn", "why": "Le Djinn (EMF, UV, glaciales) passe lui aussi à 2,5 m/s, mais seulement disjoncteur allumé, quand il te voit à plus de 3 m : l'électronique n'y change rien." },
     { "with": "revenant", "why": "Le Revenant (orbes, écriture, glaciales) fonce à 3,0 m/s dès qu'il te détecte (voix, électronique active, vue) et rampe à 1,0 m/s sinon." }
   ],

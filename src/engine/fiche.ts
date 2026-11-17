@@ -58,7 +58,7 @@ export function pairZeroVariants(items: readonly TextItem[]): PairedItem[] {
   })
 }
 
-/** « Peut se téléporter… » → « peut se téléporter… », pour suivre « en partie sans preuve : ». */
+/** « Peut se téléporter… » → « peut se téléporter… », pour suivre « en partie à 0 preuve : ». */
 export function lowerFirst(text: string): string {
   return text.charAt(0).toLocaleLowerCase('fr') + text.slice(1)
 }

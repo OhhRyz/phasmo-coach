@@ -137,7 +137,7 @@
   border-bottom: 1px solid var(--rule);
   transition: background-color .2s ease;
 }
-.cx-main, .cx-data { display: contents; }
+.cx-main { display: contents; }
 .cx-num { grid-area: num; font-family: "Courier Prime", monospace; font-size: 12px; color: var(--ink-3); }
 .cx-name { grid-area: name; min-width: 0; display: flex; align-items: baseline; gap: 0 7px; flex-wrap: wrap; }
 .cx-link { font-family: "Fell", serif; font-size: 21px; line-height: 1.15; color: var(--ink); text-decoration: none; }
@@ -151,12 +151,15 @@
 .cx-ev .evw-list { gap: 0 13px; }
 .cx-ev .evw { font-size: 14.5px; line-height: 1.45; text-decoration-thickness: 2.5px; text-underline-offset: 3px; }
 .cx-ev .faint { font-weight: 400; }
-.cx-speed, .cx-san { font-family: "Courier Prime", monospace; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
-.cx-speed { grid-area: speed; }
+.cx-cls, .cx-speed, .cx-san { font-family: "Courier Prime", monospace; font-size: 12.5px; line-height: 1.3; color: var(--ink-2); }
+/* la dernière colonne, sur les deux rangs : le mot de la vitesse (« lente », « normale », « rapide », « variable »),
+   à l'encre, toujours au même endroit pour se lire d'un coup d'œil de haut en bas ; dessous, les m/s puis le seuil */
+.cx-data { grid-area: 1 / 4 / 3 / 5; display: grid; min-width: 0; }
+.cx-data-nums { display: grid; min-width: 0; }
+.cx-cls { color: var(--ink); white-space: nowrap; }
 /* trouvée par un mot de sa fiche : la phrase, le mot passé au surligneur (le même coup que la maîtrise) */
 .cx-snip { grid-column: 2 / -1; margin: 3px 0 1px; max-width: 46em; font-family: "Caslon", Georgia, serif; font-style: italic; font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
 .cx-hit { padding: 0 2px; color: var(--ink); font-style: normal; background: var(--hl); border-radius: 2px 7px 3px 6px / 6px 3px 7px 2px; box-shadow: 0 0 10px var(--hl-glow); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.cx-san { grid-area: san; }
 /* sur ordinateur, l'en-tête des colonnes suffit : l'étiquette reste pour les lecteurs d'écran */
 .cx-san .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -172,8 +175,8 @@
 .cx-row:has(.cx-link:focus-visible) { outline: 2px dashed var(--red-pen); outline-offset: 2px; }
 
 /* éliminée : barrée au crayon, estompée, jamais cachée */
-.cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san, .cx-snip) { opacity: .42; }
-:root[data-theme="dark"] .cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-speed, .cx-san, .cx-snip) { opacity: .4; }
+.cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-cls, .cx-speed, .cx-san, .cx-snip, .cx-gval) { opacity: .42; }
+:root[data-theme="dark"] .cx-row.is-out :is(.cx-num, .cx-name, .cx-mast, .cx-ev, .cx-cls, .cx-speed, .cx-san, .cx-snip, .cx-gval) { opacity: .4; }
 .cx-row.is-out .cx-link { color: var(--ink-2); }
 .cx-row.is-out .mastery-hl::before { filter: grayscale(1); }
 .cx-row.is-out .cx-los { opacity: .5; }
@@ -185,6 +188,41 @@
 .cx-strike path { stroke-width: 1.6; }
 
 .cx-book .cx-foot { margin: 14px 0 0; font-size: 19px; text-align: right; }
+
+/* ==========================================================================
+   « Ranger par » : l'ordre du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse
+   ========================================================================== */
+.cx-rank { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin: 0 0 12px; }
+.cx-rank .opts { gap: 2px 4px; margin-left: -4px; }
+.cx-book .cx-rank-hint { flex-basis: 100%; margin: 2px 0 0; max-width: 34em; font-size: 18px; line-height: 1.1; }
+
+/* une page de registre comptable : trois colonnes lignées côte à côte, leurs titres tapés sur le même rang */
+.cx-ledger { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto auto 1fr; border-top: 1.5px solid var(--ink-2); }
+.cx-grp { display: grid; grid-row: span 4; grid-template-rows: subgrid; min-width: 0; padding: 8px 10px 0; }
+.cx-grp:first-child { padding-left: 0; }
+.cx-grp:last-child { padding-right: 0; }
+.cx-grp + .cx-grp { border-left: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); }
+.cx-book .cx-grp-h { margin: 0; font-family: "Elite", monospace; font-weight: 400; font-size: 19px; line-height: 1.15; letter-spacing: .03em; color: var(--ink); }
+.cx-book .cx-grp-def { margin: 2px 0 0; font-family: "Courier Prime", monospace; font-size: 11px; font-weight: 700; line-height: 1.35; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.cx-book .cx-grp-play { margin: 4px 0 0; padding-bottom: 7px; font-size: 17px; line-height: 1.05; }
+.cx-grp-list { align-self: start; border-top: 1px solid var(--ink-3); }
+.cx-book .cx-grp-none { align-self: start; margin: 0; padding-top: 8px; border-top: 1px solid var(--ink-3); font-size: 18px; }
+
+/* une ligne : le nom, au crayon « change de vitesse », et dessous, tapée petit, la valeur qui la range ici */
+.cx-row--grp { display: block; padding: 6px 0 6px; }
+.cx-row--grp .cx-name { gap: 0 8px; }
+.cx-row--grp .cx-link { font-size: 19px; }
+.cx-gnote { font-size: 16.5px; line-height: 1; white-space: nowrap; }
+.cx-gval { display: block; font-family: "Courier Prime", monospace; font-size: 12px; line-height: 1.3; color: var(--ink); }
+.cx-glos { color: var(--ink-2); }
+.cx-row--grp .cx-snip { display: block; }
+.cx-row--grp .cx-strike { left: 0; top: 12px; width: 100%; }
+.cx-row.is-out .cx-gnote { opacity: .5; }
+/* trois colonnes côte à côte : « change de vitesse » toujours sur sa ligne, sous le nom. À côté, il n'y tenait que
+   pour les noms courts, et les lignes d'une même colonne n'avaient plus la même allure */
+@media (min-width: 760px) {
+  .cx-row--grp .cx-gnote { flex-basis: 100%; }
+}
 
 /* après le registre : s'exercer sur un contrat simulé */
 .cx-book .cx-train { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; margin: 34px 0 0; }
@@ -203,6 +241,10 @@
    ========================================================================== */
 @media (max-width: 1180px) {
   .cx-los { left: auto; right: calc(100% + 26px); width: 80px; text-align: right; transform: rotate(2deg); }
+}
+/* le carnet de preuves finit au-dessus du folio de sa page (« Tout effacer » est sa dernière ligne) */
+@media (min-width: 760px) and (max-width: 1180px) {
+  .cx-book .page--left { padding-bottom: 56px; }
 }
 
 /* ==========================================================================
@@ -249,10 +291,26 @@
   .cx-ev .evw { font-size: 13.5px; }
   .cx-mast .mastery-hl { width: 30px; height: 11px; }
   .cx-mast .mastery .pct { font-size: 11px; }
-  .cx-data { grid-area: data; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; min-width: 0; }
-  .cx-speed, .cx-san { font-size: 11.5px; white-space: nowrap; }
+  /* le mot de la vitesse garde sa colonne étroite, devant les m/s : le seuil passe dessous sans jamais s'y glisser */
+  .cx-data { grid-area: data; align-self: baseline; display: grid; grid-template-columns: 54px minmax(0, 1fr); column-gap: 8px; min-width: 0; }
+  .cx-data-nums { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; min-width: 0; }
+  /* les m/s passent à la ligne dans leur colonne quand elle est trop étroite (« 1,36 ou 1,96 m/s (1,7) » à 320 px) :
+     ils ne débordent jamais sous la jauge de maîtrise ; le seuil suit dessous */
+  .cx-cls, .cx-speed, .cx-san { font-size: 11.5px; }
+  .cx-cls, .cx-san { white-space: nowrap; }
   .cx-san .k { position: static; width: auto; height: auto; overflow: visible; clip: auto; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
   .cx-los { position: static; grid-column: 2 / -1; width: auto; font-size: 17px; transform: none; text-align: left; }
   .cx-strike { left: 26px; top: 15px; width: calc(100% - 26px); }
   .cx-book .cx-foot { text-align: left; }
+
+  /* rangé par vitesse ou par seuil : les trois colonnes l'une sous l'autre, chacune sous son titre */
+  .cx-rank { gap: 0 10px; }
+  .cx-ledger { display: block; border-top: 0; }
+  .cx-grp { display: block; padding: 10px 0 0; border-top: 1.5px solid var(--ink-2); }
+  .cx-grp + .cx-grp { margin-top: 22px; border-left: 0; }
+  .cx-book .cx-grp-h { font-size: 21px; }
+  .cx-book .cx-grp-play { font-size: 18px; }
+  .cx-row--grp { padding: 7px 0 6px; }
+  .cx-row--grp .cx-link { font-size: 20px; }
+  .cx-row--grp .cx-strike { top: 14px; }
 }

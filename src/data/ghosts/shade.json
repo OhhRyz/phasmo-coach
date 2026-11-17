@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue ; après avoir perdu la LdV, elle garde cette vitesse jusqu'à ta dernière position connue, puis la perd très lentement."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue ; après avoir perdu la ligne de vue, elle garde cette vitesse jusqu'à ta dernière position connue, puis la perd très lentement."
     ]
   },
   "huntSanity": {
@@ -105,7 +105,7 @@
       "card": 2
     },
     {
-      "text": "Une fois la pièce favorite connue, place un crucifix qui couvre toute la pièce et des capteurs de mouvement à toutes ses entrées. Suis la position de l'entité grâce aux capteurs : si elle ne fait rien pendant qu'elle est dans la pièce (alors que tu y es aussi), ça peut être une Ombre.",
+      "text": "Une fois la pièce favorite connue, place un crucifix qui couvre toute la pièce et des détecteurs de mouvement à toutes ses entrées. Suis la position de l'entité grâce aux détecteurs : si elle ne fait rien pendant qu'elle est dans la pièce (alors que tu y es aussi), ça peut être une Ombre.",
       "definitive": false
     },
     {
@@ -148,7 +148,7 @@
     },
     {
       "with": "jinn",
-      "why": "Mêmes EMF 5 et températures glaciales. Le Djinn chasse à 50 %, fonce à 2,5 m/s en LdV (disjoncteur allumé, à plus de 3 m) et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF au disjoncteur)."
+      "why": "Mêmes EMF 5 et températures glaciales. Le Djinn chasse à 50 %, fonce à 2,5 m/s en ligne de vue (disjoncteur allumé, à plus de 3 m) et peut faire chuter de 25 % la santé mentale d'un joueur proche (avec un EMF au disjoncteur)."
     },
     {
       "with": "oni",
@@ -172,7 +172,7 @@
     },
     {
       "with": "aswang",
-      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s)."
+      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en ligne de vue (8,667 s au lieu de 13 s)."
     },
     {
       "with": "goryo",
@@ -306,6 +306,6 @@
   ],
   "uncertain": [
     "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle, selon une seule source) : non confirmée.",
-    "Modèle translucide au cercle d'invocation : on le disait propre à l'Ombre, mais les sources actuelles ne citent plus que la forme d'ombre ; ne t'en sers pas comme preuve."
+    "Apparence translucide au cercle d'invocation : on le disait propre à l'Ombre, mais les sources actuelles ne citent plus que la forme d'ombre ; ne t'en sers pas comme preuve."
   ]
 }

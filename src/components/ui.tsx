@@ -28,7 +28,7 @@ export function Evidence({ id, forced, fake, short }: { id: EvidenceId; forced?:
     <span
       className={`evw${forced ? ' forced' : ''}`}
       style={{ '--c': ev.color } as Style}
-      title={forced ? `${ev.label}\u202f: preuve garantie` : fake ? `${ev.label}\u202f: fausse preuve` : ev.label}
+      title={forced ? `${ev.label}\u202f: preuve obligatoire` : fake ? `${ev.label}\u202f: fausse preuve` : ev.label}
     >
       {short ? ev.short : ev.label}
       {fake && <span className="faint"> (fausse)</span>}

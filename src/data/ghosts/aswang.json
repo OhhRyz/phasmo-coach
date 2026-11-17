@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,53 m/s · accélère en LdV en 8,7 s (13 s d'habitude)",
+    "summary": "1,53 m/s · accélère en ligne de vue en 8,7 s (13 s d'habitude)",
     "details": [
       "Vitesse de base de 1,53 m/s, un peu plus lente qu'une entité standard (1,7 m/s).",
-      "En LdV, il accélère toujours jusqu'à 1,65 fois sa vitesse de base (environ 2,5 m/s), mais il y parvient en 8,667 s de LdV continue au lieu de 13 s, soit une accélération progressive 1,5 fois plus rapide que la normale.",
+      "En ligne de vue, il accélère toujours jusqu'à 1,65 fois sa vitesse de base (environ 2,5 m/s), mais il y parvient en 8,667 s de ligne de vue continue au lieu de 13 s, soit une accélération progressive 1,5 fois plus rapide que la normale.",
       "Sa vitesse de base ne change pas d'une chasse à l'autre."
     ]
   },
@@ -29,13 +29,13 @@
   },
   "summary": "Un chasseur un peu lent au départ qui prend de la vitesse plus vite que les autres quand il te voit, mais dont la chasse s'arrête net s'il te rejoint dans une cachette officielle… et qui s'en souvient à la chasse suivante.",
   "keyTells": [
-    "Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de LdV (au lieu de 13 s)",
+    "Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de ligne de vue (au lieu de 13 s)",
     "La chasse s'arrête net s'il rejoint dans une cachette officielle le joueur détecté",
     "Si la chasse s'est arrêtée dans la cachette d'un joueur, l'entité marche vers la position actuelle de ce joueur dès le début de la chasse suivante, même pendant la période de grâce",
     "Si l'entité traverse le sel ou les détecteurs de mouvement pendant la période de grâce d'une chasse, c'est un Aswang"
   ],
   "tells": [
-    { "text": "Vitesse de base de 1,53 m/s ; en LdV, la vitesse atteint 1,65 fois cette base en 8,667 s au lieu de 13 s.", "zeroEvidence": true, "card": 0 },
+    { "text": "Vitesse de base de 1,53 m/s ; en ligne de vue, la vitesse atteint 1,65 fois cette base en 8,667 s au lieu de 13 s.", "zeroEvidence": true, "card": 0 },
     { "text": "Quand l'entité entre dans la cachette officielle où se trouve le joueur qu'elle a détecté, la chasse se termine immédiatement.", "zeroEvidence": true, "card": 1 }
   ],
   "behaviors": [
@@ -47,7 +47,7 @@
   "confirmationTests": [
     { "text": "Laisse l'entité te voir pendant une chasse, puis cache-toi dans une cachette officielle. Si l'entité atteint ta cachette et que la chasse s'arrête aussitôt, c'est un Aswang.", "definitive": true, "card": 0 },
     { "text": "Place du sel ou des détecteurs de mouvement près de la pièce de l'entité. Si l'entité marche dans le sel ou déclenche les détecteurs pendant la période de grâce d'une chasse, c'est un Aswang (c'est ce qui arrive à la chasse qui suit celle où un joueur caché a été trouvé). Attention : une chasse lancée avec un objet maudit réduit la période de grâce à 1 s.", "definitive": true, "card": 1 },
-    { "text": "Chronomètre la prise de vitesse en LdV : si l'entité atteint sa vitesse maximale en moins de 9 s de LdV continue, au lieu d'environ 13 s, ça pourrait être un Aswang.", "definitive": false },
+    { "text": "Chronomètre la prise de vitesse en ligne de vue : si l'entité atteint sa vitesse maximale en moins de 9 s de ligne de vue continue, au lieu d'environ 13 s, ça pourrait être un Aswang.", "definitive": false },
     { "text": "Si, après t'avoir trouvé caché, l'entité marche droit vers ta position dès le début de la chasse suivante, ça pourrait être un Aswang.", "definitive": false }
   ],
   "eliminationTests": [],
@@ -55,7 +55,7 @@
     { "with": "yurei", "why": "Même D.O.T.S + glaciales, mais le Yurei a les orbes au lieu de l'écriture ; il peut claquer une porte (−15 % de santé mentale) et l'encens le piège dans sa pièce pendant 90 s." },
     { "with": "oni", "why": "Même D.O.T.S + glaciales, mais l'Oni a l'EMF 5 au lieu de l'écriture ; vitesse standard de 1,7 m/s, plus visible en chasse, jamais d'événement « Forme de Brume » (la bulle d'air)." },
     { "with": "deogen", "why": "Même D.O.T.S + écriture, mais le Deogen a la Spirit Box au lieu des glaciales ; il te voit toujours en chasse (impossible de te cacher), fonce à 3,0 m/s de loin et ralentit à 0,4 m/s près de toi." },
-    { "with": "thaye", "why": "Même D.O.T.S + écriture, mais le Thayé a les orbes au lieu des glaciales ; il n'accélère jamais en LdV et ralentit en vieillissant." },
+    { "with": "thaye", "why": "Même D.O.T.S + écriture, mais le Thayé a les orbes au lieu des glaciales ; il n'accélère jamais en ligne de vue et ralentit en vieillissant." },
     { "with": "obambo", "why": "Même D.O.T.S + écriture, mais l'Obambo a l'UV au lieu des glaciales ; sa vitesse alterne entre 1,45 m/s (calme) et 1,96 m/s (agressif), alors que celle de l'Aswang reste à 1,53 m/s." },
     { "with": "deildegast", "why": "Même D.O.T.S + écriture, mais le Deildegast a l'EMF 5 au lieu des glaciales ; sa vitesse va de 3,0 à 0,4 m/s selon le nombre d'objets différents utilisés depuis la dernière chasse." },
     { "with": "revenant", "why": "Même écriture + glaciales, mais le Revenant a les orbes au lieu du D.O.T.S ; il rampe à 1,0 m/s puis passe d'un coup à 3,0 m/s quand il te détecte, au lieu d'accélérer progressivement." },
@@ -110,10 +110,10 @@
       "explain": "Si l'Aswang entre dans la cachette officielle où se trouve le joueur qu'il a détecté, la chasse se termine immédiatement."
     },
     {
-      "q": "En combien de temps de LdV continue l'Aswang atteint-il sa vitesse maximale ?",
+      "q": "En combien de temps de ligne de vue continue l'Aswang atteint-il sa vitesse maximale ?",
       "choices": ["8,7 s", "13 s", "4,3 s", "20 s"],
       "answer": 0,
-      "explain": "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s, contre 13 s pour les entités standards. Les entités sans accélération en LdV sont le Revenant, le Hantu, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse."
+      "explain": "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s, contre 13 s pour les entités standards. Les entités sans accélération en ligne de vue sont le Revenant, le Hantu, le Deogen et le Thayé, ainsi que le Deildegast, dont la vitesse est verrouillée pendant la chasse."
     },
     {
       "q": "Quelle est la vitesse de base de l'Aswang en chasse ?",
@@ -135,7 +135,7 @@
     }
   ],
   "changes": [
-    "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s de LdV continue."
+    "L'Aswang atteint 1,65 fois sa vitesse de base en 8,667 s de ligne de vue continue."
   ],
   "sources": [
     "tybayn wiki: wiki_los_aswang_p1",

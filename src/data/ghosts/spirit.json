@@ -15,11 +15,11 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : sa vitesse augmente progressivement pendant 13 s de ligne de vue continue, jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s).",
-      "Après avoir perdu la LdV, elle garde cette vitesse jusqu'à la dernière position connue du joueur, puis ralentit très progressivement.",
+      "Accélération standard en ligne de vue : sa vitesse augmente progressivement pendant 13 s de ligne de vue continue, jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s).",
+      "Après avoir perdu la ligne de vue, elle garde cette vitesse jusqu'à la dernière position connue du joueur, puis ralentit très progressivement.",
       "Aucune particularité de vitesse : en chasse, rien ne la distingue d'une entité standard."
     ]
   },
@@ -97,7 +97,7 @@
     },
     {
       "with": "moroi",
-      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en LdV). 3e preuve : températures glaciales vs EMF 5."
+      "why": "Spirit Box + écriture en commun. Le Moroi maudit le joueur qui l'entend au microphone parabolique et devient très rapide quand la santé moyenne baisse (jusqu'à 3,71 m/s en ligne de vue). 3e preuve : températures glaciales vs EMF 5."
     },
     {
       "with": "deogen",

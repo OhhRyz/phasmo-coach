@@ -1,11 +1,15 @@
 import { act, createElement as h, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
 import { GHOSTS } from '../data'
+import { copiesBehavior } from '../engine/filter'
+import { NBSP, sanityClasses, speedClasses } from '../engine/format'
 import { pairZeroVariants, testException } from '../engine/fiche'
 import { StoreProvider } from '../store/store'
 import { ToastProvider } from '../components/Toast'
+import { Codex } from './Codex'
+import { FROM_CODEX, TO_REGISTRY } from './codexReturn'
 import { GhostPage } from './GhostPage'
 import { InstallPage } from './Install'
 import { Notebook } from './Notebook'
@@ -30,7 +34,7 @@ afterEach(() => {
 })
 
 /** Une page de l'app telle qu'elle s'affiche (carnet neuf, sans note). */
-function renderPage(path: string, route: string, element: ReactElement): HTMLElement {
+function renderPage(path: string | { pathname: string; search?: string; state?: unknown }, route: string, element: ReactElement): HTMLElement {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const root = createRoot(host)
@@ -55,7 +59,7 @@ describe('Fiche : une capacité redite pour la partie sans preuve ne se lit plus
     const li = items[0]
     expect(text(li)).toMatch(/^Peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 ou un EMF 5/)
     const variant = li.querySelector('.zero-variant')
-    expect(text(variant)).toMatch(/^en partie sans preuve : peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 à son nouvel emplacement/)
+    expect(text(variant)).toMatch(/^en partie à 0 preuve : peut se téléporter près d'un joueur choisi au hasard, en laissant un EMF 2 à son nouvel emplacement/)
     // la mention « marche sans preuve » ne double pas l'annonce
     expect(li.querySelector('.zero-mark')).toBeNull()
   })
@@ -99,7 +103,7 @@ describe('Fiche : un test définitif qui nomme lui-même une exception', () => {
   })
 
   it('Obake et Démon : le tampon reste « Définitif », l’exception s’écrit à côté', () => {
-    // Obake : ses deux tests (changement de modèle, pas manquant après le sel) restent « Définitif », sans mention
+    // Obake : ses deux tests (changement d'apparence, pas manquant après le sel) restent « Définitif », sans mention
     // d'exception depuis que le test des empreintes (« sauf Mimic ») a quitté la fiche (audit de véracité, nov. 2026)
     const obake = [...renderFiche('obake').querySelectorAll('.protocol')]
     expect(obake).toHaveLength(2)
@@ -110,6 +114,278 @@ describe('Fiche : un test définitif qui nomme lui-même une exception', () => {
     const demon = [...renderFiche('demon').querySelectorAll('.protocol')][2]
     expect(text(demon.querySelector('.stamp'))).toBe('Définitif')
     expect(text(demon.querySelector('.protocol-except'))).toBe('sauf Onryo à Sunny Meadows, voir ci-dessous')
+  })
+})
+
+describe('Fiche : la preuve qui reste toujours visible s’appelle « preuve obligatoire »', () => {
+  it('le tampon, sa ligne d’explication et le rappel du carnet de preuves disent « obligatoire », plus « garantie » ni « forcée »', () => {
+    const stamped = GHOSTS.filter((g) => g.forcedEvidence)
+    expect(stamped.length).toBeGreaterThanOrEqual(4)
+    let withStamp = 0
+    for (const g of stamped) {
+      const page = renderFiche(g.id)
+      // le rappel écrit à côté de la preuve, dans le carnet de preuves de la fiche
+      expect(text(page), g.id).toContain("obligatoire dès qu'il y a au moins 1 preuve")
+      expect(text(page), g.id).not.toMatch(/preuves? (?:garantie|forcée)|garantie dès/i)
+      const why = page.querySelector('.gh-stamp-why')
+      if (!why) continue
+      withStamp++
+      expect([...page.querySelectorAll('.stamp')].map(text), g.id).toContain('Preuve obligatoire')
+      expect(text(why), g.id).toMatch(/fait partie des preuves visibles dès que la difficulté en donne au moins une/)
+    }
+    // d'autres tampons passent devant (« Chasse très tôt »…) : au moins une fiche porte bien celui-ci
+    expect(withStamp).toBeGreaterThan(0)
+  })
+})
+
+describe('Codex : le registre se range par numéro, par vitesse ou par seuil de chasse', () => {
+  const FILTER_KEY = 'phasmo-coach/codex-filter'
+  afterEach(() => sessionStorage.removeItem(FILTER_KEY))
+  const renderCodex = (search = '') => renderPage(`/codex${search}`, '/codex', h(Codex))
+  const pressed = (el: HTMLElement) => [...el.querySelectorAll('.cx-rank .opt')].filter((b) => b.getAttribute('aria-pressed') === 'true').map(text)
+  /** les colonnes du registre rangé : leur titre, et les noms de leurs lignes */
+  const columns = (el: HTMLElement) =>
+    [...el.querySelectorAll('.cx-ledger [role="group"]')].map((grp) => ({
+      grp,
+      title: text(grp.querySelector('h3')),
+      label: grp.getAttribute('aria-label'),
+      rows: [...grp.querySelectorAll('ul > li')],
+    }))
+  const named = (rows: Element[], g: { name: string }) => rows.filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === g.name)
+
+  it('par numéro (d’office) : les 30 lignes dans l’ordre du journal, chacune avec le mot de sa vitesse', () => {
+    const el = renderCodex()
+    const group = el.querySelector('.cx-rank [role="group"]')!
+    expect(group.getAttribute('aria-label')).toBe('Ranger le registre par')
+    expect(text(el.querySelector('.cx-rank .typed-label'))).toBe('Ranger par')
+    expect([...group.querySelectorAll('button')].map(text)).toEqual(['numéro', 'vitesse', 'seuil de chasse'])
+    expect(pressed(el)).toEqual(['numéro'])
+    expect(el.querySelector('.cx-ledger')).toBeNull()
+    expect(text(el.querySelector('.cx-right .filehead'))).toContain('Ordre du journal du jeu')
+    const rows = [...el.querySelectorAll('ol.cx-reg > li')]
+    expect(rows.map((li) => li.querySelector('.cx-link')?.textContent)).toEqual(GHOSTS.map((g) => g.name))
+    rows.forEach((li, i) => {
+      const g = GHOSTS[i]
+      const several = copiesBehavior(g) || speedClasses(g).size > 1
+      const word = text(li.querySelector('.cx-cls'))
+      expect(word, g.id).toMatch(/^Vitesse : (lente|normale|rapide|variable)$/)
+      expect(word.endsWith('variable'), g.id).toBe(several)
+    })
+    const word = (id: string) => text(rows[GHOSTS.findIndex((g) => g.id === id)].querySelector('.cx-cls'))
+    expect(word('aswang')).toBe('Vitesse : lente')
+    expect(word('spirit')).toBe('Vitesse : normale')
+    expect(word('the-twins')).toBe('Vitesse : variable')
+    // après le mot, les m/s ; le Mimic, « variable », n'écrit pas ses 1,7 m/s à côté : il dit qu'il copie
+    const speed = (id: string) => text(rows[GHOSTS.findIndex((g) => g.id === id)].querySelector('.cx-speed'))
+    expect(speed('spirit')).toBe(', 1,7 m/s')
+    expect(speed('the-mimic')).toBe(", copie l'entité imitée")
+  })
+
+  it('?rang=vitesse : trois colonnes titrées, chaque entité dans chacune de ses classes, avec la valeur qui l’y range', () => {
+    const el = renderCodex('?rang=vitesse')
+    expect(pressed(el)).toEqual(['vitesse'])
+    expect(text(el.querySelector('.cx-right .filehead'))).toContain('Rangé par vitesse')
+    expect(el.querySelector('ol.cx-reg')).toBeNull()
+    const cols = columns(el)
+    expect(cols.map((c) => c.title)).toEqual(['Lentes', 'Normales', 'Rapides'])
+    expect(cols.map((c) => c.label)).toEqual(['Entités lentes', 'Entités à vitesse normale', 'Entités rapides'])
+    expect(cols.map((c) => text(c.grp.querySelector('.cx-grp-def')))).toEqual(['moins de 1,7 m/s', '1,7 m/s', 'plus de 1,7 m/s'])
+    expect(cols.map((c) => text(c.grp.querySelector('.cx-grp-play')))).toEqual([
+      'des pas plus lents que la normale',
+      'les pas de référence, ceux de la plupart des entités',
+      'des pas plus rapides que la normale',
+    ])
+    const order = ['slow', 'normal', 'fast'] as const
+    for (const g of GHOSTS) {
+      const cls = copiesBehavior(g) ? new Set(order) : speedClasses(g)
+      expect(cls.size, g.id).toBeGreaterThan(0)
+      order.forEach((c, i) => {
+        const lines = named(cols[i].rows, g)
+        expect(lines.length, `${g.id} ${c}`).toBe(cls.has(c) ? 1 : 0)
+        for (const li of lines) {
+          expect(li.querySelector('a')?.getAttribute('href')).toBe(`/codex/${g.id}`)
+          // au crayon, seulement pour une entité qui figure dans plusieurs colonnes
+          expect(text(li.querySelector('.cx-gnote')), `${g.id} ${c}`).toBe(cls.size > 1 ? 'change de vitesse' : '')
+        }
+      })
+    }
+    const line = (i: number, id: string) => text(named(cols[i].rows, GHOSTS.find((g) => g.id === id)!)[0])
+    expect(line(0, 'aswang')).toBe('Aswang : 1,53 m/s · accélère en ligne de vue')
+    expect(line(0, 'dayan')).toBe('Dayanchange de vitesse : 1,2 m/s · accélère en ligne de vue selon les conditions')
+    expect(line(1, 'dayan')).toContain(' : 1,7 m/s · ')
+    expect(line(2, 'dayan')).toContain(' : 2,25 m/s · ')
+    expect(line(0, 'hantu')).toBe("Hantuchange de vitesse : descend à 1,4 m/s · n'accélère pas en ligne de vue")
+    expect(line(2, 'hantu')).toContain(' : monte à 2,7 m/s · ')
+    expect(line(1, 'the-mimic')).toBe("Le Mimicchange de vitesse : copie la vitesse de l'entité imitée")
+    // typographie de fr() : le nombre tient à son unité, l'apostrophe est courbe
+    const raw = cols[0].grp.textContent ?? ''
+    expect(raw).toContain(`1,53${NBSP}m/s`)
+    expect(raw).toContain(`moins de 1,7${NBSP}m/s`)
+    expect(raw).toContain('n’accélère pas en ligne de vue')
+    expect(el.querySelector('.cx-ledger')!.textContent).not.toMatch(/\d (?:m\/s|%)|'/)
+    expect(text(el.querySelector('.cx-rank-hint'))).toBe(
+      'vitesses de la fiche, hors accélération en ligne de vue · une entité qui change de vitesse figure dans chaque colonne où elle peut se trouver',
+    )
+  })
+
+  it('?rang=seuil : « Tôt », « Normal », « Tard », chaque entité dans chacune de ses classes de seuil', () => {
+    const el = renderCodex('?rang=seuil')
+    expect(pressed(el)).toEqual(['seuil de chasse'])
+    expect(text(el.querySelector('.cx-right .filehead'))).toContain('Rangé par seuil de chasse')
+    const cols = columns(el)
+    expect(cols.map((c) => c.title)).toEqual(['Tôt', 'Normal', 'Tard'])
+    expect(cols.map((c) => c.label)).toEqual(['Entités qui peuvent chasser tôt', 'Entités au seuil de chasse normal', 'Entités qui peuvent chasser tard'])
+    expect(cols.map((c) => text(c.grp.querySelector('.cx-grp-def')))).toEqual(['peut chasser au-dessus de 50 %', '50 %', 'sous 50 %'])
+    const order = ['early', 'normal', 'late'] as const
+    for (const g of GHOSTS) {
+      const cls = sanityClasses(g)
+      expect(cls.size, g.id).toBeGreaterThan(0)
+      order.forEach((c, i) => {
+        const lines = named(cols[i].rows, g)
+        expect(lines.length, `${g.id} ${c}`).toBe(cls.has(c) ? 1 : 0)
+        for (const li of lines) expect(text(li.querySelector('.cx-gnote')), `${g.id} ${c}`).toBe(cls.size > 1 ? 'change de seuil' : '')
+      })
+    }
+    const line = (i: number, id: string) => text(named(cols[i].rows, GHOSTS.find((g) => g.id === id)!)[0])
+    expect(line(1, 'spirit')).toBe('Esprit : 50 %')
+    expect([line(0, 'gallu'), line(1, 'gallu'), line(2, 'gallu')]).toEqual(['Galluchange de seuil : 60 %', 'Galluchange de seuil : 50 %', 'Galluchange de seuil : 40 %'])
+    expect(line(0, 'demon')).toBe('Démon : 70 % ou 100 %')
+    expect(el.querySelector('.cx-ledger')!.textContent).toContain(`50${NBSP}%`)
+    // pas d'accélération en ligne de vue dans ce classement
+    expect(el.querySelector('.cx-glos')).toBeNull()
+  })
+
+  it('le sélecteur change l’ordre sur place, et revient à l’ordre du journal', () => {
+    const el = renderCodex()
+    const button = (label: string) => [...el.querySelectorAll<HTMLButtonElement>('.cx-rank .opt')].find((b) => text(b) === label)!
+    act(() => button('vitesse').click())
+    expect(pressed(el)).toEqual(['vitesse'])
+    expect(columns(el).map((c) => c.title)).toEqual(['Lentes', 'Normales', 'Rapides'])
+    act(() => button('seuil de chasse').click())
+    expect(columns(el).map((c) => c.title)).toEqual(['Tôt', 'Normal', 'Tard'])
+    act(() => button('numéro').click())
+    expect(el.querySelector('.cx-ledger')).toBeNull()
+    expect(el.querySelectorAll('ol.cx-reg > li')).toHaveLength(GHOSTS.length)
+  })
+
+  it('une preuve cochée barre les mêmes entités dans les colonnes que dans le registre', () => {
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify({ filter: { evidenceCount: 3, evidence: { emf: 'found' }, speed: [], huntAbove: null, los: null }, query: '' }))
+    const el = renderCodex('?rang=vitesse')
+    const rows = columns(el).flatMap((c) => c.rows)
+    expect(rows.length).toBeGreaterThan(GHOSTS.length)
+    let out = 0
+    for (const g of GHOSTS) {
+      const keeps = g.evidence.includes('emf')
+      for (const li of named(rows, g)) {
+        expect(li.classList.contains('is-out'), g.id).toBe(!keeps)
+        expect(text(li.querySelector('.cx-link')), g.id).toBe(keeps ? g.name : `${g.name} (éliminée)`)
+        expect(!!li.querySelector('.cx-strike'), g.id).toBe(!keeps)
+        if (!keeps) out++
+      }
+    }
+    expect(out).toBeGreaterThan(0)
+  })
+})
+
+describe('Codex : arrivé d’une fiche par « voir les entités par vitesse » ou « par seuil de chasse »', () => {
+  const FILTER_KEY = 'phasmo-coach/codex-filter'
+  const EMF_FOUND = { filter: { evidenceCount: 3, evidence: { emf: 'found' }, speed: [], huntAbove: null, los: null }, query: '' }
+  const g = globalThis as { matchMedia?: unknown }
+  const realMatchMedia = g.matchMedia
+  afterEach(() => {
+    sessionStorage.removeItem(FILTER_KEY)
+    g.matchMedia = realMatchMedia
+  })
+  /** un écran de téléphone : le registre n'y montre d'emblée que les entités encore possibles */
+  const asPhone = () => {
+    g.matchMedia = (q: string) => ({ matches: q === '(max-width: 759px)', media: q, addEventListener() {}, removeEventListener() {} })
+  }
+  const deogenRows = (el: HTMLElement) => [...el.querySelectorAll('.cx-ledger li')].filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === 'Deogen')
+
+  it('sur téléphone, une preuve cochée : les éliminées restent dans la liste, barrées (l’entité qu’on vient de quitter y est)', () => {
+    asPhone()
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(EMF_FOUND))
+    // par l'onglet : seulement ce qui reste possible, le Deogen (sans EMF 5) n'y est pas
+    const tab = renderPage('/codex?rang=vitesse', '/codex', h(Codex))
+    expect(tab.querySelectorAll('.cx-ledger li').length).toBeGreaterThan(0)
+    expect(deogenRows(tab)).toHaveLength(0)
+    // par le lien de la fiche du Deogen : sa ligne est là, barrée
+    const el = renderPage({ pathname: '/codex', search: '?rang=vitesse', state: TO_REGISTRY }, '/codex', h(Codex))
+    const rows = deogenRows(el)
+    expect(rows.length).toBeGreaterThan(0)
+    for (const li of rows) {
+      expect(li.classList.contains('is-out')).toBe(true)
+      expect(li.querySelector('.cx-strike')).not.toBeNull()
+    }
+    // « les masquer » marche toujours
+    const toggle = el.querySelector<HTMLButtonElement>('.cx-out-toggle')!
+    expect(text(toggle)).toBe('les masquer')
+    act(() => toggle.click())
+    expect(deogenRows(el)).toHaveLength(0)
+    expect(text(el.querySelector('.cx-out-toggle'))).toBe('les revoir')
+  })
+
+  it('une recherche tapée, une fiche, le lien vers le codex rangé, deux retours arrière : la recherche est toujours là', () => {
+    let nav!: NavigateFunction
+    const Grab = () => {
+      nav = useNavigate()
+      return null
+    }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    mounted.push({ root, host })
+    act(() => {
+      root.render(
+        h(
+          StoreProvider,
+          null,
+          h(
+            ToastProvider,
+            null,
+            h(
+              MemoryRouter,
+              { initialEntries: ['/codex?rang=vitesse'] },
+              h(Grab),
+              h(Routes, null, h(Route, { path: '/codex', element: h(Codex) }), h(Route, { path: '/codex/:id', element: h(GhostPage) })),
+            ),
+          ),
+        ),
+      )
+    })
+    const search = () => host.querySelector<HTMLInputElement>('.cx-search input')!
+    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+    act(() => {
+      setValue.call(search(), 'froid')
+      search().dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    expect(search().value).toBe('froid')
+    expect(JSON.parse(sessionStorage.getItem(FILTER_KEY)!).query).toBe('froid')
+    // la fiche du Hantu, puis son lien « voir les entités par seuil de chasse » : un codex neuf, sans recherche
+    act(() => nav('/codex/hantu', { state: FROM_CODEX }))
+    expect(host.querySelector('.cx-search')).toBeNull()
+    act(() => nav('/codex?rang=seuil', { state: TO_REGISTRY }))
+    expect(search().value).toBe('')
+    expect(host.querySelector('.cx-rank .opt[aria-pressed="true"]')?.textContent).toBe('seuil de chasse')
+    // deux retours arrière (la fiche, puis le codex où la recherche a été tapée) : il la retrouve
+    act(() => nav(-1))
+    expect(host.querySelector('.cx-search')).toBeNull()
+    act(() => nav(-1))
+    expect(host.querySelector('.cx-rank .opt[aria-pressed="true"]')?.textContent).toBe('vitesse')
+    expect(search().value).toBe('froid')
+  })
+})
+
+describe('Fiche : de la vitesse et du seuil vers le registre rangé du Codex', () => {
+  it('« voir les entités par seuil de chasse » et « par vitesse », à côté de chaque mesure', () => {
+    const el = renderFiche('hantu')
+    const links = [...el.querySelectorAll('.measure .measure-see a')]
+    expect(links.map(text)).toEqual(['voir les entités par seuil de chasse', 'voir les entités par vitesse'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/codex?rang=seuil', '/codex?rang=vitesse'])
+    // chacun juste sous la ligne de sa mesure
+    expect(text(links[0].closest('.measure')!.querySelector('h3'))).toBe('Seuil de chasse')
+    expect(text(links[1].closest('.measure')!.querySelector('h3'))).toBe('Vitesse en chasse')
+    for (const a of links) expect(a.parentElement!.previousElementSibling?.className).toBe('measure-head')
   })
 })
 

@@ -100,7 +100,7 @@ describe('fiches des entités', () => {
       it('a au moins 5 questions rédigées, aucune sur ses preuves', () => {
         expect(g.quiz.length).toBeGreaterThanOrEqual(5)
         for (const q of g.quiz) {
-          // « Quelles sont les preuves… », « Quelle preuve est garantie… » ; « à 0 preuve » reste permis
+          // « Quelles sont les preuves… », « Quelle preuve est obligatoire… » ; « à 0 preuve » reste permis
           expect(plain(q.q).replace(/\b(0|sans) preuves?\b/gi, ''), q.q).not.toMatch(/\bpreuves?\b/i)
           // « Tu as EMF 5, UV et D.O.T.S : quelle entité ? »
           expect(evidenceNames(q.q), q.q).toBeLessThan(2)
@@ -113,7 +113,7 @@ describe('fiches des entités', () => {
       it('a des signes clés et un résumé qui décrivent un comportement, pas ses preuves', () => {
         for (const t of g.keyTells) {
           expect(evidenceCited(t, g.id), t).toEqual([])
-          expect(plain(t), t).not.toMatch(/garanti/i)
+          expect(plain(t), t).not.toMatch(/garanti|obligatoire/i)
         }
         expect(evidenceCited(g.summary, g.id), g.summary).toEqual([])
       })

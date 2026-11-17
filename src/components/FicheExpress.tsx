@@ -1,5 +1,5 @@
 import { getGhost } from '../data'
-import { NNBSP, spellLdV } from '../engine/format'
+import { NNBSP } from '../engine/format'
 import { TapeButton } from './journal/Journal'
 import { GhostEvidence, Modal } from './ui'
 
@@ -25,14 +25,14 @@ export function FicheExpress({ ghostId, onClose, back, later }: { ghostId: strin
           </p>
           <p className="qz-fiche-line">
             <span className="qz-fiche-k">Vitesse</span>
-            <span>{spellLdV(ghost.speed.summary)}</span>
+            <span>{ghost.speed.summary}</span>
           </p>
           {ghost.keyTells.length > 0 && (
             <>
               <p className="qz-fiche-k">À retenir</p>
               <ol className="qz-fiche-tells">
                 {ghost.keyTells.slice(0, 2).map((t, k) => (
-                  <li key={k}>{spellLdV(t)}</li>
+                  <li key={k}>{t}</li>
                 ))}
               </ol>
             </>

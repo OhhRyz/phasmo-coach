@@ -15,10 +15,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard de 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue."
     ]
   },
   "huntSanity": {
@@ -28,7 +28,7 @@
     "summary": "60 % · pas avant 40 % près d'une flamme allumée · à toute santé mentale après 3 flammes éteintes",
     "details": [
       "Chasse normalement à partir de 60 % de santé mentale moyenne.",
-      "Quand il est près de lumières à feu allumées, il ne peut pas chasser avant 40 % de santé mentale moyenne.",
+      "Quand il est près de flammes allumées, il ne peut pas chasser avant 40 % de santé mentale moyenne.",
       "Sa capacité lui permet de tenter une chasse à n'importe quel niveau de santé mentale après avoir éteint 3 flammes ou plus depuis sa dernière tentative de chasse due à sa capacité."
     ]
   },
@@ -37,7 +37,7 @@
     "Tente de chasser à n'importe quelle santé mentale après chaque 3e flamme éteinte",
     "Une flamme à moins de 4 m agit comme un crucifix : il la souffle au lieu de chasser",
     "Utilise les flammes en priorité sur les crucifix pour empêcher ses chasses",
-    "Seuil de chasse normal à 60 %, mais pas avant 40 % près de lumières à feu allumées",
+    "Seuil de chasse normal à 60 %, mais pas avant 40 % près de flammes allumées",
     "Seule entité capable d'éteindre deux fois la même flamme en moins de 20 s"
   ],
   "tells": [
@@ -47,7 +47,7 @@
       "card": 0
     },
     {
-      "text": "Seule entité qui peut éteindre la même lumière à feu deux fois en moins de 20 s.",
+      "text": "Seule entité qui peut éteindre la même flamme deux fois en moins de 20 s.",
       "zeroEvidence": true,
       "card": 1
     },
@@ -70,15 +70,15 @@
       "zeroEvidence": false
     },
     {
-      "text": "Règles générales des lumières à feu : après le premier allumage, aucune entité ne peut tenter de l'éteindre pendant 30 s ; ensuite, chaque allumage applique un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais grâce à ses mécanismes de prévention de chasse.",
+      "text": "Règles générales des flammes : après le premier allumage, aucune entité ne peut tenter de l'éteindre pendant 30 s ; ensuite, chaque allumage applique un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais grâce à ses mécanismes de prévention de chasse.",
       "zeroEvidence": false
     },
     {
-      "text": "Une fois le délai écoulé, toute entité a 66,67 % de chances (2 sur 3) de souffler une lumière à feu allumée à moins de 5 m. Une lumière à feu de rang II (trois bougies) est soufflée dans environ 96,30 % des cas, mais compte pour une seule flamme pour l'Onryo.",
+      "text": "Une fois le délai écoulé, toute entité a 66,67 % de chances (2 sur 3) de souffler une flamme allumée à moins de 5 m. Une source de flamme de rang II (trois bougies) est soufflée dans environ 96,30 % des cas, mais compte pour une seule flamme pour l'Onryo.",
       "zeroEvidence": false
     },
     {
-      "text": "Souffler une lumière à feu produit un EMF 2 (ou 5) et un bruit d'extinction ; les rangs I et II dégagent aussi de la fumée. Les flammes soufflées pendant une chasse comptent aussi pour le compteur de l'Onryo. Les entités ne peuvent pas rallumer une lumière à feu. Une lumière à feu s'éteint aussi d'elle-même quand sa durée est écoulée (durée selon le rang), avec de la fumée pour les rangs I et II. Une lumière à feu de rang III met en pause le délai en cours si tu l'éteins toi-même ou si la capacité de l'Onryo l'interrompt.",
+      "text": "Souffler une flamme produit un EMF 2 (ou 5) et un bruit d'extinction ; les rangs I et II dégagent aussi de la fumée. Les flammes soufflées pendant une chasse comptent aussi pour le compteur de l'Onryo. Les entités ne peuvent pas rallumer une flamme. Une flamme s'éteint aussi d'elle-même quand sa durée est écoulée (durée selon le rang), avec de la fumée pour les rangs I et II. Une source de flamme de rang III met en pause le délai en cours si tu l'éteins toi-même ou si la capacité de l'Onryo l'interrompt.",
       "zeroEvidence": false
     },
     {
@@ -88,7 +88,7 @@
   ],
   "abilities": [
     {
-      "text": "Pour utiliser sa capacité, l'entité doit éteindre la flamme en dehors d'une chasse, puis terminer un état d'inactivité hors d'un minuteur d'encens ou d'un temps de recharge de chasse. Ces conditions sont généralement réunies, d'où la tentative de chasse observée après chaque 3e flamme éteinte.",
+      "text": "Pour utiliser sa capacité, l'entité doit éteindre la flamme en dehors d'une chasse, puis terminer un état d'inactivité hors d'un minuteur d'encens ou du délai entre deux chasses. Ces conditions sont généralement réunies, d'où la tentative de chasse observée après chaque 3e flamme éteinte.",
       "zeroEvidence": true
     },
     {
@@ -100,7 +100,7 @@
       "zeroEvidence": false
     },
     {
-      "text": "Si la flamme est éteinte pendant un temps de recharge de chasse, la chasse de la capacité est retardée jusqu'à la fin de ce temps de recharge ; les flammes soufflées pendant ce délai ne comptent pas pour le cycle suivant.",
+      "text": "Si la flamme est éteinte pendant le délai entre deux chasses, la chasse de la capacité est retardée jusqu'à la fin de ce délai ; les flammes soufflées entre-temps ne comptent pas pour le cycle suivant.",
       "zeroEvidence": false
     },
     {
@@ -162,7 +162,7 @@
     },
     {
       "with": "hantu",
-      "why": "Mêmes orbes + glaciales, mais le Hantu a l'UV au lieu de la Spirit Box ; il souffle une buée glacée en chasse disjoncteur coupé et sa vitesse dépend de la température, sans accélération en LdV."
+      "why": "Mêmes orbes + glaciales, mais le Hantu a l'UV au lieu de la Spirit Box ; il souffle une buée glacée en chasse disjoncteur coupé et sa vitesse dépend de la température, sans accélération en ligne de vue."
     },
     {
       "with": "revenant",
@@ -204,7 +204,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Plus tes coéquipiers meurent, plus les bougies et les lumières à feu sont soufflées souvent.",
+      "text": "Plus tes coéquipiers meurent, plus les bougies et autres flammes sont soufflées souvent.",
       "kind": "hunt",
       "strength": "hint"
     }
@@ -263,7 +263,7 @@
         "C'est forcément un Esprit"
       ],
       "answer": 0,
-      "explain": "Après chaque rallumage, une lumière à feu est protégée de 20 à 80 s. Seul l'Onryo peut éteindre deux fois la même flamme en moins de 20 s : c'est son test définitif."
+      "explain": "Après chaque rallumage, une flamme est protégée de 20 à 80 s. Seul l'Onryo peut éteindre deux fois la même flamme en moins de 20 s : c'est son test définitif."
     },
     {
       "q": "Que se passe-t-il si tu encenses un Onryo après que son compteur a atteint 3, mais avant qu'il utilise sa capacité ?",

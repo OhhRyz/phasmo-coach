@@ -173,7 +173,7 @@ describe('filtre d’élimination', () => {
     expect(matchesEvidence(g, state({ evidenceCount: 2, evidence: excl }))).toBe(true)
   })
 
-  it('la preuve forcée doit faire partie des preuves visibles', () => {
+  it('la preuve obligatoire doit faire partie des preuves visibles', () => {
     const g = GHOSTS.find((x) => x.forcedEvidence)
     if (!g) return
     const others = g.evidence.filter((e) => e !== g.forcedEvidence)
@@ -268,7 +268,7 @@ describe('quiz', () => {
     expect(mentionsEvidence('Comment se manifeste le D.O.T.S d’un Goryo ?')).toBe(true)
     // une réponse de la Spirit Box (voix, respiration du Deogen) est la preuve elle-même
     expect(mentionsEvidence('Dans quelles conditions entends-tu la respiration du Deogen à la Spirit Box ?')).toBe(true)
-    expect(mentionsEvidence('Où se déclenchent les capteurs de mouvement et les réponses à la Spirit Box ?')).toBe(true)
+    expect(mentionsEvidence('Où se déclenchent les détecteurs de mouvement et les réponses à la Spirit Box ?')).toBe(true)
     expect(mentionsEvidence('Mêmes températures glaciales.')).toBe(true)
     // ce qui se joue sans preuve reste
     expect(mentionsEvidence('Partie à 0 preuve : tu vois des orbes dans la pièce favorite.')).toBe(false)
@@ -539,7 +539,7 @@ describe('révision et quiz : seulement ce qui sert sans preuve', () => {
         // « 65 % » face au Raiju (50 %, 65 % près de l'électronique), « 2,5 m/s » face à sa vitesse près de l'électronique
         if (q.id.startsWith('q:san:')) expect(thresholds(g).has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(false)
         if (q.id.startsWith('q:spd:')) expect(speedValues(g).has(valueOf(c.label)), `${q.id} : ${c.label}`).toBe(false)
-        // un résumé à moitié vrai (« 1,7 m/s · accélère en LdV » face au Raiju) n'est pas une mauvaise réponse
+        // un résumé à moitié vrai (« 1,7 m/s · accélère en ligne de vue » face au Raiju) n'est pas une mauvaise réponse
         if (q.id.startsWith('q:sansum:')) expect([...thresholds(o!)].some((v) => thresholds(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
         if (q.id.startsWith('q:spdsum:')) expect([...speedValues(o!)].every((v) => speedValues(g).has(v)), `${q.id} : ${c.label}`).toBe(false)
         // une entité nommée dans le test (« le Deogen est lui aussi plus visible ») ne sert pas de mauvaise réponse
@@ -619,7 +619,7 @@ describe('révision et quiz : seulement ce qui sert sans preuve', () => {
 })
 
 describe('mise en situation', () => {
-  it('respecte le nombre de preuves et la preuve forcée', () => {
+  it('respecte le nombre de preuves et la preuve obligatoire', () => {
     const rng = createRng(42)
     for (const g of GHOSTS) {
       for (const d of DIFFICULTIES) {
@@ -729,7 +729,7 @@ describe('mise en situation', () => {
     }
   })
 
-  it('pickVisibleEvidence garde la preuve forcée', () => {
+  it('pickVisibleEvidence garde la preuve obligatoire', () => {
     const g: Ghost = { ...GHOSTS[0], evidence: ['emf', 'uv', 'freezing'], forcedEvidence: 'freezing' }
     for (let i = 0; i < 20; i++) expect(pickVisibleEvidence(g, 1, createRng(i))).toEqual(['freezing'])
   })
@@ -782,7 +782,7 @@ describe('outils', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, [])
     const ids = deck.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)
-    // les preuves restent dans le codex : aucune carte « Quelles sont les 3 preuves… » ni « preuve forcée »
+    // les preuves restent dans le codex : aucune carte « Quelles sont les 3 preuves… » ni « preuve obligatoire »
     expect(deck.some((c) => (c.kind as string) === 'evidence' || (c.kind as string) === 'forced')).toBe(false)
     expect(deck.some((c) => /:ev$|:forced$/.test(c.id))).toBe(false)
     expect(deck.filter((c) => c.kind === 'tells').length).toBe(GHOSTS.length)
@@ -2119,7 +2119,7 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
       'the-twins': /(?<!\p{L})deux(?!\p{L})|simultan/iu,
       phantom: /dispar|invisib/iu,
       mare: /(?<!\p{L})(?:noir|sombre|obscur)/iu,
-      obake: /(?<!\p{L})forme|modèle|transform/iu,
+      obake: /(?<!\p{L})forme|apparence|transform/iu,
     }
     let checked = 0
     for (const q of asked) {

@@ -30,7 +30,7 @@ import { createRng, hashString, pick, sample, shuffle, weightedPick, type Rng } 
 
 /**
  * Le quiz porte sur ce qui sert quand les preuves manquent : comportements, vitesses, seuils, tests.
- * Les preuves elles-mêmes (lesquelles, forcées, combinaisons) restent dans le codex : le journal du jeu les donne.
+ * Les preuves elles-mêmes (lesquelles, obligatoires, combinaisons) restent dans le codex : le journal du jeu les donne.
  */
 export type QuizTopic = 'behavior' | 'speed' | 'sanity' | 'zero' | 'expert' | 'mechanics'
 
@@ -512,9 +512,6 @@ export function keepsSense(full: string, short: string): boolean {
   return !short.split(CLAUSES).some((c) => POINTER.test(c) && !/\d/u.test(c))
 }
 
-/** « LdV » reste dans les résumés courts ; une réponse l'écrit en toutes lettres (sa longueur est celle qu'on lit). */
-const spellLdV = (s: string) => s.replace(/\bLdV\b/gu, 'ligne de vue')
-
 /* ---------- seuils de chasse ---------- */
 
 /**
@@ -621,7 +618,7 @@ type NumberKind = 'san' | 'spd'
 /** « 65 % si tu bouges à moins de 10 m », « jusqu'à 80 % si… », « 1,96 enragé » : une valeur et sa condition. */
 const VALUE_SEGMENT = /^(?:(?:jusqu['’]à|pas avant|dès)\s+)?(\d+(?:,\d+)?)\s?(%|m\/s)?\s+(\S.*)$/u
 /** Ce qui suit une valeur sans en être la condition : la suite d'une plage (« à 87 % »), un choix (« ou 1,9 »), « selon… ». */
-const NOT_A_CONDITION = /^(?:à|ou|et|-)\s*\d|^selon(?!\p{L})|\bLdV\b|ligne de vue|[<>]/u
+const NOT_A_CONDITION = /^(?:à|ou|et|-)\s*\d|^selon(?!\p{L})|ligne de vue|[<>]/u
 
 /** Les valeurs d'un résumé (« 50 % · 65 % si tu bouges… · 45 % immobile ») autres que la valeur habituelle. */
 function conditionalValues(summary: string, unit: '%' | 'm/s', own: ReadonlySet<number>, base: number | null): { value: number; condition: string }[] {
@@ -877,7 +874,7 @@ const SUMMARIES: Record<NumberKind, SummaryKind> = {
     apart: (o, g) => ![...thresholds(o)].some((v) => thresholds(g).has(v)),
   },
   spd: {
-    label: (g) => spellLdV(g.speed.summary),
+    label: (g) => g.speed.summary,
     asked: (g) => g.id !== MIMIC && known(g) && !standardSpeed(g),
     apart: (o, g) => o.speed.summary !== g.speed.summary && !partlyTrueSpeed(o, g),
   },
@@ -969,7 +966,7 @@ function summaryQuestion(kind: NumberKind, g: Ghost, ctx: Ctx): Question | null 
     multi: false,
     choices: shuffle(ctx.rng, [{ id: g.id, label: right }, ...wrong.map((o) => ({ id: o.value.id, label: o.label }))]),
     correct: [g.id],
-    explain: san ? [right, ...g.huntSanity.details.slice(0, 2)].join(' — ') : spellLdV([g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — ')),
+    explain: san ? [right, ...g.huntSanity.details.slice(0, 2)].join(' — ') : [g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — '),
     cardId: `g:${g.id}:${san ? 'san' : 'spd'}`,
   }
 }
@@ -1040,8 +1037,8 @@ const sanityProfile: Gen = (g, ctx) => {
 
 /**
  * La description de vitesse de o est-elle en partie vraie pour g ? Ses vitesses font toutes partie de
- * celles de g (« 1,7 m/s · accélère en LdV » pour le Raiju, qui reste à 1,7 m/s loin de l'électronique),
- * ou tombent dans la plage de g avec la même ligne de vue (le Moroi passe par 1,7 m/s et accélère en LdV).
+ * celles de g (« 1,7 m/s · accélère en ligne de vue » pour le Raiju, qui reste à 1,7 m/s loin de l'électronique),
+ * ou tombent dans la plage de g avec la même ligne de vue (le Moroi passe par 1,7 m/s et accélère en ligne de vue).
  */
 function partlyTrueSpeed(o: Ghost, g: Ghost): boolean {
   const theirs = speedValues(o)
@@ -1085,7 +1082,7 @@ const speedOfGhost: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [{ id: g.id, label: mps(a.value) }, ...wrong.map((v) => ({ id: `v:${v}`, label: mps(v) }))]),
     correct: [g.id],
-    explain: spellLdV([g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — ')),
+    explain: [g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — '),
     cardId: `g:${g.id}:spd`,
   }
 }
@@ -1108,7 +1105,7 @@ const speedStandard: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
     correct: [g.id],
-    explain: spellLdV(`${called(g)}${NNBSP}: ${g.speed.summary}. Les autres ont une autre vitesse habituelle${NNBSP}: ${wrong.map((o) => `${o.name} (${o.speed.summary})`).join(', ')}.`),
+    explain: `${called(g)}${NNBSP}: ${g.speed.summary}. Les autres ont une autre vitesse habituelle${NNBSP}: ${wrong.map((o) => `${o.name} (${o.speed.summary})`).join(', ')}.`,
     cardId: `g:${g.id}:spd`,
   }
 }
@@ -1137,7 +1134,7 @@ const losOfGhost: Gen = (g, ctx) => {
       { id: 'no', label: 'Non, elle n’accélère pas en ligne de vue' },
     ],
     correct: [g.speed.los ? 'yes' : 'no'],
-    explain: spellLdV(`${g.speed.summary}. ${g.speed.details[0] ?? ''}`.trim()),
+    explain: `${g.speed.summary}. ${g.speed.details[0] ?? ''}`.trim(),
     cardId: `g:${g.id}:spd`,
   }
 }
@@ -1149,7 +1146,7 @@ const speeds = (g: Ghost) => new Set([...speedValues(g)].filter((v) => v !== 1.7
 const speedProfile: Gen = (g, ctx) => {
   if (!known(g) || g.id === MIMIC || standardSpeed(g)) return null
   const mine = speeds(g)
-  const quote = redact(g.speed.summary, g).replace(/\bLdV\b/g, 'ligne de vue')
+  const quote = redact(g.speed.summary, g)
   if (names(quote, g)) return null
   const gender = sameGender(quote, g)
   const pool = ctx.allGhosts.filter(
@@ -1168,7 +1165,7 @@ const speedProfile: Gen = (g, ctx) => {
     multi: false,
     choices: shuffle(ctx.rng, [g, ...wrong]).map(ghostChoice),
     correct: [g.id],
-    explain: spellLdV(`${called(g)}${NNBSP}: ${[g.speed.summary, ...g.speed.details.slice(0, 1)].join(' — ')}`),
+    explain: `${called(g)}${NNBSP}: ${[g.speed.summary, ...g.speed.details.slice(0, 1)].join(' — ')}`,
     cardId: `g:${g.id}:spd`,
   }
 }
@@ -1677,7 +1674,7 @@ const distinguish: Gen = (g, ctx) => {
 /* ---------- questions rédigées ---------- */
 
 const authored: Gen = (g, ctx) => {
-  // les questions sur les preuves (lesquelles, forcées, combinaisons, réponses à la Spirit Box) restent dans le codex
+  // les questions sur les preuves (lesquelles, obligatoires, combinaisons, réponses à la Spirit Box) restent dans le codex
   const valid = g.quiz.filter(
     (q) =>
       q.choices.length >= 2 &&
@@ -1841,7 +1838,7 @@ const NUMERIC_ASK = /^q:(?:san|spd|sansum|spdsum|early|sanp|spdp|los):/u
 /** Les thèmes larges d'un fait : sa vitesse, son seuil (voir SOFT_FACT). */
 const BROAD_THEMES: readonly Theme[] = ['vitesse', 'seuil']
 /** L'accélération en ligne de vue : un fait à elle seule (« accélère en ligne de vue », puis « accélère-t-elle quand elle te voit ? »). */
-const LOS = /ligne de vue|\bLdV\b/iu
+const LOS = /ligne de vue/iu
 /**
  * Une clé qu'une copie peut reprendre pour se remplir au lieu de sortir de sa liste (voir buildQuiz, `ease`) : la
  * carte d'où vient la question, la vitesse ou le seuil en général (BROAD_FACT : deux vitesses d'une entité à deux
@@ -2225,7 +2222,7 @@ const NAME_HINTS: Readonly<Record<string, RegExp>> = {
   'the-twins': /(?<!\p{L})deux(?!\p{L})|simultan/iu,
   phantom: /dispar\p{L}*|invisib\p{L}*/iu,
   mare: /(?<!\p{L})(?:noire?s?|sombres?|obscur\p{L}*)(?!\p{L})/iu,
-  obake: /(?<!\p{L})(?:formes?|modèles?|transform\p{L}*|métamorph\p{L}*)(?!\p{L})/iu,
+  obake: /(?<!\p{L})(?:formes?|apparences?|transform\p{L}*|métamorph\p{L}*)(?!\p{L})/iu,
 }
 
 /** Le texte contient-il le mot que souffle le nom de g (son nom lui-même mis à part) ? Calculé une fois par texte. */
@@ -2271,7 +2268,7 @@ const THEMES = {
   objetMaudit: /cercle|patte de singe|poupée|miroir|tarot/iu,
   photo: /photo|vidéo|caméra|film/iu,
   electronique: /électroni|appareil/iu,
-  visible: /visible|invisib|clignot|apparent|modèle|transform/iu,
+  visible: /visible|invisib|clignot|apparen[tc]|transform/iu,
   objets: /objets?\b|lance|projet/iu,
   ecoute: /\bvoix\b|\bpas\b(?=\s+(?:et|manquant))|bruits?\s+de\s+pas|entend|silenci|écoute/iu,
   cachette: /cach/iu,
@@ -2303,7 +2300,7 @@ const REDACTED = /(?<!\p{L})(?:cette|ces) entités?(?!\p{L})/iu
 /** Ce qui parle du sexe de l'entité (« Toujours féminine ») : vrai de plusieurs entités, jamais une mauvaise réponse. */
 const GENDER_TALK = /f[ée]minin|masculin|\bsexe\b|prénom/iu
 /** Les signes qui ne parlent que de vitesse ou de seuil : ils ont déjà leur carte, on préfère un comportement. */
-const SPEED_OR_SANITY = /m\/s|\bvitesse\b|\bseuil\b|\bLdV\b|ligne de vue|chass\p{L}*\s+(?:dès|à)\s*\d/iu
+const SPEED_OR_SANITY = /m\/s|\bvitesse\b|\bseuil\b|ligne de vue|chass\p{L}*\s+(?:dès|à)\s*\d/iu
 
 /** Un signe clé gardé pour la révision : sans preuve, ni liste de preuves. */
 const plainSign = (t: string) => !isEvidenceList(t) && !needsEvidence(t) && !mentionsEvidence(t)
@@ -2849,7 +2846,7 @@ export function questionForCard(card: Card, ctx: CardQuizContext): Question | nu
     id: `q:card:${card.id}`,
     topic: CARD_TOPIC[card.kind],
     prompt: fr(q.prompt),
-    explain: fr(noLeadingMais(spellLdV(q.explain))),
+    explain: fr(noLeadingMais(q.explain)),
     cardId: card.id,
   })
   const finish = (b: { q: Question; form: string } | null) => (b ? { q: done(b.q), form: b.form } : null)

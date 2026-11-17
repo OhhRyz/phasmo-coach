@@ -11,11 +11,11 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : avec 13 s de LdV continue sur toi, il monte jusqu'à 1,65 × sa vitesse de base (environ 2,8 m/s).",
-      "Une fois la LdV rompue, il garde sa vitesse jusqu'à ta dernière position connue, puis la perd très lentement s'il ne te revoit pas."
+      "Accélération standard en ligne de vue : avec 13 s de ligne de vue continue sur toi, il monte jusqu'à 1,65 × sa vitesse de base (environ 2,8 m/s).",
+      "Une fois la ligne de vue rompue, il garde sa vitesse jusqu'à ta dernière position connue, puis la perd très lentement s'il ne te revoit pas."
     ]
   },
   "huntSanity": {
@@ -28,13 +28,13 @@
       "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
     ]
   },
-  "summary": "Entité métamorphe : pendant les chasses, elle change de modèle le temps d'un clignotement, et elle peut « sauter » un bruit de pas après avoir marché dans le sel.",
+  "summary": "Entité métamorphe : pendant les chasses, elle change d'apparence le temps d'un clignotement, et elle peut « sauter » un bruit de pas après avoir marché dans le sel.",
   "keyTells": [
-    "Change de modèle le temps d'un seul clignotement pendant les chasses",
+    "Change d'apparence le temps d'un seul clignotement pendant les chasses",
     "Première transformation au 12e clignotement : environ 8 s de chasse",
     "Transformations dans un ordre fixe, toujours du même sexe, qui continue d'une chasse à l'autre",
     "Peut « sauter » un bruit de pas : un pas manquant après le sel le confirme",
-    "Quand son propre modèle est le suivant, seule sa posture se réinitialise d'un coup au clignotement"
+    "Quand sa propre apparence est la suivante, seule sa posture se réinitialise d'un coup au clignotement"
   ],
   "tells": [
     {
@@ -46,12 +46,12 @@
       "zeroEvidence": false
     },
     {
-      "text": "Change de modèle le temps d'un seul clignotement pendant les chasses, au moins une fois par chasse de durée normale. Les changements tombent sur des clignotements prédéterminés (12e, 27e, 39e, 54e, 62e, 80e, 105e, 120e et 132e) : une chasse plus courte qu'environ 8 s n'en contient donc pas forcément.",
+      "text": "Change d'apparence le temps d'un seul clignotement pendant les chasses, au moins une fois par chasse de durée normale. Les changements tombent sur des clignotements prédéterminés (12e, 27e, 39e, 54e, 62e, 80e, 105e, 120e et 132e) : une chasse plus courte qu'environ 8 s n'en contient donc pas forcément.",
       "zeroEvidence": true,
       "card": 0
     },
     {
-      "text": "Les transformations suivent un ordre fixe qui ne se réinitialise pas entre les chasses. Modèles masculins : Butcher (boucher), Club / Fisherman (pêcheur), Greybeard (barbe grise), Naked (nu), Nerd, Skeleton (squelette), Brute (puis on recommence). Modèles féminins : Enfant, Grand-mère, Patient 07, Femme (puis on recommence). Un modèle masculin ne devient que d'autres modèles masculins, et inversement.",
+      "text": "Les transformations suivent un ordre fixe qui ne se réinitialise pas entre les chasses. Apparences masculines : Butcher (boucher), Club / Fisherman (pêcheur), Greybeard (barbe grise), Naked (nu), Nerd, Skeleton (squelette), Brute (puis on recommence). Apparences féminines : Enfant, Grand-mère, Patient 07, Femme (puis on recommence). Une apparence masculine ne devient que d'autres apparences masculines, et inversement.",
       "zeroEvidence": true,
       "card": 1
     },
@@ -61,7 +61,7 @@
       "card": 2
     },
     {
-      "text": "Quand son propre modèle est le suivant dans l'ordre, la transformation garde le même modèle : ça se voit en général par une posture qui se réinitialise d'un coup.",
+      "text": "Quand sa propre apparence est la suivante dans l'ordre, la transformation garde la même apparence : ça se voit en général par une posture qui se réinitialise d'un coup.",
       "zeroEvidence": true,
       "card": 3
     }
@@ -80,7 +80,7 @@
   ],
   "confirmationTests": [
     {
-      "text": "Trouve un endroit où tu peux faire tourner l'entité en boucle tout en gardant son modèle en vue en permanence. Si, pendant la boucle, tu vois le modèle changer le temps d'un seul clignotement, c'est un Obake.",
+      "text": "Trouve un endroit où tu peux faire tourner l'entité en boucle tout en la gardant en vue en permanence. Si, pendant la boucle, tu vois son apparence changer le temps d'un seul clignotement, c'est un Obake.",
       "definitive": true,
       "card": 0
     },
@@ -95,7 +95,7 @@
   "confusions": [
     {
       "with": "the-mimic",
-      "why": "Le Mimic peut copier la transformation de l'Obake (et, comme il a l'UV, ses empreintes spéciales en l'imitant). Mais il ne donne jamais l'EMF niveau 5 : si tu as l'EMF 5, ce n'est pas le Mimic ; s'il y a Spirit Box ou Températures glaciales, ce n'est pas l'Obake. Bug connu : quand un Mimic imite l'Obake, ses changements de modèle ne sont visibles que par l'hôte."
+      "why": "Le Mimic peut copier la transformation de l'Obake (et, comme il a l'UV, ses empreintes spéciales en l'imitant). Mais il ne donne jamais l'EMF niveau 5 : si tu as l'EMF 5, ce n'est pas le Mimic ; s'il y a Spirit Box ou Températures glaciales, ce n'est pas l'Obake. Bug connu : quand un Mimic imite l'Obake, ses changements d'apparence ne sont visibles que par l'hôte."
     },
     {
       "with": "banshee",
@@ -103,7 +103,7 @@
     },
     {
       "with": "hantu",
-      "why": "Hantu : Ultraviolet + Orbes, mais Températures glaciales au lieu de l'EMF 5. Pas d'accélération en LdV, plus rapide dans les pièces froides et souffle visible en chasse quand le disjoncteur est coupé."
+      "why": "Hantu : Ultraviolet + Orbes, mais Températures glaciales au lieu de l'EMF 5. Pas d'accélération en ligne de vue, plus rapide dans les pièces froides et souffle visible en chasse quand le disjoncteur est coupé."
     },
     {
       "with": "kormos",
@@ -135,7 +135,7 @@
     },
     {
       "with": "oni",
-      "why": "L'Oni est lui aussi reconnaissable à son clignotement : il est plus visible que les autres pendant les chasses, mais il ne change jamais de modèle."
+      "why": "L'Oni est lui aussi reconnaissable à son clignotement : il est plus visible que les autres pendant les chasses, mais il ne change jamais d'apparence."
     }
   ],
   "observations": [
@@ -200,7 +200,7 @@
         "Le Deogen"
       ],
       "answer": 2,
-      "explain": "Changer de modèle le temps d'un clignotement est propre à l'Obake (un Mimic qui l'imite peut aussi le faire). Le Fantôme est au contraire presque invisible en chasse ; l'Oni et le Deogen restent plus visibles que la normale, sans changer de modèle."
+      "explain": "Changer d'apparence le temps d'un clignotement est propre à l'Obake (un Mimic qui l'imite peut aussi le faire). Le Fantôme est au contraire presque invisible en chasse ; l'Oni et le Deogen restent plus visibles que la normale, sans changer d'apparence."
     },
     {
       "q": "Pendant une chasse, combien de temps faut-il environ pour être sûr que l'Obake se soit transformé au moins une fois ?",
@@ -228,12 +228,12 @@
       "q": "Pendant une chasse, au moment d'un clignotement, la posture de l'entité se réinitialise d'un coup sans que son apparence change. Que cela peut-il trahir ?",
       "choices": [
         "Un Fantôme qui devient invisible",
-        "Un Obake qui prend son propre modèle",
+        "Un Obake qui se transforme en lui-même",
         "Un Oni qui reste visible plus longtemps",
         "Un Deogen qui ralentit près de toi"
       ],
       "answer": 1,
-      "explain": "Les transformations de l'Obake suivent un ordre fixe. Quand son propre modèle est le suivant dans l'ordre, il se transforme en lui-même : ça se voit en général par une posture qui se réinitialise d'un coup."
+      "explain": "Les transformations de l'Obake suivent un ordre fixe. Quand sa propre apparence est la suivante dans l'ordre, il se transforme en lui-même : ça se voit en général par une posture qui se réinitialise d'un coup."
     },
     {
       "q": "Lors de la dernière chasse, la dernière transformation de l'Obake était le Patient 07. En quoi se transformera-t-il en premier à la chasse suivante ?",
@@ -260,7 +260,7 @@
   ],
   "changes": [
     "La transformation de l'Obake peut être filmée à la caméra vidéo (vidéo « Ghost Shapeshift »).",
-    "Précision : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses."
+    "Précision : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre d'apparences fixe qui ne se réinitialise pas entre les chasses."
   ],
   "sources": [
     "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
@@ -278,7 +278,7 @@
   "uncertain": [
     "Fréquence des empreintes spéciales : environ 1 sur 6, selon une seule source.",
     "La transformation compte-t-elle pour l'objectif « vidéo de l'entité » ? Annoncé pour 2026, version non confirmée.",
-    "Se transforme-t-il aussi pendant les événements saisonniers qui remplacent son modèle ? Non vérifié.",
+    "Se transforme-t-il aussi pendant les événements saisonniers qui remplacent son apparence ? Non vérifié.",
     "Valeurs « au lieu d'une » (interrupteur) et « au lieu de 4 » (clavier, porte de cellule) : non confirmées."
   ]
 }

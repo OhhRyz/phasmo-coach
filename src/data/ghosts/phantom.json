@@ -15,10 +15,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "Sa vitesse est normale : ce qui le trahit en chasse, c'est sa visibilité (longues phases d'invisibilité entre deux clignotements)."
     ]
   },
@@ -210,12 +210,12 @@
       "q": "Comment reconnaître un Fantôme pendant une chasse ?",
       "choices": [
         "Il clignote plus vite que les autres entités",
-        "Il change de modèle le temps d'un clignotement",
+        "Il change d'apparence le temps d'un clignotement",
         "Il reste invisible plus longtemps entre deux clignotements",
         "Il souffle une buée glacée visible pendant toute la chasse"
       ],
       "answer": 2,
-      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements : il est presque invisible en chasse, et ne clignote donc pas plus vite que les autres. Plus visible : Oni ou Deogen. Changement de modèle : Obake. Souffle glacé : Hantu, disjoncteur coupé."
+      "explain": "Le Fantôme reste invisible plus longtemps entre deux clignotements : il est presque invisible en chasse, et ne clignote donc pas plus vite que les autres. Plus visible : Oni ou Deogen. Changement d'apparence : Obake. Souffle glacé : Hantu, disjoncteur coupé."
     },
     {
       "q": "Ton lecteur EMF affiche un niveau 2 près de toi sans aucune interaction autour. Fantôme ou Spectre : qu'est-ce qui les distingue ?",

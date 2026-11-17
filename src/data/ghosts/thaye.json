@@ -15,12 +15,12 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "2,75 m/s jeune → 1,0 m/s vieux · n'accélère pas en LdV",
+    "summary": "2,75 m/s jeune → 1,0 m/s vieux · n'accélère pas en ligne de vue",
     "details": [
-      "Ne prend jamais de vitesse en LdV.",
-      "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en LdV ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
+      "Ne prend jamais de vitesse en ligne de vue.",
+      "Au plus jeune âge, il se déplace toujours à 2,75 m/s, même en ligne de vue ; chaque vieillissement lui retire 0,175 m/s, jusqu'à 1,0 m/s après 10 vieillissements.",
       "Repères par vieillissement : +1 → 2,575 · +2 → 2,4 · +3 → 2,225 · +4 → 2,05 · +5 → 1,875 · +6 → 1,7 · +7 → 1,525 · +8 → 1,35 · +9 → 1,175 · +10 → 1,0 m/s.",
-      "Il n'accélère jamais en LdV et ralentit d'une chasse à l'autre s'il a été exposé aux joueurs.",
+      "Il n'accélère jamais en ligne de vue et ralentit d'une chasse à l'autre s'il a été exposé aux joueurs.",
       "Compte environ 1 à 2 min passées dans la même pièce que l'entité par vieillissement, soit environ 10 à 20 min pour l'âge maximal."
     ]
   },
@@ -37,7 +37,7 @@
   },
   "summary": "Entité qui vieillit au contact des joueurs : très active, précoce et rapide au début, elle s'affaiblit et ralentit au fil de la partie.",
   "keyTells": [
-    "N'accélère jamais en LdV ; plus lent à chaque chasse s'il a été exposé aux joueurs (2,75 → 1,0 m/s)",
+    "N'accélère jamais en ligne de vue ; plus lent à chaque chasse s'il a été exposé aux joueurs (2,75 → 1,0 m/s)",
     "Au Ouija, l'âge annoncé augmente au fil de la partie (90 ans ou plus : signe certain)",
     "Chasse dès 75 % quand il est jeune, de plus en plus tard en vieillissant",
     "Très actif au début, de plus en plus calme quand tu restes près de lui"
@@ -77,31 +77,31 @@
       "card": 1
     },
     {
-      "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en LdV, ça peut être un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",
+      "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en ligne de vue, ça peut être un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",
       "definitive": false
     },
     {
-      "text": "Pendant une chasse, si l'entité n'accélère pas en LdV, ça peut être un Thayé.",
+      "text": "Pendant une chasse, si l'entité n'accélère pas en ligne de vue, ça peut être un Thayé.",
       "definitive": false
     }
   ],
   "eliminationTests": [
     {
-      "text": "Pendant une chasse, si l'entité accélère en LdV, ce n'est pas un Thayé."
+      "text": "Pendant une chasse, si l'entité accélère en ligne de vue, ce n'est pas un Thayé."
     }
   ],
   "confusions": [
     {
       "with": "moroi",
-      "why": "Le Moroi est lui aussi très rapide, mais il accélère en LdV (jusqu'à 3,71 m/s) et devient plus rapide quand la santé baisse. Le Thayé n'accélère jamais en LdV et ralentit à chaque chasse. Sans LdV, un Moroi ne dépasse pas 2,25 m/s, moins qu'un Thayé jeune."
+      "why": "Le Moroi est lui aussi très rapide, mais il accélère en ligne de vue (jusqu'à 3,71 m/s) et devient plus rapide quand la santé baisse. Le Thayé n'accélère jamais en ligne de vue et ralentit à chaque chasse. Sans ligne de vue, un Moroi ne dépasse pas 2,25 m/s, moins qu'un Thayé jeune."
     },
     {
       "with": "deildegast",
-      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans LdV et chasse à 50 %, mais il ralentit selon les objets que l'équipe utilise et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ralentit d'une chasse à l'autre s'il a été exposé aux joueurs."
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu des Orbes. Lui aussi est très rapide en début de partie sans accélération en ligne de vue et chasse à 50 %, mais il ralentit selon les objets que l'équipe utilise et redevient rapide (3,0 m/s) après chaque chasse ; le Thayé, lui, ralentit d'une chasse à l'autre s'il a été exposé aux joueurs."
     },
     {
       "with": "deogen",
-      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu des Orbes. Pas de LdV non plus, mais sa vitesse varie dans la chasse (3,0 m/s de loin, 0,4 m/s près de toi) ; il chasse à 40 %."
+      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu des Orbes. Pas d'accélération en ligne de vue non plus, mais sa vitesse varie dans la chasse (3,0 m/s de loin, 0,4 m/s près de toi) ; il chasse à 40 %."
     },
     {
       "with": "obambo",
@@ -109,19 +109,19 @@
     },
     {
       "with": "aswang",
-      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu des Orbes ; il accélère très vite en LdV (1,65 × en 8,7 s au lieu de 13 s)."
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu des Orbes ; il accélère très vite en ligne de vue (1,65 × en 8,7 s au lieu de 13 s)."
     },
     {
       "with": "demon",
-      "why": "Le Démon chasse lui aussi très tôt (70 %), mais avec une vitesse standard et l'accélération en LdV ; ses preuves (UV, Écriture, Glaciales) ne partagent que l'Écriture avec le Thayé."
+      "why": "Le Démon chasse lui aussi très tôt (70 %), mais avec une vitesse standard et l'accélération en ligne de vue ; ses preuves (UV, Écriture, Glaciales) ne partagent que l'Écriture avec le Thayé."
     },
     {
       "with": "mare",
-      "why": "Cauchemar : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % quand la lumière de la pièce où il se trouve est éteinte, avec une vitesse standard et l'accélération en LdV."
+      "why": "Cauchemar : Orbes + Écriture, mais Spirit Box au lieu des D.O.T.S ; chasse à 60 % quand la lumière de la pièce où il se trouve est éteinte, avec une vitesse standard et l'accélération en ligne de vue."
     },
     {
       "with": "revenant",
-      "why": "Revenant : Orbes + Écriture, mais Températures glaciales au lieu des D.O.T.S ; pas de LdV non plus, mais il passe de 1,0 à 3,0 m/s dès qu'il te détecte, au sein d'une même chasse."
+      "why": "Revenant : Orbes + Écriture, mais Températures glaciales au lieu des D.O.T.S ; pas d'accélération en ligne de vue non plus, mais il passe de 1,0 à 3,0 m/s dès qu'il te détecte, au sein d'une même chasse."
     },
     {
       "with": "banshee",
@@ -141,7 +141,7 @@
     },
     {
       "with": "hantu",
-      "why": "Le Hantu n'accélère pas non plus en LdV, mais sa vitesse dépend de la température de la pièce (1,4 à 2,7 m/s) et peut changer en pleine chasse ; celle du Thayé ne dépend que de son âge. Une seule preuve en commun (orbes)."
+      "why": "Le Hantu n'accélère pas non plus en ligne de vue, mais sa vitesse dépend de la température de la pièce (1,4 à 2,7 m/s) et peut changer en pleine chasse ; celle du Thayé ne dépend que de son âge. Une seule preuve en commun (orbes)."
     }
   ],
   "observations": [

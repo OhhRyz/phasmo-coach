@@ -15,9 +15,9 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "3,0 m/s loin → 0,4 m/s près · n'accélère pas en LdV",
+    "summary": "3,0 m/s loin → 0,4 m/s près · n'accélère pas en ligne de vue",
     "details": [
-      "Pas d'accélération en LdV : il sait en permanence où se trouve sa cible.",
+      "Pas d'accélération en ligne de vue : il sait en permanence où se trouve sa cible.",
       "Il fonce à 3,0 m/s tant qu'il est loin du joueur ciblé, puis ralentit jusqu'à 0,4 m/s quand il arrive tout près de lui.",
       "Conséquence : impossible de te cacher, mais une fois sur toi il est très lent."
     ]
@@ -36,7 +36,7 @@
   "keyTells": [
     "Fonce à 3,0 m/s puis ralentit à 0,4 m/s en arrivant sur toi",
     "Te trouve toujours en chasse : se cacher ne sert à rien",
-    "Aucune accélération en LdV",
+    "Aucune accélération en ligne de vue",
     "Seuil de chasse 40 % · plus visible que la normale pendant les chasses"
   ],
   "tells": [
@@ -57,7 +57,7 @@
   ],
   "behaviors": [
     {
-      "text": "A toujours une LdV sur le joueur pendant les chasses : tu ne peux pas te cacher d'un Deogen.",
+      "text": "A toujours une ligne de vue sur le joueur pendant les chasses : tu ne peux pas te cacher d'un Deogen.",
       "zeroEvidence": true
     }
   ],
@@ -87,19 +87,19 @@
     },
     {
       "with": "deildegast",
-      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu de la Spirit Box. Même plage de vitesse (0,4 à 3,0 m/s) sans LdV, mais sa vitesse est fixe pendant toute la chasse (réglée par les objets utilisés avant) : il ne ralentit pas en arrivant sur toi. Il chasse à 50 %."
+      "why": "Deildegast : Écriture + D.O.T.S, mais EMF 5 au lieu de la Spirit Box. Même plage de vitesse (0,4 à 3,0 m/s) sans accélération en ligne de vue, mais sa vitesse est fixe pendant toute la chasse (réglée par les objets utilisés avant) : il ne ralentit pas en arrivant sur toi. Il chasse à 50 %."
     },
     {
       "with": "thaye",
-      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de la Spirit Box. Lui non plus n'accélère pas en LdV et peut être très rapide (2,75 m/s jeune), mais sa vitesse est constante pendant la chasse et baisse d'une chasse à l'autre ; il chasse dès 75 % quand il est jeune."
+      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de la Spirit Box. Lui non plus n'accélère pas en ligne de vue et peut être très rapide (2,75 m/s jeune), mais sa vitesse est constante pendant la chasse et baisse d'une chasse à l'autre ; il chasse dès 75 % quand il est jeune."
     },
     {
       "with": "moroi",
-      "why": "Moroi : Spirit Box + Écriture (Spirit Box garantie aussi), mais Températures glaciales au lieu des D.O.T.S. Il accélère en LdV et devient plus rapide quand la santé baisse ; il chasse à 50 %."
+      "why": "Moroi : Spirit Box + Écriture (Spirit Box obligatoire aussi), mais Températures glaciales au lieu des D.O.T.S. Il accélère en ligne de vue et devient plus rapide quand la santé baisse ; il chasse à 50 %."
     },
     {
       "with": "spirit",
-      "why": "Esprit : Spirit Box + Écriture, mais EMF 5 au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en LdV, et il attend 180 s après un encens avant de pouvoir rechasser."
+      "why": "Esprit : Spirit Box + Écriture, mais EMF 5 au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en ligne de vue, et il attend 180 s après un encens avant de pouvoir rechasser."
     },
     {
       "with": "poltergeist",
@@ -127,11 +127,11 @@
     },
     {
       "with": "aswang",
-      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de la Spirit Box ; base de 1,53 m/s avec une accélération en LdV très rapide."
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de la Spirit Box ; base de 1,53 m/s avec une accélération très rapide en ligne de vue."
     },
     {
       "with": "oni",
-      "why": "Autre entité plus visible que la normale pendant les chasses. L'Oni a toutefois une vitesse standard avec accélération en LdV, et ses preuves (EMF 5, Températures glaciales, D.O.T.S) ne partagent que les D.O.T.S avec le Deogen."
+      "why": "Autre entité plus visible que la normale pendant les chasses. L'Oni a toutefois une vitesse standard avec accélération en ligne de vue, et ses preuves (EMF 5, Températures glaciales, D.O.T.S) ne partagent que les D.O.T.S avec le Deogen."
     },
     {
       "with": "dayan",
@@ -198,7 +198,7 @@
         "Le Revenant"
       ],
       "answer": 2,
-      "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en LdV ; le Fantôme reste au contraire invisible plus longtemps entre deux clignotements, et le Revenant accélère quand il te détecte au lieu de ralentir."
+      "explain": "Le Deogen est plus visible que la normale en chasse et ralentit à 0,4 m/s une fois sur toi. L'Oni est lui aussi plus visible, mais garde une vitesse standard avec accélération en ligne de vue ; le Fantôme reste au contraire invisible plus longtemps entre deux clignotements, et le Revenant accélère quand il te détecte au lieu de ralentir."
     },
     {
       "q": "Pendant la chasse, l'entité fonce sur toi de loin, puis avance presque au ralenti une fois arrivée sur toi. Peut-il s'agir d'un Deogen ?",

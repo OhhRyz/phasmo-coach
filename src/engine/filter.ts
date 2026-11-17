@@ -25,6 +25,11 @@ export const EMPTY_FILTER: FilterState = {
 /** Le Mimic copie vitesse, seuil et comportement d'autres entités : il passe tous les filtres comportementaux. */
 const WILDCARD_BEHAVIOR = new Set(['the-mimic'])
 
+/** L'entité copie la vitesse, le seuil et le comportement d'une autre (Mimic) : ses propres valeurs ne la classent pas. */
+export function copiesBehavior(g: Ghost): boolean {
+  return WILDCARD_BEHAVIOR.has(g.id)
+}
+
 export function marked(state: FilterState, mark: EvidenceMark): EvidenceId[] {
   return (Object.entries(state.evidence) as [EvidenceId, EvidenceMark][])
     .filter(([, m]) => m === mark)
@@ -48,7 +53,7 @@ export function matchesEvidence(g: Ghost, state: FilterState): boolean {
   const remaining = g.evidence.filter((e) => !excluded.has(e))
   if (remaining.length < n) return false
 
-  // Preuve forcée : toujours parmi les preuves visibles quand le nombre de preuves est réduit.
+  // Preuve obligatoire : toujours parmi les preuves visibles quand le nombre de preuves est réduit.
   if (n > 0 && n < 3 && g.forcedEvidence) {
     if (excluded.has(g.forcedEvidence)) return false
     if (realFound.length === n && !realFound.includes(g.forcedEvidence)) return false

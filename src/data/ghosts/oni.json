@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "Sa vitesse est normale, mais l'entité clignote plus fréquemment pendant les chasses, ce qui la rend plus visible."
     ]
   },
@@ -58,7 +58,7 @@
       "zeroEvidence": true
     },
     {
-      "text": "Plus susceptible d'apparaître avec son modèle complet lors des événements.",
+      "text": "Plus susceptible de se montrer sous son apparence complète lors des événements.",
       "zeroEvidence": true
     }
   ],
@@ -123,11 +123,11 @@
     },
     {
       "with": "aswang",
-      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV."
+      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en ligne de vue."
     },
     {
       "with": "obake",
-      "why": "L'Obake se reconnaît lui aussi à son clignotement en chasse : il change de modèle le temps d'un clignotement, alors que l'Oni est simplement plus visible. Une seule preuve en commun (EMF 5)."
+      "why": "L'Obake se reconnaît lui aussi à son clignotement en chasse : il change d'apparence le temps d'un clignotement, alors que l'Oni est simplement plus visible. Une seule preuve en commun (EMF 5)."
     }
   ],
   "observations": [
@@ -147,7 +147,7 @@
       "strength": "strong"
     },
     {
-      "text": "Lors des événements, l'entité apparaît avec son modèle complet plus souvent que ne le ferait une autre entité.",
+      "text": "Lors des événements, l'entité se montre sous son apparence complète plus souvent que ne le ferait une autre entité.",
       "kind": "event",
       "strength": "hint"
     },
@@ -194,7 +194,7 @@
         "L'événement de chant"
       ],
       "answer": 0,
-      "explain": "L'Oni ne fait pas l'événement « Forme de Brume » (la bulle d'air). Il apparaît au contraire plus volontiers avec son modèle complet, et ses événements coûtent 20 % de santé mentale au lieu de 10 %."
+      "explain": "L'Oni ne fait pas l'événement « Forme de Brume » (la bulle d'air). Il se montre au contraire plus volontiers sous son apparence complète, et ses événements coûtent 20 % de santé mentale au lieu de 10 %."
     },
     {
       "q": "Pendant un événement, tu entends un « sifflement » sans rien voir. Peux-tu exclure l'Oni ?",
@@ -227,7 +227,7 @@
         "L'Oni"
       ],
       "answer": 3,
-      "explain": "L'Oni et le Deogen sont tous deux plus visibles en chasse, mais le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de toi ; l'Oni garde une vitesse normale. Le Fantôme est presque invisible, et l'Obake change de modèle le temps d'un clignotement."
+      "explain": "L'Oni et le Deogen sont tous deux plus visibles en chasse, mais le Deogen fonce à 3,0 m/s puis ralentit à 0,4 m/s près de toi ; l'Oni garde une vitesse normale. Le Fantôme est presque invisible, et l'Obake change d'apparence le temps d'un clignotement."
     }
   ],
   "changes": [],

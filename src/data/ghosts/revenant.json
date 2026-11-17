@@ -15,7 +15,7 @@
     "alt": null,
     "isRange": false,
     "los": false,
-    "summary": "1,0 m/s · 3,0 m/s en te détectant · n'accélère pas en LdV",
+    "summary": "1,0 m/s · 3,0 m/s en te détectant · n'accélère pas en ligne de vue",
     "details": [
       "Vitesse de base en chasse : 1,0 m/s tant qu'il n'a détecté aucun joueur.",
       "Dès qu'il détecte un joueur (par la vue, la voix ou l'utilisation d'un appareil électronique), il accélère immédiatement à 3,0 m/s.",
@@ -37,7 +37,7 @@
   "summary": "Une entité qui avance à 1,0 m/s tant qu'elle ne te détecte pas, puis fonce à 3,0 m/s dès qu'elle te repère.",
   "keyTells": [
     "En chasse : 1,0 m/s sans cible, 3,0 m/s dès qu'il te détecte",
-    "Accélération instantanée, jamais progressive (pas de LdV standard)",
+    "Accélération instantanée, jamais progressive (pas d'accélération standard en ligne de vue)",
     "Ralentit peu à peu une fois arrivé à ta dernière position connue"
   ],
   "tells": [
@@ -64,19 +64,19 @@
   "confusions": [
     {
       "with": "mare",
-      "why": "Mêmes orbes et écriture. Le Cauchemar chasse à 1,7 m/s avec l'accélération standard en LdV et son seuil dépend des lumières (60 % lumière éteinte, 40 % allumée). Le Revenant, lui, traîne à 1,0 m/s puis bondit à 3,0 m/s."
+      "why": "Mêmes orbes et écriture. Le Cauchemar chasse à 1,7 m/s avec l'accélération standard en ligne de vue et son seuil dépend des lumières (60 % lumière éteinte, 40 % allumée). Le Revenant, lui, traîne à 1,0 m/s puis bondit à 3,0 m/s."
     },
     {
       "with": "thaye",
-      "why": "Mêmes orbes et écriture, et pas de LdV standard non plus. Mais la vitesse du Thayé dépend de son âge (2,75 m/s jeune, 1,0 m/s vieux) : il ne bondit pas à 3,0 m/s quand il te détecte."
+      "why": "Mêmes orbes et écriture, et pas d'accélération standard en ligne de vue non plus. Mais la vitesse du Thayé dépend de son âge (2,75 m/s jeune, 1,0 m/s vieux) : il ne bondit pas à 3,0 m/s quand il te détecte."
     },
     {
       "with": "hantu",
-      "why": "Mêmes orbes et températures glaciales, sans LdV standard. La vitesse du Hantu dépend de la température (plus rapide au froid) et il a un souffle glacé visible en chasse quand le disjoncteur est coupé."
+      "why": "Mêmes orbes et températures glaciales, sans accélération standard en ligne de vue. La vitesse du Hantu dépend de la température (plus rapide au froid) et il a un souffle glacé visible en chasse quand le disjoncteur est coupé."
     },
     {
       "with": "yurei",
-      "why": "Mêmes orbes et températures glaciales. Le Yurei chasse à 1,7 m/s avec l'accélération standard en LdV ; il peut fermer une porte en faisant chuter la santé mentale de 15 %."
+      "why": "Mêmes orbes et températures glaciales. Le Yurei chasse à 1,7 m/s avec l'accélération standard en ligne de vue ; il peut fermer une porte en faisant chuter la santé mentale de 15 %."
     },
     {
       "with": "onryo",
@@ -88,23 +88,23 @@
     },
     {
       "with": "shade",
-      "why": "Mêmes écriture et températures glaciales. L'Ombre chasse à 1,7 m/s avec LdV et seulement sous 35 % de santé mentale moyenne."
+      "why": "Mêmes écriture et températures glaciales. L'Ombre chasse à 1,7 m/s avec accélération en ligne de vue et seulement sous 35 % de santé mentale moyenne."
     },
     {
       "with": "demon",
-      "why": "Mêmes écriture et températures glaciales. Le Démon chasse à 1,7 m/s avec LdV, très tôt (70 %), et peut rechasser 60 s après l'encens."
+      "why": "Mêmes écriture et températures glaciales. Le Démon chasse à 1,7 m/s avec accélération en ligne de vue, très tôt (70 %), et peut rechasser 60 s après l'encens."
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroi augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en LdV) et monte progressivement en LdV ; il ne descend jamais à 1,0 m/s."
+      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroi augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en ligne de vue) et monte progressivement en ligne de vue ; il ne descend jamais à 1,0 m/s."
     },
     {
       "with": "aswang",
-      "why": "Mêmes écriture et températures glaciales. L'Aswang a une base de 1,53 m/s et accélère progressivement en LdV (en 8,667 s au lieu de 13 s), sans saut instantané."
+      "why": "Mêmes écriture et températures glaciales. L'Aswang a une base de 1,53 m/s et accélère progressivement en ligne de vue (en 8,667 s au lieu de 13 s), sans saut instantané."
     },
     {
       "with": "jinn",
-      "why": "Le Djinn accélère aussi d'un coup, mais part de 1,7 m/s et ne saute qu'à 2,5 m/s (disjoncteur allumé, en LdV, à plus de 3 m du joueur)."
+      "why": "Le Djinn accélère aussi d'un coup, mais part de 1,7 m/s et ne saute qu'à 2,5 m/s (disjoncteur allumé, en ligne de vue, à plus de 3 m du joueur)."
     },
     {
       "with": "raiju",
@@ -116,7 +116,7 @@
     },
     {
       "with": "dayan",
-      "why": "Seulement les orbes en commun, mais la Dayan change aussi de vitesse d'un coup près des joueurs : à moins de 10 m, 1,2 m/s si tu restes immobile et 2,25 m/s si tu bouges ; plus loin, 1,7 m/s avec LdV standard. Elle ne descend pas à 1,0 m/s et ne monte pas à 3,0 m/s."
+      "why": "Seulement les orbes en commun, mais la Dayan change aussi de vitesse d'un coup près des joueurs : à moins de 10 m, 1,2 m/s si tu restes immobile et 2,25 m/s si tu bouges ; plus loin, 1,7 m/s avec l'accélération standard en ligne de vue. Elle ne descend pas à 1,0 m/s et ne monte pas à 3,0 m/s."
     },
     {
       "with": "deogen",
@@ -202,7 +202,7 @@
         "Vers la fin de la chasse, quoi qu'il arrive"
       ],
       "answer": 1,
-      "explain": "Il garde ses 3,0 m/s jusqu'à ne plus te détecter ET avoir atteint ta dernière position connue, puis ralentit progressivement jusqu'à 1,0 m/s. Briser la LdV ne suffit donc pas à le ralentir tout de suite."
+      "explain": "Il garde ses 3,0 m/s jusqu'à ne plus te détecter ET avoir atteint ta dernière position connue, puis ralentit progressivement jusqu'à 1,0 m/s. Briser la ligne de vue ne suffit donc pas à le ralentir tout de suite."
     },
     {
       "q": "Pendant toute une chasse, l'entité se déplace à une vitesse constante d'environ 1,7 m/s sans t'avoir détecté. Qu'en conclus-tu ?",
@@ -224,7 +224,7 @@
         "Revenant, Hantu, Deogen, Thayé"
       ],
       "answer": 3,
-      "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en LdV. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une LdV particulière, mais en ont une."
+      "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en ligne de vue. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une accélération particulière en ligne de vue, mais en ont une."
     },
     {
       "q": "Pendant toute une chasse, l'entité avance à environ 1,0 m/s sans t'avoir détecté (vitesse des entités à 100 %). Qu'en conclus-tu ?",

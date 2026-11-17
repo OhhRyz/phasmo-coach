@@ -11,7 +11,7 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,45 m/s calme · 1,96 m/s agressif · accélère en LdV",
+    "summary": "1,45 m/s calme · 1,96 m/s agressif · accélère en ligne de vue",
     "details": [
       "État calme : 1,45 m/s en chasse, plus lent qu'une entité standard.",
       "État agressif : 1,96 m/s en chasse, plus rapide qu'une entité standard.",
@@ -110,7 +110,7 @@
     },
     {
       "with": "aswang",
-      "why": "Mêmes écriture et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s), sans saut brutal de vitesse."
+      "why": "Mêmes écriture et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en ligne de vue (8,667 s au lieu de 13 s), sans saut brutal de vitesse."
     },
     {
       "with": "deildegast",
@@ -248,7 +248,7 @@
   "uncertain": [
     "Vitesses exactes : 1,445 / 1,955 m/s pour les sources les plus précises, arrondies à 1,45 / 1,96 ailleurs.",
     "Activité hors chasse : plus calme ou plus active en état agressif ? Les sources divergent.",
-    "Vitesse maximale en LdV : non publiée.",
+    "Vitesse maximale en ligne de vue : non publiée.",
     "Précision du minuteur (quelques secondes autour des bascules) et cas des cartes à plusieurs portes d'entrée : non vérifiés.",
     "Les deux tests de vitesse (saut en pleine chasse, alternance d'une chasse à l'autre) sont les plus sûrs ; le test du chronomètre vient de sources secondaires."
   ]

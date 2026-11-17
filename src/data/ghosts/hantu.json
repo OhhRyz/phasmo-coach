@@ -15,7 +15,7 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "1,4 à 2,7 m/s selon le froid · n'accélère pas en LdV",
+    "summary": "1,4 à 2,7 m/s selon le froid · n'accélère pas en ligne de vue",
     "details": [
       "Pendant une chasse, sa vitesse dépend de la température de la pièce où il se trouve : plus la pièce est froide, plus il est rapide.",
       "Paliers : 1,4 m/s au-dessus de 15 °C, 1,75 m/s entre 12 et 15 °C, 2,1 m/s entre 9 et 12 °C, 2,3 m/s entre 6 et 9 °C, 2,4 m/s entre 3 et 6 °C, 2,5 m/s entre 0 et 3 °C et 2,7 m/s sous 0 °C.",
@@ -35,7 +35,7 @@
   "summary": "Une entité du froid : plus la pièce est froide, plus elle est rapide en chasse, et sa buée glacée se voit pendant les chasses quand le disjoncteur est éteint ou cassé.",
   "keyTells": [
     "Buée glacée visible en chasse quand le disjoncteur est éteint ou cassé",
-    "1,4 à 2,7 m/s selon la température de la pièce, aucune accélération en LdV",
+    "1,4 à 2,7 m/s selon la température de la pièce, aucune accélération en ligne de vue",
     "Ne peut pas rallumer le disjoncteur et le coupe plus souvent",
     "En pleine chasse, sa vitesse change d'une pièce à l'autre selon leur température"
   ],
@@ -88,10 +88,10 @@
       "text": "Si l'entité rallume le disjoncteur, ce n'est pas un Hantu."
     },
     {
-      "text": "Si l'entité accélère en LdV, ce n'est pas un Hantu."
+      "text": "Si l'entité accélère en ligne de vue, ce n'est pas un Hantu."
     },
     {
-      "text": "Dans une difficulté qui donne au moins 1 preuve (Cauchemar, Démence…), les températures glaciales sont garanties : si tu les as exclues, ce n'est pas un Hantu."
+      "text": "Dans une difficulté qui donne au moins 1 preuve (Cauchemar, Démence…), les températures glaciales sont obligatoires : si tu les as exclues, ce n'est pas un Hantu."
     }
   ],
   "confusions": [
@@ -101,19 +101,19 @@
     },
     {
       "with": "obake",
-      "why": "Même UV + orbes, mais l'Obake a l'EMF 5 au lieu des glaciales ; il peut laisser des empreintes à 6 doigts, change de modèle le temps d'un clignotement en chasse et accélère en LdV."
+      "why": "Même UV + orbes, mais l'Obake a l'EMF 5 au lieu des glaciales ; il peut laisser des empreintes à 6 doigts, change d'apparence le temps d'un clignotement en chasse et accélère en ligne de vue."
     },
     {
       "with": "banshee",
-      "why": "Même UV + orbes, mais la Banshee a le D.O.T.S ; elle ne poursuit que sa cible, peut pousser un cri unique au micro parabolique et accélère en LdV."
+      "why": "Même UV + orbes, mais la Banshee a le D.O.T.S ; elle ne poursuit que sa cible, peut pousser un cri unique au micro parabolique et accélère en ligne de vue."
     },
     {
       "with": "jinn",
-      "why": "Même UV + glaciales, mais le Djinn a l'EMF 5. Il ne peut pas couper directement le disjoncteur et, disjoncteur allumé, passe à 2,5 m/s quand il te voit à plus de 3 m. Le Hantu, lui, coupe souvent le disjoncteur et n'accélère jamais en LdV."
+      "why": "Même UV + glaciales, mais le Djinn a l'EMF 5. Il ne peut pas couper directement le disjoncteur et, disjoncteur allumé, passe à 2,5 m/s quand il te voit à plus de 3 m. Le Hantu, lui, coupe souvent le disjoncteur et n'accélère jamais en ligne de vue."
     },
     {
       "with": "demon",
-      "why": "Même UV + glaciales, mais le Démon a l'écriture ; il peut chasser dès 70 %, rechasser 60 s après l'encens et accélère en LdV."
+      "why": "Même UV + glaciales, mais le Démon a l'écriture ; il peut chasser dès 70 %, rechasser 60 s après l'encens et accélère en ligne de vue."
     },
     {
       "with": "revenant",
@@ -121,11 +121,11 @@
     },
     {
       "with": "yurei",
-      "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S ; il peut claquer une porte en faisant perdre 15 % de santé mentale et accélère en LdV."
+      "why": "Mêmes orbes + glaciales, mais le Yurei a le D.O.T.S ; il peut claquer une porte en faisant perdre 15 % de santé mentale et accélère en ligne de vue."
     },
     {
       "with": "onryo",
-      "why": "Mêmes orbes + glaciales, mais l'Onryo a la Spirit Box ; il chasse dès 60 %, souffle les flammes (qui agissent comme un crucifix) et accélère en LdV."
+      "why": "Mêmes orbes + glaciales, mais l'Onryo a la Spirit Box ; il chasse dès 60 %, souffle les flammes (qui agissent comme un crucifix) et accélère en ligne de vue."
     },
     {
       "with": "kormos",
@@ -133,7 +133,7 @@
     },
     {
       "with": "thaye",
-      "why": "Le Thayé n'accélère pas non plus en LdV, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes."
+      "why": "Le Thayé n'accélère pas non plus en ligne de vue, mais sa vitesse baisse d'une chasse à l'autre en vieillissant (2,75 puis jusqu'à 1,0 m/s), sans lien avec la température. Il ne partage que les orbes."
     },
     {
       "with": "mare",

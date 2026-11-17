@@ -26,7 +26,7 @@ import type { EvidenceId, Ghost, ObservationStrength } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import { de, le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, possibleEvidence, type EvidenceMark, type FilterState } from '../engine/filter'
-import { NBSP, NNBSP, fr, num, safeDate, spellLdV } from '../engine/format'
+import { NBSP, NNBSP, fr, num, safeDate } from '../engine/format'
 import { coachNameOf, coachNotes } from '../engine/notes'
 import { WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { createRng, weightedPick } from '../engine/random'
@@ -433,7 +433,7 @@ export function Scenario() {
                     <path d="M13 3 C 5 6, 9 50, 3 60 C 9 70, 5 114, 13 117" pathLength={1} strokeWidth={1.6} />
                   </svg>
                   <span>
-                    En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves garanties (Hantu,
+                    En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves obligatoires (Hantu,
                     Goryo…) restent visibles dans ces deux modes. En 0 preuve, seuls les orbes du Mimic apparaissent.
                   </span>
                 </p>
@@ -1261,7 +1261,7 @@ function Report({
           )}
         </span>
       </div>
-      <p className="sc-report-text">{spellLdV(clue.text)}</p>
+      <p className="sc-report-text">{clue.text}</p>
       {ev && (
         <p className={`sc-ev${found ? ' is-found' : ' is-missing'}`} data-clue={clue.id}>
           <JournalBox state={found ? 'yes' : 'no'} color={ev.color} seed={`sc-${clue.id}-${clue.evidence}`} crossOut delay={isNew ? 0.25 : 0} />

@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue."
     ]
   },
   "huntSanity": {
@@ -95,11 +95,11 @@
     },
     {
       "with": "hantu",
-      "why": "Mêmes UV et températures glaciales. Le Hantu n'a pas de LdV standard, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé."
+      "why": "Mêmes UV et températures glaciales. Le Hantu n'a pas l'accélération standard en ligne de vue, va plus vite dans les pièces froides et a un souffle glacé visible en chasse quand le disjoncteur est coupé."
     },
     {
       "with": "jinn",
-      "why": "Mêmes UV et températures glaciales. Le Djinn chasse à 50 % et fonce à 2,5 m/s en LdV quand le disjoncteur est allumé."
+      "why": "Mêmes UV et températures glaciales. Le Djinn chasse à 50 % et fonce à 2,5 m/s en ligne de vue quand le disjoncteur est allumé."
     },
     {
       "with": "the-mimic",
@@ -111,7 +111,7 @@
     },
     {
       "with": "revenant",
-      "why": "Mêmes écriture et températures glaciales. Le Revenant chasse à 1,0 m/s puis 3,0 m/s quand il te détecte ; le Démon est à 1,7 m/s avec LdV standard."
+      "why": "Mêmes écriture et températures glaciales. Le Revenant chasse à 1,0 m/s puis 3,0 m/s quand il te détecte ; le Démon est à 1,7 m/s avec l'accélération standard en ligne de vue."
     },
     {
       "with": "moroi",
@@ -119,7 +119,7 @@
     },
     {
       "with": "aswang",
-      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV."
+      "why": "Mêmes écriture et températures glaciales. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en ligne de vue."
     },
     {
       "with": "onryo",
@@ -135,7 +135,7 @@
     },
     {
       "with": "thaye",
-      "why": "Jeune, le Thayé peut aussi chasser très tôt, dès 75 %, à 2,75 m/s sans accélération en LdV, puis de plus en plus tard en vieillissant. Une seule preuve en commun (écriture)."
+      "why": "Jeune, le Thayé peut aussi chasser très tôt, dès 75 %, à 2,75 m/s sans accélération en ligne de vue, puis de plus en plus tard en vieillissant. Une seule preuve en commun (écriture)."
     }
   ],
   "observations": [

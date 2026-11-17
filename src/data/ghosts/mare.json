@@ -15,10 +15,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "Sa vitesse ne dépend pas de la lumière : c'est son seuil de chasse qui en dépend."
     ]
   },
@@ -126,7 +126,7 @@
     },
     {
       "with": "thaye",
-      "why": "Orbes + écriture en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en LdV, puis vieillit et ralentit. 3e preuve : D.O.T.S vs Spirit Box."
+      "why": "Orbes + écriture en commun. Jeune, le Thayé chasse dès 75 % et à 2,75 m/s sans accélération en ligne de vue, puis vieillit et ralentit. 3e preuve : D.O.T.S vs Spirit Box."
     },
     {
       "with": "hantu",

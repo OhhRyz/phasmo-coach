@@ -15,14 +15,14 @@
     "alt": null,
     "isRange": true,
     "los": true,
-    "summary": "1,5 → 2,25 m/s selon la santé · accélère en LdV (3,71 max)",
+    "summary": "1,5 → 2,25 m/s selon la santé · accélère en ligne de vue (3,71 max)",
     "details": [
       "Sa vitesse dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, puis environ +0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %.",
       "Repères par tranche de santé mentale : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
       "Sa vitesse suit la santé en pleine chasse : si l'équipe prend des pilules, il ralentit.",
-      "Il a l'accélération en LdV : jusqu'à 1,65 × sa vitesse actuelle après 13 s de LdV continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
-      "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit.",
-      "En partie sans preuve jouée sans santé mentale (équipe à 0 %), il chasse d'emblée à 2,25 m/s et monte jusqu'à 3,71 m/s en ligne de vue : l'entité la plus rapide du jeu."
+      "Il a l'accélération en ligne de vue : jusqu'à 1,65 × sa vitesse actuelle après 13 s de ligne de vue continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
+      "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de ligne de vue qu'il lui restait, et recommence à accélérer s'il te revoit.",
+      "En partie à 0 preuve jouée sans santé mentale (équipe à 0 %), il chasse d'emblée à 2,25 m/s et monte jusqu'à 3,71 m/s en ligne de vue : l'entité la plus rapide du jeu."
     ]
   },
   "huntSanity": {
@@ -37,8 +37,8 @@
   },
   "summary": "Entité qui maudit ceux qui l'entendent et qui devient de plus en plus rapide à mesure que la santé mentale de l'équipe chute.",
   "keyTells": [
-    "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
-    "Sans santé mentale (0 %) : 2,25 m/s de base, et jusqu'à 3,71 m/s après 13 s de LdV continue — la vitesse la plus élevée du jeu",
+    "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en ligne de vue",
+    "Sans santé mentale (0 %) : 2,25 m/s de base, et jusqu'à 3,71 m/s après 13 s de ligne de vue continue — la vitesse la plus élevée du jeu",
     "Encens en chasse : aveuglé 7 s au lieu de 5 s",
     "Malédiction quand tu entends un son paranormal au micro parabolique, ou que tu enregistres un son à l'enregistreur de son : santé qui baisse 2× plus vite"
   ],
@@ -60,14 +60,14 @@
   ],
   "behaviors": [
     {
-      "text": "Plus rapide quand la santé mentale moyenne est basse ; peut atteindre 3,71 m/s en LdV.",
+      "text": "Plus rapide quand la santé mentale moyenne est basse ; peut atteindre 3,71 m/s en ligne de vue.",
       "zeroEvidence": true
     }
   ],
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse, tant que personne ne prend de pilules pour la faire remonter) tout en ayant l'accélération en LdV, ça peut être un Moroi. Attention : les Jumeaux (une chance sur deux à chaque chasse d'avoir le lent ou le rapide), le Gallu (selon son état : affaibli, normal ou enragé) et l'Obambo (toutes les 2 minutes à la montre du jeu) changent aussi de vitesse et accélèrent aussi en ligne de vue. Sans santé mentale (0 %), le Moroi est déjà au maximum : sa vitesse ne change plus d'une chasse à l'autre. Et les pilules, en faisant remonter la santé, le ralentissent.",
+      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse, tant que personne ne prend de pilules pour la faire remonter) tout en ayant l'accélération en ligne de vue, ça peut être un Moroi. Attention : les Jumeaux (une chance sur deux à chaque chasse d'avoir le lent ou le rapide), le Gallu (selon son état : affaibli, normal ou enragé) et l'Obambo (toutes les 2 minutes à la montre du jeu) changent aussi de vitesse et accélèrent aussi en ligne de vue. Sans santé mentale (0 %), le Moroi est déjà au maximum : sa vitesse ne change plus d'une chasse à l'autre. Et les pilules, en faisant remonter la santé, le ralentissent.",
       "definitive": false
     },
     {
@@ -93,11 +93,11 @@
   "confusions": [
     {
       "with": "thaye",
-      "why": "Le Thayé est lui aussi très rapide (2,75 m/s jeune), mais il n'accélère jamais en LdV et ralentit en vieillissant. Le Moroi, lui, accélère en LdV et devient plus rapide quand la santé baisse. Sans LdV, un Moroi plafonne à 2,25 m/s."
+      "why": "Le Thayé est lui aussi très rapide (2,75 m/s jeune), mais il n'accélère jamais en ligne de vue et ralentit en vieillissant. Le Moroi, lui, accélère en ligne de vue et devient plus rapide quand la santé baisse. Sans ligne de vue, un Moroi plafonne à 2,25 m/s."
     },
     {
       "with": "deogen",
-      "why": "Deogen : Spirit Box + Écriture aussi (Spirit Box garantie chez les deux), mais D.O.T.S au lieu des Températures glaciales. Il chasse à 40 %, fonce à 3,0 m/s de loin puis ralentit à 0,4 m/s près de toi, sans accélération en LdV."
+      "why": "Deogen : Spirit Box + Écriture aussi (Spirit Box obligatoire chez les deux), mais D.O.T.S au lieu des Températures glaciales. Il chasse à 40 %, fonce à 3,0 m/s de loin puis ralentit à 0,4 m/s près de toi, sans accélération en ligne de vue."
     },
     {
       "with": "spirit",
@@ -117,7 +117,7 @@
     },
     {
       "with": "the-twins",
-      "why": "Jumeaux : Spirit Box + Températures glaciales, mais EMF 5 au lieu de l'Écriture ; vitesse de base d'environ 1,5 ou 1,9 m/s selon le jumeau (avec accélération en LdV), qui ne dépend pas de la santé."
+      "why": "Jumeaux : Spirit Box + Températures glaciales, mais EMF 5 au lieu de l'Écriture ; vitesse de base d'environ 1,5 ou 1,9 m/s selon le jumeau (avec accélération en ligne de vue), qui ne dépend pas de la santé."
     },
     {
       "with": "the-mimic",
@@ -125,7 +125,7 @@
     },
     {
       "with": "revenant",
-      "why": "Revenant : Écriture + Températures glaciales, mais Orbes au lieu de la Spirit Box ; 1,0 m/s puis 3,0 m/s d'un coup dès qu'il te détecte, sans accélération progressive en LdV."
+      "why": "Revenant : Écriture + Températures glaciales, mais Orbes au lieu de la Spirit Box ; 1,0 m/s puis 3,0 m/s d'un coup dès qu'il te détecte, sans accélération progressive en ligne de vue."
     },
     {
       "with": "shade",
@@ -137,7 +137,7 @@
     },
     {
       "with": "aswang",
-      "why": "Aswang : Écriture + Températures glaciales, mais D.O.T.S au lieu de la Spirit Box ; base de 1,53 m/s et accélération en LdV très rapide (1,65 × en 8,7 s au lieu de 13 s)."
+      "why": "Aswang : Écriture + Températures glaciales, mais D.O.T.S au lieu de la Spirit Box ; base de 1,53 m/s et accélération très rapide en ligne de vue (1,65 × en 8,7 s au lieu de 13 s)."
     },
     {
       "with": "gallu",
@@ -203,7 +203,7 @@
         "3,71 m/s"
       ],
       "answer": 3,
-      "explain": "À 0 % de santé il part de 2,25 m/s, et 13 s de LdV continue le font monter à 1,65 × cette vitesse : 3,71 m/s, le record du jeu."
+      "explain": "À 0 % de santé il part de 2,25 m/s, et 13 s de ligne de vue continue le font monter à 1,65 × cette vitesse : 3,71 m/s, le record du jeu."
     },
     {
       "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 pendant une chasse ?",
@@ -269,6 +269,6 @@
     "Les pilules lèvent-elles la malédiction ? Une seule source l'affirme (la malédiction par l'enregistreur de son, si le son est enregistré, est en revanche confirmée).",
     "Test des pilules : un Obambo qui repasse en calme en pleine chasse ralentit aussi ; refais le test en cas de doute.",
     "Durée d'aveuglement avec un encens de rang 2 ou 3 : non documentée.",
-    "« Plus rapide d'une chasse à l'autre avec accélération en LdV » et « plus de 5 s pour revenir après l'encens » passent souvent pour des tests définitifs ; ils ne le sont pas tout à fait, car les Jumeaux, le Gallu et l'Obambo changent aussi de vitesse d'une chasse à l'autre et accélèrent aussi en ligne de vue, et un Gallu affaibli reste aveuglé 6 s."
+    "« Plus rapide d'une chasse à l'autre avec accélération en ligne de vue » et « plus de 5 s pour revenir après l'encens » passent souvent pour des tests définitifs ; ils ne le sont pas tout à fait, car les Jumeaux, le Gallu et l'Obambo changent aussi de vitesse d'une chasse à l'autre et accélèrent aussi en ligne de vue, et un Gallu affaibli reste aveuglé 6 s."
   ]
 }

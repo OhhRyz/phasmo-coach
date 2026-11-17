@@ -14,9 +14,9 @@
     "losVaries": true,
     "summary": "1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile",
     "details": [
-      "À plus de 10 m de tout joueur : 1,7 m/s avec une accélération en LdV standard.",
+      "À plus de 10 m de tout joueur : 1,7 m/s avec une accélération standard en ligne de vue.",
       "Dès qu'un joueur est à moins de 10 m d'elle, sa vitesse dépend du joueur le plus proche : 2,25 m/s s'il marche, 1,2 m/s s'il ne bouge pas.",
-      "Dans ce rayon de 10 m, l'accélération en LdV ne s'applique plus, mais elle continue de s'accumuler en arrière-plan et s'applique dès que la Dayan ressort du rayon de 10 m."
+      "Dans ce rayon de 10 m, l'accélération en ligne de vue ne s'applique plus, mais elle continue de s'accumuler en arrière-plan et s'applique dès que la Dayan ressort du rayon de 10 m."
     ]
   },
   "huntSanity": {
@@ -33,12 +33,12 @@
   "keyTells": [
     "À moins de 10 m : 2,25 m/s si tu bouges, 1,2 m/s si tu restes immobile",
     "Chasse dès 65 % si tu bouges près d'elle, seulement à 45 % si tu restes immobile",
-    "Toujours féminine (nom et modèle)",
-    "À moins de 10 m de toi, sa vitesse devient fixe : plus d'accélération en LdV"
+    "Toujours féminine (nom et apparence)",
+    "À moins de 10 m de toi, sa vitesse devient fixe : plus d'accélération en ligne de vue"
   ],
   "tells": [
     { "text": "Pendant une chasse, dès qu'un joueur est à moins de 10 m, l'entité se déplace à 2,25 m/s si le joueur le plus proche marche et à 1,2 m/s si ce joueur ne bouge pas.", "zeroEvidence": true, "card": 0 },
-    { "text": "Uniquement féminine : le nom et le modèle de l'entité le montrent. Attention, la Banshee aussi est uniquement féminine.", "zeroEvidence": true, "card": 1 }
+    { "text": "Uniquement féminine : le nom et l'apparence de l'entité le montrent. Attention, la Banshee aussi est uniquement féminine.", "zeroEvidence": true, "card": 1 }
   ],
   "behaviors": [
     { "text": "Chasse plus tôt (65 %) quand un joueur marche près de l'entité, et plus tard (45 %) quand ce joueur reste immobile près de l'entité.", "zeroEvidence": true }
@@ -46,7 +46,7 @@
   "abilities": [],
   "confirmationTests": [
     { "text": "Pendant une chasse, quand l'entité est à moins de 10 m de toi, alterne entre rester parfaitement immobile et marcher. Si sa vitesse bascule entre un pas lent et fixe (~1,2 m/s) et un pas rapide et fixe (~2,25 m/s) au rythme de tes mouvements, c'est une Dayan.", "definitive": true, "card": 0 },
-    { "text": "Pendant une chasse, si l'entité ralentit soudainement en arrivant près de toi (même sans LdV), ça pourrait être une Dayan.", "definitive": false },
+    { "text": "Pendant une chasse, si l'entité ralentit soudainement en arrivant près de toi (même sans ligne de vue), ça pourrait être une Dayan.", "definitive": false },
     { "text": "Si l'entité chasse alors que l'équipe est encore entre 50 % et 65 % de santé mentale, juste au moment où quelqu'un se déplaçait près d'elle, ça pourrait être une Dayan.", "definitive": false }
   ],
   "eliminationTests": [],
@@ -55,7 +55,7 @@
     { "with": "wraith", "why": "Même EMF 5 + Spirit Box, mais le Spectre a le D.O.T.S au lieu des orbes ; il ne perturbe jamais le sel et se téléporte vers les joueurs." },
     { "with": "the-twins", "why": "Même EMF 5 + Spirit Box, mais les Jumeaux ont des glaciales au lieu des orbes ; leur vitesse peut changer d'une chasse à l'autre (~1,5 ou ~1,9 m/s), pas selon tes mouvements." },
     { "with": "gallu", "why": "Même EMF 5 + Spirit Box, mais le Gallu a l'UV au lieu des orbes ; ses changements de vitesse (1,96 m/s enragé, 1,36 m/s affaibli) viennent du sel, de l'encens et des crucifix." },
-    { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu de la Spirit Box ; empreintes à 6 doigts possibles et changement de modèle le temps d'un clignotement en chasse." },
+    { "with": "obake", "why": "Même EMF 5 + orbes, mais l'Obake a l'UV au lieu de la Spirit Box ; empreintes à 6 doigts possibles et changement d'apparence le temps d'un clignotement en chasse." },
     { "with": "raiju", "why": "Même EMF 5 + orbes, mais le Raiju a le D.O.T.S au lieu de la Spirit Box ; il accélère à 2,5 m/s près de l'électronique active, pas selon tes mouvements, et peut chasser dès 65 % près d'un appareil allumé." },
     { "with": "mare", "why": "Même Spirit Box + orbes, mais le Cauchemar a l'écriture au lieu de l'EMF ; son seuil dépend de la lumière de la pièce où il se trouve (60 % éteinte, 40 % allumée), pas de tes mouvements." },
     { "with": "yokai", "why": "Même Spirit Box + orbes, mais le Yokai a le D.O.T.S au lieu de l'EMF ; c'est parler près de lui (jusqu'à 80 %) qui le fait chasser tôt, et en chasse il ne t'entend qu'à 2,5 m." },
@@ -119,13 +119,13 @@
       "explain": "Marcher près d'elle fait monter son seuil à 65 %. Elle chasse à 50 % quand les joueurs sont loin d'elle, et à 45 % si le joueur près d'elle reste immobile. 40 % est le seuil du Deogen."
     },
     {
-      "q": "Quelles sont les deux entités uniquement féminines (nom et modèle) ?",
+      "q": "Quelles sont les deux entités uniquement féminines (nom et apparence) ?",
       "choices": ["Raiju et Onryo", "Yurei et Yokai", "Hantu et Goryo", "Dayan et Banshee"],
       "answer": 3,
-      "explain": "La Dayan est uniquement féminine : le nom et le modèle de l'entité le montrent. La Banshee aussi."
+      "explain": "La Dayan est uniquement féminine : le nom et l'apparence de l'entité le montrent. La Banshee aussi."
     },
     {
-      "q": "Pourquoi l'accélération en LdV semble-t-elle disparaître quand la Dayan est à moins de 10 m de toi ?",
+      "q": "Pourquoi l'accélération en ligne de vue semble-t-elle disparaître quand la Dayan est à moins de 10 m de toi ?",
       "choices": ["Elle perd définitivement toute accélération en ligne de vue", "Sa vitesse est fixée tant qu'elle est tout près de toi", "Elle devient aveugle tant qu'elle est tout près de toi", "Elle ne peut pas te voir tant que tu bouges près d'elle"],
       "answer": 1,
       "explain": "Dans le rayon de 10 m, seule compte ta façon de bouger (2,25 ou 1,2 m/s) : sa vitesse y est fixe. L'accélération en ligne de vue continue pourtant de s'accumuler en arrière-plan et s'applique dès qu'elle ressort des 10 m."

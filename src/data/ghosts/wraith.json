@@ -15,10 +15,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue.",
       "N'est pas ralenti par le sel de rang 3 pendant une chasse, contrairement aux entités standard (cas du Gallu enragé inconnu).",
       "Pendant les chasses, l'entité traque et se déplace exactement comme les autres : elle ne traverse pas les murs et ne voit pas à travers les portes."
     ]

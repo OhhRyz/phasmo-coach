@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { buildDeck, namesGhost, type Card } from '../engine/cards'
-import { dayKey, spellLdV } from '../engine/format'
+import { dayKey } from '../engine/format'
 import { askKey, buildReviewQueue, SAME_ASK_GAP, SAME_GHOST_GAP, sessionGhosts, studiedGhosts, unseenCards } from '../engine/progress'
 import { buildQuiz, questionForCard, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
 import { entityMentions } from '../engine/mentions'
@@ -52,7 +52,7 @@ import {
 } from './reviewSession'
 import { reviseLabel } from './exhibits'
 import { pageTitle } from '../components/Layout'
-import { criteriaText, exactName, keepsSearch, searchCodex, searchSnippet, searchTarget, searchTexts } from './Codex'
+import { criteriaText, exactName, keepsSearch, searchCodex, searchSnippet, searchTarget, searchTexts, searchToSave } from './Codex'
 import { memoryKey, parseScrolls, rememberScroll, restoresScroll, SCROLL_MAX, scrollFor } from './scrollMemory'
 import { COACHING_SOLO_LEAD, steps as coachingSteps } from './Coaching'
 import { draftChanged, onlyAQuestion, titleHelp, type NoteDraft } from '../components/NoteEditor'
@@ -966,6 +966,24 @@ describe('Codex : une vieille recherche ne trie pas la partie suivante en silenc
   const saved = { query: 'Obambo', key: 'k1' }
   it('revenir d’une fiche par « Précédent » (ou recharger la page) garde la recherche tapée', () => {
     expect(keepsSearch(saved, 'POP', 'k1')).toBe(true)
+    // entre-temps, la fiche a ouvert un codex neuf (« voir les entités par seuil de chasse », clé k2) : il n'a pas
+    // de recherche, et n'efface pas celle de k1, que deux retours arrière retrouvent
+    expect(keepsSearch(saved, 'PUSH', 'k2')).toBe(false)
+    const kept = searchToSave(saved, '', 'k2')
+    expect(kept).toEqual(saved)
+    expect(keepsSearch(kept, 'POP', 'k1')).toBe(true)
+    // le codex neuf changé d'ordre (l'entrée est remplacée, clé k3) ne l'efface pas non plus
+    expect(searchToSave(kept, '', 'k3')).toEqual(saved)
+  })
+  it('la recherche notée suit ce qu’on tape : vidée sur sa page, ou remplacée sur une autre, l’ancienne s’efface', () => {
+    expect(searchToSave({ query: '' }, 'Obambo', 'k1')).toEqual(saved)
+    expect(searchToSave(saved, 'Obam', 'k1')).toEqual({ query: 'Obam', key: 'k1' })
+    // « Effacer » sur la page où elle a été tapée
+    expect(searchToSave(saved, '', 'k1')).toEqual({ query: '', key: 'k1' })
+    // une autre recherche tapée sur le codex neuf prend la place
+    expect(searchToSave(saved, 'sel', 'k2')).toEqual({ query: 'sel', key: 'k2' })
+    // puis vidée là : plus rien à retrouver
+    expect(searchToSave({ query: 'sel', key: 'k2' }, '', 'k2')).toEqual({ query: '', key: 'k2' })
   })
   it('entrer à neuf dans le codex (onglet, lien, accueil) repart sans recherche', () => {
     // un lien ou un onglet crée une nouvelle entrée d’historique
@@ -1072,14 +1090,50 @@ describe('Mise en situation : le contrat en cours survit à un détour', () => {
   })
 })
 
-describe('« LdV » en toutes lettres là où on le lit', () => {
-  it('spellLdV écrit « ligne de vue », sans toucher aux autres mots', () => {
-    expect(spellLdV('1,7 m/s · accélère en LdV')).toBe('1,7 m/s · accélère en ligne de vue')
-    expect(spellLdV('2,5 m/s si disjoncteur allumé, LdV et > 3 m')).toBe('2,5 m/s si disjoncteur allumé, ligne de vue et > 3 m')
-    expect(spellLdV('LdVx et xLdV')).toBe('LdVx et xLdV')
+describe('« ligne de vue » en toutes lettres, partout', () => {
+  // le jargon n'arrive jamais abrégé sous les yeux d'un débutant : les fiches l'écrivent en toutes lettres,
+  // plus aucune page n'a à le réécrire au passage
+  it('aucun texte des fiches ni des mécaniques n’écrit « LdV » (résumés, détails, sources compris)', () => {
+    const texts: string[] = []
+    const walk = (v: unknown): void => {
+      if (typeof v === 'string') texts.push(v)
+      else if (Array.isArray(v)) v.forEach(walk)
+      else if (v && typeof v === 'object') Object.values(v).forEach(walk)
+    }
+    walk(GHOSTS)
+    walk(MECHANICS)
+    expect(texts.length).toBeGreaterThan(3000)
+    expect(texts.filter((t) => /\bLdV\b/i.test(t))).toEqual([])
+    // les résumés de vitesse (tableaux, fiche express, verso des cartes) le disent en toutes lettres
+    expect(GHOSTS.filter((g) => /ligne de vue/.test(g.speed.summary)).length).toBeGreaterThanOrEqual(20)
   })
 
-  it('aucune question de la révision ni du quiz n’écrit « LdV » (énoncé, citation, réponses, correction)', () => {
+  // les mots du coach (17 novembre 2026) : un seul nom par chose, celui que les joueurs français emploient
+  it('les fiches et les mécaniques parlent comme le coach : détecteur de mouvement, preuve obligatoire, flamme, apparence', () => {
+    const texts: string[] = []
+    const walk = (v: unknown): void => {
+      if (typeof v === 'string') texts.push(v.replace(/[\u00a0\u202f]/g, ' '))
+      else if (Array.isArray(v)) v.forEach(walk)
+      else if (v && typeof v === 'object') Object.values(v).forEach(walk)
+    }
+    walk(GHOSTS)
+    walk(MECHANICS)
+    const BANNED: [string, RegExp][] = [
+      ['capteur de mouvement → détecteur de mouvement', /capteurs? de mouvement/i],
+      ['preuve forcée ou garantie → preuve obligatoire', /preuves? (?:forcée|garantie)s?|(?:preuve|Spirit Box|D\.O\.T\.S|UV|glaciales)[^.]{0,30}\bgarantie?s?\b/i],
+      ['lumière à feu → flamme', /lumières? à feu/i],
+      ['temps de recharge de chasse → délai entre deux chasses', /temps de recharge/i],
+      ['modèle (l’apparence de l’entité) → apparence', /\bmodèles?\b/i],
+      ['partie sans preuve → partie à 0 preuve', /partie sans preuve/i],
+      // « micro » tout court, c'est le micro du joueur (sa voix) : le micro parabolique se nomme en entier
+      ['tenir ou écouter « le micro » → le micro parabolique', /(?:tient|écoute au|entend au) (?:le )?micro(?! ?parabolique|phone)/i],
+    ]
+    for (const [rule, re] of BANNED) expect(texts.filter((t) => re.test(t)), rule).toEqual([])
+    expect(texts.some((t) => /détecteurs? de mouvement/i.test(t))).toBe(true)
+    expect(texts.some((t) => /preuves? obligatoires?/i.test(t))).toBe(true)
+  })
+
+  it('aucune question de la révision ni du quiz n’écrit « LdV » (énoncé, citation, réponses, correction), aucun verso de carte non plus', () => {
     const deck = buildDeck(GHOSTS, MECHANICS, [])
     const shown: string[] = []
     const add = (q: Question | null) => {
@@ -1089,10 +1143,9 @@ describe('« LdV » en toutes lettres là où on le lit', () => {
     for (const card of deck) for (const pass of [0, 1, 2]) add(questionForCard(card, { allGhosts: GHOSTS, mechanics: MECHANICS, day: '2026-11-01', pass, seen: pass }))
     for (const t of QUIZ_TOPICS) for (let seed = 1; seed <= 12; seed++) for (const q of buildQuiz({ topics: [t.id], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) })) add(q)
     expect(shown.filter((t) => /\bLdV\b/.test(t))).toEqual([])
-    // le verso des cartes de vitesse garde le résumé de la fiche : la page de révision l'écrit en toutes lettres
-    const backs = deck.filter((c) => /\bLdV\b/.test(c.back))
-    expect(backs.length).toBeGreaterThan(0)
-    for (const c of backs) expect(spellLdV(c.back)).not.toMatch(/\bLdV\b/)
+    // le verso des cartes de vitesse reprend le résumé de la fiche, tel quel
+    expect(deck.filter((c) => /\bLdV\b/.test([c.front, c.back, ...(c.backList ?? [])].join(' ')))).toEqual([])
+    expect(deck.filter((c) => /ligne de vue/.test(c.back)).length).toBeGreaterThan(0)
   })
 })
 

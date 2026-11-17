@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard de 1,7 m/s.",
-      "Accélération en LdV standard : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue."
     ]
   },
   "huntSanity": {
@@ -55,7 +55,7 @@
     { "with": "deildegast", "why": "Même EMF 5 + écriture, mais le Deildegast a le D.O.T.S au lieu de l'UV ; sa vitesse part de 3,0 m/s et baisse de 0,1 m/s par objet différent utilisé depuis la dernière chasse." },
     { "with": "jinn", "why": "Même EMF 5 + UV, mais le Djinn a des températures glaciales au lieu de l'écriture ; disjoncteur allumé, il passe à 2,5 m/s quand il te voit à plus de 3 m." },
     { "with": "goryo", "why": "Même EMF 5 + UV, mais le Goryo a le D.O.T.S au lieu de l'écriture, visible seulement à la caméra, et il ne change jamais de pièce favorite." },
-    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu de l'écriture ; il peut laisser des empreintes à 6 doigts et change de modèle le temps d'un clignotement en chasse." },
+    { "with": "obake", "why": "Même EMF 5 + UV, mais l'Obake a les orbes au lieu de l'écriture ; il peut laisser des empreintes à 6 doigts et change d'apparence le temps d'un clignotement en chasse." },
     { "with": "gallu", "why": "Même EMF 5 + UV, mais le Gallu a la Spirit Box au lieu de l'écriture ; le sel, l'encens ou un crucifix modifient son état et sa vitesse (1,96 m/s enragé, 1,36 m/s affaibli)." },
     { "with": "poltergeist", "why": "Même UV + écriture, mais le Poltergeist a la Spirit Box au lieu de l'EMF ; il lance beaucoup d'objets et, en chasse, en projette un toutes les 0,5 s." },
     { "with": "demon", "why": "Même UV + écriture, mais le Démon a des températures glaciales au lieu de l'EMF ; il peut chasser dès 70 % (et à n'importe quel niveau grâce à sa capacité) et rechasser 60 s après un encens." },

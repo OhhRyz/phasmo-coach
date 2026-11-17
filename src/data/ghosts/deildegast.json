@@ -11,13 +11,13 @@
     "alt": null,
     "isRange": true,
     "los": false,
-    "summary": "3,0 → 0,4 m/s selon les objets · n'accélère pas en LdV",
+    "summary": "3,0 → 0,4 m/s selon les objets · n'accélère pas en ligne de vue",
     "details": [
       "Sa vitesse de chasse dépend du nombre d'objets différents (hors équipement) utilisés ou ramassés par les joueurs depuis la dernière chasse (ou tentative de chasse).",
       "Départ à 3,0 m/s ; chaque action retire 0,1 m/s, jusqu'à 0,4 m/s au minimum (26 actions). Repères : 9 objets = 2,1 m/s · 13 = 1,7 m/s · 20 = 1,0 m/s.",
       "Comptent : ramasser un objet hors équipement (joueur vivant ou mort), interagir avec un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
       "Chaque objet ne compte qu'une fois (une chaussure ramassée et lâchée plusieurs fois = 1), mais il peut être n'importe où sur la carte, même hors de la zone d'enquête ou dans le camion.",
-      "Vitesse verrouillée dès le début de la chasse : pas d'accélération en LdV, pas de ralentissement à l'approche, et ce que tu touches pendant la chasse ne compte pas.",
+      "Vitesse verrouillée dès le début de la chasse : pas d'accélération en ligne de vue, pas de ralentissement à l'approche, et ce que tu touches pendant la chasse ne compte pas.",
       "Après chaque chasse ou tentative de chasse, retour à 3,0 m/s ; les objets déjà utilisés peuvent alors recompter."
     ]
   },
@@ -35,7 +35,7 @@
   "keyTells": [
     "3,0 m/s si personne n'a rien touché depuis la dernière chasse",
     "Chaque objet différent hors équipement utilisé ou ramassé : −0,1 m/s (minimum 0,4 m/s)",
-    "Vitesse fixe pendant toute la chasse : aucune accélération en LdV",
+    "Vitesse fixe pendant toute la chasse : aucune accélération en ligne de vue",
     "Revient à 3,0 m/s après chaque chasse ou tentative de chasse"
   ],
   "tells": [
@@ -45,7 +45,7 @@
       "card": 0
     },
     {
-      "text": "N'accélère pas en LdV : sa vitesse est verrouillée pendant toute la chasse.",
+      "text": "N'accélère pas en ligne de vue : sa vitesse est verrouillée pendant toute la chasse.",
       "zeroEvidence": true,
       "card": 1
     },
@@ -91,17 +91,17 @@
   ],
   "eliminationTests": [
     {
-      "text": "Si l'entité accélère progressivement quand elle te garde en LdV, ce n'est pas un Deildegast."
+      "text": "Si l'entité accélère progressivement quand elle te garde en ligne de vue, ce n'est pas un Deildegast."
     }
   ],
   "confusions": [
     {
       "with": "deogen",
-      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu de l'EMF 5. Même plage de vitesse (0,4 à 3,0 m/s) sans LdV, mais elle dépend de la distance : il ralentit en arrivant sur toi, alors que le Deildegast garde la même vitesse toute la chasse. Le Deogen chasse à 40 %."
+      "why": "Deogen : Écriture + D.O.T.S, mais Spirit Box au lieu de l'EMF 5. Même plage de vitesse (0,4 à 3,0 m/s) sans accélération en ligne de vue, mais elle dépend de la distance : il ralentit en arrivant sur toi, alors que le Deildegast garde la même vitesse toute la chasse. Le Deogen chasse à 40 %."
     },
     {
       "with": "thaye",
-      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de l'EMF 5. Lui aussi est très rapide en début de partie sans LdV, mais il ralentit avec le temps passé près de lui (et non avec les objets) et ne redevient jamais plus rapide ; il chasse dès 75 % quand il est jeune."
+      "why": "Thayé : Écriture + D.O.T.S, mais Orbes au lieu de l'EMF 5. Lui aussi est très rapide en début de partie sans accélération en ligne de vue, mais il ralentit avec le temps passé près de lui (et non avec les objets) et ne redevient jamais plus rapide ; il chasse dès 75 % quand il est jeune."
     },
     {
       "with": "revenant",
@@ -113,11 +113,11 @@
     },
     {
       "with": "aswang",
-      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de l'EMF 5 ; base de 1,53 m/s et accélération en LdV très rapide."
+      "why": "Aswang : Écriture + D.O.T.S, mais Températures glaciales au lieu de l'EMF 5 ; base de 1,53 m/s et accélération très rapide en ligne de vue."
     },
     {
       "with": "spirit",
-      "why": "Esprit : EMF 5 + Écriture, mais Spirit Box au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en LdV."
+      "why": "Esprit : EMF 5 + Écriture, mais Spirit Box au lieu des D.O.T.S ; vitesse standard de 1,7 m/s avec accélération en ligne de vue."
     },
     {
       "with": "shade",
@@ -133,7 +133,7 @@
     },
     {
       "with": "oni",
-      "why": "Oni : EMF 5 + D.O.T.S, mais Températures glaciales au lieu de l'Écriture ; plus visible pendant les chasses, vitesse standard avec LdV."
+      "why": "Oni : EMF 5 + D.O.T.S, mais Températures glaciales au lieu de l'Écriture ; plus visible pendant les chasses, vitesse standard avec accélération en ligne de vue."
     },
     {
       "with": "goryo",
@@ -248,7 +248,7 @@
   "sources": [
     "tybayn wiki: wiki_deildegast_speed_*",
     "tybayn wiki: wiki_ghost_speed_h0 (tableau des vitesses du Deildegast)",
-    "tybayn wiki: tableau de simulation LdV (Deildegast 0,4–3,0 m/s, sans LdV)",
+    "tybayn wiki: tableau de simulation de ligne de vue (Deildegast 0,4–3,0 m/s, sans accélération en ligne de vue)",
     "tybayn wiki: wiki_misconceptions_deildegast_1, wiki_misconceptions_deildegast_2, wiki_misconceptions_deildegast_3",
     "tybayn wiki: wiki_known_bugs_deildegast",
     "https://phasmopedia.com/en/ghosts/deildegast/",

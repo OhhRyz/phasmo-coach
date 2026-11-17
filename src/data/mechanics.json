@@ -111,7 +111,7 @@
         },
         {
           "id": "chasses-09",
-          "text": "En chasse, l'Obake change de modèle sur des clignotements prédéterminés : 12, 27, 39, 54, 62, 80, 105, 120 et 132. Sa transformation n'est donc pas garantie lors des chasses de moins d'environ 8 s.",
+          "text": "En chasse, l'Obake change d'apparence sur des clignotements prédéterminés : 12, 27, 39, 54, 62, 80, 105, 120 et 132. Sa transformation n'est donc pas garantie lors des chasses de moins d'environ 8 s.",
           "q": "À quel clignotement l'Obake se transforme-t-il pour la première fois en chasse ?",
           "a": "Au 12e clignotement.",
           "choices": [
@@ -124,14 +124,14 @@
         },
         {
           "id": "chasses-10",
-          "text": "Un Obake à modèle masculin ne se transforme qu'en d'autres modèles masculins, et un modèle féminin qu'en modèles féminins. L'ordre des modèles suit un schéma fixe qui ne se réinitialise pas entre les chasses.",
-          "q": "Un Obake à modèle masculin peut-il prendre un modèle féminin en chasse ?",
-          "a": "Non, il ne prend que des modèles masculins.",
+          "text": "Un Obake d'apparence masculine ne prend que d'autres apparences masculines, et un Obake d'apparence féminine que des apparences féminines. L'ordre des apparences suit un schéma fixe qui ne se réinitialise pas entre les chasses.",
+          "q": "Un Obake d'apparence masculine peut-il prendre une apparence féminine en chasse ?",
+          "a": "Non, il ne prend que des apparences masculines.",
           "choices": [
-            "Oui, il prend n'importe quel modèle",
-            "Non, il ne change jamais de modèle",
+            "Oui, il prend n'importe quelle apparence",
+            "Non, il ne change jamais d'apparence",
             "Oui, à partir de sa deuxième chasse",
-            "Non, seulement des modèles masculins"
+            "Non, seulement des apparences masculines"
           ],
           "answer": 3
         },
@@ -210,7 +210,7 @@
         {
           "id": "vitesses-01",
           "text": "Une entité à vitesse standard chasse à 1,7 m/s. Avec une ligne de vue continue sur un joueur, elle accélère pendant 13 s jusqu'à 1,65 fois sa vitesse de base.",
-          "q": "Combien de secondes de LdV continue faut-il à une entité standard pour atteindre sa vitesse maximale ?",
+          "q": "Combien de secondes de ligne de vue continue faut-il à une entité standard pour atteindre sa vitesse maximale ?",
           "a": "13 secondes, jusqu'à 1,65 fois sa vitesse de base.",
           "choices": [
             "6 s",
@@ -222,8 +222,8 @@
         },
         {
           "id": "vitesses-02",
-          "text": "Après avoir perdu la LdV, l'entité garde sa vitesse accrue jusqu'à la dernière position connue du joueur. Si elle ne retrouve pas la LdV, elle perd ensuite très lentement cette vitesse.",
-          "q": "Que fait une entité de sa vitesse accrue après avoir perdu la LdV ?",
+          "text": "Après avoir perdu la ligne de vue, l'entité garde sa vitesse accrue jusqu'à la dernière position connue du joueur. Si elle ne retrouve pas la ligne de vue, elle perd ensuite très lentement cette vitesse.",
+          "q": "Que fait une entité de sa vitesse accrue après avoir perdu la ligne de vue ?",
           "a": "Elle la garde jusqu'à la dernière position connue du joueur, puis la perd très lentement.",
           "choices": [
             "La garde jusqu'à ta dernière position, puis ralentit peu à peu",
@@ -235,8 +235,8 @@
         },
         {
           "id": "vitesses-03",
-          "text": "Toutes les entités ont l'accélération en LdV standard sauf le Revenant, le Hantu, le Deogen et le Thayé. Le Deildegast n'accélère pas non plus en LdV (vitesse verrouillée pendant la chasse). Le Kormos, lui, ne gagne de la vitesse en LdV que si tu bouges à moins de 5 m de lui ; les Jumeaux ont une LdV particulière.",
-          "q": "En dehors du Deildegast, quelles entités n'accélèrent jamais en LdV ?",
+          "text": "Toutes les entités ont l'accélération standard en ligne de vue sauf le Revenant, le Hantu, le Deogen et le Thayé. Le Deildegast n'accélère pas non plus en ligne de vue (vitesse verrouillée pendant la chasse). Le Kormos, lui, ne gagne de la vitesse en ligne de vue que si tu bouges à moins de 5 m de lui ; les Jumeaux ont une accélération particulière en ligne de vue.",
+          "q": "En dehors du Deildegast, quelles entités n'accélèrent jamais en ligne de vue ?",
           "a": "Revenant, Hantu, Deogen et Thayé.",
           "choices": [
             "Revenant, Hantu, Deogen et Thayé",
@@ -248,8 +248,8 @@
         },
         {
           "id": "vitesses-04",
-          "text": "L'Aswang a une vitesse de base de 1,53 m/s. Il accélère lui aussi jusqu'à 1,65 fois en LdV, mais en 8,667 s de LdV continue au lieu de 13 s.",
-          "q": "En combien de temps de LdV un Aswang atteint-il sa vitesse maximale ?",
+          "text": "L'Aswang a une vitesse de base de 1,53 m/s. Il accélère lui aussi jusqu'à 1,65 fois en ligne de vue, mais en 8,667 s de ligne de vue continue au lieu de 13 s.",
+          "q": "En combien de temps de ligne de vue un Aswang atteint-il sa vitesse maximale ?",
           "a": "8,667 secondes (au lieu de 13).",
           "choices": [
             "4,333 s",
@@ -274,7 +274,7 @@
         },
         {
           "id": "vitesses-06",
-          "text": "Le Deogen n'a pas d'accélération en LdV : il sent toujours sa cible et fonce à 3,0 m/s, puis ralentit à 0,4 m/s une fois proche du joueur ciblé.",
+          "text": "Le Deogen n'a pas d'accélération en ligne de vue : il sent toujours sa cible et fonce à 3,0 m/s, puis ralentit à 0,4 m/s une fois proche du joueur ciblé.",
           "q": "À quelle vitesse ralentit un Deogen arrivé près de sa cible ?",
           "a": "0,4 m/s (3,0 m/s quand il est loin).",
           "choices": [
@@ -287,7 +287,7 @@
         },
         {
           "id": "vitesses-07",
-          "text": "Le Hantu n'a pas d'accélération en LdV : sa vitesse dépend de la température de la pièce où il se trouve, de 1,4 m/s au-dessus de 15 °C à 2,7 m/s sous 0 °C (1,75 m/s entre 12 et 15 °C, 2,5 m/s entre 0 et 3 °C).",
+          "text": "Le Hantu n'a pas d'accélération en ligne de vue : sa vitesse dépend de la température de la pièce où il se trouve, de 1,4 m/s au-dessus de 15 °C à 2,7 m/s sous 0 °C (1,75 m/s entre 12 et 15 °C, 2,5 m/s entre 0 et 3 °C).",
           "q": "Quelle est la vitesse d'un Hantu dans une pièce sous 0 °C ?",
           "a": "2,7 m/s.",
           "choices": [
@@ -300,7 +300,7 @@
         },
         {
           "id": "vitesses-08",
-          "text": "La vitesse du Moroi dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de LdV continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+          "text": "La vitesse du Moroi dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de ligne de vue continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
           "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
           "a": "3,71 m/s, la plus rapide de toutes les entités.",
           "choices": [
@@ -313,9 +313,9 @@
         },
         {
           "id": "vitesses-09",
-          "text": "Le Thayé n'accélère jamais en LdV. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroi sans LdV (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en LdV continue.",
+          "text": "Le Thayé n'accélère jamais en ligne de vue. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroi sans ligne de vue (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en ligne de vue continue.",
           "q": "À quelle vitesse se déplace un Thayé au plus jeune âge ?",
-          "a": "2,75 m/s, même avec une LdV.",
+          "a": "2,75 m/s, même en ligne de vue.",
           "choices": [
             "1,75 m/s",
             "1,7 m/s",
@@ -326,14 +326,14 @@
         },
         {
           "id": "vitesses-10",
-          "text": "Le Djinn chasse à 1,7 m/s avec une accélération en LdV standard. Si le disjoncteur est allumé, qu'il a une LdV sur un joueur et qu'il est à plus de 3 m de lui, il passe immédiatement à 2,5 m/s, puis reprend un comportement normal à moins de 3 m.",
+          "text": "Le Djinn chasse à 1,7 m/s avec une accélération standard en ligne de vue. Si le disjoncteur est allumé, qu'il a une ligne de vue sur un joueur et qu'il est à plus de 3 m de lui, il passe immédiatement à 2,5 m/s, puis reprend un comportement normal à moins de 3 m.",
           "q": "Dans quelles conditions un Djinn passe-t-il à 2,5 m/s ?",
-          "a": "Disjoncteur allumé, LdV sur le joueur et plus de 3 m de distance.",
+          "a": "Disjoncteur allumé, ligne de vue sur le joueur et plus de 3 m de distance.",
           "choices": [
-            "Disjoncteur éteint, LdV et moins de 3 m",
-            "Disjoncteur allumé, sans LdV et moins de 3 m",
-            "Disjoncteur éteint, sans LdV et plus de 3 m",
-            "Disjoncteur allumé, LdV et plus de 3 m"
+            "Disjoncteur éteint, ligne de vue et moins de 3 m",
+            "Disjoncteur allumé, sans ligne de vue et moins de 3 m",
+            "Disjoncteur éteint, sans ligne de vue et plus de 3 m",
+            "Disjoncteur allumé, ligne de vue et plus de 3 m"
           ],
           "answer": 3
         },
@@ -352,7 +352,7 @@
         },
         {
           "id": "vitesses-12",
-          "text": "La Dayan se déplace à 1,7 m/s avec une accélération en LdV standard à plus de 10 m de tout joueur. À moins de 10 m, elle va à 2,25 m/s si un joueur marche et à 1,2 m/s s'il reste immobile.",
+          "text": "La Dayan se déplace à 1,7 m/s avec une accélération standard en ligne de vue à plus de 10 m de tout joueur. À moins de 10 m, elle va à 2,25 m/s si un joueur marche et à 1,2 m/s s'il reste immobile.",
           "q": "Quelle est la vitesse d'une Dayan à moins de 10 m d'un joueur immobile ?",
           "a": "1,2 m/s (2,25 m/s si le joueur marche).",
           "choices": [
@@ -424,7 +424,7 @@
         },
         {
           "id": "encens-02",
-          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base (1,5 à 2,25 m/s selon la santé mentale moyenne). Ensuite, il récupère la vitesse de LdV qu'il lui restait.",
+          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base (1,5 à 2,25 m/s selon la santé mentale moyenne). Ensuite, il récupère la vitesse gagnée en ligne de vue qu'il lui restait.",
           "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 ?",
           "a": "7 secondes (contre 5 s en standard).",
           "choices": [
@@ -515,8 +515,8 @@
         },
         {
           "id": "encens-09",
-          "text": "À son premier allumage, une lumière à feu est protégée 30 s avant qu'une entité puisse tenter de l'éteindre. Chaque rallumage applique ensuite un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais.",
-          "q": "Combien de temps une lumière à feu fraîchement allumée est-elle protégée la première fois ?",
+          "text": "À son premier allumage, une flamme est protégée 30 s avant qu'une entité puisse tenter de l'éteindre. Chaque rallumage applique ensuite un délai aléatoire de 20 à 80 s. L'Onryo peut contourner ces délais.",
+          "q": "Combien de temps une flamme fraîchement allumée est-elle protégée la première fois ?",
           "a": "30 secondes (puis 20 à 80 s à chaque rallumage).",
           "choices": [
             "20 s",
@@ -528,8 +528,8 @@
         },
         {
           "id": "encens-10",
-          "text": "Une fois le délai écoulé, une entité à moins de 5 m a 66,67 % de chances (2 sur 3) de souffler une lumière à feu. Le rang II est soufflé à environ 96,30 % car ses trois bougies tirent chacune leur chance, mais il compte comme une seule flamme pour l'Onryo.",
-          "q": "À quelle distance une entité peut-elle souffler une lumière à feu, et avec quelle probabilité ?",
+          "text": "Une fois le délai écoulé, une entité à moins de 5 m a 66,67 % de chances (2 sur 3) de souffler une flamme. Le rang II est soufflé à environ 96,30 % car ses trois bougies tirent chacune leur chance, mais il compte comme une seule flamme pour l'Onryo.",
+          "q": "À quelle distance une entité peut-elle souffler une flamme, et avec quelle probabilité ?",
           "a": "À moins de 5 m, avec 66,67 % de chances (2 sur 3).",
           "choices": [
             "À moins de 5 m, 1 chance sur 3",
@@ -541,8 +541,8 @@
         },
         {
           "id": "encens-11",
-          "text": "Les entités peuvent souffler les lumières à feu à tout moment, même pendant une chasse (cela compte pour le compteur de l'Onryo), mais elles ne peuvent jamais les rallumer.",
-          "q": "Une entité peut-elle rallumer une lumière à feu ?",
+          "text": "Les entités peuvent souffler les flammes à tout moment, même pendant une chasse (cela compte pour le compteur de l'Onryo), mais elles ne peuvent jamais les rallumer.",
+          "q": "Une entité peut-elle rallumer une flamme ?",
           "a": "Non, elle peut seulement l'éteindre.",
           "choices": [
             "Oui, à la fin de chaque chasse",
@@ -554,8 +554,8 @@
         },
         {
           "id": "encens-12",
-          "text": "L'Onryo n'évite pas les flammes : s'il tente de chasser à portée d'une lumière à feu, il la souffle au lieu d'utiliser un crucifix.",
-          "q": "Que fait un Onryo qui tente de chasser à portée d'une lumière à feu ?",
+          "text": "L'Onryo n'évite pas les flammes : s'il tente de chasser à portée d'une flamme, il la souffle au lieu d'utiliser un crucifix.",
+          "q": "Que fait un Onryo qui tente de chasser à portée d'une flamme ?",
           "a": "Il la souffle à la place d'utiliser un crucifix.",
           "choices": [
             "Il chasse quand même, sans toucher à la flamme",
@@ -580,8 +580,8 @@
         },
         {
           "id": "encens-14",
-          "text": "La forte pluie empêche d'allumer les lumières à feu et allume-feux de rang 1 et 2 sous la pluie et les éteint aussitôt. La pluie légère et la Lune de sang n'éteignent pas les lumières à feu.",
-          "q": "Quelle météo empêche d'allumer dehors les lumières à feu de rang 1 et 2 ?",
+          "text": "La forte pluie empêche d'allumer les sources de flamme et allume-feux de rang 1 et 2 sous la pluie et les éteint aussitôt. La pluie légère et la Lune de sang n'éteignent pas les flammes.",
+          "q": "Quelle météo empêche d'allumer dehors les sources de flamme de rang 1 et 2 ?",
           "a": "La forte pluie.",
           "choices": [
             "La forte pluie",
@@ -674,9 +674,9 @@
         },
         {
           "id": "equipement-09",
-          "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? » ; formules du jeu en anglais : \"How old are you?\", \"Are you a child?\", \"Are you young?\", \"Are you old?\") renvoient un âge qui n'est pas corrélé au modèle de l'entité.",
-          "q": "L'âge donné par la Spirit Box correspond-il au modèle de l'entité ?",
-          "a": "Non, il n'est pas corrélé au modèle.",
+          "text": "Les questions d'âge à la Spirit Box (« Quel âge avez-vous ? », « Êtes-vous un enfant ? », « Êtes-vous jeune ? », « Êtes-vous vieux ? » ; formules du jeu en anglais : \"How old are you?\", \"Are you a child?\", \"Are you young?\", \"Are you old?\") renvoient un âge qui n'est pas corrélé à l'apparence de l'entité.",
+          "q": "L'âge donné par la Spirit Box correspond-il à l'apparence de l'entité ?",
+          "a": "Non, il n'est pas corrélé à l'apparence.",
           "evidence": true
         },
         {
@@ -755,11 +755,11 @@
         },
         {
           "id": "preuves-03",
-          "text": "Dans une partie à 0 preuve, aucune preuve n'apparaît, même les preuves garanties. La seule exception est les orbes du Mimic, car ce sont une capacité et non une vraie preuve.",
+          "text": "Dans une partie à 0 preuve, aucune preuve n'apparaît, même les preuves obligatoires. La seule exception est les orbes du Mimic, car ce sont une capacité et non une vraie preuve.",
           "q": "Quelle preuve peut quand même apparaître dans une partie à 0 preuve ?",
           "a": "Les faux orbes du Mimic : c'est une capacité, pas une vraie preuve.",
           "choices": [
-            "La preuve garantie d'un Goryo ou d'un Obake",
+            "La preuve obligatoire d'un Goryo ou d'un Obake",
             "Une preuve au hasard parmi celles de l'entité",
             "Les faux orbes du Mimic, même sans preuve",
             "Aucune, pas même une fausse preuve"
@@ -998,7 +998,7 @@
         },
         {
           "id": "portees-08",
-          "text": "Le Kormos ne voit les joueurs, et ne gagne de vitesse en LdV, que s'ils bougent à moins de 5 m. Il chasse à 1,7 m/s, ou à 2,21 m/s quand il détecte un joueur à plus de 5 m ; une vitesse LdV maximale de 2,81 m/s peut ainsi passer à 3,65 m/s.",
+          "text": "Le Kormos ne voit les joueurs, et ne gagne de vitesse en ligne de vue, que s'ils bougent à moins de 5 m. Il chasse à 1,7 m/s, ou à 2,21 m/s quand il détecte un joueur à plus de 5 m ; une vitesse maximale en ligne de vue de 2,81 m/s peut ainsi passer à 3,65 m/s.",
           "q": "À quelle distance le Kormos doit-il être pour voir un joueur en mouvement ?",
           "a": "À moins de 5 m.",
           "choices": [
@@ -1554,9 +1554,9 @@
     },
     {
       "id": "tf-20",
-      "claim": "Une preuve garantie peut quand même être trouvée dans une partie à 0 preuve.",
+      "claim": "Une preuve obligatoire peut quand même être trouvée dans une partie à 0 preuve.",
       "answer": false,
-      "explain": "Il n'y a aucune preuve en 0 preuve, même garantie. Seuls les orbes du Mimic font exception, car c'est une capacité."
+      "explain": "Il n'y a aucune preuve en 0 preuve, même obligatoire. Seuls les orbes du Mimic font exception, car c'est une capacité."
     },
     {
       "id": "tf-21",
@@ -1625,7 +1625,7 @@
       "id": "tf-31",
       "claim": "L'Onryo tente de chasser après chaque 3e flamme soufflée, sauf si son compteur est réinitialisé.",
       "answer": true,
-      "explain": "C'est sa capacité. Le compteur est réinitialisé quand une tentative de chasse due à la capacité a lieu, ou quand il atteint 3 pendant qu'un minuteur d'encens est actif ou que la flamme est soufflée pendant une chasse. Une flamme soufflée pendant un temps de recharge de chasse, ou un encens utilisé une fois le compteur à 3, ne fait que retarder la tentative."
+      "explain": "C'est sa capacité. Le compteur est réinitialisé quand une tentative de chasse due à la capacité a lieu, ou quand il atteint 3 pendant qu'un minuteur d'encens est actif ou que la flamme est soufflée pendant une chasse. Une flamme soufflée pendant le délai entre deux chasses, ou un encens utilisé une fois le compteur à 3, ne fait que retarder la tentative."
     },
     {
       "id": "tf-32",
@@ -1637,19 +1637,19 @@
       "id": "tf-33",
       "claim": "Le Thayé n'accélère jamais avec la ligne de vue.",
       "answer": true,
-      "explain": "Jeune, il va à 2,75 m/s même en LdV, puis ralentit en vieillissant. C'est la différence clé avec le Moroi."
+      "explain": "Jeune, il va à 2,75 m/s même en ligne de vue, puis ralentit en vieillissant. C'est la différence clé avec le Moroi."
     },
     {
       "id": "tf-34",
       "claim": "Le Moroi peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
       "answer": true,
-      "explain": "À 0 % de santé mentale moyenne, avec 13 s de LdV continue."
+      "explain": "À 0 % de santé mentale moyenne, avec 13 s de ligne de vue continue."
     },
     {
       "id": "tf-35",
-      "claim": "Une entité ne peut jamais rallumer une lumière à feu qu'elle a soufflée.",
+      "claim": "Une entité ne peut jamais rallumer une flamme qu'elle a soufflée.",
       "answer": true,
-      "explain": "Les entités peuvent souffler les lumières à feu à tout moment, mais ne peuvent jamais les rallumer."
+      "explain": "Les entités peuvent souffler les flammes à tout moment, mais ne peuvent jamais les rallumer."
     },
     {
       "id": "tf-36",

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { cameFromCodex } from './codexReturn'
+import { cameFromCodex, TO_REGISTRY } from './codexReturn'
 import { HatchDefs, SanityChart, SpeedChart, UvPrint } from '../components/journal/Charts'
 import {
   CircledNumber,
@@ -29,8 +29,9 @@ import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
 import type { CoachNote } from '../engine/cards'
-import { fr, NBSP, NNBSP, num, safeDate, spellLdV, validTime } from '../engine/format'
+import { fr, NBSP, NNBSP, num, safeDate, validTime } from '../engine/format'
 import { coachNameOf, coachNotes, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
+import { codexRankPath } from '../engine/groups'
 import { entityMentions } from '../engine/mentions'
 import { lowerFirst, pairZeroVariants, testException } from '../engine/fiche'
 import { masteryLevel } from '../engine/progress'
@@ -90,7 +91,7 @@ function stampFor(g: Ghost): string | null {
   // le Thayé chasse à 75 % jeune mais seulement à 15 % une fois vieux : « très tôt » serait faux la moitié du temps
   if (g.id === 'thaye') return 'Tôt, puis tard'
   if (g.huntSanity.high >= 70 && g.huntSanity.normal >= 60) return 'Chasse très tôt'
-  if (g.forcedEvidence) return 'Preuve garantie'
+  if (g.forcedEvidence) return 'Preuve obligatoire'
   if (!g.speed.los && !g.speed.losVaries) return 'Vitesse spéciale'
   if (g.huntSanity.high > 50) return 'Chasse tôt'
   if (g.huntSanity.normal >= 0 && g.huntSanity.normal < 50) return 'Chasse tard'
@@ -148,7 +149,7 @@ function Lines({ items, self }: { items: TextItem[]; self: string }) {
           {variant && ' '}
           {variant && (
             <span className="zero-variant">
-              <span className="pencil-note zero-variant-k">en partie sans preuve{NNBSP}:</span> <Linked text={lowerFirst(variant.text)} skip={[self]} />
+              <span className="pencil-note zero-variant-k">en partie à 0 preuve{NNBSP}:</span> <Linked text={lowerFirst(variant.text)} skip={[self]} />
             </span>
           )}
         </li>
@@ -361,7 +362,7 @@ export function GhostPage() {
               </Stamp>
             )}
             {/* le tampon s'explique en une ligne : le terme reste, le débutant sait ce qu'il veut dire */}
-            {stamp === 'Preuve garantie' && ghost.forcedEvidence && (
+            {stamp === 'Preuve obligatoire' && ghost.forcedEvidence && (
               <p className="gh-stamp-why">
                 {fr(
                   `${ghost.name.startsWith('Les ') ? 'Leur' : 'Sa'} preuve ${EVIDENCE[ghost.forcedEvidence].label} fait partie des preuves visibles dès que la difficulté en donne au moins une (Cauchemar, Démence…). En partie à 0 preuve, elle n'apparaît pas.`,
@@ -427,7 +428,7 @@ export function GhostPage() {
                         </span>
                         {has && (
                           <span className="side">
-                            {ghost.forcedEvidence === e ? 'garantie dès qu’il y a au moins 1 preuve' : ev.side}
+                            {ghost.forcedEvidence === e ? 'obligatoire dès qu’il y a au moins 1 preuve' : ev.side}
                           </span>
                         )}
                         {fake && <span className="side">fausse preuve, toujours présente</span>}
@@ -446,6 +447,11 @@ export function GhostPage() {
                 <h3>Seuil de chasse</h3>
                 <span className="val">{ghost.huntSanity.summary}</span>
               </div>
+              <p className="measure-see">
+                <Link className="link" to={codexRankPath('seuil')} state={TO_REGISTRY}>
+                  voir les entités par seuil de chasse
+                </Link>
+              </p>
               <SanityChart ghost={ghost} />
               {ghost.huntSanity.details.map((d, k) => (
                 <p key={k}>
@@ -456,8 +462,13 @@ export function GhostPage() {
             <div className="measure">
               <div className="measure-head">
                 <h3>Vitesse en chasse</h3>
-                <span className="val">{spellLdV(ghost.speed.summary)}</span>
+                <span className="val">{ghost.speed.summary}</span>
               </div>
+              <p className="measure-see">
+                <Link className="link" to={codexRankPath('vitesse')} state={TO_REGISTRY}>
+                  voir les entités par vitesse
+                </Link>
+              </p>
               <SpeedChart ghost={ghost} />
               {ghost.speed.details.map((d, k) => (
                 <p key={k}>

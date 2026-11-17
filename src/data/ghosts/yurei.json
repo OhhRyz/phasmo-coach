@@ -11,10 +11,10 @@
     "alt": null,
     "isRange": false,
     "los": true,
-    "summary": "1,7 m/s · accélère en LdV",
+    "summary": "1,7 m/s · accélère en ligne de vue",
     "details": [
       "Vitesse de chasse standard : 1,7 m/s.",
-      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de LdV continue."
+      "Accélération standard en ligne de vue : jusqu'à 1,65 fois sa vitesse de base (environ 2,8 m/s) après 13 s de ligne de vue continue."
     ]
   },
   "huntSanity": {
@@ -80,11 +80,11 @@
   "confusions": [
     {
       "with": "revenant",
-      "why": "Mêmes orbes et températures glaciales. Le Revenant chasse à 1,0 m/s puis bondit à 3,0 m/s quand il te détecte, sans LdV standard."
+      "why": "Mêmes orbes et températures glaciales. Le Revenant chasse à 1,0 m/s puis bondit à 3,0 m/s quand il te détecte, sans accélération standard en ligne de vue."
     },
     {
       "with": "hantu",
-      "why": "Mêmes orbes et températures glaciales. Le Hantu va plus vite dans les pièces froides, n'a pas de LdV standard et souffle un air glacé visible en chasse quand le disjoncteur est coupé."
+      "why": "Mêmes orbes et températures glaciales. Le Hantu va plus vite dans les pièces froides, n'a pas l'accélération standard en ligne de vue et souffle un air glacé visible en chasse quand le disjoncteur est coupé."
     },
     {
       "with": "onryo",
@@ -108,7 +108,7 @@
     },
     {
       "with": "thaye",
-      "why": "Mêmes orbes et D.O.T.S. Le Thayé vieillit : sa vitesse (2,75 → 1,0 m/s) et son seuil (75 % → 15 %) baissent au fil de la partie, sans LdV standard."
+      "why": "Mêmes orbes et D.O.T.S. Le Thayé vieillit : sa vitesse (2,75 → 1,0 m/s) et son seuil (75 % → 15 %) baissent au fil de la partie, sans accélération standard en ligne de vue."
     },
     {
       "with": "oni",
@@ -116,7 +116,7 @@
     },
     {
       "with": "aswang",
-      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en LdV (8,667 s au lieu de 13 s)."
+      "why": "Mêmes températures glaciales et D.O.T.S. L'Aswang chasse à 1,53 m/s de base et accélère plus vite que la normale en ligne de vue (8,667 s au lieu de 13 s)."
     }
   ],
   "observations": [

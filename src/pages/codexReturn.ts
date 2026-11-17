@@ -9,3 +9,14 @@ export const FROM_CODEX = { fromCodex: true } as const
 export function cameFromCodex(state: unknown, historyIdx: unknown): boolean {
   return !!state && typeof state === 'object' && (state as { fromCodex?: unknown }).fromCodex === true && typeof historyIdx === 'number' && historyIdx > 0
 }
+
+/**
+ * Une fiche renvoie au registre du Codex (« voir les entités par vitesse ») : à l'arrivée, le registre vient
+ * sous les yeux. Sur téléphone il est loin sous le carnet de preuves.
+ */
+export const TO_REGISTRY = { registre: true } as const
+
+/** Le lien suivi demandait-il le registre ? */
+export function wantsRegistry(state: unknown): boolean {
+  return !!state && typeof state === 'object' && (state as { registre?: unknown }).registre === true
+}
