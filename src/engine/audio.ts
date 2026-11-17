@@ -1,7 +1,7 @@
 /**
  * Bruits de pas synthétisés (Web Audio), sans aucun fichier son.
- * Cadence : même relation vitesse → pas/minute que le métronome du cheat sheet
- * (bpm = 60 / (1/v − 0,075)), à 100 % de vitesse.
+ * Rythme : formule propre à l'app (bpm = 60 / (1/v − 0,075)), à 100 % de vitesse. La fiche de tybayn ne donne
+ * pas de conversion vitesse → pas/minute : c'est une approximation, à comparer à son outil BPM (1,7 m/s ≈ 117).
  */
 
 export function speedToBpm(speed: number): number {

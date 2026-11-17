@@ -12,7 +12,7 @@
     "isRange": false,
     "los": true,
     "losVaries": true,
-    "summary": "1,7 m/s · 2,21 m/s si joueur détecté à plus de 5 m · LdV seulement si tu bouges à moins de 5 m",
+    "summary": "1,7 m/s · 2,21 m/s si un joueur est détecté à plus de 5 m · LdV seulement si tu bouges à moins de 5 m",
     "details": [
       "Vitesse de base : 1,7 m/s, quand il ne te détecte pas ou quand il te voit.",
       "S'il te détecte à plus de 5 m, il file vers ta dernière position connue à 2,21 m/s (1,3 × sa vitesse de base) jusqu'à l'atteindre.",

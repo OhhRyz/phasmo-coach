@@ -835,7 +835,7 @@
             "Sur toutes les photos où il apparaît",
             "Sur les photos prises pendant une chasse",
             "Sur les photos prises de très près",
-            "Sur les photos étiquetées « Fantôme » au journal"
+            "Sur les photos que le journal attribue à l'entité"
           ],
           "answer": 3
         },
@@ -865,23 +865,23 @@
           "q": "Qui peut entendre le cri de la Banshee au microphone parabolique ?",
           "a": "N'importe quel joueur.",
           "choices": [
-            "Seulement sa cible",
-            "Tout joueur qui écoute au micro",
-            "Seulement l'hôte",
-            "Seulement le joueur le plus proche d'elle"
+            "Seulement la cible de la Banshee",
+            "Tout joueur, et pas seulement sa cible",
+            "Seulement l'hôte de la partie",
+            "Seulement le joueur le plus proche"
           ],
           "answer": 1
         },
         {
           "id": "preuves-14",
           "text": "L'Ombre est la seule entité pouvant apparaître sous forme d'ombre pendant les événements de la patte de singe, de la boîte à musique et du cercle d'invocation.",
-          "q": "Quelle entité peut apparaître sous forme d'ombre pendant l'événement d'un objet maudit ?",
-          "a": "L'Ombre.",
+          "q": "Pendant les événements de quels objets maudits l'Ombre est-elle la seule à pouvoir apparaître sous forme d'ombre ?",
+          "a": "Patte de singe, boîte à musique et cercle d'invocation.",
           "choices": [
-            "L'Ombre",
-            "Le Fantôme",
-            "Le Cauchemar",
-            "Le Démon"
+            "Patte de singe, boîte à musique et cercle d'invocation",
+            "Planche Ouija, miroir hanté et cartes de tarot",
+            "Poupée vaudou, planche Ouija et miroir hanté",
+            "Cartes de tarot, poupée vaudou et patte de singe"
           ],
           "answer": 0
         },
@@ -1042,7 +1042,7 @@
           "a": "Non, mais elle peut chasser depuis une pièce adjacente.",
           "choices": [
             "Oui, elle chasse comme n'importe quelle autre entité",
-            "Non, et pas non plus depuis une pièce voisine",
+            "Non, jamais, ni dedans ni depuis une pièce voisine",
             "Oui, mais seulement quand la santé mentale est basse",
             "Non, mais depuis une pièce voisine, c'est possible"
           ],
@@ -1074,7 +1074,7 @@
           "q": "Quand le miroir hanté se brise-t-il ?",
           "a": "Quand l'utilisateur tombe à court de santé mentale ou l'utilise sous 20 %.",
           "choices": [
-            "Après 10 s d'utilisation, quelle que soit ta santé mentale",
+            "Après 10 s d'usage, quelle que soit ta santé mentale",
             "Utilisé sous 50 % de santé mentale",
             "Quand l'entité passe à moins de 5 m du miroir",
             "À court de santé mentale, ou utilisé sous 20 %"

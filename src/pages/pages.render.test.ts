@@ -89,8 +89,9 @@ describe('Fiche : un test définitif qui nomme lui-même une exception', () => {
   })
 
   it('seulement quand le texte du test nomme l’exception : aucune autre fiche n’en reçoit', () => {
-    // le Spectre (Gallu enragé), l'Obake (« ou un Mimic en train de l'imiter ») et le Démon (un Onryo à Sunny Meadows)
-    const expected: Record<string, number> = { wraith: 2, obake: 1, demon: 1 }
+    // le Spectre (Gallu enragé) et le Démon (un Onryo à Sunny Meadows) ; l'Obake n'en a plus : son test des empreintes
+    // (« ou un Mimic en train de l'imiter ») a quitté la fiche à l'audit de véracité (nov. 2026, absent des tests de tybayn)
+    const expected: Record<string, number> = { wraith: 2, demon: 1 }
     for (const g of GHOSTS) {
       const named = g.confirmationTests.filter((t) => t.definitive && testException(t.text, GHOSTS)).length
       expect(named, g.id).toBe(expected[g.id] ?? 0)
@@ -98,9 +99,14 @@ describe('Fiche : un test définitif qui nomme lui-même une exception', () => {
   })
 
   it('Obake et Démon : le tampon reste « Définitif », l’exception s’écrit à côté', () => {
-    const obake = [...renderFiche('obake').querySelectorAll('.protocol')][1]
-    expect(text(obake.querySelector('.stamp'))).toBe('Définitif')
-    expect(text(obake.querySelector('.protocol-except'))).toBe('sauf Mimic, voir ci-dessous')
+    // Obake : ses deux tests (changement de modèle, pas manquant après le sel) restent « Définitif », sans mention
+    // d'exception depuis que le test des empreintes (« sauf Mimic ») a quitté la fiche (audit de véracité, nov. 2026)
+    const obake = [...renderFiche('obake').querySelectorAll('.protocol')]
+    expect(obake).toHaveLength(2)
+    for (const t of obake) {
+      expect(text(t.querySelector('.stamp'))).toBe('Définitif')
+      expect(text(t.querySelector('.protocol-except'))).toBe('')
+    }
     const demon = [...renderFiche('demon').querySelectorAll('.protocol')][2]
     expect(text(demon.querySelector('.stamp'))).toBe('Définitif')
     expect(text(demon.querySelector('.protocol-except'))).toBe('sauf Onryo à Sunny Meadows, voir ci-dessous')

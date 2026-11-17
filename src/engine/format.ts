@@ -52,7 +52,7 @@ export function sanityText(g: Ghost): string {
 export type SpeedClass = 'slow' | 'normal' | 'fast'
 export type SanityClass = 'late' | 'normal' | 'early'
 
-/** Classes inspirées des filtres du cheat sheet : lent < 1,7 m/s, rapide > 1,7 m/s. */
+/** Convention propre à l'app : comparaison à la vitesse standard de tybayn (1,7 m/s) ; lent < 1,7 m/s, rapide > 1,7 m/s. */
 export function speedClasses(g: Ghost): Set<SpeedClass> {
   const s = g.speed
   const out = new Set<SpeedClass>()

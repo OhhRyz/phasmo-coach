@@ -64,8 +64,8 @@ export function lowerFirst(text: string): string {
 }
 
 /**
- * L'exception qu'un test définitif nomme lui-même, ou null : « Seul un Gallu enragé (juste après…) fait pareil »
- * → « Gallu enragé » ; « désignent l'Obake (ou un Mimic en train de l'imiter…) » → « Mimic » ; « c'est un Démon
+ * L'exception qu'un test définitif nomme lui-même, ou null : « Un Gallu enragé fait pareil » (ou « Seul un Gallu
+ * enragé (juste après…) fait pareil ») → « Gallu enragé » ; « désignent l'Obake (ou un Mimic en train de l'imiter…) » → « Mimic » ; « c'est un Démon
  * (à Sunny Meadows, un Onryo peut chasser tôt…) » → « Onryo à Sunny Meadows ». Le tampon garde la décision du
  * coach (définitif) et renvoie à l'exception. Une parenthèse qui ne fait que départager (« le Deogen aussi est
  * plus visible, mais… ») n'en est pas une.
@@ -73,8 +73,11 @@ export function lowerFirst(text: string): string {
 export function testException(text: string, ghosts: readonly Pick<Ghost, 'name'>[]): string | null {
   const names = ghosts.map((g) => g.name.replace(/^(?:Le|La|Les) /u, ''))
   const entity = (what: string) => names.some((n) => what === n || what.startsWith(`${n} `))
-  const only = /(?<![\p{L}\d])Seule? (?:un|une|le|la|l['’])\s?([^.;:()«»]+?)\s*(?:\([^)]*\)\s*)?(?:fait|ferait|font|feraient) pareil/u.exec(text)
-  if (only) return entity(only[1].trim()) ? only[1].trim() : null
+  // « Seul un Gallu enragé (…) fait pareil », ou, depuis que la fiche suit tybayn, « Un Gallu enragé fait pareil »
+  const only = /(?<![\p{L}\d])(?:Seule? (?:un|une|le|la|l['’])|Une?\s)\s?([^.;:()«»]+?)\s*(?:\([^)]*\)\s*)?(?:fait|ferait|font|feraient) pareil/u.exec(text)
+  if (only && entity(only[1].trim())) return only[1].trim()
+  // « Seul un joueur attentif ferait pareil » : pas une entité, pas d'exception ; « Un … fait pareil » sans entité : on cherche plus loin
+  if (only && /^Seul/u.test(only[0])) return null
   // « (ou un Mimic en train de l'imiter) » : une autre entité donne le même signe
   const or = /\(ou (?:un|une)\s([\p{Lu}][\p{L}-]*)/u.exec(text)
   if (or && names.includes(or[1])) return or[1]

@@ -433,7 +433,7 @@ export function Scenario() {
                     <path d="M13 3 C 5 6, 9 50, 3 60 C 9 70, 5 114, 13 117" pathLength={1} strokeWidth={1.6} />
                   </svg>
                   <span>
-                    En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves forcées (Hantu,
+                    En Cauchemar et en Démence, une preuve absente ne prouve rien : elle peut être cachée. Les preuves garanties (Hantu,
                     Goryo…) restent visibles dans ces deux modes. En 0 preuve, seuls les orbes du Mimic apparaissent.
                   </span>
                 </p>

@@ -666,7 +666,9 @@ export function Codex() {
             <div className="field">
               <span>Vitesse en chasse</span>
               <Toggle label="Vitesse" items={SPEEDS} value={filter.speed} onChange={(speed) => setFilter({ ...filter, speed })} />
-              <span className="pencil-note cx-field-hint">plusieurs choix possibles · normale = 1,7 m/s</span>
+              <span className="pencil-note cx-field-hint">
+                vitesse de base, sans ligne de vue · normale = 1,7 m/s (la plupart accélèrent jusqu’à 1,65 fois leur vitesse de base quand elles te voient)
+              </span>
             </div>
             <div className="field">
               <span>Une chasse a démarré au-dessus de</span>
