@@ -42,15 +42,18 @@
   "tells": [
     {
       "text": "Pendant les chasses, sa distance d'écoute et de détection est de 2,5 m ou moins.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Déclenche l'événement de la boîte à musique à 2,5 m de celle-ci au lieu des 5 m habituels.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Termine l'événement de la boîte à musique quand sa tête est à 0,5 m de la boîte au lieu du 1 m habituel.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     }
   ],
   "behaviors": [
@@ -68,11 +71,13 @@
   "confirmationTests": [
     {
       "text": "Pendant une chasse, parle (ou active le chat global) à une distance où une entité normale pourrait t'entendre mais pas un Yokai, en restant hors de sa vue, et regarde si l'entité vient vers toi : si ce n'est pas le cas, c'est un Yokai.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Après avoir repéré la zone de l'entité, localise-la précisément (capteur de mouvement ou autre méthode) pour t'assurer qu'elle peut t'atteindre en moins de 5 s une fois la boîte à musique activée. Accroupi, tiens la boîte à musique en main et active-la (le plus sûr est de te tenir sur un crucifix de rang 3). Quand l'entité t'atteint : si l'entité s'attarde quelques secondes au-dessus de la boîte avant de la fermer et de tenter une chasse, au lieu de la fermer immédiatement, c'est un Yokai. Important : l'entité doit t'atteindre avant la fin de la boîte à musique (5 s), sinon la boîte peut se refermer toute seule, ce qui ressemble exactement à une fermeture immédiate et fausse le test. Reste accroupi et garde la boîte en main : posée au sol, la boîte peut se retrouver hors de portée de toutes les entités.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     }
   ],
   "eliminationTests": [

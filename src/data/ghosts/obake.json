@@ -38,7 +38,7 @@
   ],
   "tells": [
     {
-      "text": "Peut laisser des empreintes spéciales : une main à 6 doigts (portes, fenêtres, glacières), une double empreinte digitale (interrupteurs, au lieu d'une seule) ou 5 empreintes digitales (claviers, portes de cellule, au lieu de 4).",
+      "text": "Peut laisser des empreintes spéciales : une main à 6 doigts (portes, fenêtres, glacières), une double empreinte digitale (interrupteurs) ou 5 empreintes digitales (claviers, portes de cellule).",
       "zeroEvidence": false
     },
     {
@@ -47,22 +47,31 @@
     },
     {
       "text": "Change de modèle le temps d'un seul clignotement pendant les chasses, au moins une fois par chasse de durée normale. Les changements tombent sur des clignotements prédéterminés (12e, 27e, 39e, 54e, 62e, 80e, 105e, 120e et 132e) : une chasse plus courte qu'environ 8 s n'en contient donc pas forcément.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
-      "text": "Les transformations suivent un ordre fixe qui ne se réinitialise pas entre les chasses. Modèles masculins : Boucher, Batte / Pêcheur, Barbe grise, Nu, Nerd, Squelette, Brute (puis on recommence). Modèles féminins : Enfant, Grand-mère, Patient 07, Femme (puis on recommence). Un modèle masculin ne devient que d'autres modèles masculins, et inversement.",
-      "zeroEvidence": true
+      "text": "Les transformations suivent un ordre fixe qui ne se réinitialise pas entre les chasses. Modèles masculins : Butcher (boucher), Club / Fisherman (pêcheur), Greybeard (barbe grise), Naked (nu), Nerd, Skeleton (squelette), Brute (puis on recommence). Modèles féminins : Enfant, Grand-mère, Patient 07, Femme (puis on recommence). Un modèle masculin ne devient que d'autres modèles masculins, et inversement.",
+      "zeroEvidence": true,
+      "card": 1
     },
     {
-      "text": "A 25 % de chances de « sauter » un bruit de pas après avoir marché dans le sel.",
-      "zeroEvidence": true
+      "text": "A 25 % de chances de manquer un bruit de pas pendant les événements.",
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "Quand son propre modèle est le suivant dans l'ordre, la transformation garde le même modèle : ça se voit en général par une posture qui se réinitialise d'un coup.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
     }
   ],
-  "behaviors": [],
+  "behaviors": [
+    {
+      "text": "Idée reçue : deux empreintes de pas gauches (ou deux droites) d'affilée ne veulent pas dire que l'entité a manqué un pas ; n'importe quelle entité peut en laisser.",
+      "zeroEvidence": false
+    }
+  ],
   "abilities": [
     {
       "text": "Peut faire disparaître les empreintes deux fois plus vite.",
@@ -72,30 +81,21 @@
   "confirmationTests": [
     {
       "text": "Trouve un endroit où tu peux faire tourner l'entité en boucle tout en gardant son modèle en vue en permanence. Si, pendant la boucle, tu vois le modèle changer le temps d'un seul clignotement, c'est un Obake.",
-      "definitive": true
-    },
-    {
-      "text": "Passe la lampe UV sur les portes, fenêtres, glacières, interrupteurs et claviers touchés par l'entité. Une main à 6 doigts, une double empreinte sur un interrupteur (au lieu d'une) ou 5 empreintes sur un clavier ou une porte de cellule (au lieu de 4) désignent l'Obake (ou un Mimic en train de l'imiter, qui a lui aussi l'UV).",
       "definitive": true,
-      "requires": "uv"
+      "card": 0
     },
     {
       "text": "Pose un seul tas de sel près de l'entité. Si, une fois le sel traversé, tu entends un pas manquant dans la série de bruits de pas (pas… [ ]… pas… au lieu de pas… pas… pas…), c'est un Obake.",
-      "definitive": true
+      "definitive": true,
+      "why": "Après le sel, une entité fait de 0 à 4 pas audibles. Si l'entité s'arrête, les pas s'arrêtent aussi et ne reprennent pas quand l'entité repart : un arrêt n'explique donc pas un pas manquant.",
+      "card": 2
     }
   ],
-  "eliminationTests": [
-    {
-      "text": "Si l'entité n'accélère pas du tout alors qu'elle te garde en LdV pendant plusieurs secondes, ce n'est pas un Obake."
-    },
-    {
-      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Obake."
-    }
-  ],
+  "eliminationTests": [],
   "confusions": [
     {
       "with": "the-mimic",
-      "why": "Le Mimic peut copier la transformation de l'Obake (et, comme il a l'UV, ses empreintes spéciales en l'imitant). Mais il ne donne jamais l'EMF niveau 5 : si tu as l'EMF 5, ce n'est pas le Mimic ; s'il y a Spirit Box ou Températures glaciales, ce n'est pas l'Obake."
+      "why": "Le Mimic peut copier la transformation de l'Obake (et, comme il a l'UV, ses empreintes spéciales en l'imitant). Mais il ne donne jamais l'EMF niveau 5 : si tu as l'EMF 5, ce n'est pas le Mimic ; s'il y a Spirit Box ou Températures glaciales, ce n'est pas l'Obake. Bug connu : quand un Mimic imite l'Obake, ses changements de modèle ne sont visibles que par l'hôte."
     },
     {
       "with": "banshee",
@@ -157,19 +157,19 @@
     {
       "text": "À la lampe UV, tu trouves sur une porte une empreinte de main à six doigts.",
       "kind": "interaction",
-      "strength": "definitive",
+      "strength": "strong",
       "requires": "uv"
     },
     {
       "text": "À la lampe UV, l'interrupteur que l'entité vient de basculer porte une double empreinte digitale.",
       "kind": "interaction",
-      "strength": "definitive",
+      "strength": "strong",
       "requires": "uv"
     },
     {
       "text": "À la lampe UV, le clavier touché par l'entité porte cinq empreintes digitales.",
       "kind": "interaction",
-      "strength": "definitive",
+      "strength": "strong",
       "requires": "uv"
     },
     {
@@ -222,7 +222,7 @@
         "C'est un Fantôme"
       ],
       "answer": 0,
-      "explain": "L'Obake a 25 % de chances de « sauter » un bruit de pas : un pas manquant juste après le sel le confirme. Le Gallu peut au contraire faire plus de 4 pas après le sel, le Spectre ne perturbe jamais le sel, et le Fantôme n'a rien de particulier au sel."
+      "explain": "Un pas manquant dans la série de pas audibles après le sel, c'est un Obake. Le Gallu peut au contraire faire plus de 4 pas après le sel, et le Spectre ne perturbe jamais le sel."
     },
     {
       "q": "Pendant une chasse, au moment d'un clignotement, la posture de l'entité se réinitialise d'un coup sans que son apparence change. Que cela peut-il trahir ?",
@@ -259,13 +259,11 @@
     }
   ],
   "changes": [
-    "Chronicle Patch v0.13.1.0 (juillet 2025) : la transformation de l'Obake peut être filmée comme preuve vidéo (« Changement de forme »).",
-    "Winter's Jest v0.15.1.0 (16 décembre 2025) : correction d'un bug majeur qui faisait laisser des empreintes d'Obake à toutes les entités.",
-    "Précision : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses.",
-    "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
+    "La transformation de l'Obake peut être filmée à la caméra vidéo (vidéo « Ghost Shapeshift »).",
+    "Précision : les transformations ont lieu sur des clignotements prédéterminés (12, 27, 39, 54, 62, 80, 105, 120, 132), avec un ordre de modèles fixe qui ne se réinitialise pas entre les chasses."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_obake_blinking_*",
     "tybayn wiki: wiki_obake_fingerprints_*",
     "tybayn wiki: wiki_flickering_p3",

@@ -43,7 +43,8 @@
   "tells": [
     {
       "text": "Montre toujours des orbes fantomatiques dans sa pièce favorite, même en partie à 0 preuve.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Ses orbes se comportent exactement comme ceux des autres entités : les orbes restent dans la pièce favorite et n'ont aucune différence visuelle.",
@@ -64,19 +65,23 @@
   "confirmationTests": [
     {
       "text": "En partie à 0 preuve, cherche des Orbes fantomatiques dans la pièce favorite. S'il y en a, c'est le Mimic.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Compare les chasses d'une même partie. Si l'entité y montre deux façons de chasser qu'aucune autre entité ne réunit (par exemple une chasse à 1,0 m/s qui passe d'un coup à 3,0 m/s quand tu es repéré, puis une autre qui fonce à 3,0 m/s et ralentit à 0,4 m/s une fois sur toi), c'est le Mimic.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Si tu trouves plus de preuves que la difficulté n'en autorise (par exemple 4 preuves en Professionnel), c'est le Mimic.",
-      "definitive": true
+      "definitive": true,
+      "card": 2
     },
     {
       "text": "Si tu observes un comportement propre à une entité qui ne peut pas donner une preuve que tu as trouvée (par exemple le cri de la Banshee au micro parabolique alors que tu as la Spirit Box), c'est le Mimic.",
-      "definitive": true
+      "definitive": true,
+      "card": 3
     }
   ],
   "eliminationTests": [

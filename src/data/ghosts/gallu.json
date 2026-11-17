@@ -21,8 +21,8 @@
       "État enragé : 1,96 m/s.",
       "État affaibli : 1,36 m/s.",
       "Il accélère en LdV ; comme pour les autres entités récentes à vitesse variable, cette accélération semble calculée directement à partir de sa vitesse du moment.",
-      "Sa vitesse change donc d'une chasse à l'autre selon son état, lui-même lié à ton usage du sel, de l'encens et des crucifix.",
-      "Attention : s'il s'enrage pendant une chasse (encens, sel), il passe en état affaibli dès la fin de cette même chasse ; c'est donc la chasse suivante qui sera lente (1,36 m/s)."
+      "Sa vitesse change avec son état, y compris en pleine chasse : 2 s (depuis l'état normal) ou 3 s (depuis l'état affaibli) après le sel, tout de suite après un encens ou un crucifix.",
+      "L'état enragé dure jusqu'à la fin d'une chasse, puis l'entité passe en état affaibli (1,36 m/s)."
     ]
   },
   "huntSanity": {
@@ -47,27 +47,33 @@
   "tells": [
     {
       "text": "Passe par 3 états qui changent sa vitesse et d'autres comportements, dans cet ordre : normal > enragé > affaibli > normal…",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "État normal (état de départ) : 1,7 m/s en chasse, sans autre particularité. Marcher dans du sel, recevoir de l'encens ou utiliser un crucifix fait passer l'entité en état enragé (2 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "État enragé : 1,96 m/s, seuil de 60 % de santé mentale moyenne, aveuglement par l'encens de 4 s, portée du crucifix réduite de 2 m, ne perturbe pas le sel. L'état enragé dure jusqu'à la fin d'une chasse, puis laisse place à l'état affaibli.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "État affaibli : 1,36 m/s, seuil de 40 %, aveuglement par l'encens de 6 s, portée du crucifix augmentée de 1 m, perturbe le sel. L'état affaibli dure jusqu'au prochain sel traversé, encens reçu ou crucifix utilisé, puis l'entité revient en état normal (3 s de délai après le sel ; changement immédiat avec l'encens ou le crucifix).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
     },
     {
       "text": "En état enragé, peut lancer une chasse juste au-dessus d'un crucifix de rang 1 posé au sol.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 4
     },
     {
       "text": "Seule entité qui peut faire plus de 4 pas juste après avoir marché dans du sel.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 5
     }
   ],
   "behaviors": [
@@ -85,26 +91,30 @@
   "confirmationTests": [
     {
       "text": "Si tu vois une entité nettement rapide sans ligne de vue (environ 1,96 m/s) marcher dans un tas de sel pendant une chasse sans le perturber, c'est un Gallu (le Spectre ne perturbe pas le sel non plus, mais reste à 1,7 m/s hors ligne de vue).",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Pendant une chasse, si une entité à vitesse normale ou lente accélère 2 ou 3 s après avoir marché dans un tas de sel de rang 1 ou 2, c'est un Gallu.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Pose du sel de rang 2 ou 3 en 3 lignes espacées de 1 à 2 m, si possible sous l'œil d'une caméra. Lance ou attends une chasse, puis attire l'entité vers toi pour qu'elle traverse les 3 lignes. Dès qu'elle perturbe le premier tas, encense-la : ça la fait passer immédiatement à l'état suivant. L'entité continue alors sa route sur les 2e et 3e lignes : si la première est perturbée mais pas les deux suivantes, c'est un Gallu (le Spectre ne perturbe jamais le sel). Le test marche le mieux si le Gallu est en état normal ; tu peux aussi n'utiliser que du sel de rang 3, qui ralentit l'entité, à condition d'espacer assez les tas pour qu'elle mette plus de 3 s à atteindre le suivant. Fais faire l'observation par l'hôte, à cause du bug de synchronisation du sel.",
-      "definitive": true
+      "definitive": true,
+      "card": 2
     },
     {
       "text": "Après une chasse (avant tout crucifix utilisé, sel traversé ou encens reçu), pose un seul tas de sel et attends que l'entité le traverse. Si l'entité fait alors 5 ou 6 pas audibles juste après avoir marché dans le sel, c'est un Gallu.",
-      "definitive": true
+      "definitive": true,
+      "card": 3
     },
     {
       "text": "Si l'entité alterne entre perturber le sel et ne pas le perturber, ça peut être un Gallu.",
       "definitive": false
     },
     {
-      "text": "Mesure sa vitesse sur plusieurs chasses. S'il est en état normal (1,7 m/s) et que tu l'encenses hors chasse, qu'il marche dans le sel ou qu'un crucifix bloque une chasse, sa chasse suivante est à 1,96 m/s (enragé) ; à la fin de cette chasse il passe en affaibli et chasse ensuite à 1,36 m/s tant que tu n'utilises ni sel, ni encens, ni crucifix. S'il s'enrage pendant une chasse, il passe en affaibli dès la fin de cette même chasse. Cette séquence liée à tes protections est sa signature (les Jumeaux varient aussi, autour de 1,5 / 1,9 m/s, mais sans lien avec tes protections).",
+      "text": "Mesure sa vitesse sur plusieurs chasses. S'il est en état normal (1,7 m/s) et que tu l'encenses hors chasse, qu'il marche dans le sel ou qu'un crucifix bloque une chasse, sa chasse suivante est à 1,96 m/s (enragé) ; à la fin de cette chasse il passe en affaibli et chasse ensuite à 1,36 m/s tant que tu n'utilises ni sel, ni encens, ni crucifix. Cette séquence liée à tes protections est sa signature (les Jumeaux varient aussi, autour de 1,5 / 1,9 m/s, mais sans lien avec tes protections).",
       "definitive": false
     },
     {
@@ -112,14 +122,7 @@
       "definitive": false
     }
   ],
-  "eliminationTests": [
-    {
-      "text": "Si l'entité chasse au-dessus de 60 % de santé mentale moyenne sans objet maudit, ce n'est pas un Gallu."
-    },
-    {
-      "text": "Si sa vitesse de chasse de base (vitesse des entités réglée à 100 %) est nettement différente de 1,36, 1,7 et 1,96 m/s, ce n'est pas un Gallu."
-    }
-  ],
+  "eliminationTests": [],
   "confusions": [
     {
       "with": "wraith",
@@ -180,7 +183,7 @@
   ],
   "observations": [
     {
-      "text": "Sur le même trajet, l'entité perturbe ta première ligne de sel, puis traverse la suivante sans la toucher.",
+      "text": "Pendant une chasse, l'entité perturbe ta première ligne de sel ; tu l'encenses aussitôt, puis l'entité traverse les 2e et 3e lignes sans les perturber.",
       "kind": "interaction",
       "strength": "definitive"
     },
@@ -200,14 +203,14 @@
       "strength": "strong"
     },
     {
-      "text": "En pleine chasse, alors qu'elle avance nettement plus lentement que la normale, ton encens de rang 1 la désoriente environ 6 s, un peu plus longtemps que d'habitude.",
+      "text": "En pleine chasse, alors qu'elle avance nettement plus lentement que la normale, ton encens la désoriente environ 6 s, un peu plus longtemps que d'habitude.",
       "kind": "hunt",
       "strength": "strong"
     },
     {
-      "text": "En pleine chasse, alors que l'entité avance nettement plus vite que la normale, ton encens de rang 1 ne la désoriente qu'environ 4 s, moins longtemps que d'habitude.",
+      "text": "En pleine chasse, alors que l'entité avance nettement plus vite que la normale, ton encens ne l'aveugle qu'environ 4 s (5 s en standard).",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Après que tu l'as encensée hors chasse, l'entité finit par lancer une chasse alors que la santé mentale moyenne est encore vers 58 %, sans objet maudit.",
@@ -283,9 +286,7 @@
       "explain": "Un Gallu perturbe le sel en état normal puis s'enrage et ne le touche plus ; le Spectre ne le perturbe jamais. N'avoir touché à aucun sel va dans le sens du Spectre, la téléportation près d'un joueur est aussi la sienne, et on ignore encore si un Gallu enragé est ralenti par le sel pendant les chasses."
     }
   ],
-  "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour Winter's Jest v0.15.1.0 (16 décembre 2025), en même temps que la Dayan et l'Obambo."
-  ],
+  "changes": [],
   "sources": [
     "tybayn wiki: wiki_gallu_states_title",
     "tybayn wiki: wiki_gallu_states_p1",
@@ -307,9 +308,7 @@
     "https://www.gamespot.com/articles/all-phasmophobia-unique-ghost-abilities/"
   ],
   "uncertain": [
-    "Aucune preuve garantie connue en difficulté Cauchemar et Démence, sans confirmation officielle.",
     "Vitesse maximale en LdV dans chaque état : non chiffrée (l'accélération semble partir de sa vitesse du moment).",
-    "Effet d'un encens ou d'un crucifix utilisé pendant une chasse sur la vitesse de cette même chasse : non documenté.",
     "Un Gallu enragé est-il ralenti par le sel de rang 3 ? Inconnu.",
     "Délai après l'encens et délai entre deux chasses : supposés standard, non vérifiés.",
     "Passage en affaibli à la fin de la chasse même où il s'est enragé : déduit de sa description, non testé en jeu."

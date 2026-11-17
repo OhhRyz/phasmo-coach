@@ -26,25 +26,25 @@
       "Seuil de chasse standard : 50 % de santé mentale moyenne, sans condition particulière."
     ]
   },
-  "summary": "Une entité silencieuse en chasse — tu ne l'entends qu'à 12 m au lieu de 20 m — mais bavarde au micro parabolique.",
+  "summary": "Une entité qu'on entend de moins loin en chasse — 12 m au lieu de 20 m — mais bavarde au micro parabolique.",
   "keyTells": [
     "En chasse, pas et voix inaudibles au-delà de 12 m (20 m normalement)",
     "Plus de sons paranormaux au micro parabolique et à l'enregistreur (deux en moins de 80 s : Myling)",
     "Vitesse et seuil de chasse standards (1,7 m/s, 50 %)"
   ],
   "tells": [
-    { "text": "Ses pas et ses sons vocaux ne s'entendent pas à plus de 12 m pendant les chasses (contre 20 m normalement).", "zeroEvidence": true },
-    { "text": "Produit davantage de sons au micro parabolique et à l'enregistreur de son que les autres entités.", "zeroEvidence": true },
-    { "text": "Le grésillement de l'enregistreur de son commence à 5 m / 6,5 m / 7,5 m (rang 1 / 2 / 3) du son paranormal, au lieu des 4 m / 5,5 m / 6,5 m habituels.", "zeroEvidence": true }
+    { "text": "Ses pas et ses sons vocaux ne s'entendent pas à plus de 12 m pendant les chasses (contre 20 m normalement).", "zeroEvidence": true, "card": 0 },
+    { "text": "Produit davantage de sons au micro parabolique et à l'enregistreur de son que les autres entités.", "zeroEvidence": true, "card": 1 },
+    { "text": "Le grésillement de l'enregistreur de son commence à 5 m / 6,5 m / 7,5 m (rang 1 / 2 / 3) du son paranormal, au lieu des 4 m / 5,5 m / 6,5 m habituels.", "zeroEvidence": true, "card": 2 }
   ],
   "behaviors": [
     { "text": "Contrairement à une idée reçue, le Myling émet bien des sons vocaux pendant les chasses ; c'est sa portée d'audition réduite (12 m au lieu de 20 m) qui le rend aussi un peu plus discret qu'une entité normale à distance égale.", "zeroEvidence": false }
   ],
   "abilities": [],
   "confirmationTests": [
-    { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true },
-    { "text": "Si l'entité émet deux sons paranormaux au micro parabolique ou à l'enregistreur de son à moins de 80 s d'intervalle, c'est un Myling.", "definitive": true },
-    { "text": "Prends un enregistreur de son de rang 1 ou 3 et attends un son paranormal. Dès que ce son se produit, entre et sors de la zone de grésillement (le voyant passe au rouge ou la boussole apparaît). Si le grésillement commence 1 m plus loin que la normale pour le rang de ton enregistreur, c'est un Myling.", "definitive": true }
+    { "text": "Pendant une chasse, si tu n'entends pas l'entité alors qu'elle se trouve entre 12 m et 20 m de toi, c'est un Myling.", "definitive": true, "card": 0 },
+    { "text": "Si l'entité émet deux sons paranormaux au micro parabolique ou à l'enregistreur de son à moins de 80 s d'intervalle, c'est un Myling.", "definitive": true, "card": 1 },
+    { "text": "Prends un enregistreur de son de rang 1 ou 3 et attends un son paranormal. Dès que ce son se produit, entre et sors de la zone de grésillement (le voyant passe au rouge ou la boussole apparaît). Si le grésillement commence 1 m plus loin que la normale pour le rang de ton enregistreur, c'est un Myling.", "definitive": true, "card": 2 }
   ],
   "eliminationTests": [
     { "text": "Si tu entends l'entité entre 12 m et 20 m de toi pendant une chasse, ce n'est pas un Myling." }
@@ -65,7 +65,6 @@
     { "text": "Pendant une chasse, l'entité traverse une grande pièce dégagée à une quinzaine de mètres de toi, et tu n'entends ni ses pas ni sa voix.", "kind": "hunt", "strength": "definitive" },
     { "text": "Pendant une chasse, ton coéquipier, qui voit l'entité, t'annonce qu'elle est à une quinzaine de mètres de toi dans le même couloir ; tu n'entends pourtant rien.", "kind": "hunt", "strength": "definitive" },
     { "text": "Les chasses te paraissent étonnamment silencieuses : les pas surgissent d'un coup, alors que l'entité est déjà assez proche.", "kind": "hunt", "strength": "strong" },
-    { "text": "Pendant une chasse, tu ne commences à entendre les pas de l'entité qu'un instant avant que ta lampe torche se mette à grésiller.", "kind": "hunt", "strength": "strong" },
     { "text": "Au micro parabolique, tu captes nettement plus de sons paranormaux que d'habitude autour de sa pièce.", "kind": "behavior", "strength": "hint" },
     { "text": "Pendant les chasses, l'entité te surprend souvent au détour d'un couloir : tu ne l'as pas entendue arriver de loin.", "kind": "hunt", "strength": "hint" },
     { "text": "Au micro parabolique, tu captes deux sons paranormaux à moins d'une minute d'intervalle.", "kind": "behavior", "strength": "definitive" },
@@ -76,7 +75,7 @@
       "q": "À quelle distance maximale entends-tu les pas d'un Myling en chasse ?",
       "choices": ["20 m", "10 m", "12 m", "2,5 m"],
       "answer": 2,
-      "explain": "Le Myling n'est audible qu'à 12 m en chasse, contre 20 m pour une entité normale. 10 m est la portée standard des perturbations électroniques, et 2,5 m la portée de détection du Yokai."
+      "explain": "Le Myling n'est audible qu'à 12 m en chasse, contre 20 m pour une entité normale. 10 m est la portée standard des perturbations électroniques, et 2,5 m la distance à laquelle un Yokai détecte la voix et l'électronique en chasse."
     },
     {
       "q": "Au micro parabolique, l'entité émet deux sons paranormaux à moins de 80 s d'intervalle. Qu'en conclus-tu ?",
@@ -111,7 +110,7 @@
   ],
   "changes": [],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_misconceptions_myling_1_r",
     "tybayn wiki: wiki_known_bugs_myling",
     "https://progameguides.com/phasmophobia/phasmophobia-patch-notes/"

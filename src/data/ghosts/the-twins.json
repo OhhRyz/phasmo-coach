@@ -35,8 +35,8 @@
     "Capteurs de mouvement et sel ne réagissent qu'à sa position réelle"
   ],
   "tells": [
-    { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true },
-    { "text": "En chasse, sa vitesse sera soit de 1,5 m/s, soit de 1,9 m/s (0,2 m/s de moins ou de plus que la vitesse normale de 1,7 m/s).", "zeroEvidence": true }
+    { "text": "Peut faire 2 interactions en même temps : l'une dans sa portée standard et l'autre dans sa portée étendue (rayon effectif d'environ 8,48 m sur petite et moyenne carte, 16,97 m sur grande carte).", "zeroEvidence": true, "card": 0 },
+    { "text": "En chasse, sa vitesse sera soit de 1,5 m/s, soit de 1,9 m/s (0,2 m/s de moins ou de plus que la vitesse normale de 1,7 m/s).", "zeroEvidence": true, "card": 1 }
   ],
   "behaviors": [
     { "text": "Le déclenchement des capteurs de mouvement, les pas dans le sel et les réponses à la Spirit Box ne se produisent qu'à sa position physique réelle.", "zeroEvidence": false },

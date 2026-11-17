@@ -131,18 +131,49 @@ function testNeedsEvidence(text: string): boolean {
   return /\bpreuves?\b/iu.test(first.replace(NO_EVIDENCE, '')) || needsEvidence(text)
 }
 
+/**
+ * Le numéro de carte de chaque élément d'une liste (tests, signes) : celui que porte l'élément dans la fiche
+ * (`card`). La progression d'un carnet est rangée par identifiant de carte (`g:<entité>:test:<numéro>`,
+ * `g:<entité>:rev:<numéro>`) : supprimer, rétrograder ou ajouter un élément ne doit jamais faire passer un
+ * identifiant d'un texte à un autre, d'où un numéro écrit, et non un rang dans la liste.
+ *
+ * Un élément retenu (`eligible`) sans numéro reçoit le premier numéro libre après le plus grand numéro écrit
+ * dans la liste, dans l'ordre de la liste ; les numéros écrits sur des éléments qui ne sont plus retenus (test
+ * rétrogradé) restent pris. Un numéro écrit deux fois ne vaut que pour le premier. Ce repli garde l'app
+ * debout ; le numéro définitif s'écrit dans la fiche (src/data/cardIds.test.ts dit lequel).
+ */
+export function cardNumbers<T extends { card?: number }>(items: readonly T[], eligible: (t: T) => boolean): Map<T, number> {
+  const taken = new Set<number>()
+  const out = new Map<T, number>()
+  const unnumbered: T[] = []
+  for (const t of items) {
+    const n = t.card
+    if (typeof n === 'number' && Number.isInteger(n) && n >= 0 && !taken.has(n)) {
+      taken.add(n)
+      if (eligible(t)) out.set(t, n)
+    } else if (eligible(t)) unnumbered.push(t)
+  }
+  let next = taken.size ? Math.max(...taken) + 1 : 0
+  for (const t of unnumbered) out.set(t, next++)
+  return out
+}
+
+/** Le numéro de carte des tests définitifs d'une fiche. */
+export const testNumbers = (g: Ghost) => cardNumbers(g.confirmationTests, (t) => t.definitive)
+/** Le numéro de carte des signes « 0 preuve » d'une fiche (`tells`). */
+export const tellNumbers = (g: Ghost) => cardNumbers(g.tells, (t) => !!t.zeroEvidence)
+
 const zeroTestCache = new WeakMap<Ghost, { text: string; k: number }[]>()
 
-/** Tests définitifs utilisables sans preuve, avec leur rang parmi les tests définitifs (identifiant de carte stable). */
+/** Tests définitifs utilisables sans preuve, avec leur numéro de carte (k : identifiant de carte stable, voir cardNumbers). */
 export function zeroTests(g: Ghost): { text: string; k: number }[] {
   let out = zeroTestCache.get(g)
   if (!out) {
+    const numbers = testNumbers(g)
     out = g.confirmationTests
-      .filter((t) => t.definitive)
-      .map((t, k) => ({ t, k }))
       // « requires » : le test n'existe qu'avec cette preuve (empreintes de l'Obake, respiration du Deogen)
-      .filter(({ t }) => !t.requires && !testNeedsEvidence(t.text))
-      .map(({ t, k }) => ({ text: t.text, k }))
+      .filter((t) => t.definitive && !t.requires && !testNeedsEvidence(t.text))
+      .map((t) => ({ text: t.text, k: numbers.get(t)! }))
     zeroTestCache.set(g, out)
   }
   return out
@@ -323,7 +354,7 @@ const reverseCache = new WeakMap<readonly Ghost[], Map<string, { text: string; k
 
 /**
  * Les signes « 0 preuve » qui deviennent des cartes « Quelle entité correspond à ce signe ? », déjà caviardés
- * (k : rang parmi les signes 0 preuve, identifiant de carte stable). Une carte ne propose aucun choix : le
+ * (k : numéro de carte du signe, identifiant de carte stable, voir cardNumbers). Une carte ne propose aucun choix : le
  * signe doit être propre à l'entité. On écarte donc ceux qui passent par une preuve, qui gardent le nom
  * (entre « ») et ceux qu'une autre entité donne aussi (sa fiche dit presque la même chose).
  */
@@ -333,9 +364,10 @@ export function reverseTells(g: Ghost, all: readonly Ghost[]): { text: string; k
   const cached = byGhost.get(g.id)
   if (cached) return cached
   const others = all.filter((o) => o.id !== g.id && o.id !== MIMIC)
+  const numbers = tellNumbers(g)
   const out = g.tells
     .filter((t) => t.zeroEvidence)
-    .map((t, k) => ({ text: redact(withoutEvidenceAsides(t.text), g), k }))
+    .map((t) => ({ text: redact(withoutEvidenceAsides(t.text), g), k: numbers.get(t)! }))
     .filter(
       ({ text }) =>
         !needsEvidence(text) &&

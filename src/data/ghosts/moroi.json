@@ -18,7 +18,7 @@
     "summary": "1,5 → 2,25 m/s selon la santé · accélère en LdV (3,71 max)",
     "details": [
       "Sa vitesse dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, puis environ +0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %.",
-      "Repères par tranche de santé mentale : 40–45 % 1,583 · 35–40 % 1,666 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
+      "Repères par tranche de santé mentale : 40–45 % 1,583 · 35–40 % 1,66 · 30–35 % 1,749 · 25–30 % 1,832 · 20–25 % 1,915 · 15–20 % 1,998 · 10–15 % 2,081 · 5–10 % 2,164 · 0–5 % 2,25 m/s.",
       "Sa vitesse suit la santé en pleine chasse : si l'équipe prend des pilules, il ralentit.",
       "Il a l'accélération en LdV : jusqu'à 1,65 × sa vitesse actuelle après 13 s de LdV continue, soit 3,71 m/s au maximum à 0 % de santé (l'entité la plus rapide du jeu) et environ 2,5 m/s quand l'équipe est encore au-dessus de 45 %.",
       "Encens de rang 1 en chasse : il retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; ensuite il récupère le bonus de LdV qu'il lui restait, et recommence à accélérer s'il te revoit.",
@@ -38,9 +38,9 @@
   "summary": "Entité qui maudit ceux qui l'entendent et qui devient de plus en plus rapide à mesure que la santé mentale de l'équipe chute.",
   "keyTells": [
     "Plus la santé moyenne baisse, plus il est rapide (1,5 → 2,25 m/s), et il accélère en LdV",
-    "Sans santé mentale (0 %), l'entité la plus rapide du jeu : 2,25 m/s, jusqu'à 3,71 m/s en LdV",
+    "Sans santé mentale (0 %) : 2,25 m/s de base, et jusqu'à 3,71 m/s après 13 s de LdV continue — la vitesse la plus élevée du jeu",
     "Encens en chasse : aveuglé 7 s au lieu de 5 s",
-    "Malédiction quand tu l'entends au micro parabolique ou à l'enregistreur de son : santé qui baisse 2× plus vite"
+    "Malédiction quand tu entends un son paranormal au micro parabolique, ou que tu enregistres un son à l'enregistreur de son : santé qui baisse 2× plus vite"
   ],
   "tells": [
     {
@@ -49,11 +49,13 @@
     },
     {
       "text": "Maudit le joueur qui l'entend au micro parabolique : la malédiction fait baisser sa santé mentale deux fois plus vite.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
-      "text": "L'aveuglement à l'encens pendant les chasses dure plus longtemps : 7 s au lieu de 5 s avec un encens de rang 1 (les notes de patch annonçaient +50 %, soit 7,5 s, mais c'est 7 s en jeu).",
-      "zeroEvidence": true
+      "text": "L'aveuglement à l'encens pendant les chasses dure plus longtemps : 7 s au lieu de 5 s avec un encens de rang 1 (les notes de patch annonçaient +50 %, soit 7,5 s, mais c'est 7 s en jeu). C'est l'entité qui reste aveuglée le plus longtemps après un encens.",
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [
@@ -73,26 +75,21 @@
       "definitive": false
     },
     {
-      "text": "Si, après avoir entendu un son paranormal au micro parabolique ou à l'enregistreur de son, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une (petite) pièce éclairée, c'est un Moroi.",
-      "definitive": true
+      "text": "Si, après avoir entendu un son paranormal au micro parabolique ou à l'enregistreur de son, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une pièce éclairée, c'est un Moroi.",
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroi. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Si, après avoir entendu un murmure au micro parabolique ou à l'enregistreur de son, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroi.",
       "definitive": false
     }
   ],
-  "eliminationTests": [
-    {
-      "text": "Si l'entité n'accélère pas du tout alors qu'elle te garde en LdV pendant plusieurs secondes, ce n'est pas un Moroi."
-    },
-    {
-      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Moroi."
-    }
-  ],
+  "eliminationTests": [],
   "confusions": [
     {
       "with": "thaye",
@@ -170,9 +167,9 @@
       "requires": "spiritbox"
     },
     {
-      "text": "La santé mentale de l'équipe est déjà bien entamée ; tu prends des pilules en pleine chasse et l'entité ralentit juste après.",
+      "text": "La santé mentale moyenne est passée sous 40 % ; tu prends des pilules en pleine chasse et l'entité ralentit juste après.",
       "kind": "hunt",
-      "strength": "strong"
+      "strength": "definitive"
     },
     {
       "text": "L'équipe n'a presque plus de santé mentale ; l'entité, qui te garde en vue dans un long couloir, finit par atteindre une vitesse folle, près de 3,7 m/s.",
@@ -254,11 +251,10 @@
     }
   ],
   "changes": [
-    "Bug connu : l'aveuglement à l'encens dure 7 s en jeu, et non 7,5 s comme l'annonçaient les notes de patch.",
-    "v0.17.0.0 (mai 2026) avait ralenti l'accélération en LdV de toutes les entités (+5 %/s → +2,5 %/s) ; annulé en v0.17.1.4 (2 juin 2026), retour aux valeurs d'origine."
+    "Bug connu : l'aveuglement à l'encens dure 7 s en jeu, et non 7,5 s comme l'annonçaient les notes de patch."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_moroi_p1, wiki_los_moroi_p2",
     "tybayn wiki: wiki_ghost_speed_h6 (tableau des vitesses du Moroi)",
     "tybayn wiki: wiki_los_thaye_p1, wiki_los_thaye_p3",

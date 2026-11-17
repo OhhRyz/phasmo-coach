@@ -13,7 +13,7 @@
     "los": false,
     "summary": "3,0 → 0,4 m/s selon les objets · n'accélère pas en LdV",
     "details": [
-      "Sa vitesse de chasse dépend du nombre d'objets différents utilisés ou ramassés par les joueurs depuis la dernière chasse (ou tentative de chasse).",
+      "Sa vitesse de chasse dépend du nombre d'objets différents (hors équipement) utilisés ou ramassés par les joueurs depuis la dernière chasse (ou tentative de chasse).",
       "Départ à 3,0 m/s ; chaque action retire 0,1 m/s, jusqu'à 0,4 m/s au minimum (26 actions). Repères : 9 objets = 2,1 m/s · 13 = 1,7 m/s · 20 = 1,0 m/s.",
       "Comptent : ramasser un objet hors équipement (joueur vivant ou mort), interagir avec un objet hors équipement (console, micro-ondes…), un interrupteur, le disjoncteur ou un robinet.",
       "Chaque objet ne compte qu'une fois (une chaussure ramassée et lâchée plusieurs fois = 1), mais il peut être n'importe où sur la carte, même hors de la zone d'enquête ou dans le camion.",
@@ -31,25 +31,28 @@
       "Aucune capacité connue ne modifie ce seuil (hors objets maudits)."
     ]
   },
-  "summary": "Entité ultra-rapide que tu ralentis en manipulant des objets : chaque objet différent utilisé entre deux chasses lui retire 0,1 m/s.",
+  "summary": "Entité ultra-rapide que tu ralentis en manipulant des objets : chaque objet différent hors équipement utilisé entre deux chasses lui retire 0,1 m/s.",
   "keyTells": [
     "3,0 m/s si personne n'a rien touché depuis la dernière chasse",
-    "Chaque objet différent utilisé ou ramassé : −0,1 m/s (minimum 0,4 m/s)",
+    "Chaque objet différent hors équipement utilisé ou ramassé : −0,1 m/s (minimum 0,4 m/s)",
     "Vitesse fixe pendant toute la chasse : aucune accélération en LdV",
     "Revient à 3,0 m/s après chaque chasse ou tentative de chasse"
   ],
   "tells": [
     {
-      "text": "Sa vitesse de chasse dépend du nombre d'objets différents utilisés ou ramassés par les joueurs depuis la dernière chasse : 3,0 m/s au départ, −0,1 m/s par action, minimum 0,4 m/s (26 actions).",
-      "zeroEvidence": true
+      "text": "Sa vitesse de chasse dépend du nombre d'objets différents (hors équipement) utilisés ou ramassés par les joueurs depuis la dernière chasse ou tentative de chasse : 3,0 m/s au départ, −0,1 m/s par action, minimum 0,4 m/s (26 actions).",
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "N'accélère pas en LdV : sa vitesse est verrouillée pendant toute la chasse.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Le réglage « portes ouvertes au départ » est appliqué un cran plus bas que celui choisi (élevé → moyen, moyen → faible, faible → aucune, aucune → aucune).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     }
   ],
   "behaviors": [
@@ -74,30 +77,21 @@
   "confirmationTests": [
     {
       "text": "Ramasse ou utilise au moins 26 objets différents (hors équipement). Si, à la chasse suivante, l'entité avance à 0,4 m/s sans être près de toi, c'est un Deildegast.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Fais le tour de la carte avant de toucher à la moindre porte : s'il y a moins de portes ouvertes au départ que prévu pour la difficulté choisie, ça peut être un Deildegast.",
       "definitive": false
     },
     {
-      "text": "Repère la vitesse d'une première chasse sans avoir touché à rien (environ 3,0 m/s, constante). Avant la chasse suivante, ramasse ou utilise une quinzaine d'objets différents (hors équipement). Si l'entité est alors nettement plus lente (environ 1,5 m/s) et garde cette vitesse toute la chasse, ça peut être un Deildegast. Un Thayé qui a vieilli entre les deux chasses peut donner le même résultat : confirme avec le test suivant.",
+      "text": "Repère la vitesse d'une première chasse sans avoir touché à rien (environ 3,0 m/s, constante). Avant la chasse suivante, ramasse ou utilise une quinzaine d'objets différents (hors équipement). Si l'entité est alors nettement plus lente (environ 1,5 m/s) et garde cette vitesse toute la chasse, ça peut être un Deildegast. Un Thayé qui a vieilli entre les deux chasses peut donner le même résultat : confirme avec le test des 26 objets.",
       "definitive": false
-    },
-    {
-      "text": "Après une chasse lente, ne touche plus à rien : si la chasse suivante redevient très rapide (3,0 m/s) et que cette vitesse ne change pas de toute la chasse, c'est un Deildegast (un Thayé ne redevient jamais plus rapide).",
-      "definitive": true
     }
   ],
   "eliminationTests": [
     {
       "text": "Si l'entité accélère progressivement quand elle te garde en LdV, ce n'est pas un Deildegast."
-    },
-    {
-      "text": "Si sa vitesse change au cours d'une même chasse (ralentit en arrivant sur toi, accélère d'un coup quand elle te détecte), ce n'est pas un Deildegast."
-    },
-    {
-      "text": "Si l'entité tente de chasser au-dessus de 50 % de santé mentale moyenne (sans objet maudit), ce n'est pas un Deildegast."
     }
   ],
   "confusions": [
@@ -169,7 +163,7 @@
     {
       "text": "Après une chasse lente, plus personne ne touche à rien : la chasse suivante redevient ultra-rapide (environ 3 m/s), à vitesse constante du début à la fin.",
       "kind": "hunt",
-      "strength": "definitive"
+      "strength": "strong"
     },
     {
       "text": "Même mort, ton coéquipier a ramassé une quinzaine d'objets différents entre deux chasses : la chasse suivante tombe à environ 1,5 m/s et garde cette allure du début à la fin, sans accélérer quand l'entité te voit.",
@@ -250,9 +244,7 @@
       "explain": "3,0 − 13 × 0,1 = 1,7 m/s. Avec 9 objets il est à 2,1 m/s, avec 26 il atteint son minimum de 0,4 m/s."
     }
   ],
-  "changes": [
-    "Nouvelle entité ajoutée avec la mise à jour v0.18.0.0 « 13 Willow Street Rework & Quality of Life #1 » (21 juillet 2026)."
-  ],
+  "changes": [],
   "sources": [
     "tybayn wiki: wiki_deildegast_speed_*",
     "tybayn wiki: wiki_ghost_speed_h0 (tableau des vitesses du Deildegast)",
@@ -267,8 +259,7 @@
   ],
   "uncertain": [
     "Version d'ajout (v0.18.0.0, 21 juillet 2026) : une seule source la relie au Deildegast.",
-    "L'équipement ne compte pas ; les portes et les objets maudits non plus, d'après une seule source.",
-    "Aucune preuve garantie pour la plupart des sources ; une seule affirme le contraire.",
+    "Les portes et les objets maudits ne compteraient pas, d'après une seule source.",
     "Les tests qui comparent deux chasses sont déduits de son mécanisme ; les tests de référence sont ceux des 26 objets et des portes ouvertes au départ. Un Hantu pourrait brouiller une mesure faite à l'oreille.",
     "Effet de l'encens et du crucifix : supposé standard ; un crucifix qui empêche une chasse remettrait aussi le compteur à zéro (une seule source)."
   ]

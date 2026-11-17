@@ -41,11 +41,13 @@
   "tells": [
     {
       "text": "Ne touche pas au sel et n'interagit d'aucune façon avec le sel.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Le sel de rang 3 ne ralentit pas l'entité pendant une chasse.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [],
@@ -62,11 +64,13 @@
   "confirmationTests": [
     {
       "text": "Si tu vois l'entité traverser un tas de sel sans le perturber, pendant un événement ou une chasse, c'est un Spectre. Seul un Gallu enragé (juste après encens, sel ou crucifix) fait pareil, mais en chasse le Gallu enragé file nettement plus vite : 1,96 m/s au lieu de 1,7 hors ligne de vue. Fais faire l'observation par l'hôte : à cause d'un bug, seul l'hôte voit parfois un Gallu perturber le sel.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Place du sel en ligne juste sous un détecteur de mouvement de rang 1 ou 2, en couvrant toute la largeur du laser. Si le détecteur s'active mais que le sel reste intact, c'est un Spectre. Seul un Gallu enragé ferait pareil : fais ce test quand ni encens, ni sel, ni crucifix n'a servi depuis la dernière chasse, et laisse l'hôte observer.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Pour écarter le Gallu : à la fin d'une chasse, un Gallu n'est jamais enragé (il passe en affaibli ou reste normal), et dans ces deux états il perturbe le premier sel qu'il touche. Si, après une chasse et sans encens ni crucifix utilisé entre-temps, l'entité traverse ton sel sans le perturber (constaté par l'hôte), ce n'est pas un Gallu : avec EMF 5 + Spirit Box, il ne reste que le Spectre.",

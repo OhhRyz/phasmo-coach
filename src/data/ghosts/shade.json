@@ -28,9 +28,9 @@
       "Elle peut en revanche sortir de la pièce et lancer la chasse depuis une pièce adjacente."
     ]
   },
-  "summary": "L'entité la plus timide : elle ne fait presque rien quand tu es dans sa pièce, ne chasse pas avant 35 % de santé mentale et préfère se montrer en silhouette noire.",
+  "summary": "Entité discrète : elle ne fait presque rien tant qu'elle est dans la même pièce que toi, ne chasse pas avant 35 % de santé mentale et préfère se montrer en forme d'ombre.",
   "keyTells": [
-    "Apparaît en silhouette noire au cercle, à la boîte à musique ou à la patte de singe",
+    "Seule entité qui peut apparaître en silhouette noire au cercle d'invocation, à la boîte à musique ou à la patte de singe",
     "Aucune interaction, aucun événement, aucune chasse depuis la pièce où tu es",
     "Seuil de chasse bas : 35 %",
     "Aucun événement tant que la santé mentale moyenne est à 100 %"
@@ -38,19 +38,23 @@
   "tells": [
     {
       "text": "Seule entité qui peut apparaître en silhouette noire et floue lors des événements du cercle d'invocation, de la boîte à musique et de la patte de singe.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Plus susceptible de faire des événements de brouillard fantomatique.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Ne peut pas faire d'événement de chant.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "Ne peut pas faire l'interaction « soulever un objet et le lancer sur le joueur ».",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
     }
   ],
   "behaviors": [
@@ -86,16 +90,19 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu as une poupée vaudou, place du sel ou un détecteur de mouvement dans la pièce de l'entité et reste dans cette même pièce. Pose plusieurs objets que l'entité peut toucher ou lancer, à portée d'interaction du détecteur ou du sel. Quand l'entité marche dans le sel ou déclenche le détecteur, enfonce une aiguille dans la poupée vaudou : s'il ne se produit aucune interaction (vérifie à l'EMF), c'est une Ombre.",
-      "definitive": true
+      "text": "Si tu as une poupée vaudou, place du sel ou un détecteur de mouvement dans la pièce où se trouve l'entité et reste dans cette même pièce. Pose plusieurs objets que l'entité peut toucher ou lancer, à portée d'interaction du détecteur ou du sel. Quand l'entité marche dans le sel ou déclenche le détecteur, enfonce une aiguille dans la poupée vaudou : s'il ne se produit aucune interaction (vérifie à l'EMF), c'est une Ombre.",
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Si tu as le cercle d'invocation, allume-le : si l'entité apparaît en silhouette noire et floue, c'est une Ombre.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Pendant l'événement de la boîte à musique ou de la patte de singe, si l'entité apparaît en silhouette noire et floue, c'est une Ombre.",
-      "definitive": true
+      "definitive": true,
+      "card": 2
     },
     {
       "text": "Une fois la pièce favorite connue, place un crucifix qui couvre toute la pièce et des capteurs de mouvement à toutes ses entrées. Suis la position de l'entité grâce aux capteurs : si elle ne fait rien pendant qu'elle est dans la pièce (alors que tu y es aussi), ça peut être une Ombre.",
@@ -129,7 +136,7 @@
   "confusions": [
     {
       "with": "spirit",
-      "why": "Mêmes EMF 5 et écriture. L'Esprit chasse dès 50 %, interagit normalement quand tu es dans sa pièce et attend 180 s après l'encens avant de rechasser."
+      "why": "Mêmes EMF 5 et écriture. L'Esprit chasse dès 50 %, interagit normalement quand tu es dans la même pièce que lui et attend 180 s après l'encens avant de rechasser."
     },
     {
       "with": "myling",
@@ -137,7 +144,7 @@
     },
     {
       "with": "deildegast",
-      "why": "Mêmes EMF 5 et écriture. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet utilisé ; l'Ombre est toujours à 1,7 m/s."
+      "why": "Mêmes EMF 5 et écriture. La vitesse de chasse du Deildegast part de 3,0 m/s et baisse de 0,1 m/s par objet différent (hors équipement) pris ou manipulé par les joueurs depuis la fin de la dernière chasse ou tentative de chasse ; l'Ombre est toujours à 1,7 m/s."
     },
     {
       "with": "jinn",
@@ -184,12 +191,12 @@
       "strength": "definitive"
     },
     {
-      "text": "Tant que tu restes dans sa pièce, l'activité s'arrête presque complètement ; dès que tu en sors, les objets et les portes recommencent à bouger.",
+      "text": "Tant que tu es dans la même pièce que l'entité, favorite ou non, elle ne fait aucune interaction ; elle peut en revanche sortir de la pièce et interagir avec des objets à l'intérieur.",
       "kind": "behavior",
       "strength": "strong"
     },
     {
-      "text": "Tant que quelqu'un reste dans la pièce de l'entité, aucune chasse ne part de cette pièce, même quand la santé de l'équipe est très basse.",
+      "text": "Tant que quelqu'un reste dans la pièce où se trouve l'entité, aucune chasse ne part de cette pièce, même quand la santé de l'équipe est très basse.",
       "kind": "hunt",
       "strength": "hint"
     },
@@ -209,7 +216,7 @@
       "strength": "hint"
     },
     {
-      "text": "Tant que tu restes dans sa pièce, la bougie que tu y as allumée n'est jamais soufflée.",
+      "text": "Tant que tu restes dans la pièce où se trouve l'entité, la bougie que tu y as allumée n'est jamais soufflée.",
       "kind": "interaction",
       "strength": "hint"
     }
@@ -286,7 +293,7 @@
     "Précision : la forme d'ombre propre à l'Ombre vaut pour les événements du cercle d'invocation, de la boîte à musique et de la patte de singe, pas seulement pour le cercle."
   ],
   "sources": [
-    "tybayn backup b0.11.1.1",
+    "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_summoning_circle_p8",
     "tybayn wiki: wiki_music_box_p10",
     "tybayn wiki: wiki_monkey_paw_p23",
@@ -298,7 +305,6 @@
     "https://phasmopedia.com/en/ghosts/shade/"
   ],
   "uncertain": [
-    "Peut-elle écrire dans le livre en présence d'un joueur ? Les sources divergent.",
     "Part de la forme sombre (environ 2/3 aux événements, 50 % au cercle, selon une seule source) : non confirmée.",
     "Modèle translucide au cercle d'invocation : on le disait propre à l'Ombre, mais les sources actuelles ne citent plus que la forme d'ombre ; ne t'en sers pas comme preuve."
   ]

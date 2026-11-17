@@ -29,12 +29,12 @@
     "summary": "50 %",
     "details": [
       "Chasse à partir de 50 % de santé mentale moyenne de l'équipe, comme une entité standard.",
-      "Il fait baisser la santé de toute l'équipe pendant les chasses et les événements (0,5 % par seconde, multiplié par le nombre de joueurs dans la portée des battements de cœur), ce qui peut avancer ses chasses."
+      "Il fait baisser la santé de toute l'équipe pendant les chasses et les événements (0,5 % par seconde, multiplié par le nombre de joueurs dans la portée des battements de cœur)."
     ]
   },
-  "summary": "Entité insaisissable : elle disparaît quand tu la prends en photo, n'apparaît pas sur la photo et reste presque invisible pendant les chasses.",
+  "summary": "Entité insaisissable : elle disparaît quand tu la prends en photo, n'apparaît pas sur la photo étiquetée « Fantôme » et reste presque invisible pendant les chasses.",
   "keyTells": [
-    "Une photo de l'entité la fait disparaître, et elle n'est pas visible sur la photo",
+    "Une photo de l'entité la fait disparaître, et l'entité n'apparaît pas sur la photo que le journal classe comme photo d'entité",
     "Presque invisible en chasse : longues phases d'invisibilité entre les clignotements",
     "Draine 0,5 %/s de santé à toute l'équipe, multiplié par le nombre de joueurs à portée de battements de cœur (chasses et événements)",
     "Peut errer vers un joueur pris au hasard et laisser un EMF 2"
@@ -42,19 +42,27 @@
   "tells": [
     {
       "text": "Une photo de l'entité est bien classée comme photo d'entité dans le journal, mais l'entité n'y figure pas.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Disparaît aussitôt quand tu prends l'entité en photo ou en vidéo.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     },
     {
       "text": "Moins visible pendant les chasses : reste invisible plus longtemps entre deux clignotements.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 2
     },
     {
       "text": "Pendant les chasses et les événements, tous les joueurs perdent 0,5 % de santé mentale par seconde, multiplié par le nombre de joueurs qui se trouvent dans la portée des battements de cœur de l'entité.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 3
+    },
+    {
+      "text": "Disparaît aussi quand tu prends l'entité en photo ou en vidéo pendant que l'entité est visible dans le D.O.T.S.",
+      "zeroEvidence": false
     }
   ],
   "behaviors": [],
@@ -71,15 +79,18 @@
   "confirmationTests": [
     {
       "text": "Prends l'entité en photo pendant un événement. Si l'entité disparaît (alors que les sons de l'événement continuent) et n'apparaît pas sur la photo d'entité du journal, c'est un Fantôme.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
-      "text": "Filme l'entité pendant un événement. Si l'entité disparaît (alors que les sons de l'événement continuent) et que la vidéo, classée par le journal comme vidéo de l'entité sous sa forme complète, ne la montre pas, c'est un Fantôme.",
-      "definitive": true
+      "text": "Filme l'entité pendant un événement. Si l'entité disparaît (alors que les sons de l'événement continuent) et que le journal classe la vidéo comme vidéo de l'entité sous sa forme complète, c'est un Fantôme.",
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Pendant une chasse, si l'entité paraît presque invisible, c'est un Fantôme.",
-      "definitive": true
+      "definitive": true,
+      "card": 2
     },
     {
       "text": "Si, pendant ton enquête, tu obtiens un EMF 2 sans aucune interaction près de toi, c'est peut-être le Fantôme qui a utilisé sa capacité d'errance.",
@@ -117,7 +128,7 @@
     },
     {
       "with": "yokai",
-      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans sa pièce et ne te détecte qu'à 2,5 m pendant une chasse. 3e preuve : orbes vs UV."
+      "why": "Spirit Box + D.O.T.S en commun. Le Yokai peut chasser jusqu'à 80 % si tu parles dans la même pièce que lui et, en chasse, ne repère ta voix et ton électronique qu'à 2,5 m. 3e preuve : orbes vs UV."
     },
     {
       "with": "deogen",
@@ -146,12 +157,7 @@
   ],
   "observations": [
     {
-      "text": "Tu prends une photo pendant un événement : l'entité disparaît aussitôt, alors que les sons de l'événement continuent.",
-      "kind": "event",
-      "strength": "definitive"
-    },
-    {
-      "text": "Tu photographies l'entité pendant un événement : dans le journal, la photo est bien classée comme photo de l'entité, mais l'entité n'y apparaît pas.",
+      "text": "Tu photographies l'entité pendant un événement : l'entité disparaît aussitôt, alors que les sons de l'événement continuent, et dans le journal la photo est bien classée comme photo de l'entité, mais l'entité n'y apparaît pas.",
       "kind": "event",
       "strength": "definitive"
     },
@@ -161,7 +167,7 @@
       "strength": "definitive"
     },
     {
-      "text": "Tu prends en photo la silhouette de l'entité dans le faisceau du projecteur D.O.T.S : elle disparaît aussitôt et n'apparaît pas sur la photo.",
+      "text": "Tu prends en photo la silhouette de l'entité dans le faisceau du projecteur D.O.T.S : elle disparaît aussitôt et n'apparaît pas sur la photo, pourtant classée comme photo de l'entité dans le journal.",
       "kind": "tell",
       "strength": "definitive",
       "requires": "dots"
@@ -246,9 +252,9 @@
     }
   ],
   "changes": [
-    "v0.18.0.0 (21 juillet 2026) : le bug qui permettait au Fantôme d'utiliser sa capacité sur des joueurs morts ou à l'extérieur serait corrigé ; non confirmé, car il est encore listé comme bug connu.",
-    "Depuis la refonte des médias (Chronicle, v0.13, juin 2025), il existe des médias vidéo : bug connu, le Fantôme reste visible sur la pellicule de certaines vidéos. Seules la photo « Fantôme » et la vidéo de type « Fantôme » comptent pour le test.",
-    "Nouvelles entités partageant deux preuves : Gallu (Spirit Box + UV) et Obambo (UV + D.O.T.S), toutes deux en décembre 2025, puis Kormos (Spirit Box + UV, mai 2026)."
+    "Bugs connus (tybayn v0.19.1.0) : le Fantôme peut utiliser sa capacité sur des joueurs morts et sur des joueurs hors de la zone d'enquête.",
+    "Bug connu : le Fantôme reste visible sur la pellicule des vidéos « Fantôme translucide », « Fantôme ombre », « Trace D.O.T.S » et « Fantôme en chasse ».",
+    "Entités partageant deux preuves avec le Fantôme : Gallu (Spirit Box + UV), Obambo (UV + D.O.T.S) et Kormos (Spirit Box + UV)."
   ],
   "sources": [
     "tybayn backup b0.11.1.1",

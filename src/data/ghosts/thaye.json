@@ -45,11 +45,13 @@
   "tells": [
     {
       "text": "L'âge donné par la planche Ouija augmente à mesure que le Thayé vieillit.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Seule entité qui peut annoncer un âge de 90 ans ou plus à la planche Ouija.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [
@@ -66,11 +68,13 @@
   "confirmationTests": [
     {
       "text": "Si tu as une planche Ouija, demande l'âge de l'entité (« Quel âge avez-vous ? », 5 % de santé mentale). Après un moment passé dans sa pièce, repose la question. Si le nombre a augmenté, c'est un Thayé.",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     },
     {
       "text": "Si tu as une planche Ouija, demande l'âge de l'entité : si la planche répond 90 ou plus, c'est un Thayé.",
-      "definitive": true
+      "definitive": true,
+      "card": 1
     },
     {
       "text": "Si la vitesse diminue à chaque chasse et que l'entité n'accélère pas en LdV, ça peut être un Thayé (vérifie que l'équipe n'a pas manipulé de plus en plus d'objets entre les chasses : un Deildegast ralentirait aussi).",

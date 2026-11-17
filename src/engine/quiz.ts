@@ -16,6 +16,7 @@ import {
   standardSanity,
   standardSpeed,
   TESTS_PER_GHOST,
+  tellNumbers,
   thresholds,
   withoutEvidenceAsides,
   zeroTests,
@@ -1167,12 +1168,14 @@ const speedProfile: Gen = (g, ctx) => {
 
 // les signes clés résument parfois des propriétés partagées (« vitesse standard ») : on n'utilise ici
 // que les signes « 0 preuve » de tybayn, propres à l'entité (k : rang parmi eux)
-const tellQuotes = perGhost((g) =>
-  g.tells
+// k : numéro de carte du signe (le même que sa carte « signe à reconnaître », quand il en a une)
+const tellQuotes = perGhost((g) => {
+  const numbers = tellNumbers(g)
+  return g.tells
     .filter((t) => t.zeroEvidence)
-    .map((t, k) => ({ quote: quoteFor(t.text, g), k }))
-    .filter((t): t is { quote: string; k: number } => t.quote != null),
-)
+    .map((t) => ({ quote: quoteFor(t.text, g), k: numbers.get(t)! }))
+    .filter((t): t is { quote: string; k: number } => t.quote != null)
+})
 
 const whichGhostTell: Gen = (g, ctx) => {
   // le Mimic n'est jamais une mauvaise réponse (il copie tout) : parmi les choix, il serait toujours la bonne

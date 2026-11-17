@@ -36,11 +36,13 @@
   "tells": [
     {
       "text": "Seule entité qui peut fermer ou toucher une porte de sortie en dehors d'une chasse ou d'un événement.",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 0
     },
     {
       "text": "Doit ouvrir ou fermer complètement chaque porte touchée (en dehors d'une chasse).",
-      "zeroEvidence": true
+      "zeroEvidence": true,
+      "card": 1
     }
   ],
   "behaviors": [
@@ -66,7 +68,8 @@
   "confirmationTests": [
     {
       "text": "Si une porte de sortie se ferme ou bouge alors qu'aucune chasse ni aucun événement n'est en cours, c'est un Yurei (c'est la seule entité capable de le faire).",
-      "definitive": true
+      "definitive": true,
+      "card": 0
     }
   ],
   "eliminationTests": [
