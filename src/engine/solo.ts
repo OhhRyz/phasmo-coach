@@ -124,16 +124,36 @@ export interface SoloOptions {
   /** aucune question ne nomme une autre entité (un débutant qui n'a étudié que celle-ci) */
   onlyListed?: boolean
   /**
-   * Jusqu'où compléter la copie d'une fiche trop courte pour dix questions (1 par défaut) :
-   * 0, rien que ce que la fiche donne sans redite ; 1, un départage de plus avec une entité proche ;
-   * 2, en dernier recours, un vrai ou faux, un « de qui parle-t-on ? » ou une observation de plus, qui peut
-   * reprendre une fois un objet ou un geste déjà demandé (jamais une même valeur ni une même phrase) : sa réponse
-   * se tire, elle porte donc aussi souvent sur un fait d'une entité proche. À 2, les copies sont plus longues, mais
-   * certaines redisent un fait (« tu entends le cri unique : est-ce que ça suffit ? », deux fois) : par défaut, une
-   * fiche courte donne plutôt une copie plus courte.
+   * Jusqu'où compléter la copie d'une fiche trop courte pour dix questions : le dernier palier permis de LADDER
+   * (par défaut, tous). 0 : un objet, une question, et la variété du plan ; 2 : le dernier palier qui garde cette
+   * variété (trois questions à deux réponses au plus, cinq à quatre réponses au moins).
    */
-  relax?: 0 | 1 | 2
+  relax?: number
 }
+
+/**
+ * Les paliers d'une copie de dix qui ne se remplit pas, du plus strict au plus souple. Aucun ne redemande un fait,
+ * ni ne demande une réponse déjà montrée : ils jouent sur la finesse des faits et sur la variété de la copie.
+ *  0. chaque objet en bloc (un objet, une question, voir FACETS), deux départages, une observation ou deux ;
+ *  1. les faits d'un même objet se distinguent (la cadence des lancers du Poltergeist, puis son explosion) ;
+ *  2. un départage de plus avec une entité proche ;
+ *  3. une troisième observation, et l'observation se pose même quand l'une de ses trois réponses n'a plus de quoi
+ *     se poser (`loose`) : la copie peut alors compter moins de cinq questions à quatre réponses ;
+ *  4. une quatrième question à deux réponses, un quatrième départage ;
+ *  5. une cinquième question à deux réponses, un cinquième départage : une fiche qui dit peu de choses de son
+ *     entité se complète par ce qui la distingue des entités qu'on confond avec elle.
+ * Une fiche qui n'a pas dix questions à ce prix donne une copie plus courte.
+ */
+const LADDER = [
+  { fine: false, two: 3, three: 2, duels: 2, reverse: 1, loose: false },
+  { fine: true, two: 3, three: 2, duels: 2, reverse: 1, loose: false },
+  { fine: true, two: 3, three: 2, duels: 3, reverse: 2, loose: false },
+  { fine: true, two: 3, three: 3, duels: 3, reverse: 2, loose: true },
+  { fine: true, two: 4, three: 3, duels: 4, reverse: 3, loose: true },
+  { fine: true, two: 5, three: 3, duels: 5, reverse: 4, loose: true },
+] as const
+/** Le dernier palier de LADDER qui garde la variété d'une copie : trois questions à deux réponses au plus, cinq à quatre réponses au moins. */
+export const SOLO_VARIED = 2
 
 /* ---------- ce qu'une question demande, ce qu'elle montre ---------- */
 
@@ -149,9 +169,11 @@ interface Stmt {
    * cachette est le signe de l'Aswang ne dit pas si l'observer suffit à le confirmer : les deux se demandent dans
    * une même copie, dans cet ordre. Et une preuve, puis un indice sur le même objet, sont deux faits (la chasse
    * qui s'arrête dans la cachette ; l'entité qui marche vers le joueur à la chasse suivante) ; deux preuves, le
-   * plus souvent le même. `any` : un corrigé rédigé, qui peut dire l'un ou l'autre.
+   * plus souvent le même. `any` : un corrigé rédigé, qui peut dire l'un ou l'autre. `value` : une question dont la
+   * réponse est une valeur (« Combien de santé mentale fait perdre l'explosion ? 2 % par objet ») ne demande que
+   * cette valeur : savoir que l'entité lance des objets ne la donne pas.
    */
-  aspect?: 'own' | 'proof' | 'hint' | 'ownProof' | 'any'
+  aspect?: 'own' | 'proof' | 'hint' | 'ownProof' | 'any' | 'value'
   /**
    * Un signe clé (`keyTells`) : les signes clés d'une fiche sont des faits différents, même quand ils parlent du
    * même objet (le disjoncteur du Hantu : sa buée quand il est coupé, et il ne le rallume jamais). Entre eux, le
@@ -198,11 +220,159 @@ interface Seed {
   make: (rng: Rng) => Built | null
 }
 
+/** Une clé d'objet ou de geste (le sel, la cachette, les objets lancés), prise en bloc : toute phrase qui en parle. */
 const isSoft = (k: string) => k.includes('|~')
+/** La même, par fait : ce que la phrase dit de l'objet (voir FACETS). */
+const isFine = (k: string) => k.includes('|§')
 /** La vitesse ou le seuil en général (voir keysOf et les questions en nombres). */
 const BROAD = /\|~(?:vitesse|seuil)$/u
-/** L'objet ou le geste d'une clé souple, quel que soit l'angle sous lequel on le demande. */
-const themeOf = (k: string) => k.replace(/[/!].*$/u, '')
+
+/**
+ * Ce qu'une fiche dit d'un même objet, fait par fait. Presque toutes les lignes du Poltergeist parlent d'objets
+ * lancés, celles du Cauchemar de lumières : pris en bloc, l'objet ne laisserait à la copie qu'une seule question
+ * sur l'entité (« à qui est ce signe ? »), alors que la fiche en dit plusieurs choses sans rapport (la cadence des
+ * lancers en chasse ; l'explosion et ce qu'elle coûte en santé mentale). Une phrase qui ne dit aucun de ces faits,
+ * ou dont on ne sait pas lequel, les recoupe tous : dans le doute, c'est le même fait. Sans entrée ici, un objet
+ * est un seul fait.
+ *
+ * La copie se compose d'abord en prenant chaque objet en bloc (un objet, une question : la copie la plus variée),
+ * et ne distingue ses faits que pour se compléter (voir LADDER). À relire quand une fiche change : une ligne
+ * nouvelle qui ne dit aucun de ces faits reste prudente (elle les recoupe tous), jamais fausse.
+ */
+const FACETS: Readonly<Record<string, Readonly<Record<string, readonly (readonly [string, RegExp])[]>>>> = {
+  poltergeist: {
+    objets: [
+      // la cadence des lancers pendant une chasse, et le test des objets alignés sur son passage
+      ['cadence', /0,5\s?s(?!\p{L})|rafale|par seconde|passage|passera|align/iu],
+      // l'explosion : plusieurs objets d'un coup, 2 % de santé mentale par objet, le test du tas
+      ['explosion', /explosion|d[’']un coup|en même temps|(?<!\p{L})tas(?!\p{L})|2\s?%|ensemble/iu],
+      // des lancers plus forts, plus loin, plus fréquents
+      ['force', /plus vite|plus loin|(?<!\p{L})loin(?!\p{L})|souvent|plus de chances|plus de force|force accrue/iu],
+      ['pièce éclairée', /éclairée/iu],
+      // il ne touche aux objets qu'en les lançant, mais actionne portes et interrupteurs
+      ['lancer seulement', /qu[’']en les lançant|autrement qu/iu],
+    ],
+  },
+  mare: {
+    lumiere: [
+      // son seuil de chasse selon la lumière de la pièce où il se trouve
+      ['seuil', /seuil|\d\s?%|ne chasse pas|chasse dès/iu],
+      // sa capacité : éteindre aussitôt une lumière allumée à moins de 4 m, même pendant un événement
+      ['éteint aussitôt', /aussitôt|immédiatement|vient d[’']allumer|que tu allumes|4\s?m(?!\p{L})|capacité|l[’']éteint|les éteint|pendant (?:un|les) événements?/iu],
+      ['n’allume jamais', /n[’']allume jamais|ne peut (?:pas|jamais) (?:en )?r?allumer|jamais allumé|l[’']entité allume/iu],
+      ['erre davantage', /(?<!\p{L})erre|en sort|quitte plus souvent/iu],
+      // il préfère éteindre les lumières et faire éclater les ampoules
+      ['éteint souvent', /ampoule|préfère|éteint (?:beaucoup|vite|souvent)|en a éteint/iu],
+      ['clignotement', /clignot/iu],
+    ],
+  },
+  onryo: {
+    flamme: [
+      // sa capacité : une chasse à n'importe quelle santé mentale après trois flammes éteintes
+      ['trois flammes', /3e|(?<!\p{L})trois|3 flammes|troisième|n[’']importe quel|toute santé|80\s?%|capacité/iu],
+      // une flamme proche agit comme un crucifix, et passe avant lui
+      ['comme un crucifix', /crucifix|4\s?m(?!\p{L})|au lieu de chasser|à la place|empêch/iu],
+      ['seuil', /seuil|60\s?%|40\s?%|35\s?%/iu],
+      ['deux fois la même', /deux fois|20\s?s(?!\p{L})|de nouveau/iu],
+      ['n’allume pas', /allume une source|ne peut pas allumer/iu],
+      ['joueurs morts', /(?<!\p{L})morts?(?!\p{L})|meurent/iu],
+    ],
+  },
+  hantu: {
+    froid: [
+      ['buée', /buée|(?:souffle|air) glacé/iu],
+      ['vitesse', /vitesse|rapide|plus vite|(?<!\p{L})lente?(?!\p{L})|ralenti|m\/s|tiède|chaud|°C/iu],
+    ],
+    disjoncteur: [
+      ['buée', /buée|(?:souffle|air) glacé/iu],
+      // il ne rallume jamais le disjoncteur, et le coupe plus souvent
+      ['courant', /rallum|(?<!\p{L})coupe|éteindre le disjoncteur/iu],
+    ],
+  },
+  banshee: {
+    cible: [
+      ['seuil', /(?:selon|en fonction de) la santé|se base|pour chasser/iu],
+      ['poursuite', /poursui|traquer le même|ignore les joueurs|qui n[’']est pas sa cible/iu],
+      ['errance', /(?<!\p{L})errer|66\s?%/iu],
+      ['choix de la cible', /choisi|hasard|en solo|patte de singe/iu],
+      ['chant', /(?<!\p{L})chant(?!\p{L})/iu],
+      ['cri', /(?<!\p{L})cri(?!\p{L})|parabolique/iu],
+    ],
+  },
+  raiju: {
+    electronique: [
+      ['vitesse', /vitesse|2,5|accél|rapide|allumer? (?:et|puis) éte/iu],
+      ['perturbations', /perturb|15\s?m(?!\p{L})/iu],
+      ['seuil', /6[35]\s?%|chasser (?:dès|à)|peut chasser|chasse démarre|niveau de santé/iu],
+    ],
+  },
+  yurei: {
+    porte: [
+      ['porte de sortie', /porte de sortie|porte principale/iu],
+      // son pouvoir : fermer une porte, 15 % de santé mentale en moins pour les joueurs proches
+      ['pouvoir', /15\s?%|(?<!à )pouvoir|santé/iu],
+      ['jusqu’au bout', /complètement|entrouverte|jusqu[’']au bout|mi-course/iu],
+      ['enfermé par l’encens', /encens/iu],
+    ],
+  },
+  jinn: {
+    disjoncteur: [
+      ['vitesse', /2,5|accél|allure|vitesse|comment chasse|m\/s/iu],
+      ['ne le coupe jamais', /ne coupe|couper (?:directement )?le disjoncteur|coupé directement|jamais coupé/iu],
+      ['capacité', /25\s?%|capacité|EMF/iu],
+    ],
+  },
+  wraith: {
+    sel: [
+      ['intact', /perturb|touch|intact|bougé|passe dessus|interagi/iu],
+      ['rang 3', /ralenti|rang 3/iu],
+    ],
+  },
+  goryo: {
+    errance: [
+      ['pièce favorite fixe', /chang|toujours la même|jamais déplacée/iu],
+      ['s’éloigne peu', /éloigne|rarement|longue errance|reste plus souvent|abords/iu],
+    ],
+  },
+  myling: {
+    ecoute: [
+      // ses pas et sa voix ne s'entendent pas au-delà de 12 m pendant une chasse
+      ['portée', /1[26]\s?m(?!\p{L})|20\s?m(?!\p{L})|quinzaine|silencieu|de loin|inaudible|son vocal|ni ses pas|surgissent/iu],
+      ['sons paranormaux', /micro|enregistreur|plus de sons/iu],
+    ],
+    son: [
+      ['plus de sons', /plus de sons|davantage de sons|deux sons|80\s?s(?!\p{L})|d[’']une minute/iu],
+      ['grésillement', /grésillement/iu],
+    ],
+  },
+  obake: {
+    visible: [
+      ['un clignotement', /le temps d[’']un seul clignotement|l[’']espace d[’']un instant|en boucle/iu],
+      ['12e clignotement', /12e|8\s?s(?!\p{L})/iu],
+      ['ordre fixe', /ordre|sexe|en premier/iu],
+      ['posture', /posture/iu],
+    ],
+  },
+  aswang: {
+    cachette: [
+      ['la chasse s’arrête', /s[’']arrête|s[’']est arrêtée|se termine|terminée|prend fin|met fin/iu],
+      ['chasse suivante', /suivante|précédente|marche (?:droit )?vers/iu],
+    ],
+  },
+}
+
+/** Les objets d'une entité dont les faits se distinguent (voir FACETS), pour relire la table face aux fiches. */
+export const soloFacets = (who: string): string[] => Object.keys(FACETS[who] ?? {})
+
+/** Les faits d'une phrase sur l'objet d'une clé souple (voir FACETS). */
+function facetsOf(who: string, key: string, text: string): string[] {
+  const theme = key.slice(key.indexOf('|~') + 2)
+  const base = `${who}|§${theme}`
+  const known = FACETS[who]?.[theme]
+  if (!known) return [`${base}:*`]
+  const said = known.filter(([, re]) => re.test(text))
+  return (said.length ? said : known).map(([name]) => `${base}:${name}`)
+}
 
 /** « Quitte rarement sa pièce », « reste dans sa pièce » : le même fait que « s'éloigne peu de sa pièce favorite » (thème `errance` de factKeys). */
 const OWN_ROOM = /(?<!\p{L})(?:sa|leur)\s+pièce(?!\p{L})/iu
@@ -277,16 +447,22 @@ const SORTS = ['KV', 'K', 'V', 'P'] as const
 const sortOf = (key: boolean, valued: boolean) => (key ? (valued ? 'KV' : 'K') : valued ? 'V' : 'P')
 const sameFact = (a: (typeof SORTS)[number], b: (typeof SORTS)[number]) => !(a.startsWith('K') && b.startsWith('K')) && !(a.endsWith('V') && b.endsWith('V'))
 
-/** Les clés d'une phrase : dures (valeurs, ligne de vue), et son objet ou son geste, avec sa sorte. */
+/**
+ * Les clés d'une phrase : dures (valeurs, ligne de vue), et son objet ou son geste, avec sa sorte. L'objet deux
+ * fois : en bloc (`|~`), et fait par fait (`|§`, voir FACETS). Deux phrases qui disent le même fait d'un objet
+ * parlent du même objet : ce que les clés par fait écartent, les clés en bloc l'écartent aussi.
+ */
 function parts(s: Stmt): { hard: string[]; soft: string[]; sort: (typeof SORTS)[number] } {
   const keys = keysOf(s.who, s.text)
   const hard = keys.filter((k) => !isSoft(k))
-  return { hard, soft: keys.filter(isSoft), sort: sortOf(!!s.key, hard.length > 0) }
+  const whole = keys.filter(isSoft)
+  return { hard, soft: [...whole, ...whole.flatMap((k) => facetsOf(s.who, k, s.text))], sort: sortOf(!!s.key, hard.length > 0) }
 }
 
 /** Ce que demande une question qui pose cette phrase : ses valeurs et son objet (à qui est-ce ?), ou ce qu'elle vaut. */
 function askKeys(s: Stmt): string[] {
   const { hard, soft, sort } = parts(s)
+  if (s.aspect === 'value' && hard.length) return [...hard, ...lineKeys(s)]
   const own = s.aspect === 'proof' || s.aspect === 'hint' ? [] : [...hard, ...soft.flatMap((k) => SORTS.filter((o) => sameFact(sort, o)).map((o) => `${k}/${o}`))]
   return [...own, ...soft.flatMap((k) => worthOf(s.aspect).map((w) => `${k}${w}`)), ...lineKeys(s)]
 }
@@ -506,9 +682,10 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
     const asks = factKeys(q).filter((k) => !k.startsWith('carte:') && !isSoft(k))
     // « vitesse très élevée, qui chute près du joueur » redit « 3,0 m/s loin → 0,4 m/s près » : la question demande aussi
     // la vitesse (ou le seuil) en général, comme une phrase chiffrée face à une phrase sans nombre
-    const broad = `${x.id}|~${q.topic === 'sanity' ? 'seuil' : 'vitesse'}`
-    const b = built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], [...asks, ...SORTS.filter((o) => sameFact('V', o)).map((o) => `${broad}/${o}`)])
-    b.shows.add(`${broad}/V`)
+    const theme = q.topic === 'sanity' ? 'seuil' : 'vitesse'
+    const broad = [`${x.id}|~${theme}`, `${x.id}|§${theme}:*`]
+    const b = built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], [...asks, ...broad.flatMap((k) => SORTS.filter((o) => sameFact('V', o)).map((o) => `${k}/${o}`))])
+    for (const k of broad) b.shows.add(`${k}/V`)
     return b
   }
   for (const kind of ['san', 'spd'] as const) {
@@ -1169,8 +1346,10 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
         // « Tu hésites entre un Esprit et un Spectre. Quel test les départage ? » : elle demande aussi un fait du Spectre
         const asked = `${a.q} \n ${a.choices[a.answer]}`
         const named = all.filter((o) => o.id !== x.id && namesGhost(a.q, o))
+        // « Combien de santé mentale fait perdre l'explosion ? 2 % par objet lancé » : la réponse est une valeur, c'est elle qu'on demande
+        const aspect = keysOf(x.id, a.choices[a.answer]).some((k) => !isSoft(k)) ? ('value' as const) : ('own' as const)
         // son corrigé peut dire ce que vaut le fait (« c'est un test définitif ») : par prudence, il le montre
-        return built(q, 'auth', [{ who: x.id, text: asked }, ...named.map((o) => ({ who: o.id, text: asked }))], [{ who: x.id, text: a.explain, aspect: 'any' }])
+        return built(q, 'auth', [{ who: x.id, text: asked, aspect }, ...named.map((o) => ({ who: o.id, text: asked }))], [{ who: x.id, text: a.explain, aspect: 'any' }])
       },
     })
   })
@@ -1201,8 +1380,11 @@ export function soloSupply(x: Ghost, all: Ghost[]): { id: string; type: SoloType
  * fois : pas de mauvaises réponses de même forme). Pour relire une question, ou la vérifier une à une.
  */
 export function soloQuestion(x: Ghost, all: Ghost[], id: string, rng: Rng): Question | null {
-  const q = seedsFor(x, all).find((s) => s.id === id)?.make(rng)?.q
-  return q ? { ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)) } : null
+  const b = seedsFor(x, all).find((s) => s.id === id)?.make(rng)
+  if (!b) return null
+  const q = { ...b.q, prompt: fr(b.q.prompt), explain: fr(noLeadingMais(b.q.explain)) }
+  ledgers.set(q, b)
+  return q
 }
 
 /* ---------- la copie ---------- */
@@ -1214,7 +1396,9 @@ export function soloQuestion(x: Ghost, all: Ghost[], id: string, rng: Rng): Ques
  * questions dans la copie, lui, se décide à la fin.
  */
 const FIRST = ['T1los', 'T1san', 'T1spd', 'T2'] as const
-const BLUEPRINT = ['T2', 'T3', 'T4', 'T5', 'T7a', 'T7b', 'T8'] as const
+const BLUEPRINT = ['T2', 'T3', 'T4', 'T5', 'T8'] as const
+/** Les départages après le reste : ils citent le trait le plus connu de l'entité, que d'autres sortes demandent mieux. */
+const DUELS = ['T7a', 'T7b'] as const
 /** De quoi compléter une copie : un vrai ou faux, une question rédigée, puis une de plus des autres sortes. */
 const FILL = ['T6', 'auth', 'T8', 'T3', 'T2', 'T7a', 'T5', 'T6', 'auth', 'T4', 'T1san', 'T1spd', 'T7b'] as const
 /**
@@ -1222,10 +1406,10 @@ const FILL = ['T6', 'auth', 'T8', 'T3', 'T2', 'T7a', 'T5', 'T6', 'auth', 'T4', '
  * pas partie du plan (il prendrait la place de deux questions sur ces signes) et ne sert qu'à compléter la copie.
  */
 const INTRUDER_SIGNS = 5
-type Slot = (typeof FIRST)[number] | (typeof BLUEPRINT)[number] | (typeof FILL)[number]
+type Slot = (typeof FIRST)[number] | (typeof BLUEPRINT)[number] | (typeof DUELS)[number] | (typeof FILL)[number]
 
-/** Les sortes de questions dont la réponse se tire avant la question (voir addEither et le plan des observations). */
-const DRAWN: ReadonlySet<SoloType> = new Set<SoloType>(['T6', 'T7b', 'T8'])
+/** Après autant d'essais sans se composer (pas de mauvaises réponses de même forme, ou déjà lues), une question n'est plus tentée dans la copie. */
+const MISSES = 4
 
 /** Une fois sur combien la question sur un test est « ce test suffit-il ? » plutôt que « quel test confirme X ? ». */
 const ENOUGH_SHARE = 0.4
@@ -1236,11 +1420,11 @@ const ENOUGH_ONE_SIDED = 0.5
  * Compose la copie sur une seule entité : `count` questions (dix), toutes sur elle. Une question déjà posée dans
  * une copie précédente (`seen`) passe après les autres. Une même valeur, une même phrase ne se demandent qu'une
  * fois, et aucune réponse n'a été montrée plus tôt dans la copie : une question qui en montrerait une autre passe
- * après elle, ou ne se pose pas. Un même objet, un même geste (la cachette de l'Aswang, les objets du Poltergeist)
- * se demande une fois pour dire à qui il est, puis pour dire ce qu'il vaut (une preuve, un simple indice), jamais
- * deux fois sous le même angle (voir Stmt). Quand la fiche n'a pas de quoi remplir la copie, un départage de plus
- * avec une entité proche la complète ; une fiche vraiment courte donne une copie de moins de `count` questions,
- * plutôt qu'une question dont la réponse vient d'être lue (voir SoloOptions.relax). Le tirage ne dépend que de `rng`.
+ * après elle, ou ne se pose pas. Un même fait (la chasse qui s'arrête dans la cachette de l'Aswang) se demande une
+ * fois pour dire à qui il est, puis pour dire ce qu'il vaut (une preuve, un simple indice), jamais deux fois sous
+ * le même angle (voir Stmt). Quand la fiche n'a pas de quoi remplir la copie ainsi, elle se complète palier par
+ * palier (voir LADDER) ; une fiche vraiment courte donne une copie de moins de `count` questions, plutôt qu'une
+ * question dont la réponse vient d'être lue. Le tirage ne dépend que de `rng`.
  */
 export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const { ghost: x, allGhosts: all, rng } = opts
@@ -1254,83 +1438,82 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const los = losChance(all)
   const gates = { stdSan: rng() < SOLO_STANDARD.san, stdSpd: rng() < SOLO_STANDARD.spd, los: rng() < (x.speed.los ? los.yes : los.no) }
   const scale = count / SOLO_COUNT
-  const cap = { two: Math.max(1, Math.floor(3 * scale)), three: Math.max(1, Math.floor(2 * scale)), duels: Math.max(1, Math.ceil(3 * scale)), reverse: Math.max(1, Math.ceil(2 * scale)) }
+  /** le palier en cours (voir LADDER), et ses plafonds à la mesure de la copie */
+  let level = 0
+  const cap = () => {
+    const l = LADDER[level]
+    return { two: Math.max(1, Math.floor(l.two * scale)), three: Math.max(1, Math.floor(l.three * scale)), duels: Math.max(1, Math.ceil(l.duels * scale)), reverse: Math.max(1, Math.ceil(l.reverse * scale)) }
+  }
 
   const picked: Built[] = []
   const ids = new Set<string>()
   const screens = new Set<string>()
   /** before[i] : les questions qui doivent passer avant la question i */
   const before: Set<number>[] = []
-  /** la copie ne s'est pas remplie : 1, un départage de plus est permis ; 2, un même objet peut revenir une fois (voir SoloOptions.relax) */
-  let ease: 0 | 1 | 2 = 0
-  /** les objets et gestes déjà repris une fois en dernier recours */
-  const repeated = new Set<string>()
-
   const widthOf = (n: number) => picked.filter((b) => b.q.choices.length === n).length
   const countOf = (pred: (b: Built) => boolean) => picked.filter(pred).length
   const roomFor = (s: Seed) => {
-    if (s.width === 2 && widthOf(2) >= cap.two) return false
-    if (s.width === 3 && widthOf(3) >= cap.three) return false
-    // pour remplir la copie d'une fiche courte (ease 1), un départage de plus : il porte sur ce qui distingue une entité proche de X
-    if ((s.type === 'T7a' || s.type === 'T7b') && countOf((b) => b.type === 'T7a' || b.type === 'T7b') >= cap.duels + Math.min(1, ease)) return false
-    if (s.type === 'T7a' && s.cls === 'y' && countOf((b) => b.type === 'T7a' && !b.q.cardId) >= cap.reverse + Math.min(1, ease)) return false
+    const c = cap()
+    if (s.width === 2 && widthOf(2) >= c.two) return false
+    if (s.width === 3 && widthOf(3) >= c.three) return false
+    if ((s.type === 'T7a' || s.type === 'T7b') && countOf((b) => b.type === 'T7a' || b.type === 'T7b') >= c.duels) return false
+    if (s.type === 'T7a' && s.cls === 'y' && countOf((b) => b.type === 'T7a' && !b.q.cardId) >= c.reverse) return false
     if (s.type === 'T3b' && countOf((b) => b.type === 'T3b') >= Math.max(1, Math.round(scale))) return false
     return true
   }
-  /** Ce que a demande et que b montre une fois corrigée : `hard`, une valeur ou une phrase de fiche ; `soft`, des objets ou des gestes. */
-  const leaks = (a: Built, b: Built): { hard: boolean; soft: string[] } => {
-    const soft: string[] = []
-    for (const k of a.asks) {
-      if (!b.shows.has(k)) continue
-      if (!isSoft(k)) return { hard: true, soft }
-      soft.push(themeOf(k))
+  /** Les clés qui comptent au palier en cours : les valeurs et les phrases toujours ; l'objet en bloc, ou fait par fait (voir LADDER). */
+  const counts = (k: string, fine = LADDER[level].fine) => (fine ? !isSoft(k) : !isFine(k))
+  /** `a` demande-t-elle ce que `b` montre une fois corrigée ? */
+  const leaks = (a: Built, b: Built, fine = LADDER[level].fine): boolean => {
+    for (const k of a.asks) if (counts(k, fine) && b.shows.has(k)) return true
+    return false
+  }
+  /** `first` doit passer avant `after` par la question nouvelle : impossible si une question de `first` doit déjà suivre l'une de `after`. */
+  const loops = (first: readonly number[], after: readonly number[]): boolean => {
+    if (!first.length || !after.length) return false
+    const reach = new Set<number>()
+    const walk = (i: number) => {
+      if (reach.has(i)) return
+      reach.add(i)
+      for (const j of before[i]) walk(j)
     }
-    return { hard: false, soft }
+    for (const i of after) walk(i)
+    return first.some((i) => reach.has(i))
   }
   /**
    * Les questions que `b` doit précéder, celles qui doivent le précéder ; null s'il ne peut pas entrer dans la copie :
-   * deux questions qui se montreraient l'une l'autre ne vont pas ensemble. En dernier recours (ease 2), un objet ou
-   * un geste peut revenir une fois sous un angle qui recoupe le premier ; jamais une valeur ni une phrase.
+   * deux questions qui se montreraient l'une l'autre ne vont pas ensemble. Quand les faits d'un objet se
+   * distinguent (voir LADDER), deux questions sur le même objet mais sur deux faits vont ensemble ; celle qui parle
+   * de l'objet sans le demander passe quand même après l'autre, tant que l'ordre de la copie le permet.
    */
-  const place = (b: Built): { first: number[]; after: number[]; again: string[] } | null => {
+  const place = (b: Built): { first: number[]; after: number[] } | null => {
+    const fine = LADDER[level].fine
     const first: number[] = []
     const after: number[] = []
-    const again = new Set<string>()
+    const rather: { first: number[]; after: number[] } = { first: [], after: [] }
     for (let i = 0; i < picked.length; i++) {
-      const precede = leaks(b, picked[i])
-      const follow = leaks(picked[i], b)
-      const forward = precede.hard || precede.soft.length > 0
-      const backward = follow.hard || follow.soft.length > 0
-      if (forward && backward) {
-        // dernier recours, et seulement pour une question dont la réponse se tire (vrai ou faux, X ou Y, les trois
-        // réponses d'une observation) : une fois sur deux ou plus, elle porte alors sur un fait d'une entité proche
-        if (ease < 2 || !DRAWN.has(b.type) || (precede.hard && follow.hard)) return null
-        for (const k of [...precede.soft, ...follow.soft]) again.add(k)
-        if (precede.hard) first.push(i)
-        else if (follow.hard) after.push(i)
-      } else if (forward) first.push(i)
+      const forward = leaks(b, picked[i])
+      const backward = leaks(picked[i], b)
+      if (forward && backward) return null
+      if (forward) first.push(i)
       else if (backward) after.push(i)
+      else if (fine) {
+        const sooner = leaks(b, picked[i], false)
+        const later = leaks(picked[i], b, false)
+        if (sooner && !later) rather.first.push(i)
+        else if (later && !sooner) rather.after.push(i)
+      }
     }
-    for (const k of again) if (repeated.has(k)) return null
     // un intrus dont deux des trois affirmations vraies sont déjà connues par d'autres questions n'en serait plus un
     const chosen = [...picked, b]
     for (const p of chosen) {
-      if (p.truths && p.truths.filter((t) => chosen.some((o) => o !== p && t.some((k) => !isSoft(k) && o.shows.has(k)))).length > 1) return null
+      if (p.truths && p.truths.filter((t) => chosen.some((o) => o !== p && t.some((k) => !isSoft(k) && !isFine(k) && o.shows.has(k)))).length > 1) return null
     }
-    // b avant `first`, après `after` : impossible si une question de `first` doit déjà passer avant une de `after`
-    if (first.length && after.length) {
-      const reach = new Set<number>()
-      const walk = (i: number) => {
-        if (reach.has(i)) return
-        reach.add(i)
-        for (const j of before[i]) walk(j)
-      }
-      for (const i of after) walk(i)
-      if (first.some((i) => reach.has(i))) return null
-    }
-    return { first, after, again: [...again] }
+    if (loops(first, after)) return null
+    const wished = { first: [...first, ...rather.first], after: [...after, ...rather.after] }
+    return loops(wished.first, wished.after) ? { first, after } : wished
   }
-  type Found = { b: Built; at: { first: number[]; after: number[]; again: string[] } }
+  type Found = { b: Built; at: { first: number[]; after: number[] } }
   /**
    * Les réponses en phrases d'une question (signes, tests, départages), le nom de l'entité retiré : lue une fois,
    * corrigée, une réponse qui reviendrait s'écarterait d'emblée (« … chasse à 1,53 m/s de base » dans deux
@@ -1346,7 +1529,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const read = new Set<string>()
   /** tout ce que la copie demande déjà */
   const askedAll = new Set<string>()
-  const doomed = (s: Seed) => !!s.pre && s.pre().some((k) => askedAll.has(k))
+  const doomed = (s: Seed) => !!s.pre && s.pre().some((k) => counts(k) && askedAll.has(k))
   /**
    * Ce que l'énoncé et le corrigé d'une question rédigée montrent d'une autre entité qu'ils nomment (« le Spectre ne
    * touche jamais au sel ; l'Esprit le perturbe normalement », dans le corrigé d'une question sur l'Esprit), phrase
@@ -1368,7 +1551,6 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     screens.add(screenOf(b.q))
     before.push(new Set(at.after))
     for (const i of at.first) before[i].add(n)
-    for (const k of at.again) repeated.add(k)
     for (const w of wrongOf(b)) read.add(w)
     for (const k of b.asks) askedAll.add(k)
   }
@@ -1378,13 +1560,21 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   /** Les questions possibles d'une sorte, dans l'ordre où les essayer. */
   const ordered = (list: readonly Seed[]) => {
     const room = again && repeats() < Math.floor(count / 2)
-    const usable = shuffle(rng, list.filter((s) => !ids.has(s.id) && (!s.gate || gates[s.gate]) && roomFor(s) && (room || !seen.has(s.id) || s.gate === 'los') && !doomed(s)))
+    const usable = shuffle(rng, list.filter((s) => !ids.has(s.id) && !spent(s) && (!s.gate || gates[s.gate]) && roomFor(s) && (room || !seen.has(s.id) || s.gate === 'los') && !doomed(s)))
     const rank = (s: Seed) => (seen.has(s.id) ? 2 : 0) + (s.late ? 1 : 0)
     return usable
       .map((s, i) => ({ s, i }))
       .sort((a, b) => rank(a.s) - rank(b.s) || a.i - b.i)
       .map(({ s }) => s)
   }
+  /**
+   * Les questions qui ne se poseront plus dans cette copie : elles demandent ce qu'une autre montre déjà (la copie
+   * ne fait que grandir), ou ne se sont pas composées à plusieurs paliers de suite. Les retenter à chaque palier
+   * (voir LADDER) coûterait le plus clair du temps d'une copie courte.
+   */
+  const out = new Set<string>()
+  const failed = new Map<string, number>()
+  const spent = (s: Seed) => out.has(s.id) || (failed.get(s.id) ?? 0) >= MISSES
   /** La première question de la liste qui se compose et entre dans la copie (sans l'y mettre). */
   const find = (list: readonly Seed[], tries = 10): Found | null => {
     let left = tries
@@ -1393,10 +1583,15 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
       let b = s.make(rng)
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
       if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
-      if (!b || screens.has(screenOf(b.q)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) continue
+      if (!b || screens.has(screenOf(b.q)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) {
+        failed.set(s.id, (failed.get(s.id) ?? 0) + 1)
+        continue
+      }
       mentions(b)
       const at = place(b)
       if (at) return { b, at }
+      // refusée alors que les faits d'un objet se distinguent déjà : aucun palier ne la fera entrer
+      if (LADDER[level].fine) out.add(s.id)
     }
     return null
   }
@@ -1458,9 +1653,11 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
           const plan = observationPlan(all).get(`${x.id}|${scene}`)
           if (!plan) continue
           // chaque réponse possible pour X doit avoir de quoi se poser : sinon le tirage pencherait vers les autres
+          // (sauf pour compléter une copie courte, voir LADDER : le tirage se fait alors entre celles qui restent)
           const found = plan.map((p) => ({ ...p, f: find(of('T8', (s) => s.register === scene && s.cls === p.cls), 6) }))
-          if (found.some((p) => !p.f)) continue
-          commit(weightedPick(rng, found, (p) => p.weight).f!)
+          const left = found.filter((p) => p.f)
+          if (!left.length || (left.length < found.length && !LADDER[level].loose)) continue
+          commit(weightedPick(rng, left, (p) => p.weight).f!)
           return true
         }
         return false
@@ -1471,8 +1668,8 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   }
 
   // une copie plus courte que dix : les sortes dans le désordre, sans préférence
-  const plan: Slot[] = count < SOLO_COUNT ? ['T1los', ...shuffle(rng, [...FIRST.slice(1), ...BLUEPRINT])] : []
-  for (let r = Math.max(1, Math.round(scale)); count >= SOLO_COUNT && r > 0; r--) plan.push(...FIRST, ...shuffle(rng, BLUEPRINT))
+  const plan: Slot[] = count < SOLO_COUNT ? ['T1los', ...shuffle(rng, [...FIRST.slice(1), ...BLUEPRINT, ...DUELS])] : []
+  for (let r = Math.max(1, Math.round(scale)); count >= SOLO_COUNT && r > 0; r--) plan.push(...FIRST, ...shuffle(rng, BLUEPRINT), ...shuffle(rng, DUELS))
   const rich = Math.max(...STYLES.map((style) => ownSigns(x, all, style).length)) >= INTRUDER_SIGNS
   for (const slot of plan) {
     if (picked.length >= count) break
@@ -1488,17 +1685,13 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
       }
     }
   }
-  // compléter : d'abord sans redite ; puis un départage de plus ; puis des questions d'une copie précédente ; et, en
-  // dernier recours, un objet ou un geste repris une fois
-  const levels = ([0, 1, 2] as const).slice(0, (opts.relax ?? 1) + 1)
+  // compléter, palier par palier (voir LADDER) : d'abord sans aucune question d'une copie précédente, puis avec
+  const last = Math.min(LADDER.length - 1, Math.max(0, Math.floor(opts.relax ?? LADDER.length - 1)))
   for (const repeat of seen.size ? [false, true] : [false]) {
     again = repeat
-    for (const level of levels) {
-      if (level === 2 && !repeat && seen.size) continue
-      ease = level
-      fill()
-    }
+    for (level = 0; level <= last && picked.length < count; level++) fill()
   }
+  level = last
 
   // une copie courte ne compte jamais plus d'une moitié de questions déjà posées : les dernières entrées en sortent
   const dropped = new Set<number>()
@@ -1534,14 +1727,14 @@ const ledgers = new WeakMap<Question, Built>()
 /**
  * Ce qu'une question rendue par buildSoloQuiz demande (`asks`) et tout ce qu'elle montre une fois corrigée
  * (`shows`), sous les clés qui ont servi à composer la copie : `entité|valeur` et `entité|ligne de vue` (voir
- * factKeys), `entité#début de la phrase` et `entité#C2` (une ligne de sa fiche), `entité|~objet/sorte` (à qui est
- * ce fait), `entité|~objet!` (ce qu'il vaut). Dans une copie, aucune question ne demande ce qu'une question placée
- * avant elle montre, hormis un objet ou un geste repris une fois pour la remplir. Null pour une question d'une
- * autre origine (ou recopiée : la question se reconnaît à l'objet rendu, pas à son identifiant).
+ * factKeys), `entité#début de la phrase` et `entité#C2` (une ligne de sa fiche), `entité|§objet:fait/sorte` (à qui
+ * est ce fait, voir FACETS), `entité|§objet:fait!preuve` (ce qu'il vaut). Dans une copie, aucune question ne
+ * demande ce qu'une question placée avant elle montre. Null pour une question d'une autre origine (ou recopiée :
+ * la question se reconnaît à l'objet rendu, pas à son identifiant).
  */
 export function soloFacts(q: Question): { asks: string[]; shows: string[] } | null {
   const b = ledgers.get(q)
-  return b ? { asks: [...b.asks], shows: [...b.shows] } : null
+  return b ? { asks: [...b.asks].filter((k) => !isSoft(k)), shows: [...b.shows].filter((k) => !isSoft(k)) } : null
 }
 
 /**
