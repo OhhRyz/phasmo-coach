@@ -21,7 +21,7 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     const aswang = getGhost('aswang')!
     const direct = buildSoloQuiz({ ghost: aswang, allGhosts: GHOSTS, rng: createRng(5), topics: DEFAULT_TOPICS })
     const routed = buildQuiz({ topics: DEFAULT_TOPICS, ghosts: [aswang], allGhosts: GHOSTS, mechanics: MECHANICS, count: SOLO_COUNT, rng: createRng(5) })
-    expect(direct.length).toBeGreaterThan(5)
+    expect(direct.length).toBeGreaterThanOrEqual(4)
     // le même tirage donne la même copie, par l'un ou l'autre chemin
     expect(routed).toEqual(direct)
     expect(buildSoloQuiz({ ghost: aswang, allGhosts: GHOSTS, rng: createRng(5), topics: DEFAULT_TOPICS })).toEqual(direct)
@@ -150,46 +150,47 @@ const COPIES = 30
 /**
  * Le plus petit nombre de questions des copies de chaque entité dans le corpus. Aucune fiche ne remplit toujours une
  * copie de dix aujourd'hui : la copie reste courte plutôt que de reposer une réponse déjà lue, de pencher vers une
- * réponse, d'aligner les questions à deux réponses, de dire faux ce que la fiche de X explique, ou de poser plus de
- * deux départages à l'envers (« à quoi reconnais-tu Y plutôt que X ? », dont la réponse parle de l'autre entité :
- * mieux vaut sept questions sur X que dix dont quatre sur celles qu'on confond avec lui). En moyenne, 7,7 questions.
+ * réponse, d'aligner les questions à deux réponses, de dire faux ce que la fiche de X explique, ou de poser une
+ * question sur une autre entité (le départage à l'envers, « à quoi reconnais-tu Y plutôt que X ? », que le coach a
+ * écarté le 18 novembre 2026 : mieux vaut cinq questions sur X que sept dont deux sur celles qu'on confond avec
+ * lui). En moyenne, 5,9 questions.
  * À vider à mesure que des questions rédigées complètent ces fiches : une entité retirée de la liste doit atteindre
  * dix à chaque copie, et le test le vérifie.
  */
 const SHORT_COPIES: Readonly<Record<string, number>> = {
-  'the-twins': 9,
-  kormos: 9,
-  mare: 8,
-  onryo: 8,
-  phantom: 7,
-  banshee: 7,
-  shade: 7,
-  yurei: 7,
-  yokai: 7,
-  thaye: 7,
-  obambo: 7,
-  wraith: 6,
-  poltergeist: 6,
-  jinn: 6,
-  demon: 6,
-  oni: 6,
-  hantu: 6,
-  myling: 6,
-  raiju: 6,
-  moroi: 6,
-  deogen: 6,
-  gallu: 6,
-  spirit: 5,
-  obake: 5,
-  dayan: 5,
-  aswang: 5,
-  deildegast: 5,
-  // ses signes clés ne parlent que de ses deux vitesses, que les questions en nombres demandent déjà
-  revenant: 4,
-  // pas d'observation décisive ni de test de confirmation sans preuve : peu de questions qui ne se recoupent pas
-  goryo: 4,
+  'the-twins': 7,
+  kormos: 7,
+  phantom: 6,
+  mare: 6,
+  onryo: 6,
+  poltergeist: 5,
+  banshee: 5,
+  shade: 5,
+  yurei: 5,
+  yokai: 5,
+  myling: 5,
+  thaye: 5,
+  obambo: 5,
+  spirit: 4,
+  wraith: 4,
+  jinn: 4,
+  demon: 4,
+  oni: 4,
+  hantu: 4,
+  raiju: 4,
+  obake: 4,
   // ses questions sont presque toutes à deux ou trois réponses (tests, observations) : cinq au plus par copie
   'the-mimic': 4,
+  moroi: 4,
+  deogen: 4,
+  gallu: 4,
+  dayan: 3,
+  aswang: 3,
+  deildegast: 3,
+  // sa fiche tient en une idée (1,0 m/s, puis 3,0 m/s dès qu'il te détecte) : les questions en nombres la demandent déjà
+  revenant: 2,
+  // pas d'observation décisive ni de test de confirmation sans preuve : peu de questions qui ne se recoupent pas
+  goryo: 2,
 }
 
 interface View {
@@ -494,8 +495,8 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
         expect(v.partner.id, v.q.id).not.toBe(v.x.id)
       }
     }
-    // le test mord : des milliers de questions nomment bien une entité proche
-    expect(naming).toBeGreaterThan(1000)
+    // le test mord : des centaines de questions nomment bien une entité proche (« de qui parle-t-on ? », le départage)
+    expect(naming).toBeGreaterThan(300)
     measure(`a. ${all.length} questions dans ${corpus.length} copies, dont ${naming} nomment une entité proche`)
   })
 
@@ -664,7 +665,7 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     expect(worthFirst, some(worthFirst)).toHaveLength(0)
     expect(askedTwice, some(askedTwice)).toHaveLength(0)
     // les deux angles : mesurés, pour que leur part ne grimpe pas sans qu'on le voie (0,4 paire par copie aujourd'hui)
-    expect(pairs).toBeGreaterThan(20_000)
+    expect(pairs).toBeGreaterThan(12_000)
     expect(twoAngles / corpus.length, `${twoAngles} paires « à qui est-ce, puis ce que ça vaut » sur ${corpus.length} copies`).toBeLessThanOrEqual(0.6)
   })
 
@@ -700,7 +701,7 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
         for (const c of v.q.choices) expect(namesGhost(c.label, v.x), `${v.q.id} : ${c.label}`).toBe(false)
       }
     }
-    expect(composed).toBeGreaterThan(3000)
+    expect(composed).toBeGreaterThan(1400)
     for (const [key, set] of labels) expect(set.size, key).toBe(1)
     // la variété : à toute taille, trois questions à deux réponses au plus (une sur deux se trouve au hasard) et cinq au
     // plus à moins de quatre réponses ; une copie de dix compte donc cinq questions à quatre réponses au moins
@@ -758,15 +759,16 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     // la part des questions dont la réponse parle de l'entité proche (départage à l'envers, signe d'une autre fiche jugé faux…)
     const rival = (c: Copy) => c.views.filter((v) => v.about.id !== c.x.id).length
     measure(`g. questions dont la réponse parle de l’entité proche : ${((100 * corpus.reduce((n, c) => n + rival(c), 0)) / all.length).toFixed(1)} % ; au plus ${Math.max(...corpus.map(rival))} par copie ; copies où elles sont la majorité : ${corpus.filter((c) => rival(c) > c.qs.length / 2).length}/${corpus.length}`)
-    // le départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») est la seule question qui demande de connaître Y :
-    // deux au plus par copie, à tous les paliers (voir LADDER, REVERSE_MAX) : une copie sur X parle de X, quitte à
-    // rester plus courte
+    // le départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») demandait de connaître Y : une question sur
+    // une autre entité, que le coach a écartée (18 novembre 2026). Il ne se pose plus : une copie sur X parle de X,
+    // quitte à rester plus courte. Le départage ne se pose que dans l'autre sens, et sa bonne réponse parle de X
     const reverse = (c: Copy) => c.views.filter((v) => v.type === 'T7a' && v.about.id !== c.x.id).length
     const duels = (c: Copy) => c.views.filter((v) => v.type === 'T7a' || v.type === 'T7b').length
-    measure(`g. départages à l’envers : ${((100 * corpus.reduce((n, c) => n + reverse(c), 0)) / all.length).toFixed(1)} % des questions, ${(corpus.reduce((n, c) => n + reverse(c), 0) / corpus.length).toFixed(2)} par copie, au plus ${Math.max(...corpus.map(reverse))} ; départages en tout : au plus ${Math.max(...corpus.map(duels))} par copie`)
+    measure(`g. départages : au plus ${Math.max(...corpus.map(duels))} par copie ; à l’envers : ${corpus.reduce((n, c) => n + reverse(c), 0)}`)
     for (const c of corpus) {
-      expect(reverse(c), `${c.x.id} (graine ${c.seed})`).toBeLessThanOrEqual(2)
+      expect(reverse(c), `${c.x.id} (graine ${c.seed}) : un départage à l’envers`).toBe(0)
       expect(duels(c), `${c.x.id} (graine ${c.seed})`).toBeLessThanOrEqual(5)
+      for (const q of c.qs) expect(q.prompt.replace(/[\u00a0\u202f]/gu, ' '), `${c.x.id} (graine ${c.seed}) : ${q.id}`).not.toMatch(new RegExp(`plutôt que (?:le |la |l’|les )${c.x.name}`, 'u'))
     }
     const mix = new Map<string, number>()
     for (const v of all) mix.set(v.type, (mix.get(v.type) ?? 0) + 1)
@@ -1217,7 +1219,7 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
     for (const d of jinn) expect(d.v.right.label).toContain('(disjoncteur allumé)')
   })
 
-  it('une vitesse dite sans décimale (« environ 1 m/s ») est la même que « 1,0 m/s » : elle ne se demande pas après la scène qui la cite ; et la copie ne s’ouvre pas sur l’entité proche', () => {
+  it('une vitesse dite sans décimale (« environ 1 m/s ») est la même que « 1,0 m/s » : elle ne se demande pas après la scène qui la cite ; et aucun départage ne se pose à l’envers', () => {
     const plain = (t: string) => t.replace(/[\u00a0\u202f]/gu, ' ')
     let pairs = 0
     let opened = 0
@@ -1238,11 +1240,10 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
             }
           }
         })
-        // un départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») n'est jamais la première question
+        // aucun départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») : ni en première question, ni ailleurs
         if (qs.length > 1) {
           opened++
-          const first = qs[0]
-          expect(soloType(first) === 'T7a' && first.id.split(':')[3] !== id, `${id} (graine ${seed}) : ${first.id}`).toBe(false)
+          for (const q of qs) expect(soloType(q) === 'T7a' && q.id.split(':')[3] !== id, `${id} (graine ${seed}) : ${q.id}`).toBe(false)
         }
       }
     }

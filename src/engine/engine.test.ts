@@ -1491,11 +1491,12 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         }
       }
     }
-    // sept questions environ, sans les questions rédigées (les thèmes par défaut) : deux départages à l'envers au plus
-    // par copie, la copie reste courte plutôt que de parler d'une autre entité (les tailles par entité se mesurent
-    // dans solo.test.ts)
+    // cinq questions environ, sans les questions rédigées (les thèmes par défaut) : plus aucun départage à l'envers
+    // (« à quoi reconnais-tu Y plutôt que X ? »), la copie reste courte plutôt que de parler d'une autre entité (les
+    // tailles par entité se mesurent dans solo.test.ts)
     const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length
-    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(6.5)
+    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(4.5)
+    for (const g of GHOSTS) for (const qs of solo.get(g.id)!) for (const q of qs) expect(q.id.startsWith('q:dist:') && q.id.split(':')[3] !== g.id, q.id).toBe(false)
     // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
     // celles dont les choix sont des noms d'entités ou nomment X
     for (const g of GHOSTS) {
@@ -1582,7 +1583,7 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       expect(q.prompt.startsWith(`Sans preuve, à quoi reconnais-tu ${le(g.name)} plutôt que `), q.id).toBe(true)
       for (const c of q.choices) expect(namesGhost(c.label, g), `${q.id} : ${c.label}`).toBe(true)
     }
-    expect(dist).toBeGreaterThan(300)
+    expect(dist).toBeGreaterThan(120)
   })
 
   it('aucune réponse composée ne commence par « Il » ou « Elle » : on ne saurait pas de qui elle parle', () => {

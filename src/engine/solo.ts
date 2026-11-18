@@ -146,17 +146,17 @@ export interface SoloOptions {
  *     des entités qu'on confond avec elle.
  * Une fiche qui n'a pas dix questions à ce prix donne une copie plus courte.
  *
- * `reverse` : les départages posés à l'envers (« à quoi reconnais-tu Y plutôt que X ? »), dont la réponse parle de
- * l'autre entité. Deux au plus par copie, à tous les paliers (voir REVERSE_MAX) : une copie sur X parle de X. Mieux
- * vaut sept questions sur lui que dix dont quatre sur celles qu'on confond avec lui.
+ * Le départage ne se pose que dans un sens : « à quoi reconnais-tu X plutôt que Y ? », dont la réponse parle de X.
+ * Posé à l'envers (« à quoi reconnais-tu Y plutôt que X ? »), il demandait de connaître Y : une question sur une
+ * autre entité, que le coach a écartée (18 novembre 2026). Une copie sur X parle de X ; mieux vaut cinq questions
+ * sur lui que sept dont deux sur celles qu'on confond avec lui.
  */
-const REVERSE_MAX = 2
 const LADDER = [
-  { fine: false, three: 2, duels: 2, reverse: 1 },
-  { fine: true, three: 2, duels: 2, reverse: 1 },
-  { fine: true, three: 2, duels: 3, reverse: REVERSE_MAX },
-  { fine: true, three: 3, duels: 4, reverse: REVERSE_MAX },
-  { fine: true, three: 3, duels: 5, reverse: REVERSE_MAX },
+  { fine: false, three: 2, duels: 2 },
+  { fine: true, three: 2, duels: 2 },
+  { fine: true, three: 2, duels: 3 },
+  { fine: true, three: 3, duels: 4 },
+  { fine: true, three: 3, duels: 5 },
 ] as const
 /**
  * La variété d'une copie de dix, à tous les paliers : trois questions à deux réponses au plus (une sur deux se
@@ -1301,46 +1301,43 @@ function duelSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
   const near = rivalsOf(x, all)
   const byId = new Map(all.map((o) => [o.id, o]))
-  /** le départage du quiz, entre X et Y seulement ; il s'inscrit toujours sur X */
-  const duel = (g: Ghost, other: Ghost, forward: boolean): Seed => ({
-    id: `q:dist:${other.id}:${g.id}`,
+  /**
+   * Le départage du quiz, entre X et Y seulement : « à quoi reconnais-tu X plutôt que Y ? ». La bonne réponse parle
+   * de X ; jamais posé à l'envers (voir LADDER).
+   */
+  const duel = (other: Ghost): Seed => ({
+    id: `q:dist:${other.id}:${x.id}`,
     type: 'T7a',
     topic: 'zero',
     width: 4,
-    cls: forward ? 'x' : 'y',
-    pre: () => [`${g.id}|départage`],
+    cls: 'x',
+    pre: () => [`${x.id}|départage`],
     make: (rng) => {
-      const made = duelQuestion(g, ctxFor(g, all, rng), other)
+      const made = duelQuestion(x, ctxFor(x, all, rng), other)
       if (!made) return null
       const { cardId: _card, ...rest } = made
       const owners = made.choices.filter((c) => !made.correct.includes(c.id)).map((c) => byId.get(c.id))
       // le corrigé du quiz (ce que la fiche dit pour les départager), et de qui parlent les trois autres réponses
       const right = made.choices.find((c) => made.correct.includes(c.id))!.label
-      // « à quoi reconnais-tu Y plutôt que l'Obake ? » : ce que la fiche de l'Obake dit de Y parle le plus souvent de
-      // formes ; « … plutôt que le Fantôme ? » : parmi les mauvaises réponses, un trait du Fantôme (« disparaît quand tu
-      // le prends en photo »). Une seule réponse à contenir le mot que souffle le nom de X se trouverait, ou s'écarterait,
-      // sans rien savoir de Y (duelQuestion le vérifie déjà pour l'entité reconnue)
-      if (!forward && made.choices.filter((c) => hints(x, c.label)).length === 1) return null
       // la fiche ne dit rien de plus que la bonne réponse : le corrigé dit d'où elle vient, sans la redire
-      const source = restates(made.explain, right) ? `C’est ce que la fiche ${de(other.name)} dit ${de(g.name)}.` : made.explain
+      const source = restates(made.explain, right) ? `C’est ce que la fiche ${de(other.name)} dit ${de(x.name)}.` : made.explain
       const explain = owners.every((o) => o) ? `${source} Les trois autres réponses décrivent, dans l’ordre, ${listOf(owners.map((o) => le(o!.name)))}.` : source
-      const q: Question = { ...rest, explain, ghostId: x.id, ...(forward ? { cardId: `g:${x.id}:tells` } : {}) }
+      const q: Question = { ...rest, explain, ghostId: x.id, cardId: `g:${x.id}:tells` }
       return built(
         q,
         'T7a',
-        [{ who: g.id, text: right }],
+        [{ who: x.id, text: right }],
         [
-          { who: g.id, text: q.explain },
+          { who: x.id, text: q.explain },
           { who: other.id, text: q.explain },
           ...q.choices.filter((c) => !q.correct.includes(c.id)).map((c) => ({ who: c.id, text: c.label })),
         ],
         // deux départages d'une même entité citent le plus souvent le même trait
-        [`${g.id}|départage`],
+        [`${x.id}|départage`],
       )
     },
   })
-  if (!plural(x)) for (const d of duelsFor(x, all)) if (near.some((o) => o.id === d.x.id)) out.push(duel(x, d.x, true))
-  for (const y of near) if (!plural(y) && duelsFor(y, all).some((d) => d.x.id === x.id)) out.push(duel(y, x, false))
+  if (!plural(x)) for (const d of duelsFor(x, all)) if (near.some((o) => o.id === d.x.id)) out.push(duel(d.x))
 
   // T7b « De qui parle-t-on ? » : une phrase sans nom, deux réponses, X et Y
   const who = (id: string, y: Ghost, owner: Ghost, register: string, quote: string, explain: string, asked: Stmt, shown: Stmt[] = []) => {
@@ -1699,7 +1696,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   let level = 0
   const cap = () => {
     const l = LADDER[level]
-    return { two: Math.max(1, Math.floor(TWO_MAX * scale)), few: Math.max(1, Math.floor(FEW_MAX * scale)), three: Math.max(1, Math.floor(l.three * scale)), duels: Math.max(1, Math.ceil(l.duels * scale)), reverse: Math.max(1, Math.ceil(l.reverse * scale)) }
+    return { two: Math.max(1, Math.floor(TWO_MAX * scale)), few: Math.max(1, Math.floor(FEW_MAX * scale)), three: Math.max(1, Math.floor(l.three * scale)), duels: Math.max(1, Math.ceil(l.duels * scale)) }
   }
 
   const picked: Built[] = []
@@ -1715,7 +1712,6 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     if (s.width === 3 && widthOf(3) >= c.three) return false
     if (s.width < 4 && picked.length - widthOf(4) >= c.few) return false
     if ((s.type === 'T7a' || s.type === 'T7b') && countOf((b) => b.type === 'T7a' || b.type === 'T7b') >= c.duels) return false
-    if (s.type === 'T7a' && s.cls === 'y' && countOf((b) => b.type === 'T7a' && !b.q.cardId) >= c.reverse) return false
     if (s.type === 'T3b' && countOf((b) => b.type === 'T3b') >= Math.max(1, Math.round(scale))) return false
     return true
   }
@@ -1991,12 +1987,10 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     // les contraintes ne bouclent jamais (voir place) ; par prudence, une question bloquée passerait quand même
     const pool = ready.length ? ready : left
     const last = order.length ? picked[order[order.length - 1]].type : null
-    // la copie s'ouvre sur X : un départage à l'envers, dont la réponse parle de l'entité proche, ne vient pas en premier
-    const opening = order.length ? pool : pool.filter((i) => !(picked[i].type === 'T7a' && !picked[i].q.cardId))
-    // … et sur du simple quand la copie en a : un nombre de sa fiche (vitesse, seuil) ou l'un de ses signes, avant
-    // les tests, les observations et les questions expertes
-    const simple = order.length ? [] : opening.filter((i) => picked[i].type === 'T1' || picked[i].type === 'T2')
-    const from = simple.length ? simple : opening.length ? opening : pool
+    // la copie s'ouvre sur du simple quand elle en a : un nombre de la fiche (vitesse, seuil) ou l'un des signes de
+    // l'entité, avant les tests, les observations et les questions expertes
+    const simple = order.length ? [] : pool.filter((i) => picked[i].type === 'T1' || picked[i].type === 'T2')
+    const from = simple.length ? simple : pool
     const varied = from.filter((i) => picked[i].type !== last)
     const next = shuffle(rng, varied.length ? varied : from)[0]
     order.push(next)
