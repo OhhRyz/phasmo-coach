@@ -1408,7 +1408,7 @@ const echoes = (a: string, b: string) => sameSaid({ who: '', words: gist(a), wor
 
 /**
  * Une scène qui ne montre qu'un ralentissement (« tu prends des pilules en pleine chasse et l'entité ralentit juste
- * après », décisif pour le Moroi), sans vitesse citée ni accélération : toute entité ralentit quand elle a perdu le
+ * après », décisif pour le Moroï), sans vitesse citée ni accélération : toute entité ralentit quand elle a perdu le
  * joueur et rejoint sa dernière position connue. La scène peut donc se voir avec X : elle ne l'exclut jamais.
  */
 const SLOWS = /(?<!sans\s)(?<!ne\s)(?<!au\s)ralenti/iu

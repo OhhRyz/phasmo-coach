@@ -1,6 +1,6 @@
 {
   "id": "moroi",
-  "name": "Moroi",
+  "name": "Moroï",
   "nameEn": "Moroi",
   "evidence": [
     "spiritbox",
@@ -67,25 +67,25 @@
   "abilities": [],
   "confirmationTests": [
     {
-      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse, tant que personne ne prend de pilules pour la faire remonter) tout en ayant l'accélération en ligne de vue, ça peut être un Moroi. Attention : les Jumeaux (une chance sur deux à chaque chasse d'avoir le lent ou le rapide), le Gallu (selon son état : affaibli, normal ou enragé) et l'Obambo (toutes les 2 minutes à la montre du jeu) changent aussi de vitesse et accélèrent aussi en ligne de vue. Sans santé mentale (0 %), le Moroi est déjà au maximum : sa vitesse ne change plus d'une chasse à l'autre. Et les pilules, en faisant remonter la santé, le ralentissent.",
+      "text": "Si tu constates que l'entité devient plus rapide d'une chasse à l'autre (à mesure que la santé baisse, tant que personne ne prend de pilules pour la faire remonter) tout en ayant l'accélération en ligne de vue, ça peut être un Moroï. Attention : les Jumeaux (une chance sur deux à chaque chasse d'avoir le lent ou le rapide), le Gallu (selon son état : affaibli, normal ou enragé) et l'Obambo (toutes les 2 minutes à la montre du jeu) changent aussi de vitesse et accélèrent aussi en ligne de vue. Sans santé mentale (0 %), le Moroï est déjà au maximum : sa vitesse ne change plus d'une chasse à l'autre. Et les pilules, en faisant remonter la santé, le ralentissent.",
       "definitive": false
     },
     {
-      "text": "Après avoir encensé l'entité (encens de rang 1) pendant une chasse, si elle met plus de 5 s à revenir vers toi (en supposant qu'elle puisse encore te détecter), ça peut être un Moroi (7 s). Attention : un Gallu en état affaibli (1,36 m/s) reste lui aussi aveuglé 6 s.",
+      "text": "Après avoir encensé l'entité (encens de rang 1) pendant une chasse, si elle met plus de 5 s à revenir vers toi (en supposant qu'elle puisse encore te détecter), ça peut être un Moroï (7 s). Attention : un Gallu en état affaibli (1,36 m/s) reste lui aussi aveuglé 6 s.",
       "definitive": false
     },
     {
-      "text": "Si, après avoir entendu un son paranormal au micro parabolique ou à l'enregistreur de son, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une pièce éclairée, c'est un Moroi.",
+      "text": "Si, après avoir entendu un son paranormal au micro parabolique ou à l'enregistreur de son, tu n'arrives pas à stopper la baisse passive de ta santé mentale en restant dans une pièce éclairée, c'est un Moroï.",
       "definitive": true,
       "card": 0
     },
     {
-      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroi. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
+      "text": "Une fois la santé moyenne sous 40 %, prends des pilules de santé mentale pendant une chasse. Si la vitesse de l'entité baisse juste après, c'est un Moroï. Attention : un Obambo qui repasse en état calme en pleine chasse ralentit aussi brusquement (d'environ 1,96 à 1,45 m/s) ; écarte-le d'abord (chasse qui ne tombe pas sur une bascule de son minuteur de 2 min) ou refais le test.",
       "definitive": true,
       "card": 1
     },
     {
-      "text": "Si, après avoir entendu un murmure au micro parabolique ou à l'enregistreur de son, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroi.",
+      "text": "Si, après avoir entendu un murmure au micro parabolique ou à l'enregistreur de son, la santé mentale d'un joueur semble baisser plus vite, ça peut être un Moroï.",
       "definitive": false
     }
   ],
@@ -93,7 +93,7 @@
   "confusions": [
     {
       "with": "thaye",
-      "why": "Le Thayé est lui aussi très rapide (2,75 m/s jeune), mais il n'accélère jamais en ligne de vue et ralentit en vieillissant. Le Moroi, lui, accélère en ligne de vue et devient plus rapide quand la santé baisse. Sans ligne de vue, un Moroi plafonne à 2,25 m/s."
+      "why": "Le Thayé est lui aussi très rapide (2,75 m/s jeune), mais il n'accélère jamais en ligne de vue et ralentit en vieillissant. Le Moroï, lui, accélère en ligne de vue et devient plus rapide quand la santé baisse. Sans ligne de vue, un Moroï plafonne à 2,25 m/s."
     },
     {
       "with": "deogen",
@@ -121,7 +121,7 @@
     },
     {
       "with": "the-mimic",
-      "why": "Le Mimic a Spirit Box + Températures glaciales (+ UV et faux orbes) mais jamais l'Écriture. Il peut imiter le Moroi : des orbes ou l'UV le trahissent."
+      "why": "Le Mimic a Spirit Box + Températures glaciales (+ UV et faux orbes) mais jamais l'Écriture. Il peut imiter le Moroï : des orbes ou l'UV le trahissent."
     },
     {
       "with": "revenant",
@@ -141,7 +141,7 @@
     },
     {
       "with": "gallu",
-      "why": "Gallu : seule la Spirit Box en commun (EMF 5 + UV au lieu de l'Écriture et des Températures glaciales), mais il imite deux tests du Moroi. En état affaibli, l'encens aveugle le Gallu 6 s, et sa vitesse change d'une chasse à l'autre (1,7 / 1,96 / 1,36 m/s), mais selon le sel, l'encens et le crucifix, pas selon la santé mentale."
+      "why": "Gallu : seule la Spirit Box en commun (EMF 5 + UV au lieu de l'Écriture et des Températures glaciales), mais il imite deux tests du Moroï. En état affaibli, l'encens aveugle le Gallu 6 s, et sa vitesse change d'une chasse à l'autre (1,7 / 1,96 / 1,36 m/s), mais selon le sel, l'encens et le crucifix, pas selon la santé mentale."
     }
   ],
   "observations": [
@@ -184,7 +184,7 @@
   ],
   "quiz": [
     {
-      "q": "À quelle vitesse de base chasse un Moroi tant que la santé mentale moyenne est au-dessus de 45 % ?",
+      "q": "À quelle vitesse de base chasse un Moroï tant que la santé mentale moyenne est au-dessus de 45 % ?",
       "choices": [
         "1,7 m/s",
         "2,25 m/s",
@@ -192,10 +192,10 @@
         "1,0 m/s"
       ],
       "answer": 2,
-      "explain": "Le Moroi part de 1,5 m/s au-dessus de 45 % de santé moyenne, puis gagne environ 0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %. Il accélère en plus en ligne de vue."
+      "explain": "Le Moroï part de 1,5 m/s au-dessus de 45 % de santé moyenne, puis gagne environ 0,083 m/s par tranche de 5 % en moins, jusqu'à 2,25 m/s sous 5 %. Il accélère en plus en ligne de vue."
     },
     {
-      "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
+      "q": "Quelle vitesse maximale un Moroï peut-il atteindre ?",
       "choices": [
         "3,0 m/s",
         "2,75 m/s",
@@ -206,7 +206,7 @@
       "explain": "À 0 % de santé il part de 2,25 m/s, et 13 s de ligne de vue continue le font monter à 1,65 × cette vitesse : 3,71 m/s, le record du jeu."
     },
     {
-      "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 pendant une chasse ?",
+      "q": "Combien de temps un Moroï reste-t-il aveuglé par un encens de rang 1 pendant une chasse ?",
       "choices": [
         "7 s",
         "5 s",
@@ -217,7 +217,7 @@
       "explain": "7 s au lieu des 5 s standard (les notes de patch annonçaient 7,5 s, mais le jeu applique 7 s). 4 s, c'est un Gallu enragé."
     },
     {
-      "q": "Comment un joueur se fait-il maudire par un Moroi ?",
+      "q": "Comment un joueur se fait-il maudire par un Moroï ?",
       "choices": [
         "En le prenant en photo pendant un événement",
         "En entendant un de ses sons au micro parabolique",
@@ -232,14 +232,14 @@
       "choices": [
         "Un Thayé",
         "Un Deogen",
-        "Un Moroi",
+        "Un Moroï",
         "Un Revenant"
       ],
       "answer": 2,
-      "explain": "Seul le Moroi règle sa vitesse sur la santé mentale moyenne en temps réel : remonter la santé le ralentit."
+      "explain": "Seul le Moroï règle sa vitesse sur la santé mentale moyenne en temps réel : remonter la santé le ralentit."
     },
     {
-      "q": "Pendant une chasse, tu encenses (rang 1) un Moroi lancé à pleine vitesse. Que devient sa vitesse ?",
+      "q": "Pendant une chasse, tu encenses (rang 1) un Moroï lancé à pleine vitesse. Que devient sa vitesse ?",
       "choices": [
         "Il garde sa vitesse maximale, l'encens ne change rien",
         "Il perd tout son bonus de ligne de vue jusqu'à la fin de la chasse",
@@ -247,7 +247,7 @@
         "Il retombe à sa vitesse de base, puis reprend son bonus"
       ],
       "answer": 3,
-      "explain": "Encensé en chasse, le Moroi retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; il récupère ensuite le bonus de ligne de vue qu'il lui restait, et recommence à accélérer s'il te revoit."
+      "explain": "Encensé en chasse, le Moroï retombe à sa vitesse de base et reste aveuglé 7 s au lieu de 5 s ; il récupère ensuite le bonus de ligne de vue qu'il lui restait, et recommence à accélérer s'il te revoit."
     }
   ],
   "changes": [
@@ -256,7 +256,7 @@
   "sources": [
     "Unofficial Phasmophobia Cheat Sheet (tybayn) v0.19.1.0, relevé du 17 novembre 2026",
     "tybayn wiki: wiki_los_moroi_p1, wiki_los_moroi_p2",
-    "tybayn wiki: wiki_ghost_speed_h6 (tableau des vitesses du Moroi)",
+    "tybayn wiki: wiki_ghost_speed_h6 (tableau des vitesses du Moroï)",
     "tybayn wiki: wiki_los_thaye_p1, wiki_los_thaye_p3",
     "tybayn wiki: wiki_the_twins_los_p11",
     "tybayn wiki: wiki_known_bugs_moroi",

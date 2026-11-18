@@ -16,7 +16,7 @@
       "État calme : 1,45 m/s en chasse, plus lent qu'une entité standard.",
       "État agressif : 1,96 m/s en chasse, plus rapide qu'une entité standard.",
       "L'état peut changer en pleine chasse : la vitesse passe alors immédiatement d'une valeur à l'autre, sans transition.",
-      "L'entité accélère en ligne de vue : comme pour les autres entités récentes à vitesse variable (Moroi, Gallu…), cette accélération semble calculée directement à partir de sa vitesse actuelle (non vérifié officiellement).",
+      "L'entité accélère en ligne de vue : comme pour les autres entités récentes à vitesse variable (Moroï, Gallu…), cette accélération semble calculée directement à partir de sa vitesse actuelle (non vérifié officiellement).",
       "Ces vitesses valent pour une vitesse d'entité de 100 %. Par météo « Lune de sang », toutes les entités sont 15 % plus rapides en chasse : un Obambo calme avance alors à environ 1,67 m/s, presque comme une entité standard, et un Obambo agressif à environ 2,25 m/s."
     ]
   },

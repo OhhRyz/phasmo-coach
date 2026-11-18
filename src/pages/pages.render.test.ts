@@ -76,7 +76,7 @@ describe('Fiche : une capacité redite pour la partie sans preuve ne se lit plus
       variants += pairs
       act(() => mounted.at(-1)!.root.unmount())
     }
-    // Spectre, Djinn, Ombre et Moroi
+    // Spectre, Djinn, Ombre et Moroï
     expect(variants).toBe(4)
   })
 })
@@ -218,7 +218,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     // le classement validé par le coach le 18 novembre, dans l'ordre du journal du jeu
     expect(names(0)).toEqual(['Aswang', 'Dayan', 'Hantu', 'Obambo', 'Les Jumeaux'])
     expect(names(1)).toEqual(['Deildegast', 'Deogen', 'Revenant', 'Thayé'])
-    expect(names(2)).toEqual(['Gallu', 'Djinn', 'Kormos', 'Moroi', 'Raiju', 'Le Mimic'])
+    expect(names(2)).toEqual(['Gallu', 'Djinn', 'Kormos', 'Moroï', 'Raiju', 'Le Mimic'])
     expect(names(3)).toHaveLength(15)
     // chaque entité une fois et une seule, dans la case de sa famille, avec son lien
     const families = speedFamilies(JOURNAL_GHOSTS)
@@ -303,20 +303,20 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(el.querySelectorAll('ol.cx-reg > li')).toHaveLength(GHOSTS.length)
   })
 
-  it('« normale » cochée dans le carnet : Hantu, Moroi, Thayé et Deildegast restent possibles, et la page dit pourquoi', () => {
+  it('« normale » cochée dans le carnet : Hantu, Moroï, Thayé et Deildegast restent possibles, et la page dit pourquoi', () => {
     const NNBSP = '\u202f'
     expect(normalSpeedNote(GHOSTS)).toBe(
-      `Le Hantu, le Moroi, le Thayé et le Deildegast restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
+      `Le Hantu, le Moroï, le Thayé et le Deildegast restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
     )
     // sur la page, dans l'ordre du journal du jeu
     expect(normalSpeedNote(JOURNAL_GHOSTS)).toBe(
-      `Le Deildegast, le Hantu, le Moroi et le Thayé restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
+      `Le Deildegast, le Hantu, le Moroï et le Thayé restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
     )
     // sans le critère : pas de note
     expect(renderCodex('?rang=vitesse').querySelector('.cx-field-why')).toBeNull()
     sessionStorage.setItem(FILTER_KEY, JSON.stringify({ filter: { evidenceCount: 3, evidence: {}, speed: ['normal'], huntAbove: null, los: null }, query: '' }))
     const el = renderCodex('?rang=vitesse')
-    expect(text(el.querySelector('.cx-field-why'))).toBe('Le Deildegast, le Hantu, le Moroi et le Thayé restent possibles : leur vitesse change par paliers et passe par 1,7 m/s ou tout près')
+    expect(text(el.querySelector('.cx-field-why'))).toBe('Le Deildegast, le Hantu, le Moroï et le Thayé restent possibles : leur vitesse change par paliers et passe par 1,7 m/s ou tout près')
     const rows = boardRows(el)
     for (const id of ['hantu', 'moroi', 'thaye', 'deildegast']) {
       const g = GHOSTS.find((o) => o.id === id)!
@@ -350,9 +350,9 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(text(emf.note)).toBe('Le Deildegast reste possible : sa vitesse change par paliers et passe par 1,7 m/s ou tout près')
     expect(['hantu', 'moroi', 'thaye'].map((id) => struck(emf.el, id))).toEqual([true, true, true])
     expect(struck(emf.el, 'deildegast')).toBe(false)
-    // accélère en ligne de vue : des quatre, seul le Moroi
+    // accélère en ligne de vue : des quatre, seul le Moroï
     const los = note({ los: true })
-    expect(text(los.note)).toBe('Le Moroi reste possible : sa vitesse change par paliers et passe par 1,7 m/s ou tout près')
+    expect(text(los.note)).toBe('Le Moroï reste possible : sa vitesse change par paliers et passe par 1,7 m/s ou tout près')
     // le carnet écarte les quatre (EMF 5, UV et températures glaciales : le Djinn) : plus de note
     const jinn = note({ evidence: { emf: 'found', uv: 'found', freezing: 'found' } })
     expect(jinn.note).toBeNull()

@@ -240,9 +240,9 @@
           "a": "Revenant, Hantu, Deogen et Thayé.",
           "choices": [
             "Revenant, Hantu, Deogen et Thayé",
-            "Revenant, Hantu, Moroi et Djinn",
+            "Revenant, Hantu, Moroï et Djinn",
             "Deogen, Thayé, Raiju et Gallu",
-            "Moroi, Djinn, Raiju et Gallu"
+            "Moroï, Djinn, Raiju et Gallu"
           ],
           "answer": 0
         },
@@ -300,8 +300,8 @@
         },
         {
           "id": "vitesses-08",
-          "text": "La vitesse du Moroi dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de ligne de vue continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
-          "q": "Quelle vitesse maximale un Moroi peut-il atteindre ?",
+          "text": "La vitesse du Moroï dépend de la santé mentale moyenne de l'équipe : 1,5 m/s au-dessus de 45 %, 2,25 m/s entre 0 et 5 %. Avec 13 s de ligne de vue continue à 0 %, il atteint 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+          "q": "Quelle vitesse maximale un Moroï peut-il atteindre ?",
           "a": "3,71 m/s, la plus rapide de toutes les entités.",
           "choices": [
             "2,5 m/s",
@@ -313,7 +313,7 @@
         },
         {
           "id": "vitesses-09",
-          "text": "Le Thayé n'accélère jamais en ligne de vue. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroi sans ligne de vue (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en ligne de vue continue.",
+          "text": "Le Thayé n'accélère jamais en ligne de vue. Au plus jeune âge il se déplace à 2,75 m/s, puis ralentit à chaque cycle de vieillissement jusqu'à 1,0 m/s après 10 cycles. Un Moroï sans ligne de vue (2,25 m/s) est plus lent qu'un jeune Thayé, mais le dépasse en ligne de vue continue.",
           "q": "À quelle vitesse se déplace un Thayé au plus jeune âge ?",
           "a": "2,75 m/s, même en ligne de vue.",
           "choices": [
@@ -424,8 +424,8 @@
         },
         {
           "id": "encens-02",
-          "text": "Le Moroi a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base (1,5 à 2,25 m/s selon la santé mentale moyenne). Ensuite, il récupère la vitesse gagnée en ligne de vue qu'il lui restait.",
-          "q": "Combien de temps un Moroi reste-t-il aveuglé par un encens de rang 1 ?",
+          "text": "Le Moroï a l'aveuglement sous encens le plus long : 7 s avec un encens de rang 1, pendant lesquelles il revient à sa vitesse de base (1,5 à 2,25 m/s selon la santé mentale moyenne). Ensuite, il récupère la vitesse gagnée en ligne de vue qu'il lui restait.",
+          "q": "Combien de temps un Moroï reste-t-il aveuglé par un encens de rang 1 ?",
           "a": "7 secondes (contre 5 s en standard).",
           "choices": [
             "3 s",
@@ -1154,7 +1154,7 @@
           "choices": [
             "Le Thayé",
             "L'Obake",
-            "Le Moroi",
+            "Le Moroï",
             "Le Goryo"
           ],
           "answer": 0
@@ -1637,11 +1637,11 @@
       "id": "tf-33",
       "claim": "Le Thayé n'accélère jamais avec la ligne de vue.",
       "answer": true,
-      "explain": "Jeune, il va à 2,75 m/s même en ligne de vue, puis ralentit en vieillissant. C'est la différence clé avec le Moroi."
+      "explain": "Jeune, il va à 2,75 m/s même en ligne de vue, puis ralentit en vieillissant. C'est la différence clé avec le Moroï."
     },
     {
       "id": "tf-34",
-      "claim": "Le Moroi peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
+      "claim": "Le Moroï peut atteindre 3,71 m/s, la vitesse la plus élevée de toutes les entités.",
       "answer": true,
       "explain": "À 0 % de santé mentale moyenne, avec 13 s de ligne de vue continue."
     },

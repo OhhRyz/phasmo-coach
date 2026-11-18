@@ -78,7 +78,7 @@ const EVIDENCE_WORDS: Record<EvidenceId, RegExp> = {
   writing: /écriture/i,
   spiritbox: /spirit\s*box/i,
 }
-/** Des comportements passent par la Spirit Box (Moroi) ou les orbes (Mimic en 0 preuve) : seules, elles ne suffisent pas. */
+/** Des comportements passent par la Spirit Box (Moroï) ou les orbes (Mimic en 0 preuve) : seules, elles ne suffisent pas. */
 const EVIDENCE_ONLY: EvidenceId[] = ['emf', 'dots', 'uv', 'freezing', 'writing']
 /** « sans preuve », « 0 preuve », « aucune preuve » : justement ce qu'on veut garder. */
 const NO_EVIDENCE = /\b(?:sans|0|zéro|aucune)\s+preuves?\b/giu

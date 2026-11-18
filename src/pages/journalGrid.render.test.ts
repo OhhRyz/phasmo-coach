@@ -56,7 +56,7 @@ const PHOTO = [
   ['Deildegast', 'Démon', 'Deogen'],
   ['Gallu', 'Goryo', 'Hantu'],
   ['Djinn', 'Kormos', 'Cauchemar'],
-  ['Moroi', 'Myling', 'Obake'],
+  ['Moroï', 'Myling', 'Obake'],
   ['Obambo', 'Oni', 'Onryo'],
   ['Fantôme', 'Poltergeist', 'Raiju'],
   ['Revenant', 'Ombre', 'Esprit'],

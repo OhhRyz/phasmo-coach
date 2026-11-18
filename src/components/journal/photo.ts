@@ -625,7 +625,7 @@ const CUES: Record<string, (c: Ctx) => Layers> = {
     fy: 0.42,
   }),
 
-  /** Moroi : plongée sur des cartes de tarot étalées, l’ombre d’une tête penchée au-dessus. */
+  /** Moroï : plongée sur des cartes de tarot étalées, l’ombre d’une tête penchée au-dessus. */
   tarot: ({ uid, F }) => {
     let s = ''
     for (let i = 0; i < 5; i++) {

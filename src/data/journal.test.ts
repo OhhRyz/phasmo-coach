@@ -4,14 +4,14 @@ import { GHOST_ORDER, GHOSTS, JOURNAL_COLUMNS, JOURNAL_GHOSTS, JOURNAL_ORDER, ge
 /**
  * Le journal du jeu, page « Preuves », tel que le coach l'a photographié en français le 18 novembre 2026 :
  * dix lignes de trois noms. L'app affiche les entités dans cet ordre, pour qu'elles soient à la même place.
- * Seule différence d'écriture connue : le jeu écrit « Moroï », les fiches « Moroi ».
+ * Les noms s'écrivent comme dans le jeu en français, tréma de « Moroï » compris.
  */
 const PHOTO: string[][] = [
   ['Aswang', 'Banshee', 'Dayan'],
   ['Deildegast', 'Démon', 'Deogen'],
   ['Gallu', 'Goryo', 'Hantu'],
   ['Djinn', 'Kormos', 'Cauchemar'],
-  ['Moroi', 'Myling', 'Obake'],
+  ['Moroï', 'Myling', 'Obake'],
   ['Obambo', 'Oni', 'Onryo'],
   ['Fantôme', 'Poltergeist', 'Raiju'],
   ['Revenant', 'Ombre', 'Esprit'],

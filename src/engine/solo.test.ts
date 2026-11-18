@@ -1134,7 +1134,7 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
       const id = `q:constat:${pair}`
       expect(soloSupply(getGhost(pair.split(':')[0])!, GHOSTS).map((s) => s.id), id).not.toContain(id)
     }
-    // ce que la scène du Moroi prouve reste demandé sur sa propre fiche
+    // ce que la scène du Moroï prouve reste demandé sur sa propre fiche
     expect(soloSupply(getGhost('moroi')!, GHOSTS).map((s) => s.id)).toContain('q:constat:moroi:moroi:O4')
   })
 

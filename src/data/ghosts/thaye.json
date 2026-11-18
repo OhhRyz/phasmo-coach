@@ -93,7 +93,7 @@
   "confusions": [
     {
       "with": "moroi",
-      "why": "Le Moroi est lui aussi très rapide, mais il accélère en ligne de vue (jusqu'à 3,71 m/s) et devient plus rapide quand la santé baisse. Le Thayé n'accélère jamais en ligne de vue et ralentit à chaque chasse. Sans ligne de vue, un Moroi ne dépasse pas 2,25 m/s, moins qu'un Thayé jeune."
+      "why": "Le Moroï est lui aussi très rapide, mais il accélère en ligne de vue (jusqu'à 3,71 m/s) et devient plus rapide quand la santé baisse. Le Thayé n'accélère jamais en ligne de vue et ralentit à chaque chasse. Sans ligne de vue, un Moroï ne dépasse pas 2,25 m/s, moins qu'un Thayé jeune."
     },
     {
       "with": "deildegast",
@@ -227,15 +227,15 @@
       "explain": "Il tente de vieillir toutes les 1 à 2 min : il vieillit si un joueur est dans la même pièce que lui, sinon il réessaie 30 s plus tard. C'est cette exposition, pas les chasses elles-mêmes, qui le ralentit d'une chasse à l'autre. Les objets ramassés, c'est le Deildegast."
     },
     {
-      "q": "En chasse, quel indice distingue un Thayé d'un Moroi ?",
+      "q": "En chasse, quel indice distingue un Thayé d'un Moroï ?",
       "choices": [
-        "Le Thayé est toujours plus lent que le Moroi",
-        "Le Moroi n'accélère jamais en ligne de vue",
+        "Le Thayé est toujours plus lent que le Moroï",
+        "Le Moroï n'accélère jamais en ligne de vue",
         "Le Thayé n'accélère jamais en ligne de vue",
-        "Le Moroi est toujours plus lent que le Thayé"
+        "Le Moroï est toujours plus lent que le Thayé"
       ],
       "answer": 2,
-      "explain": "C'est la différence clé : le Moroi accélère en ligne de vue, le Thayé jamais. Ni l'un ni l'autre n'est toujours le plus lent : un Thayé jeune (2,75 m/s) est plus rapide qu'un Moroi sans ligne de vue (2,25 m/s max), mais un Thayé âgé descend jusqu'à 1,0 m/s."
+      "explain": "C'est la différence clé : le Moroï accélère en ligne de vue, le Thayé jamais. Ni l'un ni l'autre n'est toujours le plus lent : un Thayé jeune (2,75 m/s) est plus rapide qu'un Moroï sans ligne de vue (2,25 m/s max), mais un Thayé âgé descend jusqu'à 1,0 m/s."
     },
     {
       "q": "Combien de fois un Thayé peut-il vieillir avant d'atteindre sa vitesse et son seuil minimum ?",

@@ -150,7 +150,7 @@ Les icônes de l’app se régénèrent avec `node scripts/make-icons.cjs` (Play
   des questions pièges et des enquêtes avec indice trompeur volontaire, expliqué à la fin.
 - **Trois tests à trancher** : le site de tybayn marque comme définitifs trois tests que l’app garde
   pour l’instant comme simples indices, faute de certitude (le sel du Spectre face au Gallu,
-  les changements de vitesse du Hantu face à l’Obambo, les tests du Moroi face aux Jumeaux et au Gallu).
+  les changements de vitesse du Hantu face à l’Obambo, les tests du Moroï face aux Jumeaux et au Gallu).
   L’expérience de jeu du coach tranchera.
 
 Les fiches ont été comparées au site public de la Cheat Sheet (version du jeu v0.19.1.0, octobre 2026),

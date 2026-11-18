@@ -279,7 +279,7 @@ describe('quiz', () => {
     // ce qui se joue sans preuve reste
     expect(mentionsEvidence('Partie à 0 preuve : tu vois des orbes dans la pièce favorite.')).toBe(false)
     expect(mentionsEvidence('Un EMF 2 apparaît près de toi sans interaction.')).toBe(false)
-    expect(mentionsEvidence('Le Moroi maudit qui l’entend au micro parabolique.')).toBe(false)
+    expect(mentionsEvidence('Le Moroï maudit qui l’entend au micro parabolique.')).toBe(false)
     // « sous 0 °C » est une vitesse du Hantu (thermomètre), pas la preuve « températures glaciales »
     expect(evidenceIn('Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?')).toEqual([])
     expect(mentionsEvidence('Quelle vitesse atteint un Hantu dans une pièce sous 0 °C ?')).toBe(false)
@@ -1285,7 +1285,7 @@ describe('des réponses de même forme', () => {
     expect(right('aswang', 'spd')).toBe('1,53\u00a0m/s')
     // le Yokai chasse jusqu'à 80 % quand on parle : « 80 % » n'est jamais une mauvaise réponse pour lui
     for (const q of [...questions, ...extra].filter((x) => x.id === 'q:san:yokai')) expect(q.choices.map((c) => c.label), q.id).not.toContain('80\u00a0%')
-    // les seuils et vitesses qui ne tiennent pas en un nombre (Hantu, Moroi, Jumeaux…) n'ont pas de question en nombres
+    // les seuils et vitesses qui ne tiennent pas en un nombre (Hantu, Moroï, Jumeaux…) n'ont pas de question en nombres
     for (const id of none.san) expect(seen.san.has(id), id).toBe(false)
     for (const id of none.spd) expect(seen.spd.has(id), id).toBe(false)
     expect(seen.san.size).toBeGreaterThanOrEqual(28)

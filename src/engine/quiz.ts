@@ -860,7 +860,7 @@ const sanityOfGhost: Gen = (g, ctx) => {
 
 /**
  * Les entités qui ne chassent jamais d'habitude à `value` : aucun de leurs seuils (ou aucune de leurs
- * vitesses) n'est cette valeur, et elles n'y passent pas en chemin (le Thayé, de 75 à 15 %, ni le Moroi,
+ * vitesses) n'est cette valeur, et elles n'y passent pas en chemin (le Thayé, de 75 à 15 %, ni le Moroï,
  * de 1,5 à 2,25 m/s). Jamais le Mimic : il copie.
  */
 const neverAt = (all: readonly Ghost[], values: (o: Ghost) => Set<number>, summary: (o: Ghost) => string, value: number, range: (o: Ghost) => boolean) =>
@@ -1069,7 +1069,7 @@ const sanityProfile: Gen = (g, ctx) => {
 /**
  * La description de vitesse de o est-elle en partie vraie pour g ? Ses vitesses font toutes partie de
  * celles de g (« 1,7 m/s · accélère en ligne de vue » pour le Raiju, qui reste à 1,7 m/s loin de l'électronique),
- * ou tombent dans la plage de g avec la même ligne de vue (le Moroi passe par 1,7 m/s et accélère en ligne de vue).
+ * ou tombent dans la plage de g avec la même ligne de vue (le Moroï passe par 1,7 m/s et accélère en ligne de vue).
  */
 function partlyTrueSpeed(o: Ghost, g: Ghost): boolean {
   const theirs = speedValues(o)

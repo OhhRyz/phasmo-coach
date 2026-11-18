@@ -401,7 +401,7 @@ const RANK_HINT: Record<Exclude<Rank, 'numero'>, string[]> = {
   ],
 }
 
-/** « le Hantu, le Moroi, le Thayé et le Deildegast » */
+/** « le Hantu, le Moroï, le Thayé et le Deildegast » */
 const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? ''))
 
 /**
@@ -491,7 +491,7 @@ export function Codex() {
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
   const pool = useMemo(() => filterGhosts(JOURNAL_GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
-  // « normale » cochée : pourquoi le Deildegast, le Hantu, le Moroi et le Thayé restent possibles tant que le reste
+  // « normale » cochée : pourquoi le Deildegast, le Hantu, le Moroï et le Thayé restent possibles tant que le reste
   // du carnet ne les écarte pas (voir normalSpeedNote)
   const normalNote = useMemo(() => normalSpeedNote(pool), [pool])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison

@@ -77,7 +77,7 @@ const inSanityClass = (v: number, c: SanityClass) => (c === 'late' ? v < STANDAR
 
 /**
  * Les entités dont la vitesse change par paliers et passe par 1,7 m/s ou tout près (à 0,05 m/s, l'écart que
- * l'oreille ne sépare pas, voir hasSpeed : 1,75 pour le Hantu, 1,66 et 1,749 pour le Moroi, 1,7 pile pour le Thayé
+ * l'oreille ne sépare pas, voir hasSpeed : 1,75 pour le Hantu, 1,66 et 1,749 pour le Moroï, 1,7 pile pour le Thayé
  * et le Deildegast). Le filtre du carnet de preuves les garde quand on coche « normale », alors qu'aucune n'est une
  * entité normale : la page le dit à ce moment-là.
  */

@@ -96,7 +96,7 @@
     },
     {
       "with": "moroi",
-      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroi augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en ligne de vue) et monte progressivement en ligne de vue ; il ne descend jamais à 1,0 m/s."
+      "why": "Mêmes écriture et températures glaciales. La vitesse du Moroï augmente quand la santé mentale baisse (1,5 à 2,25 m/s, jusqu'à 3,71 m/s en ligne de vue) et monte progressivement en ligne de vue ; il ne descend jamais à 1,0 m/s."
     },
     {
       "with": "aswang",
@@ -218,13 +218,13 @@
     {
       "q": "Dans quel groupe AUCUNE entité n'a l'accélération standard en ligne de vue ?",
       "choices": [
-        "Revenant, Djinn, Raiju, Moroi",
+        "Revenant, Djinn, Raiju, Moroï",
         "Revenant, Ombre, Démon, Yurei",
         "Revenant, Les Jumeaux, Obambo, Gallu",
         "Revenant, Hantu, Deogen, Thayé"
       ],
       "answer": 3,
-      "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en ligne de vue. Le Djinn, le Raiju et le Moroi l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une accélération particulière en ligne de vue, mais en ont une."
+      "explain": "Le Revenant, le Hantu, le Deogen et le Thayé n'ont pas l'accélération standard en ligne de vue. Le Djinn, le Raiju et le Moroï l'ont (en plus de leurs vitesses particulières), comme l'Ombre, le Démon, le Yurei, l'Obambo et le Gallu ; les Jumeaux ont une accélération particulière en ligne de vue, mais en ont une."
     },
     {
       "q": "Pendant toute une chasse, l'entité avance à environ 1,0 m/s sans t'avoir détecté (vitesse des entités à 100 %). Qu'en conclus-tu ?",
