@@ -3,8 +3,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
 import { GHOSTS, JOURNAL_GHOSTS, JOURNAL_ORDER } from '../data'
-import { FAMILY_COPY, FAMILY_ORDER, speedFamilies, speedFamily, speedFamilyNote } from '../engine/families'
-import { NBSP, sanityClasses } from '../engine/format'
+import { FAMILY_COPY, FAMILY_ORDER, SANITY_FAMILY_COPY, SANITY_FAMILY_ORDER, sanityFamilies, sanityFamily, sanityFamilyNote, speedFamilies, speedFamily, speedFamilyNote } from '../engine/families'
+import { NBSP } from '../engine/format'
 import { pairZeroVariants, testException } from '../engine/fiche'
 import { StoreProvider } from '../store/store'
 import { ToastProvider } from '../components/Toast'
@@ -143,21 +143,8 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
   afterEach(() => sessionStorage.removeItem(FILTER_KEY))
   const renderCodex = (search = '') => renderPage(`/codex${search}`, '/codex', h(Codex))
   const pressed = (el: HTMLElement) => [...el.querySelectorAll('.cx-rank .opt')].filter((b) => b.getAttribute('aria-pressed') === 'true').map(text)
-  /** les colonnes du registre rangé : leur titre, les noms de leurs lignes, et leurs deux parties (« toujours », « par moments ») */
-  const columns = (el: HTMLElement) =>
-    [...el.querySelectorAll('.cx-ledger [role="group"]')].map((grp) => ({
-      grp,
-      title: text(grp.querySelector('h3')),
-      label: grp.getAttribute('aria-label'),
-      rows: [...grp.querySelectorAll('ul > li')],
-      parts: [...grp.querySelectorAll('.cx-part')].map((part) => ({
-        title: text(part.querySelector('h4')),
-        names: [...part.querySelectorAll('ul > li .cx-link')].map((a) => a.firstChild?.textContent ?? ''),
-        none: text(part.querySelector('.cx-part-none')),
-      })),
-    }))
   const named = (rows: Element[], g: { name: string }) => rows.filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === g.name)
-  /** les cases du tableau des familles de vitesse : leur titre, leur légende, leurs lignes */
+  /** les cases d'un tableau de familles (vitesse ou seuil de chasse) : leur titre, leur légende, leurs lignes */
   const boxes = (el: HTMLElement) =>
     [...el.querySelectorAll('.sf [role="group"]')].map((box) => ({
       box,
@@ -175,7 +162,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(text(el.querySelector('.cx-rank .typed-label'))).toBe('Ranger par')
     expect([...group.querySelectorAll('button')].map(text)).toEqual(['ordre du jeu', 'vitesse', 'seuil de chasse'])
     expect(pressed(el)).toEqual(['ordre du jeu'])
-    expect(el.querySelector('.cx-ledger')).toBeNull()
+    expect(el.querySelector('.sf')).toBeNull()
     expect(text(el.querySelector('.cx-right .filehead'))).toContain('Ordre du journal du jeu')
     const rows = [...el.querySelectorAll('ol.cx-reg > li')]
     expect(rows.map((li) => li.querySelector('.cx-link')?.textContent)).toEqual(JOURNAL_GHOSTS.map((g) => g.name))
@@ -192,7 +179,8 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(word('spirit')).toBe('Vitesse : normale')
     expect(word('the-twins')).toBe('Vitesse : lente')
     expect(word('thaye')).toBe('Vitesse : rapide')
-    expect(word('moroi')).toBe('Vitesse : variable')
+    expect(word('moroi')).toBe('Vitesse : rapide')
+    expect(word('jinn')).toBe('Vitesse : variable')
     // après le mot, les m/s ; le Mimic, « variable », n'écrit pas ses 1,7 m/s à côté : il dit qu'il copie
     const speed = (id: string) => text(rows[JOURNAL_ORDER.indexOf(id)].querySelector('.cx-speed'))
     expect(speed('spirit')).toBe(', 1,7 m/s')
@@ -204,21 +192,20 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(pressed(el)).toEqual(['vitesse'])
     expect(text(el.querySelector('.cx-right .filehead'))).toContain('Rangé par vitesse')
     expect(el.querySelector('ol.cx-reg')).toBeNull()
-    expect(el.querySelector('.cx-ledger')).toBeNull()
     const bs = boxes(el)
     expect(bs.map((b) => b.title)).toEqual(['Lentes', 'Rapides', 'Changent de vitesse', 'Normales'])
     expect(bs.map((b) => b.label)).toEqual(['Entités lentes', 'Entités rapides', 'Entités qui changent de vitesse', 'Entités à vitesse normale'])
     expect(bs.map((b) => b.def)).toEqual([
       '5 entités · moins vite que la normale',
-      '4 entités · plus vite que la normale',
-      '6 entités · selon la situation',
+      '5 entités · plus vite que la normale',
+      '5 entités · selon la situation',
       '15 entités · toujours 1,7 m/s',
     ])
     const names = (i: number) => bs[i].rows.map((li) => li.querySelector('.cx-link')?.firstChild?.textContent)
     // le classement validé par le coach le 18 novembre, dans l'ordre du journal du jeu
     expect(names(0)).toEqual(['Aswang', 'Dayan', 'Hantu', 'Obambo', 'Les Jumeaux'])
-    expect(names(1)).toEqual(['Deildegast', 'Deogen', 'Revenant', 'Thayé'])
-    expect(names(2)).toEqual(['Gallu', 'Djinn', 'Kormos', 'Moroï', 'Raiju', 'Le Mimic'])
+    expect(names(1)).toEqual(['Deildegast', 'Deogen', 'Moroï', 'Revenant', 'Thayé'])
+    expect(names(2)).toEqual(['Gallu', 'Djinn', 'Kormos', 'Raiju', 'Le Mimic'])
     expect(names(3)).toHaveLength(15)
     // chaque entité une fois et une seule, dans la case de sa famille, avec son lien
     const families = speedFamilies(JOURNAL_GHOSTS)
@@ -236,6 +223,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     }
     const line = (id: string) => text(named(boardRows(el), GHOSTS.find((g) => g.id === id)!)[0])
     expect(line('thaye')).toBe('Thayé : ralentit en vieillissant')
+    expect(line('moroi')).toBe('Moroï : plus lent quand la santé mentale est haute')
     expect(line('revenant')).toBe("Revenant : lent tant qu'il ne te détecte pas")
     expect(line('hantu')).toBe('Hantu : rapide dans le froid')
     expect(line('the-twins')).toBe('Les Jumeaux : un jumeau lent, un jumeau rapide')
@@ -247,44 +235,48 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(text(el.querySelector('.cx-rank-hint'))).toBe('le classement du coach : une seule case par entité · à côté du nom, ce qui change sa vitesse')
   })
 
-  it('?rang=seuil : « Tôt », « Normal », « Tard », chaque entité dans chacune de ses classes de seuil', () => {
+  it('?rang=seuil : les quatre cases du coach, chaque entité une seule fois, avec son seuil et ce qui le change', () => {
     const el = renderCodex('?rang=seuil')
     expect(pressed(el)).toEqual(['seuil de chasse'])
     expect(text(el.querySelector('.cx-right .filehead'))).toContain('Rangé par seuil de chasse')
-    const cols = columns(el)
-    expect(cols.map((c) => c.title)).toEqual(['Tôt', 'Normal', 'Tard'])
-    expect(cols.map((c) => c.label)).toEqual(['Entités qui peuvent chasser tôt', 'Entités au seuil de chasse normal', 'Entités qui peuvent chasser tard'])
-    expect(cols.map((c) => text(c.grp.querySelector('.cx-grp-def')))).toEqual(['peut chasser au-dessus de 50 %', '50 %', 'sous 50 %'])
-    const order = ['early', 'normal', 'late'] as const
+    expect(el.querySelector('ol.cx-reg')).toBeNull()
+    const bs = boxes(el)
+    expect(bs.map((b) => b.title)).toEqual(['Chassent tôt', 'Chassent tard', 'Seuil qui change', 'Normales'])
+    expect(bs.map((b) => b.label)).toEqual(['Entités qui chassent tôt', 'Entités qui chassent tard', 'Entités dont le seuil de chasse change', 'Entités au seuil de chasse normal'])
+    expect(bs.map((b) => b.def)).toEqual(['3 entités · au-dessus de 50 %', '2 entités · sous 50 %', '9 entités · selon la situation', '16 entités · toujours 50 %'])
+    const names = (i: number) => bs[i].rows.map((li) => li.querySelector('.cx-link')?.firstChild?.textContent)
+    // le classement validé par le coach le 18 novembre, dans l'ordre du journal du jeu
+    expect(names(0)).toEqual(['Démon', 'Onryo', 'Thayé'])
+    expect(names(1)).toEqual(['Deogen', 'Ombre'])
+    expect(names(2)).toEqual(['Banshee', 'Dayan', 'Gallu', 'Kormos', 'Cauchemar', 'Obambo', 'Raiju', 'Le Mimic', 'Yokai'])
+    expect(names(3)).toHaveLength(16)
+    // chaque entité une fois et une seule (plus de Banshee dans trois colonnes), dans la case de sa famille, avec son lien
+    const families = sanityFamilies(JOURNAL_GHOSTS)
+    expect(families.map((f) => f.id)).toEqual([...SANITY_FAMILY_ORDER])
     for (const g of GHOSTS) {
-      const cls = sanityClasses(g)
-      expect(cls.size, g.id).toBeGreaterThan(0)
-      order.forEach((c, i) => {
-        const lines = named(cols[i].rows, g)
-        expect(lines.length, `${g.id} ${c}`).toBe(cls.has(c) ? 1 : 0)
-        const [always, sometimes] = cols[i].parts
-        expect(always.names.includes(g.name), `${g.id} ${c} toujours`).toBe(cls.has(c) && cls.size === 1)
-        expect(sometimes.names.includes(g.name), `${g.id} ${c} par moments`).toBe(cls.has(c) && cls.size > 1)
-      })
+      const lines = named(boardRows(el), g)
+      expect(lines, g.id).toHaveLength(1)
+      expect(lines[0].querySelector('a')?.getAttribute('href')).toBe(`/codex/${g.id}`)
+      const i = SANITY_FAMILY_ORDER.indexOf(sanityFamily(g))
+      expect(bs[i].rows.includes(lines[0]), g.id).toBe(true)
+      expect(bs[i].title).toBe(SANITY_FAMILY_COPY[sanityFamily(g)].title)
+      // au crayon, son seuil et ce qui le change ; rien pour une entité normale
+      const note = sanityFamilyNote(g)
+      expect(lines[0].querySelector('.cx-fnote')?.textContent ?? null, g.id).toBe(note ? ` : ${note}` : null)
     }
-    expect(cols.map((c) => c.parts.map((p) => p.title))).toEqual([
-      ['Tôt, toujours', 'Tôt, par moments'],
-      ['Normal, toujours', 'Normal, par moments'],
-      ['Tard, toujours', 'Tard, par moments'],
-    ])
-    const name = (id: string) => GHOSTS.find((g) => g.id === id)!.name
-    expect(cols[0].parts[0].names).toEqual([name('demon')])
-    expect(cols[2].parts[0].names).toEqual([name('deogen'), name('shade')])
-    // aucune partie vide dans ce classement
-    expect(cols.flatMap((c) => c.parts.map((p) => p.none))).toEqual(['', '', '', '', '', ''])
-    const line = (i: number, id: string) => text(named(cols[i].rows, GHOSTS.find((g) => g.id === id)!)[0])
-    expect(line(1, 'spirit')).toBe('Esprit : 50 %')
-    expect([line(0, 'gallu'), line(1, 'gallu'), line(2, 'gallu')]).toEqual(['Gallu : 60 %', 'Gallu : 50 %', 'Gallu : 40 %'])
-    expect(line(0, 'demon')).toBe('Démon : 70 % ou 100 %')
+    const line = (id: string) => text(named(boardRows(el), GHOSTS.find((g) => g.id === id)!)[0])
+    expect(line('demon')).toBe('Démon : 70 % · à toute santé mentale avec sa capacité')
+    expect(line('shade')).toBe('Ombre : 35 %')
+    expect(line('banshee')).toBe("Banshee : 50 % de sa cible, pas de l'équipe")
+    expect(line('gallu')).toBe('Gallu : 60 % enragé · 40 % affaibli')
+    expect(line('the-mimic')).toBe("Le Mimic : copie le seuil de l'entité imitée")
+    expect(line('spirit')).toBe('Esprit')
+    // typographie de fr() : le nombre tient à son unité, l'apostrophe est courbe
+    expect(el.querySelector('.sf')!.textContent).not.toMatch(/\d (?:m\/s|%|m\b)|'/)
+    expect(el.querySelector('.sf')!.textContent).toContain(`50${NBSP}%`)
     expect(text(el.querySelector('.cx-rank-hint'))).toBe(
-      "santé mentale moyenne à partir de laquelle une chasse peut démarrer« toujours » : l'entité n'a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche",
+      'seuil de chasse : la santé mentale moyenne à partir de laquelle une chasse peut démarrerle classement du coach : une seule case par entité · à côté du nom, son seuil et ce qui le change',
     )
-    expect(el.querySelector('.cx-ledger')!.textContent).toContain(`50${NBSP}%`)
   })
 
   it('le sélecteur change l’ordre sur place, et revient à l’ordre du journal', () => {
@@ -293,12 +285,11 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     act(() => button('vitesse').click())
     expect(pressed(el)).toEqual(['vitesse'])
     expect(boxes(el).map((b) => b.title)).toEqual(['Lentes', 'Rapides', 'Changent de vitesse', 'Normales'])
-    expect(el.querySelector('.cx-ledger')).toBeNull()
     act(() => button('seuil de chasse').click())
-    expect(columns(el).map((c) => c.title)).toEqual(['Tôt', 'Normal', 'Tard'])
-    expect(el.querySelector('.sf')).toBeNull()
+    expect(pressed(el)).toEqual(['seuil de chasse'])
+    expect(boxes(el).map((b) => b.title)).toEqual(['Chassent tôt', 'Chassent tard', 'Seuil qui change', 'Normales'])
+    expect(el.querySelector('ol.cx-reg')).toBeNull()
     act(() => button('ordre du jeu').click())
-    expect(el.querySelector('.cx-ledger')).toBeNull()
     expect(el.querySelector('.sf')).toBeNull()
     expect(el.querySelectorAll('ol.cx-reg > li')).toHaveLength(GHOSTS.length)
   })
@@ -359,13 +350,11 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(normalSpeedNote([])).toBeNull()
   })
 
-  it('une preuve cochée barre les mêmes entités dans les colonnes que dans le registre', () => {
+  it('une preuve cochée barre les mêmes entités dans les deux tableaux que dans le registre', () => {
     sessionStorage.setItem(FILTER_KEY, JSON.stringify({ filter: { evidenceCount: 3, evidence: { emf: 'found' }, speed: [], huntAbove: null, los: null }, query: '' }))
-    const el = renderCodex('?rang=seuil')
-    // par seuil, une entité peut avoir plusieurs lignes ; dans le tableau des vitesses, une seule
-    const rows = [...columns(el).flatMap((c) => c.rows), ...boardRows(renderCodex('?rang=vitesse'))]
-    expect(columns(el).flatMap((c) => c.rows).length).toBeGreaterThan(GHOSTS.length)
-    expect(rows.length).toBeGreaterThan(2 * GHOSTS.length)
+    // par seuil comme par vitesse, une seule ligne par entité
+    const rows = [...boardRows(renderCodex('?rang=seuil')), ...boardRows(renderCodex('?rang=vitesse'))]
+    expect(rows).toHaveLength(2 * GHOSTS.length)
     let out = 0
     for (const g of GHOSTS) {
       const keeps = g.evidence.includes('emf')
@@ -393,7 +382,7 @@ describe('Codex : arrivé d’une fiche par « voir les entités par vitesse » 
   const asPhone = () => {
     g.matchMedia = (q: string) => ({ matches: q === '(max-width: 759px)', media: q, addEventListener() {}, removeEventListener() {} })
   }
-  const deogenRows = (el: HTMLElement) => [...el.querySelectorAll('.sf li, .cx-ledger li')].filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === 'Deogen')
+  const deogenRows = (el: HTMLElement) => [...el.querySelectorAll('.sf li')].filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === 'Deogen')
 
   it('sur téléphone, une preuve cochée : les éliminées restent dans la liste, barrées (l’entité qu’on vient de quitter y est)', () => {
     asPhone()

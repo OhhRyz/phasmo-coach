@@ -125,8 +125,9 @@ export function GhostRow({
 }
 
 /**
- * Une ligne du tableau des familles de vitesse : le nom (lien vers la fiche, toute la ligne l'ouvre) et, au crayon,
- * les quelques mots qui disent ce qui change sa vitesse. Éliminée par le carnet de preuves : barrée, comme dans le registre.
+ * Une ligne d'un tableau de familles (vitesse ou seuil de chasse) : le nom (lien vers la fiche, toute la ligne
+ * l'ouvre) et, au crayon, les quelques mots qui disent ce qui change sa vitesse ou son seuil. Éliminée par le carnet
+ * de preuves : barrée, comme dans le registre.
  */
 export function FamilyRow({
   ghost,
@@ -136,7 +137,7 @@ export function FamilyRow({
   snippet,
 }: {
   ghost: Ghost
-  /** « ralentit en vieillissant » ; rien pour une entité normale */
+  /** « ralentit en vieillissant », « 70 % · à toute santé mentale avec sa capacité » ; rien pour une entité normale */
   note?: string | null
   dimmed?: boolean
   circled?: boolean
@@ -170,59 +171,6 @@ export function FamilyRow({
         </span>
       )}
       {dimmed && <Strike seed={`fam-${ghost.id}`} />}
-    </li>
-  )
-}
-
-/**
- * Une ligne du registre rangé par seuil de chasse : le nom (lien vers la fiche, toute la ligne
- * l'ouvre) et, tapé petit, le seuil qui met l'entité dans cette colonne. Le titre de sa partie dit si elle n'a
- * que cette valeur (« toujours ») ou si elle en change (« par moments »). Éliminée par le carnet de preuves :
- * barrée au crayon, comme dans le registre.
- */
-export function GroupRow({
-  ghost,
-  value,
-  dimmed,
-  circled,
-  snippet,
-  seed,
-}: {
-  ghost: Ghost
-  /** « 60 % », « 70 % ou 100 % » */
-  value: string
-  dimmed?: boolean
-  circled?: boolean
-  snippet?: Snippet | null
-  /** distingue les traits de crayon d'une même entité d'une colonne à l'autre */
-  seed: string
-}) {
-  return (
-    <li className={`cx-row cx-row--grp${dimmed ? ' is-out' : ''}${circled ? ' is-only' : ''}`}>
-      <span className="cx-name">
-        <Link to={`/codex/${ghost.id}`} state={FROM_CODEX} className="cx-link">
-          {circled ? (
-            <RoughCircle seed={`grp-${seed}-${ghost.id}`} padX={0.06} padY={0.18} delay={0.35}>
-              {ghost.name}
-            </RoughCircle>
-          ) : (
-            ghost.name
-          )}
-          {dimmed && <span className="sr-only"> (éliminée)</span>}
-        </Link>
-      </span>
-      <span className="cx-gval">
-        <span className="sr-only"> : </span>
-        {value}
-      </span>
-      {snippet && (
-        <span className="cx-snip">
-          {snippet.before}
-          <mark className="cx-hit">{snippet.hit}</mark>
-          {snippet.after}
-        </span>
-      )}
-      {dimmed && <Strike seed={`${seed}-${ghost.id}`} />}
     </li>
   )
 }

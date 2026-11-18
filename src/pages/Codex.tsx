@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
-import { FamilyRow, GhostRow, GroupRow } from '../components/GhostRow'
+import { FamilyRow, GhostRow } from '../components/GhostRow'
 import { JournalGrid } from '../components/JournalGrid'
 import { FROM_CODEX, wantsRegistry } from './codexReturn'
 import { useToast } from '../components/Toast'
@@ -14,22 +14,8 @@ import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, type FilterState } from '../engine/filter'
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
-import { FAMILY_COPY, speedFamilies, speedFamilyNote } from '../engine/families'
-import {
-  nearStandardRanges,
-  PART_LABEL,
-  PART_ORDER,
-  partOf,
-  rankFromSearch,
-  SANITY_COPY,
-  sanityEntryText,
-  sanityGroups,
-  withRank,
-  type GroupCopy,
-  type GroupEntry,
-  type Part,
-  type Rank,
-} from '../engine/groups'
+import { FAMILY_COPY, SANITY_FAMILY_COPY, sanityFamilies, sanityFamilyNote, speedFamilies, speedFamilyNote } from '../engine/families'
+import { nearStandardRanges, rankFromSearch, withRank, type Rank } from '../engine/groups'
 import { entityMentions } from '../engine/mentions'
 import { useMastery } from '../store/hooks'
 
@@ -378,7 +364,7 @@ export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | 
 
 const PHONE = '(max-width: 759px)'
 
-/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), les quatre familles de vitesse du coach (engine/families), ou trois colonnes par seuil de chasse (engine/groups). */
+/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), ou l'un des deux classements du coach, quatre cases chacun : par vitesse, par seuil de chasse (engine/families). */
 const RANKS: { value: Rank; label: string }[] = [
   { value: 'numero', label: 'ordre du jeu' },
   { value: 'vitesse', label: 'vitesse' },
@@ -390,14 +376,14 @@ const RANK_HEAD: Record<Rank, string> = {
   seuil: 'Rangé par seuil de chasse',
 }
 /**
- * Sous le sélecteur. Par vitesse : d'où vient le classement (le coach) et comment le lire. Par seuil : ce que mesure
- * le classement, puis ce que veulent dire « toujours » et « par moments ».
+ * Sous le sélecteur : d'où vient le classement (le coach) et comment le lire. Par seuil, d'abord ce que mesure un
+ * seuil de chasse.
  */
 const RANK_HINT: Record<Exclude<Rank, 'numero'>, string[]> = {
   vitesse: ['le classement du coach : une seule case par entité · à côté du nom, ce qui change sa vitesse'],
   seuil: [
-    'santé mentale moyenne à partir de laquelle une chasse peut démarrer',
-    '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche',
+    'seuil de chasse : la santé mentale moyenne à partir de laquelle une chasse peut démarrer',
+    'le classement du coach : une seule case par entité · à côté du nom, son seuil et ce qui le change',
   ],
 }
 
@@ -417,22 +403,6 @@ export function normalSpeedNote(ghosts: readonly Ghost[]): string | null {
   const one = names.length === 1
   const text = `${listed(names)} ${one ? 'reste possible' : 'restent possibles'} : ${one ? 'sa' : 'leur'} vitesse change par paliers et passe par 1,7 m/s ou tout près`
   return fr(text.charAt(0).toUpperCase() + text.slice(1))
-}
-
-/** Une colonne du registre rangé par seuil : son titre, et ses lignes telles qu'elles s'écrivent. */
-export interface LedgerColumn {
-  id: string
-  copy: GroupCopy
-  lines: { entry: GroupEntry; value: string }[]
-}
-
-/** Le registre rangé par seuil de chasse : trois colonnes, chaque entité dans chacune de celles où tombe un seuil de sa fiche. */
-export function ledgerColumns(ghosts: readonly Ghost[]): LedgerColumn[] {
-  return sanityGroups(ghosts).map((grp) => ({
-    id: grp.id,
-    copy: SANITY_COPY[grp.id],
-    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry) })),
-  }))
 }
 
 export function Codex() {
@@ -507,41 +477,21 @@ export function Codex() {
       .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
   }, [matching, out, showOut, query])
 
-  // rangé par vitesse : les quatre cases du coach, une seule par entité, avec les mêmes lignes que le registre (ce qui
-  // reste, et les éliminées si on les montre)
+  // rangé par vitesse ou par seuil de chasse : les quatre cases du coach, une seule par entité, avec les mêmes lignes
+  // que le registre (ce qui reste, et les éliminées si on les montre)
   const board = useMemo(() => {
-    if (rank !== 'vitesse') return null
+    if (rank === 'numero') return null
     const shown = new Map(rows.map((r) => [r.g, r.snippet]))
-    return speedFamilies(JOURNAL_GHOSTS).map((box) => ({
-      ...box,
+    const boxes =
+      rank === 'vitesse'
+        ? speedFamilies(JOURNAL_GHOSTS).map((box) => ({ id: box.id as string, ghosts: box.ghosts, copy: FAMILY_COPY[box.id], note: speedFamilyNote }))
+        : sanityFamilies(JOURNAL_GHOSTS).map((box) => ({ id: box.id as string, ghosts: box.ghosts, copy: SANITY_FAMILY_COPY[box.id], note: sanityFamilyNote }))
+    return boxes.map((box) => ({
+      id: box.id,
+      copy: box.copy,
       total: box.ghosts.length,
-      lines: box.ghosts.filter((g) => shown.has(g)).map((g) => ({ g, note: speedFamilyNote(g), snippet: shown.get(g) ?? null })),
+      lines: box.ghosts.filter((g) => shown.has(g)).map((g) => ({ g, note: box.note(g), snippet: shown.get(g) ?? null })),
     }))
-  }, [rank, rows])
-
-  // rangé par seuil : les mêmes lignes, en trois colonnes ; l'extrait d'une recherche ne s'écrit qu'une fois, à la
-  // première ligne de l'entité
-  const ledger = useMemo(() => {
-    if (rank !== 'seuil') return null
-    const shown = new Map(rows.map((r) => [r.g, r.snippet]))
-    const quoted = new Set<Ghost>()
-    return ledgerColumns(JOURNAL_GHOSTS).map((col) => {
-      const lines = col.lines
-        .filter((l) => shown.has(l.entry.ghost))
-        .map((l) => {
-          const g = l.entry.ghost
-          const snippet = quoted.has(g) ? null : (shown.get(g) ?? null)
-          quoted.add(g)
-          return { ...l, snippet }
-        })
-      // « toujours » puis « par moments » ; `bare` : la colonne n'a aucune entité de cette partie, même sans filtre
-      const parts = PART_ORDER.map((id: Part) => ({
-        id,
-        lines: lines.filter((l) => partOf(l.entry) === id),
-        bare: !col.lines.some((l) => partOf(l.entry) === id),
-      }))
-      return { ...col, lines, parts }
-    })
   }, [rank, rows])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
@@ -939,7 +889,7 @@ export function Codex() {
             ))
           )}
 
-          {/* l'ordre du registre : celui du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse */}
+          {/* l'ordre du registre : celui du journal du jeu, ou les quatre cases du coach, par vitesse ou par seuil de chasse */}
           <div className="cx-rank">
             <span className="typed-label">Ranger par</span>
             <Seg label="Ranger le registre par" value={rank} onChange={setRank} options={RANKS} />
@@ -958,9 +908,9 @@ export function Codex() {
           {rows.length > 0 && board && (
             <div className="sf">
               {board.map((box) => (
-                <div key={box.id} className={`sf-box sf-box--${box.id}`} role="group" aria-label={FAMILY_COPY[box.id].label}>
-                  <h3 className="sf-h">{FAMILY_COPY[box.id].title}</h3>
-                  <p className="sf-def">{fr(`${box.total} ${box.total > 1 ? 'entités' : 'entité'} · ${FAMILY_COPY[box.id].def}`)}</p>
+                <div key={box.id} className={`sf-box sf-box--${box.id}`} role="group" aria-label={box.copy.label}>
+                  <h3 className="sf-h">{box.copy.title}</h3>
+                  <p className="sf-def">{fr(`${box.total} ${box.total > 1 ? 'entités' : 'entité'} · ${box.copy.def}`)}</p>
                   {box.lines.length > 0 ? (
                     <ul className="cx-reg sf-list">
                       {box.lines.map(({ g, note, snippet }) => (
@@ -970,48 +920,6 @@ export function Codex() {
                   ) : (
                     <p className="cx-grp-none pencil-note">aucune ici</p>
                   )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {rows.length > 0 && ledger && (
-            <div className="cx-ledger">
-              {ledger.map((col) => (
-                <div key={col.id} className="cx-grp" role="group" aria-label={col.copy.label}>
-                  <h3 className="cx-grp-h">{col.copy.title}</h3>
-                  <p className="cx-grp-def">{col.copy.def}</p>
-                  <p className="cx-grp-play pencil-note">{col.copy.play}</p>
-                  <div className="cx-grp-body">
-                    {col.parts.map((part) =>
-                      part.lines.length > 0 || part.bare ? (
-                        <div key={part.id} className="cx-part">
-                          <h4 className="typed-label cx-part-h">
-                            <span className="sr-only">{col.copy.title}, </span>
-                            {PART_LABEL[part.id]}
-                          </h4>
-                          {part.lines.length > 0 ? (
-                            <ul className="cx-reg">
-                              {part.lines.map(({ entry, value, snippet }) => (
-                                <GroupRow
-                                  key={entry.ghost.id}
-                                  seed={col.id}
-                                  ghost={entry.ghost}
-                                  value={value}
-                                  dimmed={!matching.includes(entry.ghost)}
-                                  circled={deduced && only === entry.ghost}
-                                  snippet={snippet}
-                                />
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="cx-part-none pencil-note">{col.copy.none}</p>
-                          )}
-                        </div>
-                      ) : null,
-                    )}
-                    {col.lines.length === 0 && col.parts.every((part) => !part.bare) && <p className="cx-grp-none pencil-note">aucune ici</p>}
-                  </div>
                 </div>
               ))}
             </div>
