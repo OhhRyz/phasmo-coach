@@ -110,14 +110,11 @@
   /* cibles tactiles d'au moins 40 px */
   .home .link, .home .suspects-more a { display: inline-flex; align-items: center; min-height: 40px; }
   .home .install-note .link { margin-top: 2px; }
-  .home .registry, .progression .registry { grid-template-rows: repeat(15, 40px); }
-  /* le lien occupe toute la hauteur de la ligne (40 px) ; le surligneur reste à la hauteur du nom */
-  .home .registry .nm, .progression .registry .nm { display: flex; align-items: center; min-height: 40px; padding: 0; }
-  .home .registry .nm::before, .progression .registry .nm::before { top: 10px; bottom: 9px; }
-  :root[data-theme="dark"] .home .registry .nm::before, :root[data-theme="dark"] .progression .registry .nm::before { top: 21px; bottom: 8px; }
-  .home .registry .nm::after, .progression .registry .nm::after { /* zone de toucher : toute la ligne */
-    content: ""; position: absolute; left: -34px; right: -34px; top: 0; bottom: 0;
-  }
+  /* une case du registre fait au moins 44 px de haut (le nom, puis sa maîtrise) ; la zone de toucher du nom descend
+     sur sa maîtrise et fait au moins 44 px de large (« Oni ») */
+  .home .registry li, .progression .registry li { min-height: 44px; }
+  .home .registry .nm, .progression .registry .nm { min-width: 44px; }
+  .home .registry .nm::after, .progression .registry .nm::after { content: ""; position: absolute; left: -2px; right: -4px; top: -5px; bottom: -18px; }
   .home .guide-steps li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
   /* sous le mot-clé, sur sa propre ligne : à 320 px, « chaque jour, ≈ 6 min au début » passe à la ligne au lieu d'être coupé */
   .home .guide-when { display: block; margin: 0; white-space: normal; }

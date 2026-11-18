@@ -633,17 +633,16 @@ html.js .draw [pathLength] { stroke-dasharray: 1; stroke-dashoffset: 1; animatio
 .suspects .hint { font-family: "Caveat", cursive; font-weight: 500; font-size: 22px; line-height: 1.05; color: var(--red-pen); text-align: center; max-width: 160px; }
 .suspects .after { margin-top: 26px; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
 
-/* registre des 30 */
+/* registre des 30 : la grille du journal du jeu, trois colonnes lues ligne par ligne, chaque nom à sa place */
 .registry-legend { margin: -4px 0 18px; font-size: 15.5px; color: var(--ink-2); }
 .registry-legend .hand { font-size: 1.4em; }
 .registry {
   list-style: none; margin: 0; padding: 0;
-  display: grid; grid-auto-flow: column; grid-template-rows: repeat(15, 32px); grid-template-columns: 1fr 1fr; column-gap: 34px;
+  display: grid; grid-template-columns: repeat(var(--jg-cols, 3), minmax(0, 1fr)); grid-auto-rows: 32px; column-gap: 22px;
   border-top: 1px solid var(--rule);
 }
-.registry li { display: grid; grid-template-columns: 28px 1fr 44px; align-items: center; border-bottom: 1px solid var(--rule); min-width: 0; }
-.registry .num { font-family: "Courier Prime", monospace; font-size: 12px; color: var(--ink-3); }
-.registry .nm { position: relative; justify-self: stretch; margin-left: 6px; font-size: 16.5px; line-height: 1; text-decoration: none; white-space: nowrap; padding: 3px 0; }
+.registry li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 6px; align-items: center; border-bottom: 1px solid var(--rule); min-width: 0; }
+.registry .nm { position: relative; justify-self: start; margin-left: 4px; font-size: 16.5px; line-height: 1; text-decoration: none; white-space: nowrap; padding: 3px 0; }
 .registry .nm::before { /* coup de surligneur : largeur = maîtrise */
   content: ""; position: absolute; left: -5px; top: 1px; bottom: 0; z-index: -1;
   width: calc(var(--m) * (100% + 10px));
@@ -658,7 +657,7 @@ html.js .draw [pathLength] { stroke-dasharray: 1; stroke-dashoffset: 1; animatio
 html.js .registry .nm::before { animation: swipe .6s cubic-bezier(.4, 0, .2, 1) both; animation-delay: calc(.35s + var(--i) * 28ms); }
 @keyframes swipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .registry .nm:hover { color: var(--red-pen); }
-.registry .pct { font-family: "Courier Prime", monospace; font-size: 12.5px; text-align: right; white-space: nowrap; color: var(--ink-2); }
+.registry .pct { font-family: "Courier Prime", monospace; font-size: 11.5px; text-align: right; white-space: nowrap; color: var(--ink-2); }
 .registry li.zero .nm { color: var(--ink-3); }
 .registry li.zero .pct { color: var(--ink-3); }
 .registry li.ok .nm { font-weight: 700; }
@@ -917,19 +916,15 @@ html.js .stamp.thunk { animation: thunk .42s cubic-bezier(.3, 1.6, .5, 1) both; 
   .suspects .polaroid .tape { width: 64px; height: 20px; margin-left: -32px; top: -9px; }
   .suspects .hint { font-size: 19px; }
 
-  .registry { column-gap: 16px; }
-  /* la maîtrise en % : « 100 % » tient dans sa colonne */
-  .registry li { grid-template-columns: 22px 1fr 34px; }
-  .registry .nm { font-size: 15px; }
-  .registry .num { font-size: 10.5px; }
-  .registry .pct { font-size: 11px; }
-  /* petit téléphone : le numéro d'ordre laisse sa place aux noms longs (« Les Jumeaux ») et à leur pourcentage */
-  @media (max-width: 389px) {
-    .registry { column-gap: 12px; }
-    .registry li { grid-template-columns: minmax(0, 1fr) 30px; }
-    .registry .num { display: none; }
-    .registry .nm { margin-left: 0; }
-    .registry .pct { font-size: 10px; }
+  /* trois colonnes étroites : le nom, et sa maîtrise en % juste dessous */
+  .registry { column-gap: 10px; grid-auto-rows: auto; }
+  .registry li { display: block; padding: 5px 0 4px; }
+  .registry .nm { display: inline-block; margin-left: 2px; font-size: 15.5px; }
+  .registry .pct { display: block; margin: 1px 0 0 2px; font-size: 10.5px; text-align: left; }
+  /* petit téléphone : chaque colonne prend la largeur de son nom le plus long (« Les Jumeaux ») */
+  @media (max-width: 359px) {
+    .registry { grid-template-columns: repeat(var(--jg-cols, 3), auto); justify-content: space-between; column-gap: 6px; }
+    .registry .nm { font-size: 14.5px; }
   }
 
   .notes { grid-template-columns: 1fr; }

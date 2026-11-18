@@ -20,7 +20,7 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { focusPageTitle, GhostEvidence, Modal, Seg } from '../components/ui'
-import { GHOSTS, JOURNAL_GHOSTS, getGhost } from '../data'
+import { GHOSTS, JOURNAL_COLUMNS, JOURNAL_GHOSTS, getGhost } from '../data'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost, ObservationStrength } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
@@ -1020,26 +1020,30 @@ export function Scenario() {
               <H id="h-sc-cands" count={candidates.length === 0 ? 'aucune' : `${candidates.length} sur ${GHOSTS.length}`}>
                 Encore possibles
               </H>
-              <ul className="sc-cands">
-                {possibleGhosts.map((g) => {
+              {/* la grille du journal du jeu : les 30 noms à leur place, sur trois colonnes. Une entité écartée par les
+                  preuves du carnet y reste, barrée ; les autres se barrent à la main, comme dans le jeu */}
+              <ol className="sc-cands" style={{ '--jg-cols': JOURNAL_COLUMNS } as Style} aria-label="Les entités, à la même place que dans le journal du jeu">
+                {JOURNAL_GHOSTS.map((g) => {
+                  const isOut = !possibleGhosts.includes(g)
                   const isStruck = struck.includes(g.id)
                   const isWrong = wrong.includes(g.id)
                   return (
                     <li key={g.id}>
                       <button
                         type="button"
-                        className={`sc-cand${isStruck ? ' is-struck' : ''}${isWrong ? ' is-wrong' : ''}`}
-                        disabled={isWrong}
-                        aria-pressed={isStruck}
+                        className={`sc-cand${isOut ? ' is-out' : ''}${isStruck ? ' is-struck' : ''}${isWrong ? ' is-wrong' : ''}`}
+                        disabled={isWrong || isOut}
+                        aria-pressed={isOut || isWrong ? undefined : isStruck}
                         onClick={() => setStruck((s) => (isStruck ? s.filter((x) => x !== g.id) : [...s, g.id]))}
-                        title={isWrong ? 'Fausse piste' : isStruck ? 'Rétablir' : 'Barrer'}
+                        title={isWrong ? 'Fausse piste' : isOut ? 'Écartée par tes preuves' : isStruck ? 'Rétablir' : 'Barrer'}
                       >
                         {g.name}
+                        {isOut && !isWrong && <span className="sr-only"> (écartée par tes preuves)</span>}
                       </button>
                     </li>
                   )
                 })}
-              </ul>
+              </ol>
               <p className="pencil-note sc-how">
                 <span className="on-mouse">clique sur un nom pour le barrer</span>
                 <span className="on-touch">touche un nom pour le barrer</span>

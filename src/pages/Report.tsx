@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { FileHead, H, IndexCard, JournalBox, Notebook, Page, RoughCircle, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Mastery } from '../components/ui'
-import { GHOSTS, JOURNAL_GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_COLUMNS, JOURNAL_GHOSTS } from '../data'
 import { formatDate, fr, NBSP, num, safeDate } from '../engine/format'
 import { masteryLevel, WEAK_COUNT } from '../engine/progress'
 import { decodePayload, readReportPayload, type ReportNote, type ReportPayload } from '../engine/share'
@@ -308,14 +308,13 @@ export function Report() {
             Les {GHOSTS.length} entités
           </H>
           <p className="registry-legend">{fr('La maîtrise est surlignée et chiffrée en\u00a0% ; les entités acquises sont entourées.')}</p>
-          <ol className="registry">
+          <ol className="registry" style={{ '--jg-cols': JOURNAL_COLUMNS } as Style}>
             {JOURNAL_GHOSTS.map((g, i) => {
               const m = (data.mastery[g.id] ?? 0) / 100
               const ok = m >= 0.85
               const cls = ok ? 'ok' : m === 0 ? 'zero' : m < 0.4 ? 'weak' : undefined
               return (
                 <li key={g.id} className={cls} style={{ '--m': m } as Style}>
-                  <span className="num">{String(i + 1).padStart(2, '0')}</span>
                   <Link className="nm" to={`/codex/${g.id}`} style={{ '--i': i } as Style}>
                     {ok ? (
                       <RoughCircle seed={g.id} delay={1.1 + i * 0.03}>

@@ -196,6 +196,10 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
 @media (hover: hover) { .sc-cand:hover { color: var(--red-pen); } }
 .sc-cand.is-struck { color: var(--ink-3); }
 .sc-cand.is-struck::after { transform: rotate(-4deg) scaleX(1); }
+/* écartée par les preuves du carnet : elle garde sa case, barrée au crayon, comme dans le journal du jeu */
+.sc-cand.is-out { color: var(--ink-3); cursor: default; }
+.sc-cand.is-out::after { opacity: .75; transform: rotate(-4deg) scaleX(1); }
+@media (hover: hover) { .sc-cand.is-out:hover { color: var(--ink-3); } }
 .sc-cand.is-wrong { cursor: default; }
 .sc-cand.is-wrong::after { background: var(--red-pen); height: 2.5px; transform: rotate(-6deg) scaleX(1); }
 
@@ -357,8 +361,9 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
     border: 0; padding: 0; background: rgba(10, 8, 5, .42); cursor: pointer;
   }
 
-  .sc-cands { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; }
-  .sc-cand { font-size: 19.5px; }
+  /* trois colonnes, comme le journal du jeu : chaque nom garde sa place */
+  .sc-cands { column-gap: 10px; }
+  .sc-cand { font-size: 19px; padding: 2px 2px; margin-left: -2px; }
 
   .sc-guess .opt { font-size: 19.5px; padding: 4px 10px 3px; }
 
@@ -387,4 +392,11 @@ html.js .sc-report.is-new { animation: sc-in .55s cubic-bezier(.2, .8, .3, 1) bo
    l'écran, il se cale par le bas : --stick-top est alors négatif, voir Scenario.tsx) */
 @media (min-width: 1181px) {
   .sc-board .sc-board-body { position: sticky; top: var(--stick-top, 16px); }
+}
+
+/* petit téléphone : trois tiers égaux seraient trop étroits pour « Les Jumeaux ». Chaque colonne prend la largeur de
+   son nom le plus long, et les trois se répartissent sur la page */
+@media (max-width: 359px) {
+  .sc-cands { grid-template-columns: repeat(var(--jg-cols, 3), auto); justify-content: space-between; column-gap: 6px; }
+  .sc-cand { font-size: 16.5px; padding: 2px 0; margin-left: 0; min-width: 0; }
 }

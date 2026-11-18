@@ -7,6 +7,8 @@ import { ToastProvider } from '../components/Toast'
 import { StoreProvider } from '../store/store'
 import { Codex } from './Codex'
 import { GhostPage } from './GhostPage'
+import { ProgressPage } from './Progress'
+import { Scenario } from './Scenario'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 // jsdom n'a pas ResizeObserver (le carnet mesure ses pages) : un observateur qui ne voit rien suffit ici
@@ -17,6 +19,9 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
     disconnect() {}
   } as unknown as typeof ResizeObserver
 }
+
+// jsdom n'a pas window.scrollTo (la page des contrats remonte en haut au démarrage)
+window.scrollTo = (() => {}) as typeof window.scrollTo
 
 const FILTER_KEY = 'phasmo-coach/codex-filter'
 const mounted: { root: Root; host: HTMLElement }[] = []
@@ -147,5 +152,50 @@ describe('Fiche : son numéro et ses voisines suivent le journal du jeu', () => 
       expect(text(el), id).toContain(`Fiche ${n} / 30`)
       expect(text(el), id).toContain(`n° ${n}`)
     }
+  })
+})
+
+describe('La même grille ailleurs : registre de la progression et mises en situation', () => {
+  it('« Ma progression » : les 30 noms dans l’ordre du journal, sur trois colonnes, sans numéro', () => {
+    const el = renderPage('/progression', '/progression', h(ProgressPage))
+    const reg = el.querySelector<HTMLElement>('ol.registry')!
+    expect(reg.style.getPropertyValue('--jg-cols')).toBe('3')
+    expect([...reg.querySelectorAll(':scope > li .nm')].map((a) => a.textContent)).toEqual(PHOTO.flat())
+    expect([...reg.querySelectorAll(':scope > li .nm')].map((a) => a.getAttribute('href'))).toEqual(JOURNAL_ORDER.map((id) => `/codex/${id}`))
+    expect(reg.querySelector('.num')).toBeNull()
+    expect(reg.querySelectorAll(':scope > li .pct')).toHaveLength(30)
+  })
+
+  it('mise en situation : la grille garde les 30 noms à leur place ; les preuves barrent, et on barre aussi à la main', () => {
+    const el = renderPage('/enquete', '/enquete', h(Scenario))
+    const start = [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) => /Commencer le contrat/.test(b.textContent ?? ''))!
+    act(() => start.click())
+    const grid = el.querySelector<HTMLElement>('.sc-cands')!
+    expect(grid.tagName).toBe('OL')
+    expect(grid.style.getPropertyValue('--jg-cols')).toBe('3')
+    const buttons = () => [...grid.querySelectorAll<HTMLButtonElement>(':scope > li > .sc-cand')]
+    const names = () => buttons().map((b) => b.firstChild?.textContent)
+    expect(names()).toEqual(PHOTO.flat())
+    // rien de barré au départ, tout se barre à la main
+    expect(buttons().filter((b) => b.disabled)).toHaveLength(0)
+    // une preuve trouvée : les entités qui ne l'ont pas restent à leur place, barrées, et ne se touchent plus
+    const emf = [...el.querySelectorAll<HTMLButtonElement>('.sc-board button')].find((b) => /EMF niveau 5/.test(b.textContent ?? ''))!
+    act(() => emf.click())
+    expect(names()).toEqual(PHOTO.flat())
+    buttons().forEach((b, i) => {
+      const g = JOURNAL_GHOSTS[i]
+      const keeps = g.evidence.includes('emf')
+      expect(b.classList.contains('is-out'), g.id).toBe(!keeps)
+      expect(b.disabled, g.id).toBe(!keeps)
+      expect(text(b), g.id).toBe(keeps ? g.name : `${g.name} (écartée par tes preuves)`)
+    })
+    // barrer à la main une entité encore possible, puis la rétablir
+    const free = buttons().find((b) => !b.disabled)!
+    act(() => free.click())
+    expect(free.classList.contains('is-struck')).toBe(true)
+    expect(free.getAttribute('aria-pressed')).toBe('true')
+    expect(names()).toEqual(PHOTO.flat())
+    act(() => free.click())
+    expect(free.classList.contains('is-struck')).toBe(false)
   })
 })
