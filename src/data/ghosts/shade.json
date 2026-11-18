@@ -253,7 +253,7 @@
         "Souffler la bougie que tu tiens pendant qu'elle est dans la pièce"
       ],
       "answer": 2,
-      "explain": "Elle ne lance ni chasse ni interaction EMF (écriture, flammes soufflées…) depuis la pièce où tu te trouves, mais elle peut en sortir et chasser depuis une pièce adjacente, ou interagir avec la pièce depuis l'extérieur. Et elle ne chasse jamais naturellement au-dessus de 35 %."
+      "explain": "Elle ne lance ni chasse ni interaction EMF (flammes soufflées…) depuis la pièce où tu te trouves, mais elle peut en sortir et chasser depuis une pièce adjacente, ou interagir avec la pièce depuis l'extérieur. Et elle ne chasse jamais naturellement au-dessus de 35 %."
     },
     {
       "q": "Quel test est définitif pour identifier une Ombre ?",

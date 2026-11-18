@@ -24,6 +24,7 @@ import { GHOSTS, getGhost, MECHANICS } from '../data'
 import { createRng } from '../engine/random'
 import { de, le } from '../engine/cards'
 import { buildQuiz, DEFAULT_TOPICS, isCorrect, QUIZ_TOPICS, type Question, type QuizTopic } from '../engine/quiz'
+import { buildSoloQuiz } from '../engine/solo'
 import { NBSP, NNBSP, safeDate } from '../engine/format'
 import { studiedGhosts, WEAK_COUNT, weakestGhosts } from '../engine/progress'
 import { useMastery } from '../store/hooks'
@@ -258,6 +259,16 @@ export function Quiz() {
     return { weak: list.map((id) => getGhost(id)!).filter(Boolean), started: r.ids.length ? r.started : true }
   }, [mastery, deck, state])
   const one = focusGhost ? getGhost(focusGhost) : undefined
+  /**
+   * « Me tester sur X » : la copie sur une seule entité. Ni thèmes ni nombre de questions à régler : toutes ses
+   * questions portent sur X, questions rédigées de sa fiche comprises, et leur nombre est celui que sa fiche permet
+   * (dix au plus). La copie se compose donc avant d'être annoncée : le bouton, l'aperçu et la copie disent le même
+   * nombre. Une copie distribuée, la suivante se tire d'une autre graine.
+   */
+  const solo = pool === 'one' && one ? one : null
+  const [soloSeed, setSoloSeed] = useState(() => Date.now() & 0xffffffff)
+  const waiting = !questions
+  const draft = useMemo(() => (solo && waiting ? buildSoloQuiz({ ghost: solo, allGhosts: GHOSTS, rng: createRng(soloSeed) }) : null), [solo, waiting, soloSeed])
 
   const start = (only?: QuizTopic[]) => {
     clearRun(COPY_KEY)
@@ -265,21 +276,24 @@ export function Quiz() {
     setSaved(null)
     setReplaceOpen(false)
     // « Déjà étudiées » sans entité étudiée (réglage gardé d'une autre visite) : toutes
-    const ghosts = pool === 'one' && one ? [one] : pool === 'weak' ? weak : pool === 'studied' && studied.length ? studied : GHOSTS
-    if (only) setTopics(only)
-    const qs = buildQuiz({
-      topics: only ?? (topics.length ? topics : DEFAULT_TOPICS),
-      ghosts,
-      allGhosts: GHOSTS,
-      mechanics: MECHANICS,
-      count,
-      rng: createRng(Date.now() & 0xffffffff),
-      mastery,
-      // les entités déjà étudiées : aucune question sur une entité qu'on n'a jamais vue ; s'il en manque pour ces
-      // thèmes, la fin de la copie porte sur toutes (et le dit, voir fillNote)
-      onlyListed: ghosts === studied,
-      fillUp: ghosts === studied,
-    })
+    const ghosts = pool === 'weak' ? weak : pool === 'studied' && studied.length ? studied : GHOSTS
+    if (only && !solo) setTopics(only)
+    const qs = solo
+      ? (draft ?? buildSoloQuiz({ ghost: solo, allGhosts: GHOSTS, rng: createRng(soloSeed) }))
+      : buildQuiz({
+          topics: only ?? (topics.length ? topics : DEFAULT_TOPICS),
+          ghosts,
+          allGhosts: GHOSTS,
+          mechanics: MECHANICS,
+          count,
+          rng: createRng(Date.now() & 0xffffffff),
+          mastery,
+          // les entités déjà étudiées : aucune question sur une entité qu'on n'a jamais vue ; s'il en manque pour ces
+          // thèmes, la fin de la copie porte sur toutes (et le dit, voir fillNote)
+          onlyListed: ghosts === studied,
+          fillUp: ghosts === studied,
+        })
+    if (solo) setSoloSeed(Date.now() & 0xffffffff)
     // aucun contenu pour ces thèmes (ex. pas de test 0 preuve définitif pour cette entité)
     if (!qs.length) {
       setEmpty(true)
@@ -497,8 +511,11 @@ export function Quiz() {
       pool === 'one' && one ? one.name : pool === 'weak' ? weakLabel : studiedPool ? `les ${studied.length} entités étudiées` : `les ${GHOSTS.length} entités`
     // sur quelles entités porte la copie, et pourquoi, dit avant le bouton ; l'autre choix à un geste (voir defaultPool)
     const scope =
-      pool === 'one' && one ? (
-        <p className="qz-scope">La copie ne porte que sur {le(one.name)}.</p>
+      solo ? (
+        <p className="qz-scope">
+          La copie ne porte que sur {le(solo.name)}.{' '}
+          <TypedLink onClick={() => setPool(defaultPool(studied.length))}>Revenir au quiz général</TypedLink>
+        </p>
       ) : pool === 'weak' ? (
         <p className="qz-scope">
           La copie porte sur {weakLabel}.{' '}
@@ -519,11 +536,16 @@ export function Quiz() {
         </p>
       )
     const history = quizzes.slice(-5).reverse()
+    // le nombre annoncé est celui de la copie : le réglage, ou la copie sur une seule entité, déjà composée
+    const size = solo ? (draft?.length ?? 0) : count
+    const sized = `${size} ${plural(size, 'question')}${solo ? ` sur ${le(solo.name)}` : ''}`
     // un seul libellé pour les deux boutons qui lancent la même copie
-    const startLabel = `Commencer le quiz (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
+    const startLabel = `Commencer le quiz (${sized})`
     // une copie laissée en route : la reprendre est l'action principale, une nouvelle copie se confirme
-    const newLabel = `Nouvelle copie (${count} questions${pool === 'one' && one ? ` sur ${le(one.name)}` : ''})`
+    const newLabel = `Nouvelle copie (${sized})`
     const startNew = () => (saved ? setReplaceOpen(true) : start())
+    // rien à cocher pour une copie sur une seule entité ; ailleurs, un thème au moins
+    const ready = solo ? size > 0 : topics.length > 0
     return (
       <>
       <form
@@ -560,10 +582,10 @@ export function Quiz() {
                     {`copie laissée en route${NNBSP}: ${saved.answers.length} ${plural(saved.answers.length, 'réponse')} sur ${saved.questions.length}`}
                   </p>
                   <TapeButton onClick={resume}>Reprendre la copie</TapeButton>
-                  <PaperButton type="submit" disabled={!topics.length}>
+                  <PaperButton type="submit" disabled={!ready}>
                     {newLabel}
                   </PaperButton>
-                  {topics.length > 0 ? (
+                  {solo ? null : topics.length > 0 ? (
                     <p className="pencil-note qz-or">ou règle la nouvelle copie juste en dessous ↓</p>
                   ) : (
                     <span className="pencil-note btn-hint" role="note">
@@ -573,14 +595,20 @@ export function Quiz() {
                 </div>
               ) : (
                 <div className="qz-quick">
-                  <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème ↓">
+                  <TapeButton type="submit" disabled={!ready} disabledHint={solo ? undefined : 'coche au moins un thème ↓'}>
                     {startLabel}
                   </TapeButton>
-                  {topics.length > 0 && <p className="pencil-note qz-or">ou règle la copie juste en dessous ↓</p>}
+                  {!solo && topics.length > 0 && <p className="pencil-note qz-or">ou règle la copie juste en dessous ↓</p>}
                 </div>
               )}
             </header>
 
+            {solo ? (
+              <p className="pencil-note qz-weak">
+                Rien à régler pour cette copie{NNBSP}: toutes ses questions portent sur {le(solo.name)}, et leur nombre dépend de ce que dit sa fiche.
+              </p>
+            ) : (
+            <>
             <fieldset className="qz-field">
               <legend className="typed-label">
                 <span className="qz-step">1</span> Thèmes
@@ -626,6 +654,8 @@ export function Quiz() {
                 />
               </div>
             </div>
+            </>
+            )}
             {pool === 'weak' && (
               <p className="pencil-note qz-weak">
                 {started ? 'Les moins maîtrisées' : 'À découvrir'}
@@ -671,7 +701,13 @@ export function Quiz() {
                 </div>
                 <div>
                   <dt>Sujet</dt>
-                  <dd>{topics.length ? QUIZ_TOPICS.filter((t) => topics.includes(t.id)).map((t) => t.label).join(', ') : 'aucun thème coché'}</dd>
+                  <dd>
+                    {solo
+                      ? 'Tout ce qui sert sans preuve'
+                      : topics.length
+                        ? QUIZ_TOPICS.filter((t) => topics.includes(t.id)).map((t) => t.label).join(', ')
+                        : 'aucun thème coché'}
+                  </dd>
                 </div>
                 <div>
                   <dt>Entités</dt>
@@ -679,25 +715,26 @@ export function Quiz() {
                 </div>
                 <div>
                   <dt>Questions</dt>
-                  <dd>{count}</dd>
+                  <dd>{size}</dd>
                 </div>
               </dl>
               <div className="qz-cover-note" aria-hidden>
                 <span>Note</span>
                 <span className="qz-blank" />
-                <span>/ {count}</span>
+                <span>/ {size}</span>
               </div>
               <p className="qz-cover-rules">Coche la bonne case, ou les bonnes cases quand la question le précise. La correction s’affiche aussitôt.</p>
             </Mimeo>
 
-            {empty && (
+            {(empty || (solo && size === 0)) && (
               <p className="qz-empty" role="alert">
                 <Stamp small tone="pencil" rotate={-2}>
                   Rien à tirer
                 </Stamp>
                 <span>
-                  Pas de question disponible avec ces réglages (par exemple, cette entité n’a pas de test sans preuve définitif). Ajoute un
-                  autre thème.
+                  {solo
+                    ? 'Pas de question disponible sur cette entité.'
+                    : 'Pas de question disponible avec ces réglages (par exemple, cette entité n’a pas de test sans preuve définitif). Ajoute un autre thème.'}
                 </span>
               </p>
             )}
@@ -705,12 +742,12 @@ export function Quiz() {
               {saved ? (
                 <>
                   <TapeButton onClick={resume}>Reprendre la copie</TapeButton>
-                  <PaperButton type="submit" disabled={!topics.length}>
+                  <PaperButton type="submit" disabled={!ready}>
                     {newLabel}
                   </PaperButton>
                 </>
               ) : (
-                <TapeButton type="submit" disabled={!topics.length} disabledHint="coche au moins un thème dans la liste">
+                <TapeButton type="submit" disabled={!ready} disabledHint={solo ? undefined : 'coche au moins un thème dans la liste'}>
                   {startLabel}
                 </TapeButton>
               )}
@@ -850,7 +887,7 @@ export function Quiz() {
                 {requeueLink}
                 {NBSP}→
               </TypedLink>
-            ) : mistakes.length > 0 && weakest ? (
+            ) : solo ? null : mistakes.length > 0 && weakest ? (
               <TypedLink onClick={() => start([weakest.t.id])}>Refaire un quiz sur {weakest.t.label.toLowerCase()}{NBSP}→</TypedLink>
             ) : !topics.includes('expert') ? (
               <TypedLink onClick={() => start(['expert'])}>Essayer les questions expertes{NBSP}→</TypedLink>

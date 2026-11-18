@@ -1473,7 +1473,8 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         sizes.push(qs.length)
         // dix questions au plus : une fiche courte donne une copie plus courte, jamais une question sur une autre entité
         expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
-        expect(qs.length, g.id).toBeGreaterThanOrEqual(3)
+        // (le Mimic, sans ses questions rédigées : deux tests, et une observation par sorte de scène, voir solo.ts)
+        expect(qs.length, g.id).toBeGreaterThanOrEqual(2)
         expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
         for (const q of qs) {
           // toutes s'inscrivent sur X, et chacune est d'une sorte connue de la copie
@@ -1490,8 +1491,11 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         }
       }
     }
-    // la plupart des fiches donnent huit questions ou plus
-    expect(sizes.reduce((a, b) => a + b, 0) / sizes.length).toBeGreaterThanOrEqual(7.5)
+    // sept questions environ, sans les questions rédigées (les thèmes par défaut) : deux départages à l'envers au plus
+    // par copie, la copie reste courte plutôt que de parler d'une autre entité (les tailles par entité se mesurent
+    // dans solo.test.ts)
+    const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length
+    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(6.5)
     // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
     // celles dont les choix sont des noms d'entités ou nomment X
     for (const g of GHOSTS) {

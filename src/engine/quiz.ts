@@ -174,8 +174,9 @@ function perGhost<T>(f: (g: Ghost) => T): (g: Ghost) => T {
 export function pronounClash(text: string, g: Ghost): boolean {
   const lead = LEAD_MASC.test(text) ? 'm' : LEAD_FEM.test(text) ? 'f' : null
   if (lead) return lead !== (isFeminine(g.name) ? 'f' : 'm')
-  const fem = ANY_FEM.test(text)
-  const masc = ANY_MASC.test(text)
+  const object = objectPronoun(text)
+  const fem = ANY_FEM.test(text) || object.fem
+  const masc = ANY_MASC.test(text) || object.masc
   return isFeminine(g.name) ? masc && !fem : fem && !masc
 }
 const LEAD_MASC = /^(?:Ils?|Lui)\b(?!\s+(?:faut|suffit|y\s+a)\b)/u
@@ -184,6 +185,25 @@ const LEAD_FEM = /^(?:Elles?\b|(?:Seule\s+à|Encensée)(?!\p{L}))/u
 // « près d’elle », « qu’il » : le pronom collé à l’apostrophe compte aussi
 const ANY_FEM = /(?:^|[\s(’'])[Ee]lles?\b/u
 const ANY_MASC = /(?:^|[\s(’'])(?:[Ii]ls?|[Ll]ui)\b(?!\s+(?:faut|suffit|y\s+a)\b)/u
+/**
+ * Le pronom complément dit le genre lui aussi : « l'encens le piège dans sa pièce », « ce qui le rend plus visible »
+ * ne se disent ni de la Banshee, ni de « cette entité ». Devant un verbe seulement : « le piège », « la porte », un
+ * nom après son article, ne désignent personne.
+ */
+const OBJECT_VERBS = '(?:rend|rendent|piège|piègent|bloque|bloquent|enferme|enferment|ralentit|ralentissent|aveugle|aveuglent|désoriente|désorientent|repousse|repoussent|attire|attirent|trahit|trahissent|distingue|distinguent|force|forcent|empêche|empêchent)'
+const OBJECT_BEFORE = '(?:qui|encens|sel|crucifix|flammes?|lumières?|joueurs?|et|ne)'
+export const OBJECT_MASC = new RegExp(`(?<!\\p{L})${OBJECT_BEFORE}\\s+le\\s+${OBJECT_VERBS}(?!\\p{L})`, 'iu')
+export const OBJECT_FEM = new RegExp(`(?<!\\p{L})${OBJECT_BEFORE}\\s+la\\s+${OBJECT_VERBS}(?!\\p{L})`, 'iu')
+/** Cherché une fois par phrase : les mêmes phrases des fiches reviennent à chaque tirage, pour chaque entité. */
+const objectPronouns = new Map<string, { masc: boolean; fem: boolean }>()
+function objectPronoun(text: string): { masc: boolean; fem: boolean } {
+  let v = objectPronouns.get(text)
+  if (!v) {
+    if (objectPronouns.size > 20_000) objectPronouns.clear()
+    objectPronouns.set(text, (v = { masc: OBJECT_MASC.test(text), fem: OBJECT_FEM.test(text) }))
+  }
+  return v
+}
 
 /**
  * Les mauvaises réponses que le pronom de l'énoncé n'écarte pas d'emblée (« moins elle a de chances » :
@@ -658,6 +678,8 @@ function askWhen(condition: string, g: Ghost): string {
   if (c === 'jeune') return ' encore jeune'
   if (c === 'vieux') return ' devenu vieux'
   if (/^(?:si\s+)?immobile(?: près (?:d’elle|de lui))?$/u.test(c)) return ` si tu restes immobile près ${isFeminine(g.name) ? 'd’elle' : 'de lui'}`
+  // « 1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile » : les deux valeurs valent près de l'entité, l'énoncé le dit
+  if (c === 'si tu bouges') return ` si tu bouges près ${isFeminine(g.name) ? 'd’elle' : 'de lui'}`
   if (c === 'loin' || c === 'près') return ` ${c} de sa cible`
   if (/^vers\s/u.test(c)) return ` quand ${isFeminine(g.name) ? 'elle' : 'il'} se dirige ${c}`
   if (/^(?:si|près|en|dans|quand|lorsqu|sous|sur)(?!\p{L})/u.test(c)) return ` ${c}`
@@ -1526,9 +1548,13 @@ export function wrongClaimsFor(g: Ghost, all: readonly Ghost[]): (Claim & { labe
   const cached = byGhost.get(g.id)
   if (cached) return cached
   const out: (Claim & { label: string })[] = []
+  const apart = apartFrom(g)
   for (const { claim: c, text, bare } of claimVersions(all)) {
     if (c.z.id === g.id) continue
     if (names(text, g) || pronounClash(text, g) || fitsToo(text, all, true)(g) || numbersFit(text, g) || huntsAlready(text, g) || !agrees(bare, c.z, g)) continue
+    // ni une phrase qui touche un thème des signes de g : « il est plus visible que les autres pendant les chasses »
+    // (l'Oni) dit du Deogen, plus visible lui aussi, ferait une seconde bonne réponse
+    if (!apart(text)) continue
     out.push({ ...c, text, label: naming(bare, g) })
   }
   byGhost.set(g.id, out)
@@ -2126,7 +2152,8 @@ const cardRng = (cardId: string, day: string): Rng => createRng(parseInt(hashStr
  * de o ? « 1,5 ou 1,9 m/s » (Jumeaux) ne prend pas pour mauvaise réponse l'Obambo (≈ 1,45 et 1,96 m/s).
  */
 export function nearSpeed(text: string, o: Ghost): boolean {
-  const cited = [...text.matchAll(/(\d+,\d+)(?=\s*(?:m\/s|(?:ou|à|et|→|-)\s*\d+(?:,\d+)?\s*m\/s))/gu)]
+  // « ~1,5 ou ~1,9 m/s » : le signe d'approximation devant la seconde valeur ne cache pas la première
+  const cited = [...text.matchAll(/(\d+,\d+)(?=\s*(?:m\/s|(?:ou|à|et|→|-)\s*[~≈]?\s*\d+(?:,\d+)?\s*m\/s))/gu)]
     .map((m) => Number(m[1].replace(',', '.')))
     .filter((v) => v !== 1.7)
   return cited.some((v) => [...speedValues(o)].some((w) => Math.abs(v - w) <= 0.1 + 1e-9))
@@ -2271,6 +2298,14 @@ export interface Sign {
  * une phrase rédigée parmi trois notes brèves se remarquerait.
  */
 export type SignStyle = 'key' | 'tell'
+
+/**
+ * Un signe qui, lu hors de sa fiche, est vrai de toutes les entités : « Comme toutes les entités, ne peut pas allumer
+ * de source de feu » ; « Détecteurs de mouvement et sel ne réagissent qu'à sa position réelle » (les Jumeaux : leur
+ * seconde interaction, lointaine, ne déclenche rien ; mais chez toute entité, détecteurs et sel ne réagissent que là où
+ * elle se trouve). Il reste un signe de sa fiche, jamais une mauvaise réponse ni une phrase « fausse » pour une autre.
+ */
+export const TRUE_OF_ALL = /comme toutes les entités|qu[’']à (?:sa|leur) position réelle/iu
 const signCache = new WeakMap<readonly Ghost[], Map<SignStyle, Sign[]>>()
 
 /** Les signes de toutes les entités qui peuvent servir de mauvaise réponse (jamais ceux du Mimic). */
@@ -2289,11 +2324,11 @@ export function distractorSigns(all: readonly Ghost[], style: SignStyle = 'key')
       style === 'key'
         ? g.keyTells
         : g.tells
-            .filter((t) => t.zeroEvidence && !/comme toutes les entités/iu.test(t.text))
+            .filter((t) => t.zeroEvidence)
             .map((t) => redact(withoutEvidenceAsides(t.text), g))
             .filter((t) => !REDACTED.test(t))
     for (const text of texts) {
-      if (!plainSign(text) || GENDER_TALK.test(text) || NEEDS_CONTEXT.test(text) || text.length > (style === 'key' ? 170 : 200)) continue
+      if (!plainSign(text) || GENDER_TALK.test(text) || NEEDS_CONTEXT.test(text) || TRUE_OF_ALL.test(text) || text.length > (style === 'key' ? 170 : 200)) continue
       // « ce n'est pas un Esprit », « deux en moins de 80 s : Myling » : un nom souffle de qui parle le signe
       if (all.some((o) => names(text, o))) continue
       out.push({ text, ghost: g, themes: themesOf(text) })
@@ -2402,6 +2437,35 @@ export function twinOf(right: string, wrong: readonly string[]): boolean {
   return !starts.some((s, i) => s !== r && starts.indexOf(s) !== i)
 }
 
+const apartCache = new WeakMap<Ghost, Map<boolean, (text: string, themes?: readonly Theme[]) => boolean>>()
+
+/**
+ * Une phrase d'une autre fiche reste-t-elle à l'écart des thèmes précis des signes de x (signes clés et signes
+ * « 0 preuve ») ? « Plus visible que les autres pendant les chasses » (l'Oni) serait vrai du Deogen, dont un signe clé
+ * dit la même chose avec d'autres mots : dès qu'une phrase touche un objet ou un geste dont parle la fiche de x, elle
+ * n'est jamais présentée comme fausse pour lui, ni comme l'excluant. Les thèmes précis seulement : la vitesse, le
+ * seuil et la santé sont départagés par les valeurs citées (signFits) ; sinon un signe chiffré de x ne croiserait
+ * jamais une mauvaise réponse chiffrée.
+ *
+ * Le thème que souffle le nom de x (les objets du Poltergeist) fait exception pour les mauvaises réponses : un signe
+ * d'une autre entité qui en parle reste possible s'il est faux pour x (le Deildegast ralentit selon les objets
+ * utilisés), sinon la bonne réponse serait la seule à en parler. `strict` : sans cette exception (ce qui exclut x).
+ */
+export function apartFrom(x: Ghost, strict = false): (text: string, themes?: readonly Theme[]) => boolean {
+  let byMode = apartCache.get(x)
+  if (!byMode) apartCache.set(x, (byMode = new Map()))
+  let apart = byMode.get(strict)
+  if (!apart) {
+    const mine = [...x.keyTells.filter(plainSign), ...x.tells.filter((t) => t.zeroEvidence).map((t) => t.text)]
+    const taken = new Set(themesOf(mine.join(' ')).filter((t) => NARROW.has(t)))
+    const hint = strict ? undefined : NAME_HINTS[x.id]
+    const hinted = new Set(hint ? mine.flatMap((t) => [...t.matchAll(new RegExp(hint.source, 'giu'))].flatMap((m) => themesOf(m[0]))) : [])
+    apart = (text, themes = themesOf(text)) => !themes.some((i) => taken.has(i) && !(hinted.has(i) && hint!.test(text)))
+    byMode.set(strict, apart)
+  }
+  return apart
+}
+
 const signVersionCache = new WeakMap<readonly Ghost[], Map<string, Option<Sign>[]>>()
 
 /**
@@ -2414,19 +2478,10 @@ export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle =
   if (!byGhost) signVersionCache.set(all, (byGhost = new Map()))
   const cached = byGhost.get(`${style}|${x.id}`)
   if (cached) return cached
-  const own = x.keyTells.filter(plainSign)
-  // les thèmes précis seulement : la vitesse, le seuil et la santé sont départagés par les valeurs citées
-  // (signFits) ; sinon un signe chiffré de X ne croiserait jamais une mauvaise réponse chiffrée
-  const mine = [...own, ...x.tells.filter((t) => t.zeroEvidence).map((t) => t.text)]
-  const taken = new Set(themesOf(mine.join(' ')).filter((t) => NARROW.has(t)))
-  // le thème que souffle le nom de X (les objets du Poltergeist) : un signe d'une autre entité qui en parle
-  // reste une mauvaise réponse possible s'il est faux pour X (le Deildegast ralentit selon les objets utilisés),
-  // sinon la bonne réponse serait la seule à en parler
-  const hint = NAME_HINTS[x.id]
-  const hinted = new Set(hint ? mine.flatMap((t) => [...t.matchAll(new RegExp(hint.source, 'giu'))].flatMap((m) => themesOf(m[0]))) : [])
-  const free = (s: Sign) => !s.themes.some((i) => taken.has(i) && !(hinted.has(i) && hint!.test(s.text)))
+  const free = apartFrom(x)
+  // « 1,5 ou 1,9 m/s » (les Jumeaux) face à l'Aswang, à 1,53 m/s : trop près pour être dit faux
   const out = distractorSigns(all, style)
-    .filter((s) => s.ghost.id !== x.id && free(s) && !signFits(s.text, x, all))
+    .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x))
     .flatMap((s) => [s.text, ...shortened(s.text).filter((v) => keepsSense(s.text, v) && !signFits(v, x, all))].map((label) => ({ value: s, label })))
   byGhost.set(`${style}|${x.id}`, out)
   return out
@@ -2473,6 +2528,21 @@ function testQuote(card: Card, g: Ghost, ctx: Ctx): Question | null {
 }
 
 /** Les tests de chaque entité, cités (caviardés de son nom), avec ou sans leurs apartés : calculés une fois. */
+/** La conclusion d'un test caviardé (« …, c'est cette entité ») : ce qui la précède est sa mise en place et sa condition. */
+const TEST_CONCLUSION = /c[’']est (?:cette|ces) entités?|ce sont (?:cette|ces) entités?/iu
+
+/**
+ * Un test sans ses commentaires : les apartés qui suivent sa conclusion (« … c'est cette entité (c'est ce que
+ * fait…) »), et ceux qui nomment une autre entité (« (le plus tôt qu'un Démon pourrait chasser) »). Les autres
+ * apartés d'avant la conclusion font partie du test : « (disjoncteur allumé) », « (sans objet maudit) », « (hors
+ * équipement) » sont des conditions ; sans elles, le test enseigné serait incomplet.
+ */
+export function withoutGlosses(test: string, all: readonly Ghost[]): string {
+  const at = test.search(TEST_CONCLUSION)
+  const head = (at < 0 ? test : test.slice(0, at)).replace(/\s*\([^()]*\)/gu, (aside) => (namesAny(aside, all) ? '' : aside))
+  return at < 0 ? head.trim() : `${head}${withoutAsides(test.slice(at))}`
+}
+
 const testLabels = perList((all) => {
   const out = new Map<string, string[]>()
   for (const o of all) {
@@ -2483,7 +2553,7 @@ const testLabels = perList((all) => {
       zeroTests(o)
         .map((z) => quoteFor(z.text, o))
         .filter((q): q is string => !!q)
-        .flatMap((q) => [q, withoutAsides(q)].filter((v) => keepsSense(q, v))),
+        .flatMap((q) => [q, withoutGlosses(q, all)].filter((v) => keepsSense(q, v))),
     )
   }
   return out
@@ -2527,7 +2597,8 @@ export function namingBalanced(labels: readonly string[], all: readonly Ghost[])
 /**
  * « Quel test confirme X sans preuve ? » : le test t de X face aux tests d'autres entités, chacun caviardé de
  * son propre nom (« c'est cette entité »), de même forme que le bon. Un test ne se coupe pas (sa condition et
- * sa conclusion vont ensemble), il perd au plus ses apartés, et jamais les nombres qu'ils portaient. Un test
+ * sa conclusion vont ensemble), il perd au plus ses commentaires entre parenthèses (voir withoutGlosses), et
+ * jamais les nombres qu'ils portaient. Un test
  * peut nommer une autre entité, bon ou mauvais, jamais X ; ni la seule réponse qui nomme quelqu'un, ni la
  * seule qui contient le mot que souffle le nom de X (« objets » pour le Poltergeist) n'est d'office la bonne.
  * Deux tests de X dans une même série n'ont pas le même énoncé.
@@ -2547,8 +2618,9 @@ export function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, ca
     all.filter((o) => o.id !== g.id && o.id !== MIMIC),
     ctx.rng,
   ).flatMap((o) => distinctBy((labels.get(o.id) ?? []).map(unnamedOf).filter(usable), (l) => l).map((label) => ({ value: o, label })))
-  // la version sans apartés d'abord quand ils nomment une autre entité : la bonne réponse n'a pas à en nommer
-  const bare = withoutAsides(full)
+  // la version sans les apartés de sa conclusion d'abord quand ils nomment une autre entité : la bonne réponse n'a
+  // pas à en nommer ; ses conditions entre parenthèses (« (disjoncteur allumé) ») restent, elles font partie du test
+  const bare = withoutGlosses(full, all)
   const versions = distinctBy(
     (namesAny(full, all) && !namesAny(bare, all) ? [bare, full] : [full, bare]).map(unnamedOf),
     (s) => s,

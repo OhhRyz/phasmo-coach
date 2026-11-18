@@ -1,3 +1,6 @@
+import { act, createElement as h } from 'react'
+import { createRoot } from 'react-dom/client'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { getGhost, GHOSTS, MECHANICS } from '../data'
 import { buildDeck, namesGhost, type Card } from '../engine/cards'
@@ -1697,3 +1700,109 @@ describe('Coaching : seul·e, la page ne prend pas la personne pour un élève',
     expect(coachingSteps('student', 'Ryz').map((st) => st.h)).toEqual(['Ryz écrit', 'Ryz t’envoie un lien', 'Tu l’ouvres', 'Tu renvoies ta progression'])
   })
 })
+
+describe('Quiz : « Me tester sur X » ne distribue que des questions sur X, et annonce le nombre qu’il distribue', () => {
+  it('/quiz?ghost=aswang : chaque question porte sur l’Aswang, chaque réponse s’inscrit sous lui seul, et le nombre affiché est celui de la copie', async () => {
+    ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    // jsdom n'a pas ResizeObserver (le carnet mesure ses pages)
+    if (typeof globalThis.ResizeObserver === 'undefined') {
+      globalThis.ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      } as unknown as typeof ResizeObserver
+    }
+    // ni les défilements (la correction, la question suivante)
+    const scrolls = { into: Element.prototype.scrollIntoView, to: window.scrollTo }
+    Element.prototype.scrollIntoView = () => {}
+    window.scrollTo = (() => {}) as typeof window.scrollTo
+    const { StoreProvider } = await import('../store/store')
+    const { STORAGE_KEY } = await import('../store/schema')
+    const { ToastProvider } = await import('../components/Toast')
+    const { Quiz } = await import('./Quiz')
+    localStorage.clear()
+    sessionStorage.clear()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    const text = (el: Element | null | undefined = host) => (el?.textContent ?? '').replace(/[\u00a0\u202f]/g, ' ').replace(/\u2019/g, "'")
+    const button = (label: RegExp) => [...host.querySelectorAll('button')].find((b) => label.test(text(b)))
+    const click = (el: Element | undefined) => {
+      expect(el).toBeDefined()
+      act(() => {
+        el!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+    }
+    const dealt = () => (JSON.parse(sessionStorage.getItem(COPY_KEY)!) as { run: SavedCopy }).run.questions
+    /** répond à toute la copie affichée (toujours la première réponse) ; rend son nombre de questions */
+    const answerAll = () => {
+      const n = Number(/Question 1 \/ (\d+)/.exec(text(host.querySelector('.filehead')))?.[1])
+      expect(n).toBeGreaterThanOrEqual(3)
+      expect(n).toBeLessThanOrEqual(10)
+      // le nombre affiché est celui de la copie distribuée, et toutes ses questions portent sur l'Aswang
+      const questions = dealt()
+      expect(questions).toHaveLength(n)
+      for (const q of questions) expect(q.ghostId, q.id).toBe('aswang')
+      for (let i = 0; i < n; i++) {
+        expect(text(host.querySelector('h1'))).toContain(`question ${i + 1} sur ${n}`)
+        // deux, trois ou quatre réponses, jamais un choix entre quatre noms d'entités
+        const choices = [...host.querySelectorAll('.qz-choice')]
+        expect(choices.length).toBeGreaterThanOrEqual(2)
+        expect(choices.length).toBeLessThanOrEqual(4)
+        expect(choices).toHaveLength(questions[i].choices.length)
+        click(choices[0])
+        click(button(i + 1 < n ? /^Question suivante/ : /^Voir le résultat/))
+      }
+      return n
+    }
+    try {
+      act(() => {
+        root.render(h(StoreProvider, null, h(ToastProvider, null, h(MemoryRouter, { initialEntries: ['/quiz?ghost=aswang'] }, h(Routes, null, h(Route, { path: '/quiz', element: h(Quiz) }))))))
+      })
+      // venu de la fiche : la copie est distribuée tout de suite
+      const first = answerAll()
+      // le corrigé : la note sur le nombre de questions de la copie
+      expect(button(/^Recommencer un quiz/)).toBeDefined()
+      expect(text()).toContain(`/${first}`)
+      // le carnet s'enregistre un instant plus tard
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+      })
+      const state = JSON.parse(localStorage.getItem(STORAGE_KEY)!) as PersistedState
+      const keys = Object.keys(state.answers)
+      // sous l'Aswang seul (et sous les thèmes des questions) : aucune autre entité ne reçoit de réponse
+      expect(keys.filter((k) => k.startsWith('ghost:'))).toEqual(['ghost:aswang'])
+      expect(state.answers['ghost:aswang'].t).toBe(first)
+      expect(keys.filter((k) => !k.startsWith('ghost:')).every((k) => k.startsWith('topic:'))).toBe(true)
+      expect(keys.filter((k) => k.startsWith('topic:')).reduce((n, k) => n + state.answers[k].t, 0)).toBe(first)
+      expect(state.activity.at(-1)).toMatchObject({ kind: 'quiz', total: first })
+
+      // « Changer les réglages » : ni thèmes ni nombre de questions à régler, un retour au quiz général, et le
+      // bouton annonce la copie déjà composée
+      click(button(/^Changer les réglages/))
+      const start = button(/^Commencer le quiz/)
+      const announced = Number(/^Commencer le quiz \((\d+) questions sur l'Aswang\)/.exec(text(start))?.[1])
+      expect(announced).toBeGreaterThanOrEqual(3)
+      expect(host.querySelector('.qz-topics')).toBeNull()
+      expect(text()).not.toContain('Nombre de questions')
+      expect(text(host.querySelector('.qz-cover'))).toContain(`/ ${announced}`)
+      expect(button(/^Revenir au quiz général/)).toBeDefined()
+      click(start)
+      expect(answerAll()).toBe(announced)
+
+      // le retour au quiz général rend ses réglages
+      click(button(/^Changer les réglages/))
+      click(button(/^Revenir au quiz général/))
+      expect(host.querySelector('.qz-topics')).not.toBeNull()
+      expect(text()).toContain('Nombre de questions')
+    } finally {
+      act(() => root.unmount())
+      host.remove()
+      localStorage.clear()
+      sessionStorage.clear()
+      Element.prototype.scrollIntoView = scrolls.into
+      window.scrollTo = scrolls.to
+    }
+  }, 60_000)
+})
+
