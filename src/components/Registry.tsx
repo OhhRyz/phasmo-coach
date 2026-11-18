@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import type { Card } from '../engine/cards'
 import { NBSP, NNBSP } from '../engine/format'
 import type { PersistedState } from '../store/schema'
@@ -26,8 +26,8 @@ export function acquiredLine(acquired: number, total = GHOSTS.length): string {
 }
 
 /**
- * Le registre des entités, tel que sur l'accueil et sur la page « Ma progression » : la maîtrise de chacune
- * surlignée et chiffrée, les acquises entourées, puis le bilan. `after` : ce qui suit le titre (un lien).
+ * Le registre des entités, tel que sur l'accueil et sur la page « Ma progression », dans l'ordre du journal du
+ * jeu : la maîtrise de chacune surlignée et chiffrée, les acquises entourées, puis le bilan. `after` : ce qui suit le titre (un lien).
  */
 export function Registry({ mastery, id, after }: { mastery: Record<string, number>; id: string; after?: ReactNode }) {
   const { acquired, inProgress, untouched } = registryCounts(mastery)
@@ -43,7 +43,7 @@ export function Registry({ mastery, id, after }: { mastery: Record<string, numbe
         <span className="on-touch">touche un nom</span> pour ouvrir sa fiche
       </p>
       <ol className="registry">
-        {GHOSTS.map((g, i) => {
+        {JOURNAL_GHOSTS.map((g, i) => {
           const m = mastery[g.id] ?? 0
           const ok = m >= ACQUIRED
           const cls = ok ? 'ok' : m === 0 ? 'zero' : m < 0.4 ? 'weak' : undefined

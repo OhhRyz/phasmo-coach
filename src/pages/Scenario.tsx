@@ -20,7 +20,7 @@ import {
   TypedLink,
 } from '../components/journal/Journal'
 import { focusPageTitle, GhostEvidence, Modal, Seg } from '../components/ui'
-import { GHOSTS, getGhost } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS, getGhost } from '../data'
 import { EVIDENCE } from '../data/evidence'
 import type { EvidenceId, Ghost, ObservationStrength } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
@@ -258,7 +258,8 @@ export function Scenario() {
     requestAnimationFrame(focusPageTitle)
   }
 
-  const possibleGhosts = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
+  // les noms s'affichent dans l'ordre du journal du jeu (les contrats, eux, se composent sur GHOSTS)
+  const possibleGhosts = useMemo(() => filterGhosts(JOURNAL_GHOSTS, filter), [filter])
   const candidates = useMemo(() => possibleGhosts.filter((g) => !struck.includes(g.id)), [possibleGhosts, struck])
   // même règle que le codex : une fois les preuves du contrat trouvées, les autres sont grisées
   const possible = useMemo(() => possibleEvidence(possibleGhosts, filter), [possibleGhosts, filter])
@@ -606,7 +607,8 @@ export function Scenario() {
     const debrief = candidatesAfterEachClue(scenario, GHOSTS)
     const finalScore = scoreScenario(revealed, scenario.clues.length, wrong.length, outcome === 'solved')
     const solved = outcome === 'solved'
-    const idx = GHOSTS.findIndex((g) => g.id === ghost.id)
+    // son numéro dans le registre du codex : sa place dans le journal du jeu
+    const idx = JOURNAL_GHOSTS.findIndex((g) => g.id === ghost.id)
     // seulement les vraies notes du coach sur cette entité (épinglées d'abord, puis les plus récentes)
     const coach = coachNameOf(state.profile)
     const ghostNotes = coachNotes(state.notes, state.profile, ghost.id).slice(0, 2)
@@ -812,7 +814,7 @@ export function Scenario() {
   const nextReport = () => setRevealed((r) => Math.min(scenario.clues.length, r + 1))
   // la fiche « Quelle est l'entité ? » : les entités du carnet, ou toutes (moins les fausses pistes) si le carnet se trompe
   const filtered = candidates.length > 0 && candidates.length < GHOSTS.length
-  const guessList = guessAll || !candidates.length ? GHOSTS.filter((g) => !wrong.includes(g.id)) : candidates
+  const guessList = guessAll || !candidates.length ? JOURNAL_GHOSTS.filter((g) => !wrong.includes(g.id)) : candidates
   const pendingLine = pending.length ? `${plural(pending.length, 'preuve')} des rapports à reporter` : null
 
   return (

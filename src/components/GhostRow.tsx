@@ -25,8 +25,8 @@ export function losText(ghost: Ghost): string {
   return ghost.speed.los ? 'Oui' : 'Non'
 }
 
-/** Trait de crayon qui barre une ligne du registre (se dessine à l'arrivée). */
-function Strike({ seed }: { seed: string }) {
+/** Trait de crayon qui barre une ligne du registre, ou un nom dans la grille du journal (se dessine à l'arrivée). */
+export function Strike({ seed }: { seed: string }) {
   const r = roughRng('strike-' + seed)
   const d = roughLine(0.5, 5.5 + r() * 2, 99.5, 3 + r() * 2.5, r, 0.9)
   return (
@@ -125,26 +125,24 @@ export function GhostRow({
 
 /**
  * Une ligne du registre rangé par vitesse ou par seuil de chasse : le nom (lien vers la fiche, toute la ligne
- * l'ouvre), la valeur qui met l'entité dans cette colonne, tapée petit, et au crayon ce qui la fait figurer
- * dans plusieurs colonnes. Éliminée par le carnet de preuves : barrée au crayon, comme dans le registre.
+ * l'ouvre) et, tapée petit, la valeur qui met l'entité dans cette colonne. Le titre de sa partie dit si elle n'a
+ * que cette valeur (« toujours ») ou si elle en change (« par moments »). Éliminée par le carnet de preuves :
+ * barrée au crayon, comme dans le registre.
  */
 export function GroupRow({
   ghost,
   value,
   los,
-  note,
   dimmed,
   circled,
   snippet,
   seed,
 }: {
   ghost: Ghost
-  /** « 1,53 m/s », « descend à 1,4 m/s », « 60 % » */
+  /** « 1,53 m/s », « 1,4 m/s au plus lent », « 60 % » */
   value: string
   /** « accélère en ligne de vue » : seulement dans le registre rangé par vitesse */
   los?: string | null
-  /** « change de vitesse », « change de seuil » */
-  note?: string | null
   dimmed?: boolean
   circled?: boolean
   snippet?: Snippet | null
@@ -164,7 +162,6 @@ export function GroupRow({
           )}
           {dimmed && <span className="sr-only"> (éliminée)</span>}
         </Link>
-        {note && <span className="cx-gnote pencil-note">{note}</span>}
       </span>
       <span className="cx-gval">
         <span className="sr-only"> : </span>

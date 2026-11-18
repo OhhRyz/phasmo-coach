@@ -1407,6 +1407,13 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   }
   const of = (type: SoloType, pred: (s: Seed) => boolean = () => true) => seeds.filter((s) => s.type === type && pred(s))
   /**
+   * La copie pose-t-elle « ce test suffit-il ? » : décidé une fois (le plan retente ses sortes pour se compléter, ce
+   * qui la poserait presque à chaque copie), et deux fois moins souvent pour une entité dont tous les tests
+   * suffisent, ou aucun : sa réponse serait toujours la même.
+   */
+  const sides = new Set(of('T3b').map((s) => s.cls))
+  const enough = sides.size > 0 && rng() < ENOUGH_SHARE * (sides.size === 2 ? 1 : ENOUGH_ONE_SIDED)
+  /**
    * Une question dont la réponse se tire entre `classes` (vrai ou faux, X ou Y, oui ou non) : elle ne se pose que
    * si chaque réponse a de quoi se poser à cet instant, puis la réponse se tire (`chance` : celles de la première).
    * Sinon la réponse la plus facile à composer sortirait plus souvent que l'autre.
@@ -1430,13 +1437,10 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
         return add(of('T1', (s) => s.group === 'spd'))
       case 'T2':
         return add(of('T2'))
-      case 'T3': {
-        const classes = new Set(of('T3b').map((s) => s.cls))
-        if (classes.size === 2 ? rng() < ENOUGH_SHARE : classes.size === 1 && rng() < ENOUGH_SHARE * ENOUGH_ONE_SIDED) {
-          if (classes.size === 2 ? addEither('T3b', ['yes', 'no'], enoughPlan(all)) : add(of('T3b'))) return true
-        }
+      case 'T3':
+        // « ce test suffit-il ? » : la copie l'a décidé à son premier tirage (voir enough), sinon « quel test confirme X ? »
+        if (enough && (sides.size === 2 ? addEither('T3b', ['yes', 'no'], enoughPlan(all)) : add(of('T3b')))) return true
         return add(of('T3a'))
-      }
       case 'T4':
         return add(of('T4'))
       case 'T5':

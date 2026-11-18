@@ -24,7 +24,7 @@ import { NoteEditor } from '../components/NoteEditor'
 import { ReportDialog } from '../components/ReportDialog'
 import { NoteText } from './Notebook'
 import { Empty, useMedia } from '../components/ui'
-import { DATA_INFO, GHOSTS, getGhost } from '../data'
+import { DATA_INFO, GHOSTS, JOURNAL_GHOSTS, getGhost } from '../data'
 import { EVIDENCE, EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost, ObservationKind, TextItem } from '../data/types'
 import { createFootsteps, type Footsteps } from '../engine/audio'
@@ -251,9 +251,10 @@ export function GhostPage() {
     )
   }
 
-  const idx = GHOSTS.findIndex((g) => g.id === ghost.id)
-  const prev = GHOSTS[(idx - 1 + GHOSTS.length) % GHOSTS.length]
-  const next = GHOSTS[(idx + 1) % GHOSTS.length]
+  // le numéro de la fiche et ses voisines : la place de l'entité dans le journal du jeu, comme dans le registre du codex
+  const idx = JOURNAL_GHOSTS.findIndex((g) => g.id === ghost.id)
+  const prev = JOURNAL_GHOSTS[(idx - 1 + JOURNAL_GHOSTS.length) % JOURNAL_GHOSTS.length]
+  const next = JOURNAL_GHOSTS[(idx + 1) % JOURNAL_GHOSTS.length]
   const m = mastery[ghost.id] ?? 0
   const stamp = stampFor(ghost)
   const speeds = [...new Set([ghost.speed.min, ghost.speed.max, ghost.speed.alt].filter((v): v is number => v != null && v > 0))]

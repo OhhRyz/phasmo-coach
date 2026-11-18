@@ -2,12 +2,17 @@ import type { Ghost } from '../data/types'
 import { lowerFirst } from './fiche'
 import { copiesBehavior } from './filter'
 import { fr, num, sanityClasses, speedClasses, speedText, type SanityClass, type SpeedClass } from './format'
+import { hasSpeed } from './speeds'
 
 /**
  * Le registre du Codex rangé par vitesse ou par seuil de chasse : trois classes côte à côte, et pour chaque
- * entité la valeur de sa fiche qui la met dans la classe. Rien n'est inventé ici : les classes sont celles de
- * speedClasses et sanityClasses (les mêmes que le filtre du carnet de preuves), les valeurs sont les champs
- * `speed` et `huntSanity` des fiches.
+ * entité la valeur de sa fiche qui la met dans la classe. Rien n'est inventé ici : une entité est rangée dans
+ * une colonne parce qu'une vitesse (ou un seuil) écrite sur sa fiche y tombe, et seulement pour cela.
+ *
+ * Ce n'est pas le filtre du carnet de preuves. Le filtre élimine (« j'entends des pas normaux : qui reste
+ * possible ? ») et garde, comme celui de tybayn, une entité dont la plage traverse 1,7 m/s. Le registre, lui,
+ * classe : le Hantu, le Moroi, le Thayé et le Deildegast vont de lent à rapide par paliers, ce ne sont pas des
+ * entités normales, et ils ne figurent pas dans la colonne du milieu (retour du coach, 18 novembre 2026).
  */
 
 /** L'ordre du registre : celui du journal du jeu (par défaut), par vitesse ou par seuil de chasse. */
@@ -46,12 +51,11 @@ export const SANITY_ORDER: readonly SanityClass[] = ['early', 'normal', 'late']
 /**
  * D'où vient ce qu'on écrit sur la ligne :
  * - `values` : les valeurs de la fiche qui tombent dans la classe ;
- * - `low` / `high` : pour une plage (`isRange`), sa borne de ce côté ;
- * - `span` : la plage entière, qui passe par la valeur standard ;
+ * - `low` / `high` : pour une plage (`isRange`), sa borne de ce côté (une plage n'a pas de ligne au milieu) ;
  * - `copy` : l'entité copie une autre entité (Mimic), le résumé de sa fiche le dit ;
  * - `unknown` : valeur inconnue (-1 dans les données).
  */
-export type EntryKind = 'values' | 'low' | 'high' | 'span' | 'copy' | 'unknown'
+export type EntryKind = 'values' | 'low' | 'high' | 'copy' | 'unknown'
 
 export interface GroupEntry {
   ghost: Ghost
@@ -60,7 +64,7 @@ export interface GroupEntry {
   kind: EntryKind
   /** valeurs de la fiche, par ordre croissant (m/s ou %) ; vide pour `copy` et `unknown` */
   values: number[]
-  /** l'entité figure dans plusieurs classes : « change de vitesse », « change de seuil » */
+  /** l'entité figure dans plusieurs classes (« par moments ») ; sinon elle n'a que celle-ci (« toujours ») */
   several: boolean
 }
 
@@ -84,12 +88,34 @@ export function sanityValues(g: Ghost): number[] {
 
 const ALL_SPEEDS = new Set<SpeedClass>(SPEED_ORDER)
 
+const speedClassOf = (v: number): SpeedClass => (v < STANDARD_SPEED ? 'slow' : v > STANDARD_SPEED ? 'fast' : 'normal')
+const inSpeedClass = (v: number, c: SpeedClass) => speedClassOf(v) === c
+const inSanityClass = (v: number, c: SanityClass) => (c === 'late' ? v < STANDARD_SANITY : c === 'early' ? v > STANDARD_SANITY : v === STANDARD_SANITY)
+
 /**
- * Les classes de vitesse où ranger l'entité : celles de speedClasses. Le Mimic copie la vitesse de l'entité
- * imitée : comme dans le filtre du carnet (copiesBehavior), il peut être dans les trois.
+ * Les classes de vitesse où ranger l'entité : celles des vitesses écrites sur sa fiche (`min`, `max`, `alt`).
+ * « Normale » veut dire que 1,7 m/s est l'une de ces vitesses. Une plage (`isRange` : Hantu, Moroi, Thayé,
+ * Deildegast) n'est rangée que par ses deux bornes : traverser 1,7 m/s en chemin ne fait pas une entité normale
+ * (le filtre du carnet, lui, la garde quand on coche « normale » : voir speedClasses). Le Mimic copie la vitesse
+ * de l'entité imitée : comme dans le filtre (copiesBehavior), il peut être dans les trois. Une vitesse inconnue
+ * (aucune fiche aujourd'hui) : les classes du filtre.
  */
 export function speedGroupsOf(g: Ghost): Set<SpeedClass> {
-  return copiesBehavior(g) ? new Set(ALL_SPEEDS) : speedClasses(g)
+  if (copiesBehavior(g)) return new Set(ALL_SPEEDS)
+  const values = speedValues(g)
+  if (!values.length) return speedClasses(g)
+  const written = g.speed.isRange ? [values[0], values[values.length - 1]] : values
+  return new Set(written.map(speedClassOf))
+}
+
+/**
+ * Les entités dont la vitesse change par paliers et passe par 1,7 m/s ou tout près (à 0,05 m/s, l'écart que
+ * l'oreille ne sépare pas, voir hasSpeed : 1,75 pour le Hantu, 1,66 et 1,749 pour le Moroi, 1,7 pile pour le Thayé
+ * et le Deildegast). Le filtre du carnet de preuves les garde quand on coche « normale », alors que le registre
+ * ne les range pas parmi les normales : la page le dit à ce moment-là.
+ */
+export function nearStandardRanges(ghosts: readonly Ghost[]): Ghost[] {
+  return ghosts.filter((g) => g.speed.isRange && !copiesBehavior(g) && hasSpeed(g, STANDARD_SPEED))
 }
 
 /** Les classes de seuil où ranger l'entité : celles de sanityClasses (le Mimic, de 10 à 100 %, y est déjà dans les trois). */
@@ -97,21 +123,16 @@ export function sanityGroupsOf(g: Ghost): Set<SanityClass> {
   return sanityClasses(g)
 }
 
-const inSpeedClass = (v: number, c: SpeedClass) => (c === 'slow' ? v < STANDARD_SPEED : c === 'fast' ? v > STANDARD_SPEED : v === STANDARD_SPEED)
-const inSanityClass = (v: number, c: SanityClass) => (c === 'late' ? v < STANDARD_SANITY : c === 'early' ? v > STANDARD_SANITY : v === STANDARD_SANITY)
-
 function speedEntry(g: Ghost, n: number, c: SpeedClass, several: boolean): GroupEntry {
   const base = { ghost: g, n, several }
   if (copiesBehavior(g)) return { ...base, kind: 'copy', values: [] }
   const values = speedValues(g)
   if (!values.length) return { ...base, kind: 'unknown', values: [] }
   if (g.speed.isRange) {
-    // une plage : la borne du côté de la classe ; au milieu, la plage entière (elle passe par la vitesse standard)
+    // une plage : sa borne du côté de la classe (speedGroupsOf ne la range jamais ailleurs que par ses bornes)
     const lo = values[0]
     const hi = values[values.length - 1]
-    if (c === 'slow') return { ...base, kind: 'low', values: [lo] }
-    if (c === 'fast') return { ...base, kind: 'high', values: [hi] }
-    return { ...base, kind: 'span', values: [lo, hi] }
+    return inSpeedClass(lo, c) ? { ...base, kind: 'low', values: [lo] } : { ...base, kind: 'high', values: [hi] }
   }
   return { ...base, kind: 'values', values: values.filter((v) => inSpeedClass(v, c)) }
 }
@@ -124,7 +145,7 @@ function sanityEntry(g: Ghost, n: number, c: SanityClass, several: boolean): Gro
   return { ...base, kind: 'values', values: values.filter((v) => inSanityClass(v, c)) }
 }
 
-/** Les 30 entités rangées par vitesse : lentes, normales, rapides ; chacune dans toutes les classes où elle peut se trouver, dans l'ordre du journal. */
+/** Les 30 entités rangées par vitesse : lentes, normales, rapides ; chacune dans chaque classe où tombe une vitesse de sa fiche (voir speedGroupsOf), dans l'ordre reçu. */
 export function speedGroups(ghosts: readonly Ghost[]): Group<SpeedClass>[] {
   return SPEED_ORDER.map((id) => ({
     id,
@@ -146,7 +167,11 @@ export function sanityGroups(ghosts: readonly Ghost[]): Group<SanityClass>[] {
   }))
 }
 
-/** La vitesse écrite sur la ligne : « 1,53 m/s », « 1,2 m/s », « descend à 1,4 m/s », « de 1,4 à 2,7 m/s », « copie la vitesse de l’entité imitée ». */
+/**
+ * La vitesse écrite sur la ligne : « 1,53 m/s », « 1,2 m/s », « copie la vitesse de l’entité imitée ». Pour une plage,
+ * sa borne sans dire dans quel sens l'entité la parcourt (le Thayé part de 2,75 m/s et ne fait que ralentir, le
+ * Moroi part de 1,5 m/s et accélère) : « 1,4 m/s au plus lent », « 2,7 m/s au plus rapide ».
+ */
 export function speedEntryText(e: GroupEntry): string {
   const v = e.values.map(num)
   switch (e.kind) {
@@ -155,11 +180,9 @@ export function speedEntryText(e: GroupEntry): string {
     case 'unknown':
       return 'vitesse inconnue'
     case 'low':
-      return fr(`descend à ${v[0]} m/s`)
+      return fr(`${v[0]} m/s au plus lent`)
     case 'high':
-      return fr(`monte à ${v[0]} m/s`)
-    case 'span':
-      return fr(`de ${v[0]} à ${v[1]} m/s`)
+      return fr(`${v[0]} m/s au plus rapide`)
     default:
       return fr(`${v.join(' ou ')} m/s`)
   }
@@ -209,18 +232,36 @@ export function rowSpeedText(g: Ghost): string {
   return copiesBehavior(g) ? 'copie l’entité imitée' : speedText(g)
 }
 
+/**
+ * Dans chaque colonne, deux parties : d'abord les entités qui n'ont que cette classe (« toujours »), puis celles
+ * qui en changent et figurent aussi dans une autre colonne (« par moments »). D'un coup d'œil, « Normales ·
+ * toujours » donne les entités qui ne quittent jamais 1,7 m/s, et rien d'autre.
+ */
+export type Part = 'always' | 'sometimes'
+export const PART_ORDER: readonly Part[] = ['always', 'sometimes']
+export const PART_LABEL: Record<Part, string> = { always: 'toujours', sometimes: 'par moments' }
+export const partOf = (e: Pick<GroupEntry, 'several'>): Part => (e.several ? 'sometimes' : 'always')
+
 /** Ce que disent les titres des colonnes : le nom de la classe, sa définition, ce qu'elle veut dire en partie, et le nom du groupe pour les lecteurs d'écran. */
 export interface GroupCopy {
   title: string
   def: string
   play: string
   label: string
+  /** écrit sous « toujours » quand aucune entité n'a que cette classe : un fait du jeu, pas un effet du carnet de preuves */
+  none: string
 }
 
 export const SPEED_COPY: Record<SpeedClass, GroupCopy> = {
-  slow: { title: 'Lentes', def: fr('moins de 1,7 m/s'), play: 'des pas plus lents que la normale', label: 'Entités lentes' },
-  normal: { title: 'Normales', def: fr('1,7 m/s'), play: 'les pas de référence, ceux de la plupart des entités', label: 'Entités à vitesse normale' },
-  fast: { title: 'Rapides', def: fr('plus de 1,7 m/s'), play: 'des pas plus rapides que la normale', label: 'Entités rapides' },
+  slow: { title: 'Lentes', def: fr('moins de 1,7 m/s'), play: 'des pas plus lents que la normale', label: 'Entités lentes', none: 'aucune entité n’est toujours lente' },
+  normal: {
+    title: 'Normales',
+    def: fr('1,7 m/s'),
+    play: 'les pas de référence, ceux de la plupart des entités',
+    label: 'Entités à vitesse normale',
+    none: 'aucune entité n’est toujours normale',
+  },
+  fast: { title: 'Rapides', def: fr('plus de 1,7 m/s'), play: 'des pas plus rapides que la normale', label: 'Entités rapides', none: 'aucune entité n’est toujours rapide' },
 }
 
 export const SANITY_COPY: Record<SanityClass, GroupCopy> = {
@@ -229,12 +270,14 @@ export const SANITY_COPY: Record<SanityClass, GroupCopy> = {
     def: fr('peut chasser au-dessus de 50 %'),
     play: 'une chasse alors que l’équipe a encore plus de la moitié de sa santé mentale',
     label: 'Entités qui peuvent chasser tôt',
+    none: 'aucune entité ne chasse toujours tôt',
   },
-  normal: { title: 'Normal', def: fr('50 %'), play: 'le seuil de la plupart des entités', label: 'Entités au seuil de chasse normal' },
+  normal: { title: 'Normal', def: fr('50 %'), play: 'le seuil de la plupart des entités', label: 'Entités au seuil de chasse normal', none: 'aucune entité n’a toujours ce seuil' },
   late: {
     title: 'Tard',
     def: fr('sous 50 %'),
     play: 'la santé mentale moyenne doit descendre plus bas avant une chasse',
     label: 'Entités qui peuvent chasser tard',
+    none: 'aucune entité ne chasse toujours tard',
   },
 }

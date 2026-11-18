@@ -2,12 +2,13 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { GhostRow, GroupRow } from '../components/GhostRow'
+import { JournalGrid } from '../components/JournalGrid'
 import { FROM_CODEX, wantsRegistry } from './codexReturn'
 import { useToast } from '../components/Toast'
 import { UvPrint } from '../components/journal/Charts'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty, Seg, useMedia } from '../components/ui'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import { EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
@@ -15,6 +16,10 @@ import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, 
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
 import {
   losEntryText,
+  nearStandardRanges,
+  PART_LABEL,
+  PART_ORDER,
+  partOf,
   rankFromSearch,
   SANITY_COPY,
   sanityEntryText,
@@ -25,6 +30,7 @@ import {
   withRank,
   type GroupCopy,
   type GroupEntry,
+  type Part,
   type Rank,
 } from '../engine/groups'
 import { entityMentions } from '../engine/mentions'
@@ -375,9 +381,9 @@ export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | 
 
 const PHONE = '(max-width: 759px)'
 
-/** « Ranger par » : l'ordre du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
+/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
 const RANKS: { value: Rank; label: string }[] = [
-  { value: 'numero', label: 'numéro' },
+  { value: 'numero', label: 'ordre du jeu' },
   { value: 'vitesse', label: 'vitesse' },
   { value: 'seuil', label: 'seuil de chasse' },
 ]
@@ -386,31 +392,67 @@ const RANK_HEAD: Record<Rank, string> = {
   vitesse: 'Rangé par vitesse',
   seuil: 'Rangé par seuil de chasse',
 }
-/** Sous le sélecteur : ce que mesure le classement, et pourquoi un nom revient dans plusieurs colonnes. */
-const RANK_HINT: Record<Exclude<Rank, 'numero'>, string> = {
-  vitesse: 'vitesses de la fiche, hors accélération en ligne de vue · une entité qui change de vitesse figure dans chaque colonne où elle peut se trouver',
-  seuil: 'santé mentale moyenne à partir de laquelle une chasse peut démarrer · une entité qui change de seuil figure dans chaque colonne où elle peut se trouver',
+/** Sous le sélecteur : ce que mesure le classement, puis ce que veulent dire « toujours » et « par moments ». */
+const RANK_HINT: Record<Exclude<Rank, 'numero'>, [string, string]> = {
+  vitesse: [
+    'vitesses de la fiche, hors accélération en ligne de vue',
+    '« toujours » : l’entité n’a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où tombe une vitesse de sa fiche',
+  ],
+  seuil: [
+    'santé mentale moyenne à partir de laquelle une chasse peut démarrer',
+    '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche',
+  ],
+}
+
+/** « le Hantu, le Moroi, le Thayé et le Deildegast » */
+const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? ''))
+
+/**
+ * Sous le critère « Vitesse en chasse », quand « normale » est cochée : pourquoi des entités que le registre ne
+ * range pas parmi les normales restent possibles (leurs paliers passent par 1,7 m/s ou tout près, voir
+ * nearStandardRanges). Le filtre élimine, il ne classe pas : les barrer ferait écarter la bonne entité.
+ * `ghosts` : les entités que le carnet laisse possibles. La note ne nomme que celles qui le sont encore (une
+ * autre preuve a pu écarter le Hantu), et se tait quand il n'en reste aucune.
+ */
+export function normalSpeedNote(ghosts: readonly Ghost[]): string | null {
+  const names = nearStandardRanges(ghosts).map((g) => le(g.name))
+  if (!names.length) return null
+  const one = names.length === 1
+  const text = `${listed(names)} ${one ? 'reste possible' : 'restent possibles'} : ${one ? 'sa' : 'leur'} vitesse change par paliers et passe par 1,7 m/s ou tout près`
+  return fr(text.charAt(0).toUpperCase() + text.slice(1))
+}
+
+/**
+ * Sous « Ranger par vitesse » : pourquoi les entités dont la vitesse change par paliers n'ont pas de ligne au
+ * milieu, même quand un palier vaut 1,7 m/s (le Thayé au 6e vieillissement, le Deildegast au 13e objet).
+ */
+export function rangesNote(ghosts: readonly Ghost[]): string | null {
+  const names = ghosts.filter((g) => g.speed.isRange).map((g) => le(g.name))
+  if (!names.length) return null
+  const one = names.length === 1
+  const text = `${listed(names)} ${one ? 'change' : 'changent'} de vitesse par paliers : ${one ? 'rangé' : 'rangés'} à ${one ? 'son' : 'leur'} plus lent et à ${one ? 'son' : 'leur'} plus rapide`
+  return fr(text.charAt(0).toUpperCase() + text.slice(1))
 }
 
 /** Une colonne du registre rangé : son titre, et ses lignes telles qu'elles s'écrivent. */
 export interface LedgerColumn {
   id: string
   copy: GroupCopy
-  lines: { entry: GroupEntry; value: string; los: string | null; note: string | null }[]
+  lines: { entry: GroupEntry; value: string; los: string | null }[]
 }
 
-/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans toutes celles où elle peut se trouver. */
+/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans chacune de celles où tombe une valeur de sa fiche. */
 export function ledgerColumns(ghosts: readonly Ghost[], rank: Exclude<Rank, 'numero'>): LedgerColumn[] {
   if (rank === 'vitesse')
     return speedGroups(ghosts).map((grp) => ({
       id: grp.id,
       copy: SPEED_COPY[grp.id],
-      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost), note: entry.several ? 'change de vitesse' : null })),
+      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost) })),
     }))
   return sanityGroups(ghosts).map((grp) => ({
     id: grp.id,
     copy: SANITY_COPY[grp.id],
-    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null, note: entry.several ? 'change de seuil' : null })),
+    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null })),
   }))
 }
 
@@ -464,11 +506,16 @@ export function Codex() {
     filter.los !== null ||
     filter.evidenceCount !== 3
 
-  const { matching, out } = useMemo(() => searchCodex(GHOSTS, query, filter), [filter, query])
+  // tout ce que la page affiche suit l'ordre du journal du jeu (JOURNAL_GHOSTS) : registre, colonnes, listes de noms
+  const { matching, out } = useMemo(() => searchCodex(JOURNAL_GHOSTS, query, filter), [filter, query])
 
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
-  const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
+  const pool = useMemo(() => filterGhosts(JOURNAL_GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
+  // « normale » cochée : pourquoi le Deildegast, le Hantu, le Moroi et le Thayé restent possibles tant que le reste
+  // du carnet ne les écarte pas (voir normalSpeedNote), et sous « Ranger par vitesse », pourquoi ils n'ont pas de ligne au milieu
+  const normalNote = useMemo(() => normalSpeedNote(pool), [pool])
+  const stepsNote = useMemo(() => rangesNote(JOURNAL_GHOSTS), [])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
@@ -477,7 +524,7 @@ export function Codex() {
   // fiche (pas par son nom) : un extrait montre le mot dans sa phrase
   const rows = useMemo(() => {
     const keep = new Set([...matching, ...(showOut ? out : [])])
-    return GHOSTS.map((g, i) => ({ g, n: i + 1 }))
+    return JOURNAL_GHOSTS.map((g, i) => ({ g, n: i + 1 }))
       .filter(({ g }) => keep.has(g))
       .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
   }, [matching, out, showOut, query])
@@ -488,17 +535,23 @@ export function Codex() {
     if (rank === 'numero') return null
     const shown = new Map(rows.map((r) => [r.g, r.snippet]))
     const quoted = new Set<Ghost>()
-    return ledgerColumns(GHOSTS, rank).map((col) => ({
-      ...col,
-      lines: col.lines
+    return ledgerColumns(JOURNAL_GHOSTS, rank).map((col) => {
+      const lines = col.lines
         .filter((l) => shown.has(l.entry.ghost))
         .map((l) => {
           const g = l.entry.ghost
           const snippet = quoted.has(g) ? null : (shown.get(g) ?? null)
           quoted.add(g)
           return { ...l, snippet }
-        }),
-    }))
+        })
+      // « toujours » puis « par moments » ; `bare` : la colonne n'a aucune entité de cette partie, même sans filtre
+      const parts = PART_ORDER.map((id: Part) => ({
+        id,
+        lines: lines.filter((l) => partOf(l.entry) === id),
+        bare: !col.lines.some((l) => partOf(l.entry) === id),
+      }))
+      return { ...col, lines, parts }
+    })
   }, [rank, rows])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
@@ -769,6 +822,7 @@ export function Codex() {
               <span className="pencil-note cx-field-hint">
                 vitesse de base, sans ligne de vue · normale = 1,7 m/s (la plupart accélèrent jusqu’à 1,65 fois leur vitesse de base quand elles te voient)
               </span>
+              {filter.speed.includes('normal') && normalNote && <span className="pencil-note cx-field-hint cx-field-why">{normalNote}</span>}
             </div>
             <div className="field">
               <span>Une chasse a démarré au-dessus de</span>
@@ -848,6 +902,15 @@ export function Codex() {
             {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
           </div>
 
+          {/* comme la page « Preuves » du journal du jeu : les 30 noms à leur place, barrés par le carnet. Une
+              recherche est une consultation, pas une déduction : la grille lui laisse la place */}
+          {searched === '' && (
+            <div className="jg-wrap">
+              <JournalGrid isOut={(g) => !pool.includes(g)} only={deduced ? only : null} />
+              <p className="pencil-note jg-note">à la même place que dans le journal du jeu</p>
+            </div>
+          )}
+
           {searchedOut ? (
             <Empty title={out.length === 1 ? 'Entité écartée par ton carnet' : 'Entités écartées par ton carnet'}>
               <p>
@@ -890,7 +953,19 @@ export function Codex() {
           <div className="cx-rank">
             <span className="typed-label">Ranger par</span>
             <Seg label="Ranger le registre par" value={rank} onChange={setRank} options={RANKS} />
-            {rank !== 'numero' && <p className="pencil-note cx-rank-hint">{fr(RANK_HINT[rank])}</p>}
+            {rank !== 'numero' && (
+              <p className="pencil-note cx-rank-hint">
+                {fr(RANK_HINT[rank][0])}
+                <br />
+                {fr(RANK_HINT[rank][1])}
+                {rank === 'vitesse' && stepsNote && (
+                  <>
+                    <br />
+                    {stepsNote}
+                  </>
+                )}
+              </p>
+            )}
           </div>
 
           {rows.length > 0 && ledger && (
@@ -900,25 +975,37 @@ export function Codex() {
                   <h3 className="cx-grp-h">{col.copy.title}</h3>
                   <p className="cx-grp-def">{col.copy.def}</p>
                   <p className="cx-grp-play pencil-note">{col.copy.play}</p>
-                  {col.lines.length > 0 ? (
-                    <ul className="cx-reg cx-grp-list">
-                      {col.lines.map(({ entry, value, los, note, snippet }) => (
-                        <GroupRow
-                          key={entry.ghost.id}
-                          seed={col.id}
-                          ghost={entry.ghost}
-                          value={value}
-                          los={los}
-                          note={note}
-                          dimmed={!matching.includes(entry.ghost)}
-                          circled={deduced && only === entry.ghost}
-                          snippet={snippet}
-                        />
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="cx-grp-none pencil-note">aucune ici</p>
-                  )}
+                  <div className="cx-grp-body">
+                    {col.parts.map((part) =>
+                      part.lines.length > 0 || part.bare ? (
+                        <div key={part.id} className="cx-part">
+                          <h4 className="typed-label cx-part-h">
+                            <span className="sr-only">{col.copy.title}, </span>
+                            {PART_LABEL[part.id]}
+                          </h4>
+                          {part.lines.length > 0 ? (
+                            <ul className="cx-reg">
+                              {part.lines.map(({ entry, value, los, snippet }) => (
+                                <GroupRow
+                                  key={entry.ghost.id}
+                                  seed={col.id}
+                                  ghost={entry.ghost}
+                                  value={value}
+                                  los={los}
+                                  dimmed={!matching.includes(entry.ghost)}
+                                  circled={deduced && only === entry.ghost}
+                                  snippet={snippet}
+                                />
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="cx-part-none pencil-note">{col.copy.none}</p>
+                          )}
+                        </div>
+                      ) : null,
+                    )}
+                    {col.lines.length === 0 && col.parts.every((part) => !part.bare) && <p className="cx-grp-none pencil-note">aucune ici</p>}
+                  </div>
                 </div>
               ))}
             </div>
