@@ -27,6 +27,7 @@ import {
 import { fr, NBSP, NNBSP, redactGhostName as redact } from './format'
 import { entityMentions } from './mentions'
 import { createRng, hashString, pick, sample, shuffle, weightedPick, type Rng } from './random'
+import { buildSoloQuiz } from './solo'
 
 /**
  * Le quiz porte sur ce qui sert quand les preuves manquent : comportements, vitesses, seuils, tests.
@@ -89,18 +90,13 @@ export interface QuizOptions {
   fillUp?: boolean
 }
 
-/** Ce que buildQuiz ajoute aux options pour une série sur une seule entité (« Me tester sur X »). */
-interface Ctx extends QuizOptions {
-  /** une seule entité (« Me tester sur X ») */
-  solo?: boolean
-  /** l'entité de la série, à proposer parmi les mauvaises réponses d'une question qui porte sur une autre */
+/** Ce que buildQuiz et les cartes de révision ajoutent aux options pour composer une question. */
+export interface Ctx extends QuizOptions {
+  /**
+   * Une entité de la liste à proposer parmi les mauvaises réponses d'une question qui porte sur une entité qu'on
+   * confond avec elle (une copie sur une partie des entités : la bonne réponse n'est pas le seul nom de la liste).
+   */
   offer?: Ghost
-  /** une seule entité : les questions à choix de noms déjà posées, et combien l'avaient pour réponse */
-  tally?: { named: number; self: number }
-  /** une seule entité : sa valeur standard (50 %, 1,7 m/s) se demande-t-elle dans cette série (voir SOLO_STANDARD) ? */
-  standard?: Record<NumberKind, boolean>
-  /** une seule entité, tirée encore et encore : un résumé seul plus long que les autres passe-t-il dans cette série (voir pickSummaries) ? */
-  longest?: boolean
   /**
    * Les entités de la série quand elle n'en couvre qu'une partie (« les moins maîtrisées »), ou celles des
    * autres cartes de la séance de révision : les mauvaises réponses les prennent d'abord. Sinon la bonne
@@ -124,13 +120,13 @@ interface Ctx extends QuizOptions {
   avoid?: ReadonlySet<string>
 }
 
-type Gen = (g: Ghost, ctx: Ctx) => Question | null
+export type Gen = (g: Ghost, ctx: Ctx) => Question | null
 
-const known = (g: Ghost) => g.speed.min >= 0
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-const uncap = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
+export const known = (g: Ghost) => g.speed.min >= 0
+export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+export const uncap = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 /** Un corrigé ne commence jamais par « Mais » (reste d'une phrase dont on a retiré le début). */
-const noLeadingMais = (s: string) => cap(s.replace(/^Mais\s+/u, ''))
+export const noLeadingMais = (s: string) => cap(s.replace(/^Mais\s+/u, ''))
 
 /**
  * Un choix d'entité : son nom seul. « Esprit (Spirit) » face à « Revenant » serait la seule réponse avec une
@@ -141,7 +137,7 @@ function ghostChoice(g: Ghost): Choice {
 }
 
 /** Le nom d'une entité en tête de corrigé, avec son nom anglais quand il diffère (« Esprit (Spirit) »). */
-const called = (g: Ghost) => (g.name !== g.nameEn ? `${g.name} (${g.nameEn})` : g.name)
+export const called = (g: Ghost) => (g.name !== g.nameEn ? `${g.name} (${g.nameEn})` : g.name)
 
 /** Le texte nomme-t-il cette entité (y compris entre « ») ? */
 const names = namesGhost
@@ -150,13 +146,13 @@ const names = namesGhost
  * « Change d'entité imitée », « Copie la vitesse… » : cité, un signe du Mimic qui parle de copie souffle
  * « Mimic » à qui lit l'anglais, comme son nom.
  */
-const leaksMimic = (text: string, g: Ghost) => g.id === MIMIC && /imit|copi/iu.test(text)
+export const leaksMimic = (text: string, g: Ghost) => g.id === MIMIC && /imit|copi/iu.test(text)
 
 /**
  * Une citation prête à poser : caviardée, sans aparté qui passe par une preuve. Null si elle passe
  * encore par une preuve, ou si elle nomme l'entité entre « » (le caviardage n'y touche pas).
  */
-function quoteFor(text: string, g: Ghost): string | null {
+export function quoteFor(text: string, g: Ghost): string | null {
   const quote = redact(withoutEvidenceAsides(text), g)
   return needsEvidence(quote) || names(quote, g) || leaksMimic(quote, g) ? null : quote
 }
@@ -175,7 +171,7 @@ function perGhost<T>(f: (g: Ghost) => T): (g: Ghost) => T {
  * (ou la bonne). « Il faut », « il y a » ne désignent personne. Le pronom sujet en tête de phrase décide :
  * dans « Il chasse dès 60 % si la lumière (40 % si elle est allumée)… », « elle » est la lumière.
  */
-function pronounClash(text: string, g: Ghost): boolean {
+export function pronounClash(text: string, g: Ghost): boolean {
   const lead = LEAD_MASC.test(text) ? 'm' : LEAD_FEM.test(text) ? 'f' : null
   if (lead) return lead !== (isFeminine(g.name) ? 'f' : 'm')
   const fem = ANY_FEM.test(text)
@@ -193,7 +189,7 @@ const ANY_MASC = /(?:^|[\s(’'])(?:[Ii]ls?|[Ll]ui)\b(?!\s+(?:faut|suffit|y\s+a)
  * Les mauvaises réponses que le pronom de l'énoncé n'écarte pas d'emblée (« moins elle a de chances » :
  * pas d'entité masculine). Un pronom qui ne colle pas à g lui-même désigne autre chose : on n'en tient pas compte.
  */
-function sameGender(statement: string, g: Ghost): (o: Ghost) => boolean {
+export function sameGender(statement: string, g: Ghost): (o: Ghost) => boolean {
   if (pronounClash(statement, g)) return () => true
   return (o) => !pronounClash(statement, o)
 }
@@ -216,8 +212,8 @@ function pickDistractors(g: Ghost, statement: string, ctx: Ctx, n = 3, also: (o:
 }
 
 /**
- * n mauvaises réponses prises dans `eligible` (les entités qui peuvent en être une) par `take`. Quand la série
- * porte sur une seule entité et que la question parle d'une autre, l'entité de la série en fait toujours partie
+ * n mauvaises réponses prises dans `eligible` (les entités qui peuvent en être une) par `take`. Quand la question
+ * porte sur une entité qu'on confond avec une entité de la liste, celle-ci en fait toujours partie
  * (ctx.offer) : null si elle ne peut pas en être une (l'énoncé lui conviendrait aussi, son genre l'écarterait…).
  * Les entités de ctx.pool passent avant les autres (autant qu'il en faut et qu'il y en a, au plus ctx.poolMax,
  * un nombre tiré à partir de ctx.poolMin), puis celles de ctx.known, puis toutes, chaque groupe tiré par
@@ -260,7 +256,7 @@ function withOffer(ctx: Ctx, g: Ghost, eligible: readonly Ghost[], n: number, ta
   return picked.length < k ? null : must ? [must, ...picked] : picked
 }
 
-function distinctBy<T>(items: T[], key: (t: T) => string): T[] {
+export function distinctBy<T>(items: T[], key: (t: T) => string): T[] {
   const seen = new Set<string>()
   return items.filter((i) => {
     const k = key(i)
@@ -321,7 +317,7 @@ function shapeOf(label: string): Shape {
 }
 
 /** Longueurs voisines : la plus longue fait au plus 1,6 fois la plus courte (12 caractères d'écart entre réponses courtes). */
-const closeLengths = (min: number, max: number) => max <= 1.6 * min || (max <= 20 && max - min <= 12)
+export const closeLengths = (min: number, max: number) => max <= 1.6 * min || (max <= 20 && max - min <= 12)
 
 /** Aucune marque ne distingue une seule réponse des autres (ni la seule qui l'a, ni la seule qui ne l'a pas). */
 function balancedMarks(marks: readonly number[]): boolean {
@@ -330,6 +326,20 @@ function balancedMarks(marks: readonly number[]): boolean {
     if (k === 1 || k === marks.length - 1) return false
   }
   return true
+}
+
+/**
+ * Une réponse se remarque-t-elle parmi les autres : la seule à porter une marque (un chiffre, une parenthèse, une
+ * nuance…), ou la seule à ne pas en porter une que toutes les autres ont ?
+ */
+export function standsOut(label: string, others: readonly string[]): boolean {
+  const own = shapeOf(label).marks
+  const theirs = others.map((o) => shapeOf(o).marks)
+  for (let i = 0; i < MARKS.length; i++) {
+    const k = theirs.filter((m) => m & (1 << i)).length
+    if (own & (1 << i) ? k === 0 : k === theirs.length) return true
+  }
+  return false
 }
 
 /**
@@ -346,7 +356,7 @@ export function homogeneous(choices: readonly (string | Choice)[]): boolean {
   return !!all[0].unit || all.length < 3 || balancedMarks(all.map((s) => s.marks))
 }
 
-interface Option<T> {
+export interface Option<T> {
   value: T
   label: string
 }
@@ -372,7 +382,7 @@ const EXTRA = 10
  * `need` : au moins une mauvaise réponse du groupe le vérifie (fits le refuserait sinon) ; la recherche saute
  * d'emblée les groupes qui n'en ont aucune, sans rien changer à celui qu'elle trouve.
  */
-function matching<T>(
+export function matching<T>(
   rng: Rng,
   right: string,
   pool: readonly Option<T>[],
@@ -451,7 +461,7 @@ function matching<T>(
  * l'essaie avant qu'on se rabatte sur un autre nombre. `order` : les nombres à essayer, dans l'ordre (tirés
  * au hasard sinon).
  */
-function byRank<R>(rng: Rng, make: (ranks: readonly number[]) => R | null, n = 3, order?: readonly number[]): R | null {
+export function byRank<R>(rng: Rng, make: (ranks: readonly number[]) => R | null, n = 3, order?: readonly number[]): R | null {
   for (const wanted of order ?? shuffle(rng, [...Array(n + 1).keys()])) {
     const found = make([wanted])
     if (found) return found
@@ -465,20 +475,20 @@ function byRank<R>(rng: Rng, make: (ranks: readonly number[]) => R | null, n = 3
  * si le tirage la met en premier, une fois sur quatre. Sinon, essayée en dernier recours, elle passerait le plus
  * souvent, et la plus longue serait presque toujours la bonne. Null plus souvent : la carte se pose autrement.
  */
-function longestByChance(rng: Rng): number[] {
+export function longestByChance(rng: Rng): number[] {
   const order = shuffle(rng, [0, 1, 2, 3])
   return order[0] === 0 ? order : order.filter((r) => r !== 0)
 }
 
 /** Une phrase sans ses apartés entre parenthèses (« N'allume jamais les lumières (interrupteurs, lampes) »). */
-const withoutAsides = (s: string) => s.replace(/\s*\([^()]*\)/gu, '').trim()
+export const withoutAsides = (s: string) => s.replace(/\s*\([^()]*\)/gu, '').trim()
 
 /**
  * Des versions plus courtes d'une phrase, qui en gardent le sens : sans ses apartés entre parenthèses, ou
  * sa première partie (première phrase, ou ce qui précède « · » ou « ; »). Elles servent quand la phrase
  * entière serait bien plus longue que les autres réponses.
  */
-function shortened(text: string): string[] {
+export function shortened(text: string): string[] {
   const out = new Set<string>()
   const add = (s: string) => {
     const t = s.trim()
@@ -537,7 +547,7 @@ function perList<T>(f: (all: readonly Ghost[]) => T): (all: readonly Ghost[]) =>
 
 /** Le texte nomme-t-il une entité de la liste ? Une réponse qui nomme la sienne la désignerait. Calculé une fois par texte. */
 const namingCache = new WeakMap<readonly Ghost[], Map<string, boolean>>()
-function namesAny(text: string, all: readonly Ghost[]): boolean {
+export function namesAny(text: string, all: readonly Ghost[]): boolean {
   let cache = namingCache.get(all)
   if (!cache) namingCache.set(all, (cache = new Map()))
   let v = cache.get(text)
@@ -552,7 +562,7 @@ function namesAny(text: string, all: readonly Ghost[]): boolean {
  * n'est plus bas) ne peut pas être en haut : les autres compensent. Tirée au hasard dans chaque question, la
  * bonne valeur tomberait trop souvent au milieu. `share` : la part des questions posées sur chaque cas.
  */
-function balancedRanks(cases: readonly { id: string; counts: number[]; share: number }[], n = 3): Map<string, number[]> {
+export function balancedRanks(cases: readonly { id: string; counts: number[]; share: number }[], n = 3): Map<string, number[]> {
   // équilibrage de Sinkhorn : chaque cas garde ses rangs possibles, un rang trop fréquent perd du poids partout
   const w = new Map(cases.map((c) => [c.id, c.counts.map(() => 1 / c.counts.length)]))
   for (let step = 0; step < 60; step++) {
@@ -570,28 +580,26 @@ function balancedRanks(cases: readonly { id: string; counts: number[]; share: nu
   return w
 }
 
-const pct = (v: number) => `${v}${NBSP}%`
+export const pct = (v: number) => `${v}${NBSP}%`
 
 /** Le seuil et la vitesse de la plupart des entités. */
-const STANDARD_SANITY = 50
-const STANDARD_SPEED = 1.7
+export const STANDARD_SANITY = 50
+export const STANDARD_SPEED = 1.7
 /**
  * Les chances qu'une entité au seuil (ou à la vitesse) standard ait sa question en nombres quand on la tire.
  * 22 entités chassent d'habitude à 50 % (20 à 1,7 m/s) : posées à chaque fois, « toujours 50 % » gagnerait
  * presque toujours. Le reste du temps, on demande l'inverse : quelle entité chasse comme une entité standard.
- * Il en va de même dans une série sur une seule entité : sinon, « 50 % » n'y serait jamais la bonne réponse.
+ * Une copie sur une seule entité a sa propre règle (voir solo.ts).
  */
 const KEEP_STANDARD_SANITY = 0.08
 const KEEP_STANDARD_SPEED = 0.04
-/** Dans une série sur une seule entité standard, les chances que sa valeur standard se demande (une fois). */
-const SOLO_STANDARD = 0.1
 
 /**
  * Le seuil habituel d'une entité, celui que son résumé cite en premier (« 60 % lumière éteinte · … »).
  * Aucun pour un seuil qui change au fil de la partie (« 75 % jeune → 15 % vieux »), sans valeur normale
  * (l'Obambo, calme ou agressif) ou copié (le Mimic).
  */
-function baseSanity(g: Ghost): number | null {
+export function baseSanity(g: Ghost): number | null {
   const h = g.huntSanity
   if (g.id === MIMIC || h.normal < 0 || /→/u.test(h.summary)) return null
   return new RegExp(`^${h.normal}\\s?%`, 'u').test(h.summary) ? h.normal : null
@@ -605,7 +613,7 @@ function baseSanity(g: Ghost): number | null {
  * condition que le résumé cite (« … du Yokai si quelqu'un parle dans sa pièce ? », 80 %) : ainsi toutes les
  * valeurs proposées en mauvaises réponses sont aussi, parfois, la bonne.
  */
-interface NumberAsk {
+export interface NumberAsk {
   key: string
   kind: NumberKind
   g: Ghost
@@ -613,7 +621,7 @@ interface NumberAsk {
   prompt: string
   weight: number
 }
-type NumberKind = 'san' | 'spd'
+export type NumberKind = 'san' | 'spd'
 
 /** « 65 % si tu bouges à moins de 10 m », « jusqu'à 80 % si… », « 1,96 enragé » : une valeur et sa condition. */
 const VALUE_SEGMENT = /^(?:(?:jusqu['’]à|pas avant|dès)\s+)?(\d+(?:,\d+)?)\s?(%|m\/s)?\s+(\S.*)$/u
@@ -705,7 +713,7 @@ const speedAsks = perGhost((g): NumberAsk[] => {
   return out
 })
 
-const asksOf = (kind: NumberKind, g: Ghost) => (kind === 'san' ? sanityAsks(g) : speedAsks(g))
+export const asksOf = (kind: NumberKind, g: Ghost) => (kind === 'san' ? sanityAsks(g) : speedAsks(g))
 const ownValues = (kind: NumberKind, g: Ghost) => (kind === 'san' ? thresholds(g) : speedValues(g))
 /** Les chances qu'une question tirée sur g soit `a` : une entité standard n'a la sienne que rarement. */
 const askShare = (a: NumberAsk) => a.weight / Math.max(1, asksOf(a.kind, a.g).reduce((s, x) => s + x.weight, 0))
@@ -784,45 +792,48 @@ function numberChoices(kind: NumberKind, a: NumberAsk, ctx: Ctx): number[] | nul
 }
 const RANK_CHANCE = 0.2
 
-/**
- * La question en nombres tirée sur g (null : pas cette fois, ou pas de question). Dans une série sur une
- * seule entité, tirée encore et encore, c'est la série qui décide une fois pour toutes (ctx.standard) si la
- * valeur standard se demande.
- */
+/** La question en nombres tirée sur g (null : pas cette fois, ou pas de question). */
 function pickAsk(kind: NumberKind, g: Ghost, ctx: Ctx): NumberAsk | null {
   const asks = asksOf(kind, g)
   if (!asks.length) return null
-  const weightOf = (a: NumberAsk) => (a.weight < 1 && ctx.standard ? (ctx.standard[kind] ? 1 : 0) : a.weight)
-  const total = asks.reduce((s, a) => s + weightOf(a), 0)
+  const total = asks.reduce((s, a) => s + a.weight, 0)
   let r = ctx.rng() * Math.max(1, total)
   for (const a of asks) {
-    r -= weightOf(a)
+    r -= a.weight
     if (r < 0) return a
   }
   return null
 }
 
 /**
- * « Quel est le seuil de chasse habituel du Yokai ? », « … du Yokai si quelqu'un parle dans sa pièce ? » :
- * quatre pourcentages que le jeu donne. Aucune mauvaise réponse n'est un seuil que l'entité peut avoir
- * (« 80 % » face au seuil habituel du Yokai) ; le corrigé donne le résumé et ses conditions.
+ * Une question en nombres précise : « Quel est le seuil de chasse habituel du Yokai ? », « … du Yokai si quelqu'un
+ * parle dans sa pièce ? », « Quelle est la vitesse de chasse habituelle du Raiju ? », « … du Raiju près de
+ * l'électronique ? ». Quatre valeurs que le jeu donne : aucune mauvaise réponse n'est une valeur que l'entité peut
+ * avoir (« 80 % » face au seuil habituel du Yokai, « 2,5 m/s » face à la vitesse habituelle du Raiju) ; le corrigé
+ * donne le résumé et ses conditions. La ligne de vue a sa propre question.
  */
-const sanityOfGhost: Gen = (g, ctx) => {
-  const a = pickAsk('san', g, ctx)
-  if (!a) return null
-  const wrong = numberChoices('san', a, ctx)
+export function numberQuestion(a: NumberAsk, ctx: Ctx): Question | null {
+  const g = a.g
+  const san = a.kind === 'san'
+  const wrong = numberChoices(a.kind, a, ctx)
   if (!wrong) return null
+  const label = san ? pct : mps
   return {
     id: a.key,
-    topic: 'sanity',
+    topic: san ? 'sanity' : 'speed',
     ghostId: g.id,
     prompt: a.prompt,
     multi: false,
-    choices: shuffle(ctx.rng, [{ id: g.id, label: pct(a.value) }, ...wrong.map((v) => ({ id: `v:${v}`, label: pct(v) }))]),
+    choices: shuffle(ctx.rng, [{ id: g.id, label: label(a.value) }, ...wrong.map((v) => ({ id: `v:${v}`, label: label(v) }))]),
     correct: [g.id],
-    explain: [g.huntSanity.summary, ...g.huntSanity.details.slice(0, 2)].join(' — '),
-    cardId: `g:${g.id}:san`,
+    explain: san ? [g.huntSanity.summary, ...g.huntSanity.details.slice(0, 2)].join(' — ') : [g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — '),
+    cardId: `g:${g.id}:${san ? 'san' : 'spd'}`,
   }
+}
+
+const sanityOfGhost: Gen = (g, ctx) => {
+  const a = pickAsk('san', g, ctx)
+  return a && numberQuestion(a, ctx)
 }
 
 /**
@@ -840,9 +851,7 @@ const neverAt = (all: readonly Ghost[], values: (o: Ghost) => Set<number>, summa
  * une fois par série au plus.
  */
 const sanityStandard: Gen = (g, ctx) => {
-  // « Me tester sur X » : X, toujours parmi les choix, ne serait que la bonne réponse (à 50 %, il ne peut
-  // pas être une mauvaise réponse) ; la question porte alors sur une autre entité (voir aboutOrAgainst)
-  if (baseSanity(g) !== STANDARD_SANITY || (ctx.solo && !ctx.offer)) return null
+  if (baseSanity(g) !== STANDARD_SANITY) return null
   const pool = neverAt(ctx.allGhosts, thresholds, (o) => o.huntSanity.summary, STANDARD_SANITY, () => false)
   const wrong = withOffer(ctx, g, pool, 3, (rest, k) => sample(ctx.rng, rest, k))
   if (!wrong) return null
@@ -896,13 +905,13 @@ function summaryPool(kind: NumberKind, g: Ghost, ok: readonly Ghost[], weight: R
  * réponses plus courtes. Seule plus longue, la bonne réponse ne passe alors qu’une fois sur quatre : sinon
  * « la plus longue » gagnerait trop souvent.
  */
-function pickSummaries(kind: NumberKind, g: Ghost, ok: readonly Ghost[], weight: ReadonlyMap<string, number>, rng: Rng, longest?: boolean): Option<Ghost>[] | null {
+function pickSummaries(kind: NumberKind, g: Ghost, ok: readonly Ghost[], weight: ReadonlyMap<string, number>, rng: Rng): Option<Ghost>[] | null {
   const right = SUMMARIES[kind].label(g)
   // seuils : la bonne réponse la plus longue en dernier recours seulement (elle l'est déjà souvent par force)
   const ranks = kind === 'san' ? [...shuffle(rng, [1, 2, 3]), 0] : undefined
   const wrong = matching(rng, right, summaryPool(kind, g, ok, weight, rng), 3, undefined, ranks, false)
   if (!wrong) return null
-  return kind === 'san' && wrong.every((o) => o.label.length < right.length) && !(longest ?? rng() < LONGEST_KEPT) ? null : wrong
+  return kind === 'san' && wrong.every((o) => o.label.length < right.length) && !(rng() < LONGEST_KEPT) ? null : wrong
 }
 const LONGEST_KEPT = 0.25
 
@@ -950,12 +959,12 @@ const summaryPlan = perList((all) => {
  * de même forme, faux pour l'entité. Chaque résumé proposé est aussi, parfois, la bonne réponse, et chacun est
  * proposé à peu près aussi souvent (voir summaryPlan).
  */
-function summaryQuestion(kind: NumberKind, g: Ghost, ctx: Ctx): Question | null {
+export function summaryQuestion(kind: NumberKind, g: Ghost, ctx: Ctx): Question | null {
   const k = SUMMARIES[kind]
   const { ok, weight } = summaryPlan(ctx.allGhosts)(kind)
   if (!ok.includes(g)) return null
   const right = k.label(g)
-  const wrong = pickSummaries(kind, g, ok, weight, ctx.rng, ctx.longest)
+  const wrong = pickSummaries(kind, g, ok, weight, ctx.rng)
   if (!wrong) return null
   const san = kind === 'san'
   return {
@@ -1049,7 +1058,7 @@ function partlyTrueSpeed(o: Ghost, g: Ghost): boolean {
 
 /** « 1,7 m/s », « 1,53 m/s », « 3,0 m/s » : une décimale, deux si la vitesse en a deux. */
 const decimals = (v: number) => (Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? 1 : 2)
-const mps = (v: number) => `${v.toFixed(decimals(v)).replace('.', ',')}${NBSP}m/s`
+export const mps = (v: number) => `${v.toFixed(decimals(v)).replace('.', ',')}${NBSP}m/s`
 
 /**
  * La vitesse habituelle d'une entité, celle que son résumé cite seule en premier (« 1,7 m/s · 2,5 m/s près
@@ -1057,34 +1066,16 @@ const mps = (v: number) => `${v.toFixed(decimals(v)).replace('.', ',')}${NBSP}m/
  * (« 3,0 m/s de loin → 0,4 m/s tout près »), deux vitesses au choix (« 1,5 ou 1,9 m/s ») ou une vitesse
  * copiée (le Mimic).
  */
-function baseSpeed(g: Ghost): number | null {
+export function baseSpeed(g: Ghost): number | null {
   if (g.id === MIMIC || !known(g) || g.speed.isRange) return null
   const m = /^(\d+(?:,\d+)?)\s?m\/s(?:\s+de\s+loin)?$/u.exec(g.speed.summary.split(/\s+·\s+/u)[0])
   const v = m ? Number(m[1].replace(',', '.')) : NaN
   return speedValues(g).has(v) ? v : null
 }
 
-/**
- * « Quelle est la vitesse de chasse habituelle du Raiju ? », « … du Raiju près de l'électronique ? » : quatre
- * vitesses que le jeu donne. Aucune mauvaise réponse n'est une vitesse que l'entité peut avoir (« 2,5 m/s »
- * face à la vitesse habituelle du Raiju). La ligne de vue a sa propre question.
- */
 const speedOfGhost: Gen = (g, ctx) => {
   const a = pickAsk('spd', g, ctx)
-  if (!a) return null
-  const wrong = numberChoices('spd', a, ctx)
-  if (!wrong) return null
-  return {
-    id: a.key,
-    topic: 'speed',
-    ghostId: g.id,
-    prompt: a.prompt,
-    multi: false,
-    choices: shuffle(ctx.rng, [{ id: g.id, label: mps(a.value) }, ...wrong.map((v) => ({ id: `v:${v}`, label: mps(v) }))]),
-    correct: [g.id],
-    explain: [g.speed.summary, ...g.speed.details.slice(0, 2)].join(' — '),
-    cardId: `g:${g.id}:spd`,
-  }
+  return a && numberQuestion(a, ctx)
 }
 
 /**
@@ -1093,7 +1084,7 @@ const speedOfGhost: Gen = (g, ctx) => {
  * trois entités qui n'y passent jamais (Revenant, Jumeaux, Aswang, Obambo). Un seul identifiant pour toutes.
  */
 const speedStandard: Gen = (g, ctx) => {
-  if (baseSpeed(g) !== STANDARD_SPEED || (ctx.solo && !ctx.offer)) return null
+  if (baseSpeed(g) !== STANDARD_SPEED) return null
   const pool = neverAt(ctx.allGhosts.filter(known), speedValues, (o) => o.speed.summary, STANDARD_SPEED, (o) => o.speed.isRange)
   const wrong = withOffer(ctx, g, pool, 3, (rest, k) => sample(ctx.rng, rest, k))
   if (!wrong) return null
@@ -1116,12 +1107,14 @@ const speedSummary: Gen = (g, ctx) => summaryQuestion('spd', g, ctx)
  * Cinq entités seulement n'accélèrent pas en ligne de vue : posée à chaque fois, « Oui » gagnerait quatre
  * fois sur cinq. Une entité qui accélère n'est demandée qu'une fois sur cinq : « Oui » et « Non » s'équilibrent.
  */
-const KEEP_LOS_YES = 0.2
+export const KEEP_LOS_YES = 0.2
 
-const losOfGhost: Gen = (g, ctx) => {
-  // ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) : ni oui ni non
-  if (!known(g) || g.id === MIMIC || g.speed.losVaries) return null
-  if (g.speed.los && ctx.rng() >= KEEP_LOS_YES) return null
+/** La ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) n'a ni oui ni non ; le Mimic copie. */
+export const losAsked = (g: Ghost) => known(g) && g.id !== MIMIC && !g.speed.losVaries
+
+/** « X : pendant une chasse, l'entité accélère-t-elle quand elle te voit ? » (null : ni oui ni non pour cette entité). */
+export function losQuestion(g: Ghost): Question | null {
+  if (!losAsked(g)) return null
   return {
     id: `q:los:${g.id}`,
     topic: 'speed',
@@ -1137,6 +1130,11 @@ const losOfGhost: Gen = (g, ctx) => {
     explain: `${g.speed.summary}. ${g.speed.details[0] ?? ''}`.trim(),
     cardId: `g:${g.id}:spd`,
   }
+}
+
+const losOfGhost: Gen = (g, ctx) => {
+  if (!losAsked(g) || (g.speed.los && ctx.rng() >= KEEP_LOS_YES)) return null
+  return losQuestion(g)
 }
 
 /** Les vitesses citées par une entité, hors 1,7 m/s (la vitesse de tout le monde). */
@@ -1288,7 +1286,7 @@ const abilityOfGhost: Gen = (g, ctx) => {
  * La correction d'une question sur un test de g (`text`, le test tel qu'écrit sur sa fiche) : pourquoi il
  * désigne g quand la fiche le dit (why), sinon le résumé de la fiche.
  */
-function testExplain(g: Ghost, text: string): string {
+export function testExplain(g: Ghost, text: string): string {
   return `Test de confirmation ${de(g.name)}. ${g.confirmationTests.find((t) => t.text === text)?.why ?? g.summary}`
 }
 
@@ -1338,9 +1336,9 @@ const zeroTest: Gen = (g, ctx) => {
 /** Une proposition qui ne parle que des preuves partagées ou différentes. */
 const SHARED_EVIDENCE = /\ben commun\b|\bau lieu (?:de|du|des|d['’])|^\s*Mêmes?\b|\bpartagen?t?\b[^.;]*\b(?:orbes?|Spirit Box)\b/iu
 /** Termine une phrase reprise d'une fiche (« … (sans pouvoir le rallumer) » → « …). »). */
-const endSentence = (s: string) => cap(/[.!?…]$/u.test(s) ? s : `${s}.`)
+export const endSentence = (s: string) => cap(/[.!?…]$/u.test(s) ? s : `${s}.`)
 /** Coupe un texte en phrases (une phrase commence par une majuscule, « ou un chiffre). */
-const SENTENCES = /(?<=[.!?])\s+(?=[\p{Lu}«\d])/u
+export const SENTENCES = /(?<=[.!?])\s+(?=[\p{Lu}«\d])/u
 
 /**
  * Le texte d'une confusion sans ce qui parle de preuves (« UV + D.O.T.S en commun », « 3e preuve : … »,
@@ -1368,7 +1366,7 @@ export function confusionWithoutEvidence(why: string): string {
  * qui chasse déjà à ce niveau (le Démon, à 70 % partout). Une telle phrase n'est jamais une mauvaise réponse
  * pour elle, même si la condition (l'électronique, la voix) ne la concerne pas.
  */
-function huntsAlready(text: string, g: Ghost): boolean {
+export function huntsAlready(text: string, g: Ghost): boolean {
   const top = Math.max(...thresholds(g))
   if ([...text.matchAll(/(?:dès|jusqu['’]à|à partir de)\s+(\d+)\s?%/gu)].some((m) => top >= Number(m[1]))) return true
   // « peut chasser très tôt », sans nombre : vrai de toute entité qui peut chasser au-dessus de 50 %
@@ -1377,7 +1375,7 @@ function huntsAlready(text: string, g: Ghost): boolean {
 const EARLY_HUNT = /chass[^.;·]*(?<!\p{L})(?:tôt|précoce)(?!\p{L})|(?<!\p{L})(?:tôt|précoce)(?!\p{L})[^.;·]*chass/iu
 
 /** Un nom au pluriel (« Les Jumeaux ») ne prend pas la place d'un sujet au singulier sans fausser l'accord. */
-const plural = (g: Ghost) => /^Les\s/u.test(g.name)
+export const plural = (g: Ghost) => /^Les\s/u.test(g.name)
 
 /**
  * Ce que la fiche de x dit de l'autre entité seulement, sans preuve : on retire ce qui décrit x
@@ -1419,11 +1417,11 @@ export function partnerClaim(why: string, x: Ghost, partner: Ghost): string {
  * (voir naming). Un caractère que les fiches n'emploient jamais : « l’autre » d'une fiche (« d'une pièce à
  * l'autre ») reste ce qu'il est.
  */
-const SUBJ = '\u0001'
-const subjects = (text: string) => text.split(SUBJ).length - 1
+export const SUBJ = '\u0001'
+export const subjects = (text: string) => text.split(SUBJ).length - 1
 
 /** Le texte, où l'entité dont il parle laisse sa place au sujet (SUBJ) : son nom ne souffle jamais la réponse. */
-function asOther(text: string, other: Ghost): string {
+export function asOther(text: string, other: Ghost): string {
   const KEEP = '\u0000'
   return redact(text.replaceAll('cette entité', KEEP), other)
     .replace(/cette entité/gu, SUBJ)
@@ -1438,7 +1436,7 @@ const au = (name: string) => le(name).replace(/^le /u, 'au ').replace(/^les /u, 
  * du Deildegast part de 3,0 m/s… ». Toutes les réponses d'un départage nomment ainsi l'entité demandée : la
  * bonne dit vrai d'elle, les mauvaises disent d'elle ce qui est vrai d'une autre.
  */
-function naming(text: string, g: Ghost): string {
+export function naming(text: string, g: Ghost): string {
   const s = `(?<![\\p{L}])([Dd]e|[Àà]) ${SUBJ}`
   return text
     .replace(new RegExp(s, 'gu'), (_m, p: string) => {
@@ -1457,7 +1455,7 @@ function naming(text: string, g: Ghost): string {
 const AGREED = /(?<!\p{L})(?:est|reste|devient|redevient|semble|paraît|demeure)\s+(?:(?:très|plus|moins|presque|aussi|bien|encore|alors|toujours|souvent|parfois|quasi|si|tout|vite|pas|jamais)\s+)*(?:(?:le|la|les|un|une)\s+)?(\p{L}+)/giu
 const EPICENE = /e$/u
 const FEMININE_FORM = /(?:ée|ive|euse|elle|ente|ante|eule|ette|ière|ienne|onne|ise|use)$/u
-function agrees(text: string, from: Ghost, to: Ghost): boolean {
+export function agrees(text: string, from: Ghost, to: Ghost): boolean {
   if (isFeminine(from.name) === isFeminine(to.name)) return true
   for (const m of text.matchAll(AGREED)) {
     const w = m[1].toLocaleLowerCase('fr')
@@ -1476,7 +1474,7 @@ function agrees(text: string, from: Ghost, to: Ghost): boolean {
  */
 const withoutComparatives = (text: string) =>
   text.replace(/\s+(?:lui|elle|eux|elles)\s+(?:aussi|non\s+plus)(?!\p{L})|\s+(?:aussi|également|non\s+plus)(?!\p{L})/gu, '')
-function plainClaim(text: string, about: Ghost): string {
+export function plainClaim(text: string, about: Ghost): string {
   // « Lui aussi … le Thayé … » : rien à changer sans casser la phrase
   const lead = /^(?:Lui|Elle)\s+(?:aussi|non\s+plus)\s+/u
   if (names(text, about)) return lead.test(text) ? text : withoutComparatives(text)
@@ -1488,7 +1486,7 @@ function plainClaim(text: string, about: Ghost): string {
 const POSSESSIVE = /^(Son|Sa|Ses)\s+(\p{L}+(?:\s+de\s+(?:chasse|vitesse))?)(?!\p{L})/u
 const VOWEL_START = /^[aeiouyhâàéèêîïôûAEIOUYHÂÀÉÈÊÎÏÔÛ]/u
 /** Ce qu'une fiche y dit d'une entité z qu'on confond avec elle (sans preuve, sans ce qui décrit y). */
-interface Claim {
+export interface Claim {
   y: Ghost
   z: Ghost
   text: string
@@ -1522,7 +1520,7 @@ const wrongClaimCache = new WeakMap<readonly Ghost[], Map<string, (Claim & { lab
  * chaque phrase laisse sa place à g (voir naming) : « Le Poltergeist lance énormément d'objets » face à
  * « l'Esprit », c'est faux de l'Esprit.
  */
-function wrongClaimsFor(g: Ghost, all: readonly Ghost[]): (Claim & { label: string })[] {
+export function wrongClaimsFor(g: Ghost, all: readonly Ghost[]): (Claim & { label: string })[] {
   let byGhost = wrongClaimCache.get(all)
   if (!byGhost) wrongClaimCache.set(all, (byGhost = new Map()))
   const cached = byGhost.get(g.id)
@@ -1560,7 +1558,7 @@ const claimVersions = perList((all) => {
 })
 
 /** Une paire à départager : ce que la fiche de x dit de g, et les phrases qui peuvent servir de mauvaises réponses. */
-interface Duel {
+export interface Duel {
   x: Ghost
   /** la bonne réponse entière, puis ses versions plus courtes (aucune n'est la seule à contenir le mot que souffle le nom de g) */
   rights: string[]
@@ -1571,7 +1569,7 @@ interface Duel {
 const duels = new WeakMap<readonly Ghost[], Map<string, Duel[]>>()
 
 /** Les paires utilisables pour g : calculées une fois (les fiches ne changent pas), le tirage vient ensuite. */
-function duelsFor(g: Ghost, all: readonly Ghost[]): Duel[] {
+export function duelsFor(g: Ghost, all: readonly Ghost[]): Duel[] {
   let byGhost = duels.get(all)
   if (!byGhost) duels.set(all, (byGhost = new Map()))
   const cached = byGhost.get(g.id)
@@ -1634,13 +1632,16 @@ const distinctGhosts = (chosen: readonly Option<Ghost>[]) => distinctGhostsOf(ch
  * toutes se lisent comme une phrase sur g, une seule est vraie. Ni la seule réponse qui contient le mot que
  * souffle le nom de g (« objets » pour le Poltergeist) n'est d'office la bonne.
  */
-const distinguish: Gen = (g, ctx) => {
+const distinguish: Gen = (g, ctx) => duelQuestion(g, ctx)
+
+/** Le départage de g, face à n'importe quelle entité qu'on confond avec lui, ou face à `against` seulement. */
+export function duelQuestion(g: Ghost, ctx: Ctx, against?: Ghost): Question | null {
   // le Mimic peut copier n'importe quel comportement : une mauvaise réponse pourrait être vraie pour lui ;
   // « Les Jumeaux » à la place d'un sujet au singulier fausserait l'accord
   if (g.id === MIMIC || plural(g)) return null
   // une série qui ne sort pas de sa liste : l'autre entité du départage en fait partie, elle aussi
   const listed = ctx.onlyListed ? ctx.pool : undefined
-  const pairs = duelsFor(g, ctx.allGhosts).filter((d) => !listed || listed.has(d.x.id))
+  const pairs = duelsFor(g, ctx.allGhosts).filter((d) => (!listed || listed.has(d.x.id)) && (!against || d.x.id === against.id))
   if (!pairs.length) return null
   const tries = shuffle(ctx.rng, pairs).map((d) => ({
     d,
@@ -1681,10 +1682,7 @@ const authored: Gen = (g, ctx) => {
       q.answer >= 0 &&
       q.answer < q.choices.length &&
       !mentionsEvidence(q.q) &&
-      !mentionsEvidence(q.choices[q.answer]) &&
-      // dans une série sur cette seule entité, « Qui suspectes-tu ? » aurait toujours son nom pour réponse ; et
-      // une question qui la nomme seulement parmi les mauvaises réponses apprendrait que son nom n'est jamais le bon
-      !(ctx.solo && q.choices.some((c) => names(c, g))),
+      !mentionsEvidence(q.choices[q.answer]),
   )
   if (!valid.length) return null
   const q = pick(ctx.rng, valid)
@@ -1701,14 +1699,8 @@ const authored: Gen = (g, ctx) => {
   }
 }
 
-/** « Lequel de ces signes est celui de X ? », qui renvoie à sa carte de signes. */
-const signOf: Gen = (g, ctx) => {
-  const q = signOfGhost(g, ctx)
-  return q && { ...q, cardId: `g:${g.id}:tells` }
-}
-
 /** Les entités qu'on confond avec x, dans un sens ou dans l'autre (jamais le Mimic). */
-const rivals = perList((all) => {
+export const rivals = perList((all) => {
   const out = new Map<string, Ghost[]>()
   for (const x of all) {
     const ids = new Set([...x.confusions.map((c) => c.with), ...all.filter((o) => o.confusions.some((c) => c.with === x.id)).map((o) => o.id)])
@@ -1719,60 +1711,6 @@ const rivals = perList((all) => {
   }
   return out
 })
-
-/**
- * La part des questions à choix de noms qui portent sur l'entité elle-même, dans une série sur elle seule.
- * Elle est toujours parmi les choix : posée sur elle à chaque fois, la question serait gagnée d'avance.
- */
-const SOLO_SELF = 0.25
-
-/**
- * Les chances que la prochaine question à choix de noms porte sur l'entité de la série : un quart, un peu plus
- * si la série en a eu moins qu'un quart jusqu'ici, beaucoup moins si elle en a eu plus. La part reste proche
- * d'un quart dans chaque série, sans jamais devenir prévisible.
- */
-function selfOdds(tally: Ctx['tally']): number {
-  if (!tally) return SOLO_SELF
-  const behind = SOLO_SELF * (tally.named + 1) - tally.self
-  return Math.min(0.6, Math.max(0.05, SOLO_SELF + 0.5 * (behind - SOLO_SELF)))
-}
-
-/**
- * Une question à choix de noms dans une série sur la seule entité x. Une fois sur quatre elle porte sur x ;
- * sinon sur une entité qu'on confond avec x, et x est l'une des mauvaises réponses (l'énoncé ne lui convient
- * pas). Répondre « x » à chaque fois ne rapporte donc pas plus que le hasard. Jamais pour le Mimic : il n'est
- * jamais une mauvaise réponse, et toujours la bonne, la question ne demanderait rien.
- */
-function aboutOrAgainst(gen: Gen): Gen {
-  return (x, ctx) => {
-    if (x.id === MIMIC) return null
-    if (ctx.rng() < selfOdds(ctx.tally)) return gen(x, ctx)
-    // la série est en retard d'au moins une question sur x : plus d'une fois sur deux, on laisse la place à une
-    // question qui peut porter sur lui (certaines n'existent pas pour x, comme « laquelle chasse comme une entité
-    // standard ? » sur une entité standard : sans cela, x serait trop rarement la bonne réponse)
-    if (ctx.tally && SOLO_SELF * (ctx.tally.named + 1) - ctx.tally.self >= 1 && ctx.rng() < 0.6) return null
-    // la première entité proche dont la question peut proposer x : sinon, x serait plus souvent la réponse
-    const offer = { ...ctx, offer: x }
-    for (const o of shuffle(ctx.rng, rivals(ctx.allGhosts).get(x.id) ?? [])) {
-      const q = gen(o, offer)
-      if (q) return q
-    }
-    return null
-  }
-}
-
-/**
- * Une série sur une seule entité (« Me tester sur X ») : d'abord des questions dont les choix sont des faits
- * sur elle (signes, nombres, résumés, tests, départages), puis des questions à choix de noms où elle n'est pas
- * toujours la bonne réponse (voir aboutOrAgainst).
- */
-const SOLO_GENERATORS: Record<Exclude<QuizTopic, 'mechanics'>, Gen[]> = {
-  behavior: [signOf, signOf, ...[whichGhostTell, observationQuestion, abilityOfGhost].map(aboutOrAgainst)],
-  speed: [speedOfGhost, speedSummary, losOfGhost, ...[speedProfile, speedStandard].map(aboutOrAgainst)],
-  sanity: [sanityOfGhost, sanitySummary, ...[sanityProfile, sanityStandard, earlyHunter].map(aboutOrAgainst)],
-  zero: [testOfGhost, distinguish, aboutOrAgainst(zeroTest)],
-  expert: [authored],
-}
 
 const GENERATORS: Record<Exclude<QuizTopic, 'mechanics'>, Gen[]> = {
   behavior: [whichGhostTell, observationQuestion, abilityOfGhost],
@@ -1926,9 +1864,11 @@ export function signatureKeys(g: Ghost): ReadonlySet<string> {
 /**
  * Construit une série de questions variées, en privilégiant les entités les moins maîtrisées. Une série sur
  * une partie des entités (« les moins maîtrisées ») prend ses mauvaises réponses d'abord parmi elles : la
- * bonne réponse n'est pas le seul nom de la liste parmi les choix.
+ * bonne réponse n'est pas le seul nom de la liste parmi les choix. Une liste d'une seule entité a sa propre
+ * copie, où chaque question porte sur elle (voir soloCopy et solo.ts) : jamais le tirage par thèmes.
  */
 export function buildQuiz(opts: QuizOptions): Question[] {
+  if (opts.ghosts.length === 1) return soloCopy(opts)
   const { rng, count } = opts
   // un ancien lien (?topic=evidence) ou un thème inconnu ne casse rien : il est ignoré
   const topics = opts.topics.filter((t) => t === 'mechanics' || t in GENERATORS)
@@ -1938,18 +1878,11 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   // une même question ne se pose qu'une fois par copie, même pour deux entités : « La santé mentale moyenne est
   // encore au-dessus de 50 %… » a un identifiant par entité, mais le même énoncé
   const screens = new Set<string>()
-  // une seule entité : les questions à choix de noms ne la donnent pas toujours pour réponse
-  const solo = opts.ghosts.length === 1
   // un signe de terrain ne revient pas sous deux formes dans la copie (un test, puis la même chose en rapport de
-  // terrain) : signe, observation ou test sans preuve, un seul par entité (une série sur une seule entité n'en a pas d'autre)
+  // terrain) : signe, observation ou test sans preuve, un seul par entité
   const signed = new Set<string>()
-  const tally = { named: 0, self: 0 }
-  const pool = !solo && opts.ghosts.length > 1 && opts.ghosts.length < opts.allGhosts.length ? new Set(opts.ghosts.map((g) => g.id)) : null
-  const ctx: Ctx = solo
-    ? { ...opts, solo, tally, standard: { san: rng() < SOLO_STANDARD, spd: rng() < SOLO_STANDARD }, longest: rng() < LONGEST_KEPT }
-    : pool
-      ? { ...opts, pool }
-      : opts
+  const pool = opts.ghosts.length > 1 && opts.ghosts.length < opts.allGhosts.length ? new Set(opts.ghosts.map((g) => g.id)) : null
+  const ctx: Ctx = pool ? { ...opts, pool } : opts
   // une série qui ne sort pas de sa liste : ni l'énoncé, ni la citation, ni une réponse ne nomme une entité hors
   // de la liste (« … plutôt que le Gallu ? », « plus tôt qu'un Démon », « Gallu » parmi les choix)
   const strays = pool && opts.onlyListed ? strayCheck(opts.allGhosts.filter((o) => !pool.has(o.id))) : null
@@ -1961,13 +1894,13 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     })
   // les phrases déjà lues parmi les réponses de la copie (pas les noms ni les nombres) : une question qui en reprend
   // une passe après les autres, seulement pour compléter la copie (voir deal, `given`), sinon les premières
-  // questions d'une copie liraient deux fois les mêmes mauvaises réponses. Une série sur une seule entité n'a pas ce choix
+  // questions d'une copie liraient deux fois les mêmes mauvaises réponses
   const nameLabels = new Set(opts.allGhosts.map((o) => ghostChoice(o).label))
   const sentences = (q: Question) => q.choices.map((c) => c.label).filter((l) => l.length > SENTENCE && !nameLabels.has(l))
   const read = new Set<string>()
   // le même fait d'une entité ne revient pas sous une autre forme dans la copie (voir factKeys), et aucune entité
   // n'en prend plus que sa part : deux questions au plus quand il y a assez d'entités pour la copie, sinon une de
-  // plus que la moyenne. Une série sur une seule entité n'a pas ce choix
+  // plus que la moyenne
   const facts = new Set<string>()
   const asked = new Map<string, number>()
   const listSize = Math.max(1, opts.ghosts.length)
@@ -1975,7 +1908,7 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   const roomy = listSize * 2 >= count * 1.2
   const share = roomy ? 2 : Math.ceil(count / listSize) + 1
   const crowded = listSize * CROWDED <= count
-  const generators = solo ? SOLO_GENERATORS : GENERATORS
+  const generators = GENERATORS
   const tf = topics.includes('mechanics') ? trueFalseQuestions(opts.mechanics, rng) : []
   const weight = (g: Ghost) => 1.25 - (opts.mastery?.[g.id] ?? 0)
   let topicIdx = Math.floor(rng() * topics.length)
@@ -1992,7 +1925,7 @@ export function buildQuiz(opts: QuizOptions): Question[] {
     // ce que la série de tirages sans question nouvelle a déjà fait accepter (au plus `ease`) : 1, une phrase déjà
     // lue ; 2, un fait déjà demandé
     let given = 0
-    // une seule entité s'épuise vite : on s'arrête après une longue série de tirages sans question nouvelle
+    // une courte liste s'épuise vite : on s'arrête après une longue série de tirages sans question nouvelle
     while (out.length < count && attempts < count * 40 && misses < 120) {
       attempts++
       misses++
@@ -2020,11 +1953,11 @@ export function buildQuiz(opts: QuizOptions): Question[] {
         }
       }
       if (!q || seen.has(q.id) || screens.has(screenOf(q)) || stray?.(q)) continue
-      if (!solo && given < 1 && sentences(q).some((l) => read.has(l))) continue
-      const keys = solo ? [] : factKeys(q, nameLabels)
+      if (given < 1 && sentences(q).some((l) => read.has(l))) continue
+      const keys = factKeys(q, nameLabels)
       // « au-dessus de 50 %, laquelle peut chasser ? » demande le seuil précoce de l'entité, sans l'écrire (65 % pour
       // la Dayan qui te voit bouger) : il compte comme s'il était cité
-      const early = !solo && q.id.startsWith('q:early:') && q.ghostId ? byId.get(q.ghostId) : undefined
+      const early = q.id.startsWith('q:early:') && q.ghostId ? byId.get(q.ghostId) : undefined
       if (early) for (const v of thresholds(early)) if (v > 50) keys.push(`${early.id}|${v} %`)
       // pour se remplir (ease) : une carte, la vitesse ou le seuil ; sur trop peu d'entités, un objet aussi (voir
       // SOFT_FACT), sauf la signature de l'entité (l'encens de l'Esprit, voir signatureKeys). Sur bien trop peu
@@ -2033,8 +1966,8 @@ export function buildQuiz(opts: QuizOptions): Question[] {
       const signature = (k: string) => !!own && signatureKeys(own).has(k) && (!crowded || given < 1)
       const soft = (k: string) => ease > 0 && (BROAD_FACT.test(k) || (!roomy && SOFT_FACT.test(k) && !signature(k)))
       if (keys.some((k) => facts.has(k) && !soft(k) && given < 2)) continue
-      if (!solo && ease < 2 && q.ghostId && (asked.get(q.ghostId) ?? 0) >= share) continue
-      if (!solo && q.ghostId && SIGN_FAMILY.test(q.id)) {
+      if (ease < 2 && q.ghostId && (asked.get(q.ghostId) ?? 0) >= share) continue
+      if (q.ghostId && SIGN_FAMILY.test(q.id)) {
         if (signed.has(q.ghostId)) continue
         signed.add(q.ghostId)
       }
@@ -2044,10 +1977,6 @@ export function buildQuiz(opts: QuizOptions): Question[] {
       screens.add(screenOf(q))
       for (const l of sentences(q)) read.add(l)
       misses = 0
-      if (solo && named(q)) {
-        tally.named++
-        if (q.correct.includes(opts.ghosts[0].id)) tally.self++
-      }
       // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
       out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)), ...(q.note ? { note: fr(q.note) } : {}), ...(extra ? { beyond: true } : {}) })
     }
@@ -2055,26 +1984,49 @@ export function buildQuiz(opts: QuizOptions): Question[] {
   deal(opts.ghosts, ctx, pool, strays)
   // à court de questions : une carte sert une deuxième fois (sur un autre fait, voir SOFT_FACT), une phrase déjà lue
   // parmi les mauvaises réponses revient, plutôt que de laisser la place à une entité hors de la liste
-  if (!solo && out.length < count) deal(opts.ghosts, ctx, pool, strays, false, 1)
+  if (out.length < count) deal(opts.ghosts, ctx, pool, strays, false, 1)
   // pas assez de questions sur la liste pour ces thèmes : la fin de la copie porte sur toutes les entités, comme
   // une copie sur toutes (sans liste à privilégier parmi les mauvaises réponses)
   const beyond = strays && opts.fillUp
   if (beyond && out.length < count) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true)
   // toujours pas assez (peu d'entités, beaucoup de questions) : une entité dépasse sa part, puis un même fait
   // revient, plutôt que de s'arrêter avant le nombre de questions demandé
-  if (!solo && out.length < count) {
+  if (out.length < count) {
     if (beyond) deal(opts.allGhosts, { ...opts, onlyListed: false }, null, null, true, 2)
     else deal(opts.ghosts, ctx, pool, strays, false, 2)
   }
-  // une entité qui a peu de questions dans ces thèmes (le Mimic copie tout : seuls ses tests se posent) : la
-  // série se complète de ses questions rédigées plutôt que de s'arrêter à deux
-  if (solo && out.length < count / 2 && !topics.includes('expert')) {
-    for (let i = 0; i < 40 && out.length < count; i++) {
-      const q = authored(opts.ghosts[0], ctx)
-      if (!q || seen.has(q.id) || screens.has(screenOf(q))) continue
-      seen.add(q.id)
+  return out
+}
+
+/**
+ * La copie sur une seule entité (« Me tester sur X », ou une liste « déjà étudiées » réduite à une entité) :
+ * composée par solo.ts, toutes ses questions portent sur elle. Les vrai ou faux de mécaniques, s'ils sont
+ * demandés, gardent leur part de la copie et se glissent entre ses questions. Avec onlyListed, aucune question
+ * ne nomme une autre entité ; s'il en manque et que fillUp le permet, la fin de la copie porte sur toutes les
+ * entités, marquée `beyond`, comme pour une liste plus longue.
+ */
+function soloCopy(opts: QuizOptions): Question[] {
+  const { rng, count } = opts
+  const topics = opts.topics.filter((t) => t === 'mechanics' || t in GENERATORS)
+  if (!topics.length) return []
+  const own = topics.filter((t) => t !== 'mechanics')
+  const tf = topics.includes('mechanics') ? trueFalseQuestions(opts.mechanics, rng) : []
+  const share = own.length ? Math.min(tf.length, Math.round(count / topics.length)) : Math.min(tf.length, count)
+  const out = own.length
+    ? buildSoloQuiz({ ghost: opts.ghosts[0], allGhosts: opts.allGhosts, rng, count: count - share, topics: own, onlyListed: opts.onlyListed })
+    : []
+  const facts = tf.slice(0, count - out.length).map((q) => ({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)) }))
+  // l'ordre des questions sur l'entité ne change pas (aucune ne souffle la suivante) : les mécaniques s'y glissent
+  for (const f of facts) out.splice(Math.floor(rng() * (out.length + 1)), 0, f)
+  if (out.length < count && opts.onlyListed && opts.fillUp && opts.allGhosts.length > 1) {
+    const ids = new Set(out.map((q) => q.id))
+    const screens = new Set(out.map(screenOf))
+    for (const q of buildQuiz({ ...opts, ghosts: opts.allGhosts, onlyListed: false, fillUp: false })) {
+      if (out.length >= count) break
+      if (ids.has(q.id) || screens.has(screenOf(q))) continue
+      ids.add(q.id)
       screens.add(screenOf(q))
-      out.push({ ...q, prompt: fr(q.prompt), explain: fr(noLeadingMais(q.explain)) })
+      out.push({ ...q, beyond: true })
     }
   }
   return out
@@ -2173,7 +2125,7 @@ const cardRng = (cardId: string, day: string): Rng => createRng(parseInt(hashStr
  * Les vitesses citées par un signe (hors 1,7 m/s, celle de tout le monde) sont-elles à 0,1 m/s près celles
  * de o ? « 1,5 ou 1,9 m/s » (Jumeaux) ne prend pas pour mauvaise réponse l'Obambo (≈ 1,45 et 1,96 m/s).
  */
-function nearSpeed(text: string, o: Ghost): boolean {
+export function nearSpeed(text: string, o: Ghost): boolean {
   const cited = [...text.matchAll(/(\d+,\d+)(?=\s*(?:m\/s|(?:ou|à|et|→|-)\s*\d+(?:,\d+)?\s*m\/s))/gu)]
     .map((m) => Number(m[1].replace(',', '.')))
     .filter((v) => v !== 1.7)
@@ -2227,7 +2179,7 @@ const NAME_HINTS: Readonly<Record<string, RegExp>> = {
 
 /** Le texte contient-il le mot que souffle le nom de g (son nom lui-même mis à part) ? Calculé une fois par texte. */
 const hintCache = new Map<string, boolean>()
-function hints(g: Ghost, t: string): boolean {
+export function hints(g: Ghost, t: string): boolean {
   const re = NAME_HINTS[g.id]
   if (!re) return false
   const key = `${g.id}|${t}`
@@ -2237,7 +2189,7 @@ function hints(g: Ghost, t: string): boolean {
 }
 
 /** La bonne réponse est-elle la seule à contenir le mot que souffle le nom de g ? */
-function hintAlone(g: Ghost, right: string, wrong: readonly string[]): boolean {
+export function hintAlone(g: Ghost, right: string, wrong: readonly string[]): boolean {
   return hints(g, right) && !wrong.some((t) => hints(g, t))
 }
 
@@ -2245,7 +2197,7 @@ function hintAlone(g: Ghost, right: string, wrong: readonly string[]): boolean {
  * Ce que doit vérifier au moins une mauvaise réponse pour que la bonne ne soit pas la seule à contenir le mot
  * que souffle le nom de g (voir matching, `need`) ; rien si la bonne ne le contient pas.
  */
-function hintNeed(g: Ghost, right: string): ((o: Option<unknown>) => boolean) | undefined {
+export function hintNeed(g: Ghost, right: string): ((o: Option<unknown>) => boolean) | undefined {
   return hints(g, right) ? (o) => hints(g, o.label) : undefined
 }
 
@@ -2282,32 +2234,32 @@ const THEMES = {
   cible: /\bcibles?\b|poursui|multijoueur|joueurs?\s+(?:proches?|pris)/iu,
   activite: /\bactif\b|\bactive\b|activité|interagi|interaction/iu,
 } satisfies Record<string, RegExp>
-type Theme = keyof typeof THEMES
-const themesOf = (text: string) => (Object.keys(THEMES) as Theme[]).filter((k) => THEMES[k].test(text))
+export type Theme = keyof typeof THEMES
+export const themesOf = (text: string) => (Object.keys(THEMES) as Theme[]).filter((k) => THEMES[k].test(text))
 /**
  * Les thèmes précis (un objet, un geste du joueur) : un signe sur le sel ne prend pas pour mauvaise réponse
  * une entité dont un signe clé parle aussi du sel. La vitesse, le seuil et la santé, trop larges, sont
  * déjà départagés par les valeurs citées (fitsToo).
  */
-const NARROW: ReadonlySet<Theme> = new Set<Theme>([
+export const NARROW: ReadonlySet<Theme> = new Set<Theme>([
   'sel', 'encens', 'crucifix', 'disjoncteur', 'lumiere', 'porte', 'flamme', 'ouija', 'son', 'boite', 'objetMaudit',
   'photo', 'electronique', 'visible', 'objets', 'ecoute', 'cachette', 'evenement', 'capteur', 'froid', 'errance',
 ])
 
 /** Ce que laisse le caviardage d'un nom (voir redactGhostName). */
-const REDACTED = /(?<!\p{L})(?:cette|ces) entités?(?!\p{L})/iu
+export const REDACTED = /(?<!\p{L})(?:cette|ces) entités?(?!\p{L})/iu
 
 /** Ce qui parle du sexe de l'entité (« Toujours féminine ») : vrai de plusieurs entités, jamais une mauvaise réponse. */
-const GENDER_TALK = /f[ée]minin|masculin|\bsexe\b|prénom/iu
+export const GENDER_TALK = /f[ée]minin|masculin|\bsexe\b|prénom/iu
 /** Les signes qui ne parlent que de vitesse ou de seuil : ils ont déjà leur carte, on préfère un comportement. */
-const SPEED_OR_SANITY = /m\/s|\bvitesse\b|\bseuil\b|ligne de vue|chass\p{L}*\s+(?:dès|à)\s*\d/iu
+export const SPEED_OR_SANITY = /m\/s|\bvitesse\b|\bseuil\b|ligne de vue|chass\p{L}*\s+(?:dès|à)\s*\d/iu
 
 /** Un signe clé gardé pour la révision : sans preuve, ni liste de preuves. */
-const plainSign = (t: string) => !isEvidenceList(t) && !needsEvidence(t) && !mentionsEvidence(t)
+export const plainSign = (t: string) => !isEvidenceList(t) && !needsEvidence(t) && !mentionsEvidence(t)
 /** Un signe qui se lit seulement à la suite d'un autre (« Chasse suivante : il fonce droit sur ce joueur »). */
-const NEEDS_CONTEXT = /^Chasse suivante\b|\bce joueur\b/u
+export const NEEDS_CONTEXT = /^Chasse suivante\b|\bce joueur\b/u
 
-interface Sign {
+export interface Sign {
   text: string
   ghost: Ghost
   themes: Theme[]
@@ -2318,11 +2270,11 @@ interface Sign {
  * ceux des cartes « Signe à reconnaître ». Les quatre réponses d'une question viennent de la même source :
  * une phrase rédigée parmi trois notes brèves se remarquerait.
  */
-type SignStyle = 'key' | 'tell'
+export type SignStyle = 'key' | 'tell'
 const signCache = new WeakMap<readonly Ghost[], Map<SignStyle, Sign[]>>()
 
 /** Les signes de toutes les entités qui peuvent servir de mauvaise réponse (jamais ceux du Mimic). */
-function distractorSigns(all: readonly Ghost[], style: SignStyle = 'key'): Sign[] {
+export function distractorSigns(all: readonly Ghost[], style: SignStyle = 'key'): Sign[] {
   let byStyle = signCache.get(all)
   if (!byStyle) signCache.set(all, (byStyle = new Map()))
   const cached = byStyle.get(style)
@@ -2359,7 +2311,7 @@ const clauses = (text: string) =>
     .filter((c) => c.length >= 12)
 
 /** Le signe d'une autre entité pourrait-il aussi décrire x (en tout ou en partie) ? */
-function signFits(text: string, x: Ghost, all: readonly Ghost[]): boolean {
+export function signFits(text: string, x: Ghost, all: readonly Ghost[]): boolean {
   if (numbersFit(text, x) || huntsAlready(text, x) || fitsToo(text, all, true)(x) || restatedBy(text, x, all)) return true
   return clauses(text).some((c) => c !== text && (numbersFit(c, x) || fitsToo(c, all, true)(x) || restatedBy(c, x, all)))
 }
@@ -2369,9 +2321,9 @@ function signFits(text: string, x: Ghost, all: readonly Ghost[]): boolean {
  * et le seuil ayant leur carte) face à des signes clés d'autres entités, faux pour X. Une mauvaise réponse
  * ne touche aucun thème des signes de X, ne colle pas à sa fiche, ne nomme personne, et son pronom ne
  * l'écarte pas d'emblée. Les quatre signes ont la même forme (longueur, « · », parenthèses, chiffres) : au
- * besoin, un signe perd ses apartés ou sa seconde partie.
+ * besoin, un signe perd ses apartés ou sa seconde partie. `one` : ce signe clé seulement (son rang dans la fiche).
  */
-function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string }): Question | null {
+export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string }, one?: number): Question | null {
   if (x.id === MIMIC) return null
   const all = ctx.allGhosts
   // `only` : le signe d'une carte « Signe à reconnaître », posé à l'envers ; caviardé (« cette entité »), il
@@ -2382,7 +2334,7 @@ function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string }): Qu
     .filter((t) => !names(t, x) && !GENDER_TALK.test(t) && !NEEDS_CONTEXT.test(t) && t.length <= 200)
     .map((t) => ({ t, k: only ? only.k : String(x.keyTells.indexOf(t)) }))
   const behaviour = only ? mine : mine.filter(({ t }) => !SPEED_OR_SANITY.test(t))
-  const pool = behaviour.length ? behaviour : mine
+  const pool = one != null ? mine.filter(({ k }) => k === String(one)) : behaviour.length ? behaviour : mine
   if (!pool.length) return null
   const clash = (t: string) => pronounClash(t, x)
   const partners = new Set(x.confusions.map((c) => c.with))
@@ -2443,7 +2395,7 @@ function opening(s: string): string {
  * face à « Plus actif quand on parle près de lui ») : la paire jumelle contient toujours la réponse, c'est
  * pile ou face. Permis seulement si deux autres mauvaises réponses forment, elles aussi, une paire jumelle.
  */
-function twinOf(right: string, wrong: readonly string[]): boolean {
+export function twinOf(right: string, wrong: readonly string[]): boolean {
   const r = opening(right)
   const starts = wrong.map(opening)
   if (starts.filter((s) => s === r).length !== 1) return false
@@ -2457,7 +2409,7 @@ const signVersionCache = new WeakMap<readonly Ghost[], Map<string, Option<Sign>[
  * mauvaise réponse pour X, avec leurs versions plus courtes : aucun ne touche un thème des signes de X, ni
  * ne lui convient, même en partie.
  */
-function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle = 'key'): Option<Sign>[] {
+export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle = 'key'): Option<Sign>[] {
   let byGhost = signVersionCache.get(all)
   if (!byGhost) signVersionCache.set(all, (byGhost = new Map()))
   const cached = byGhost.get(`${style}|${x.id}`)
@@ -2543,7 +2495,7 @@ const testLabels = perList((all) => {
  * du Raiju. ») ou la comparaison qui la prolonge (« c'est cette entité : l'entité est alors bien plus rapide
  * qu'un Djinn… »). Null si un nom vient avant la conclusion : le test lui-même en dépend.
  */
-function withoutNamingTail(text: string, all: readonly Ghost[]): string | null {
+export function withoutNamingTail(text: string, all: readonly Ghost[]): string | null {
   const sentences = text.split(SENTENCES)
   const end = sentences.findIndex((x) => /c[’']est (?:cette|ces) entités?|ce sont (?:cette|ces) entités?/iu.test(x))
   if (end < 0 || sentences.slice(0, end).some((x) => namesAny(x, all))) return null
@@ -2567,7 +2519,7 @@ function plausible(g: Ghost, pool: readonly Ghost[], rng: Rng): Ghost[] {
  * Aucune marque ne distingue une seule réponse : ni la seule qui nomme une entité (« plus tôt qu'un Démon »),
  * ni la seule qui n'en nomme pas.
  */
-function namingBalanced(labels: readonly string[], all: readonly Ghost[]): boolean {
+export function namingBalanced(labels: readonly string[], all: readonly Ghost[]): boolean {
   const k = labels.filter((l) => namesAny(l, all)).length
   return k !== 1 && k !== labels.length - 1
 }
@@ -2580,7 +2532,7 @@ function namingBalanced(labels: readonly string[], all: readonly Ghost[]): boole
  * seule qui contient le mot que souffle le nom de X (« objets » pour le Poltergeist) n'est d'office la bonne.
  * Deux tests de X dans une même série n'ont pas le même énoncé.
  */
-function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: string, nameless = false): Question | null {
+export function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: string, nameless = false): Question | null {
   const k = t.k
   const all = ctx.allGhosts
   const full = redact(withoutEvidenceAsides(t.text), g)
@@ -2628,14 +2580,6 @@ function whichTest(g: Ghost, t: { text: string; k: number }, ctx: Ctx, cardId?: 
     }
     return null
   }, 3, order)
-}
-
-/** « Quel test confirme X sans preuve ? » pour l'un de ses tests, tiré au hasard (une série sur X seul). */
-function testOfGhost(g: Ghost, ctx: Ctx): Question | null {
-  const tests = zeroTests(g)
-  if (!tests.length) return null
-  const p = Math.floor(ctx.rng() * tests.length)
-  return whichTest(g, tests[p], ctx, p < TESTS_PER_GHOST ? `g:${g.id}:test:${tests[p].k}` : `g:${g.id}:tells`)
 }
 
 /* ---------- les cartes écrites : mécaniques et notes ---------- */
@@ -2776,7 +2720,7 @@ function startsOther(card: Card, g: Ghost, all: readonly Ghost[]): number {
 }
 
 /** Ce qu'on lit d'une question avant les choix : son énoncé et sa citation. */
-const screenOf = (q: Question) => `${q.prompt}|${q.quote ?? ''}`
+export const screenOf = (q: Question) => `${q.prompt}|${q.quote ?? ''}`
 const orderOf = (q: Question) => q.choices.map((c) => c.label).join('|')
 /** Les mêmes choix dans le même ordre que `before` : décalés d'une place. */
 const reordered = (q: Question, before: Question | null): Question =>

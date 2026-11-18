@@ -126,7 +126,7 @@ export function isEvidenceList(text: string): boolean {
  * Un test dont la condition même porte sur les preuves trouvées (« Si tu trouves plus de preuves que… »),
  * ou qui passe par une preuve (lampe UV, réponse à la Spirit Box, D.O.T.S…).
  */
-function testNeedsEvidence(text: string): boolean {
+export function testNeedsEvidence(text: string): boolean {
   const first = text.split(/(?<=[.!?])\s+/u)[0] ?? text
   return /\bpreuves?\b/iu.test(first.replace(NO_EVIDENCE, '')) || needsEvidence(text)
 }
