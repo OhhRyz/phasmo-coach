@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
-import { GhostRow, GroupRow } from '../components/GhostRow'
+import { FamilyRow, GhostRow, GroupRow } from '../components/GhostRow'
 import { JournalGrid } from '../components/JournalGrid'
 import { FROM_CODEX, wantsRegistry } from './codexReturn'
 import { useToast } from '../components/Toast'
@@ -14,8 +14,8 @@ import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
 import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, type FilterState } from '../engine/filter'
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
+import { FAMILY_COPY, speedFamilies, speedFamilyNote } from '../engine/families'
 import {
-  losEntryText,
   nearStandardRanges,
   PART_LABEL,
   PART_ORDER,
@@ -24,9 +24,6 @@ import {
   SANITY_COPY,
   sanityEntryText,
   sanityGroups,
-  SPEED_COPY,
-  speedEntryText,
-  speedGroups,
   withRank,
   type GroupCopy,
   type GroupEntry,
@@ -381,7 +378,7 @@ export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | 
 
 const PHONE = '(max-width: 759px)'
 
-/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
+/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), les quatre familles de vitesse du coach (engine/families), ou trois colonnes par seuil de chasse (engine/groups). */
 const RANKS: { value: Rank; label: string }[] = [
   { value: 'numero', label: 'ordre du jeu' },
   { value: 'vitesse', label: 'vitesse' },
@@ -392,12 +389,12 @@ const RANK_HEAD: Record<Rank, string> = {
   vitesse: 'Rangé par vitesse',
   seuil: 'Rangé par seuil de chasse',
 }
-/** Sous le sélecteur : ce que mesure le classement, puis ce que veulent dire « toujours » et « par moments ». */
-const RANK_HINT: Record<Exclude<Rank, 'numero'>, [string, string]> = {
-  vitesse: [
-    'vitesses de la fiche, hors accélération en ligne de vue',
-    '« toujours » : l’entité n’a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où tombe une vitesse de sa fiche',
-  ],
+/**
+ * Sous le sélecteur. Par vitesse : d'où vient le classement (le coach) et comment le lire. Par seuil : ce que mesure
+ * le classement, puis ce que veulent dire « toujours » et « par moments ».
+ */
+const RANK_HINT: Record<Exclude<Rank, 'numero'>, string[]> = {
+  vitesse: ['le classement du coach : une seule case par entité · à côté du nom, ce qui change sa vitesse'],
   seuil: [
     'santé mentale moyenne à partir de laquelle une chasse peut démarrer',
     '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche',
@@ -422,37 +419,19 @@ export function normalSpeedNote(ghosts: readonly Ghost[]): string | null {
   return fr(text.charAt(0).toUpperCase() + text.slice(1))
 }
 
-/**
- * Sous « Ranger par vitesse » : pourquoi les entités dont la vitesse change par paliers n'ont pas de ligne au
- * milieu, même quand un palier vaut 1,7 m/s (le Thayé au 6e vieillissement, le Deildegast au 13e objet).
- */
-export function rangesNote(ghosts: readonly Ghost[]): string | null {
-  const names = ghosts.filter((g) => g.speed.isRange).map((g) => le(g.name))
-  if (!names.length) return null
-  const one = names.length === 1
-  const text = `${listed(names)} ${one ? 'change' : 'changent'} de vitesse par paliers : ${one ? 'rangé' : 'rangés'} à ${one ? 'son' : 'leur'} plus lent et à ${one ? 'son' : 'leur'} plus rapide`
-  return fr(text.charAt(0).toUpperCase() + text.slice(1))
-}
-
-/** Une colonne du registre rangé : son titre, et ses lignes telles qu'elles s'écrivent. */
+/** Une colonne du registre rangé par seuil : son titre, et ses lignes telles qu'elles s'écrivent. */
 export interface LedgerColumn {
   id: string
   copy: GroupCopy
-  lines: { entry: GroupEntry; value: string; los: string | null }[]
+  lines: { entry: GroupEntry; value: string }[]
 }
 
-/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans chacune de celles où tombe une valeur de sa fiche. */
-export function ledgerColumns(ghosts: readonly Ghost[], rank: Exclude<Rank, 'numero'>): LedgerColumn[] {
-  if (rank === 'vitesse')
-    return speedGroups(ghosts).map((grp) => ({
-      id: grp.id,
-      copy: SPEED_COPY[grp.id],
-      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost) })),
-    }))
+/** Le registre rangé par seuil de chasse : trois colonnes, chaque entité dans chacune de celles où tombe un seuil de sa fiche. */
+export function ledgerColumns(ghosts: readonly Ghost[]): LedgerColumn[] {
   return sanityGroups(ghosts).map((grp) => ({
     id: grp.id,
     copy: SANITY_COPY[grp.id],
-    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null })),
+    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry) })),
   }))
 }
 
@@ -513,9 +492,8 @@ export function Codex() {
   const pool = useMemo(() => filterGhosts(JOURNAL_GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
   // « normale » cochée : pourquoi le Deildegast, le Hantu, le Moroi et le Thayé restent possibles tant que le reste
-  // du carnet ne les écarte pas (voir normalSpeedNote), et sous « Ranger par vitesse », pourquoi ils n'ont pas de ligne au milieu
+  // du carnet ne les écarte pas (voir normalSpeedNote)
   const normalNote = useMemo(() => normalSpeedNote(pool), [pool])
-  const stepsNote = useMemo(() => rangesNote(JOURNAL_GHOSTS), [])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
@@ -529,13 +507,25 @@ export function Codex() {
       .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
   }, [matching, out, showOut, query])
 
-  // rangé par vitesse ou par seuil : les mêmes lignes (ce qui reste, et les éliminées si on les montre), en trois
-  // colonnes ; l'extrait d'une recherche ne s'écrit qu'une fois, à la première ligne de l'entité
+  // rangé par vitesse : les quatre cases du coach, une seule par entité, avec les mêmes lignes que le registre (ce qui
+  // reste, et les éliminées si on les montre)
+  const board = useMemo(() => {
+    if (rank !== 'vitesse') return null
+    const shown = new Map(rows.map((r) => [r.g, r.snippet]))
+    return speedFamilies(JOURNAL_GHOSTS).map((box) => ({
+      ...box,
+      total: box.ghosts.length,
+      lines: box.ghosts.filter((g) => shown.has(g)).map((g) => ({ g, note: speedFamilyNote(g), snippet: shown.get(g) ?? null })),
+    }))
+  }, [rank, rows])
+
+  // rangé par seuil : les mêmes lignes, en trois colonnes ; l'extrait d'une recherche ne s'écrit qu'une fois, à la
+  // première ligne de l'entité
   const ledger = useMemo(() => {
-    if (rank === 'numero') return null
+    if (rank !== 'seuil') return null
     const shown = new Map(rows.map((r) => [r.g, r.snippet]))
     const quoted = new Set<Ghost>()
-    return ledgerColumns(JOURNAL_GHOSTS, rank).map((col) => {
+    return ledgerColumns(JOURNAL_GHOSTS).map((col) => {
       const lines = col.lines
         .filter((l) => shown.has(l.entry.ghost))
         .map((l) => {
@@ -955,18 +945,35 @@ export function Codex() {
             <Seg label="Ranger le registre par" value={rank} onChange={setRank} options={RANKS} />
             {rank !== 'numero' && (
               <p className="pencil-note cx-rank-hint">
-                {fr(RANK_HINT[rank][0])}
-                <br />
-                {fr(RANK_HINT[rank][1])}
-                {rank === 'vitesse' && stepsNote && (
-                  <>
-                    <br />
-                    {stepsNote}
-                  </>
-                )}
+                {RANK_HINT[rank].map((line, i) => (
+                  <span key={line}>
+                    {i > 0 && <br />}
+                    {fr(line)}
+                  </span>
+                ))}
               </p>
             )}
           </div>
+
+          {rows.length > 0 && board && (
+            <div className="sf">
+              {board.map((box) => (
+                <div key={box.id} className={`sf-box sf-box--${box.id}`} role="group" aria-label={FAMILY_COPY[box.id].label}>
+                  <h3 className="sf-h">{FAMILY_COPY[box.id].title}</h3>
+                  <p className="sf-def">{fr(`${box.total} ${box.total > 1 ? 'entités' : 'entité'} · ${FAMILY_COPY[box.id].def}`)}</p>
+                  {box.lines.length > 0 ? (
+                    <ul className="cx-reg sf-list">
+                      {box.lines.map(({ g, note, snippet }) => (
+                        <FamilyRow key={g.id} ghost={g} note={note} dimmed={!matching.includes(g)} circled={deduced && only === g} snippet={snippet} />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="cx-grp-none pencil-note">aucune ici</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {rows.length > 0 && ledger && (
             <div className="cx-ledger">
@@ -985,13 +992,12 @@ export function Codex() {
                           </h4>
                           {part.lines.length > 0 ? (
                             <ul className="cx-reg">
-                              {part.lines.map(({ entry, value, los, snippet }) => (
+                              {part.lines.map(({ entry, value, snippet }) => (
                                 <GroupRow
                                   key={entry.ghost.id}
                                   seed={col.id}
                                   ghost={entry.ghost}
                                   value={value}
-                                  los={los}
                                   dimmed={!matching.includes(entry.ghost)}
                                   circled={deduced && only === entry.ghost}
                                   snippet={snippet}
@@ -1011,7 +1017,7 @@ export function Codex() {
             </div>
           )}
 
-          {rows.length > 0 && !ledger && (
+          {rows.length > 0 && rank === 'numero' && (
             <>
               <div className="cx-cols" aria-hidden>
                 <span>N°</span>

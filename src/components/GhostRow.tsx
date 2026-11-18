@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { FROM_CODEX } from '../pages/codexReturn'
 import type { Snippet } from '../pages/Codex'
 import type { Ghost } from '../data/types'
-import { NBSP, sanityText } from '../engine/format'
-import { rowSpeedText, speedWord } from '../engine/groups'
+import { sanityText } from '../engine/format'
+import { rowSpeedText, speedWord } from '../engine/families'
 import { roughLine, roughRng } from './journal/rough'
 import { RoughCircle } from './journal/Journal'
 import { GhostEvidence, Mastery } from './ui'
@@ -38,8 +38,9 @@ export function Strike({ seed }: { seed: string }) {
 
 /**
  * Une ligne du registre du codex : numéro, nom, maîtrise, preuves, vitesse et seuil. Devant la vitesse, un mot
- * tapé donne la classe d'un coup d'œil : « lente », « normale », « rapide », ou « variable » (voir speedWord) ;
- * le Mimic, « variable », écrit ensuite qu'il copie l'entité imitée (voir rowSpeedText).
+ * tapé donne sa famille d'un coup d'œil, celle du classement du coach : « lente », « normale », « rapide », ou
+ * « variable » pour une entité qui change de vitesse (voir engine/families) ; le Mimic, « variable », écrit ensuite
+ * qu'il copie l'entité imitée (voir rowSpeedText).
  * `dimmed` : entité éliminée par le carnet de preuves (barrée au crayon, pas cachée).
  * `snippet` : trouvée par un mot de sa fiche, pas par son nom : la phrase où il se trouve, le mot surligné.
  */
@@ -124,25 +125,72 @@ export function GhostRow({
 }
 
 /**
- * Une ligne du registre rangé par vitesse ou par seuil de chasse : le nom (lien vers la fiche, toute la ligne
- * l'ouvre) et, tapée petit, la valeur qui met l'entité dans cette colonne. Le titre de sa partie dit si elle n'a
+ * Une ligne du tableau des familles de vitesse : le nom (lien vers la fiche, toute la ligne l'ouvre) et, au crayon,
+ * les quelques mots qui disent ce qui change sa vitesse. Éliminée par le carnet de preuves : barrée, comme dans le registre.
+ */
+export function FamilyRow({
+  ghost,
+  note,
+  dimmed,
+  circled,
+  snippet,
+}: {
+  ghost: Ghost
+  /** « ralentit en vieillissant » ; rien pour une entité normale */
+  note?: string | null
+  dimmed?: boolean
+  circled?: boolean
+  snippet?: Snippet | null
+}) {
+  return (
+    <li className={`cx-row cx-row--fam${dimmed ? ' is-out' : ''}${circled ? ' is-only' : ''}`}>
+      <span className="cx-name">
+        <Link to={`/codex/${ghost.id}`} state={FROM_CODEX} className="cx-link">
+          {circled ? (
+            <RoughCircle seed={`fam-${ghost.id}`} padX={0.06} padY={0.18} delay={0.35}>
+              {ghost.name}
+            </RoughCircle>
+          ) : (
+            ghost.name
+          )}
+          {dimmed && <span className="sr-only"> (éliminée)</span>}
+        </Link>
+      </span>
+      {note && (
+        <span className="cx-fnote pencil-note">
+          <span className="sr-only"> : </span>
+          {note}
+        </span>
+      )}
+      {snippet && (
+        <span className="cx-snip">
+          {snippet.before}
+          <mark className="cx-hit">{snippet.hit}</mark>
+          {snippet.after}
+        </span>
+      )}
+      {dimmed && <Strike seed={`fam-${ghost.id}`} />}
+    </li>
+  )
+}
+
+/**
+ * Une ligne du registre rangé par seuil de chasse : le nom (lien vers la fiche, toute la ligne
+ * l'ouvre) et, tapé petit, le seuil qui met l'entité dans cette colonne. Le titre de sa partie dit si elle n'a
  * que cette valeur (« toujours ») ou si elle en change (« par moments »). Éliminée par le carnet de preuves :
  * barrée au crayon, comme dans le registre.
  */
 export function GroupRow({
   ghost,
   value,
-  los,
   dimmed,
   circled,
   snippet,
   seed,
 }: {
   ghost: Ghost
-  /** « 1,53 m/s », « 1,4 m/s au plus lent », « 60 % » */
+  /** « 60 % », « 70 % ou 100 % » */
   value: string
-  /** « accélère en ligne de vue » : seulement dans le registre rangé par vitesse */
-  los?: string | null
   dimmed?: boolean
   circled?: boolean
   snippet?: Snippet | null
@@ -166,13 +214,6 @@ export function GroupRow({
       <span className="cx-gval">
         <span className="sr-only"> : </span>
         {value}
-        {/* le « · » tient à la valeur (espace insécable) : il n'ouvre jamais une ligne dans une colonne étroite */}
-        {los && (
-          <>
-            {`${NBSP}· `}
-            <span className="cx-glos">{los}</span>
-          </>
-        )}
       </span>
       {snippet && (
         <span className="cx-snip">

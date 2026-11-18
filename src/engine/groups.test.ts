@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { GHOSTS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
+import { speedFamily } from './families'
 import { copiesBehavior, EMPTY_FILTER, filterGhosts } from './filter'
-import { NBSP, sanityClasses, speedClasses, speedText, type SanityClass, type SpeedClass } from './format'
+import { NBSP, sanityClasses, type SanityClass } from './format'
 import { realSpeeds } from './speeds'
 import {
   codexRankPath,
-  losEntryText,
-  losOf,
   nearStandardRanges,
   PART_LABEL,
   PART_ORDER,
@@ -17,13 +16,6 @@ import {
   SANITY_ORDER,
   sanityEntryText,
   sanityGroups,
-  SPEED_COPY,
-  SPEED_ORDER,
-  speedEntryText,
-  speedGroups,
-  speedGroupsOf,
-  rowSpeedText,
-  speedWord,
   STANDARD_SANITY,
   STANDARD_SPEED,
   withRank,
@@ -35,83 +27,8 @@ const ghost = (id: string): Ghost => getGhost(id)!
 const columnsOf = <C extends string>(groups: Group<C>[], g: Ghost): C[] => groups.filter((grp) => grp.entries.some((e) => e.ghost === g)).map((grp) => grp.id)
 const entryOf = <C extends string>(groups: Group<C>[], c: C, id: string): GroupEntry => groups.find((grp) => grp.id === c)!.entries.find((e) => e.ghost.id === id)!
 
-describe('Registre rangé par vitesse : lentes, normales, rapides', () => {
-  const groups = speedGroups(GHOSTS)
-
-  it('trois colonnes, dans cet ordre, et chaque entité dans au moins une', () => {
-    expect(groups.map((g) => g.id)).toEqual(['slow', 'normal', 'fast'])
-    expect(SPEED_ORDER).toEqual(['slow', 'normal', 'fast'])
-    for (const g of GHOSTS) expect(columnsOf(groups, g).length, g.id).toBeGreaterThan(0)
-  })
-
-  /** Les entités dont la fiche donne une plage de vitesses (elles changent par paliers) : jamais dans la colonne du milieu. */
-  const RANGES = ['hantu', 'moroi', 'thaye', 'deildegast']
-  /** Les entités qui n'ont que 1,7 m/s : la carte de tybayn n'écrit pour elles que « 1.7 m/s » (le Mimic, qui copie, est à part). */
-  const ALWAYS_NORMAL = ['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee', 'mare', 'shade', 'demon', 'yurei', 'oni', 'yokai', 'goryo', 'myling', 'onryo', 'obake']
-
-  it('une colonne par vitesse écrite sur la fiche : une plage n’est rangée que par ses deux bornes, jamais au milieu', () => {
-    let copies = 0
-    for (const g of GHOSTS) {
-      const cols = new Set(columnsOf(groups, g))
-      expect(cols, g.id).toEqual(speedGroupsOf(g))
-      if (copiesBehavior(g)) {
-        copies++
-        expect(cols, g.id).toEqual(new Set(SPEED_ORDER))
-      } else if (g.speed.isRange) {
-        expect(cols, g.id).toEqual(new Set<SpeedClass>(['slow', 'fast']))
-      } else {
-        // hors plage : les mêmes classes que le filtre du carnet de preuves
-        expect(cols, g.id).toEqual(speedClasses(g))
-      }
-    }
-    // le Mimic
-    expect(copies).toBe(1)
-    expect(GHOSTS.filter((g) => g.speed.isRange).map((g) => g.id).sort()).toEqual([...RANGES].sort())
-  })
-
-  it('« Normales » : seulement des entités dont 1,7 m/s est une vitesse écrite sur la fiche (retour du coach du 18 novembre)', () => {
-    const normal = groups.find((grp) => grp.id === 'normal')!
-    for (const e of normal.entries) {
-      if (copiesBehavior(e.ghost)) continue
-      const s = e.ghost.speed
-      expect(s.isRange, e.ghost.id).toBe(false)
-      expect([s.min, s.max, s.alt], e.ghost.id).toContain(STANDARD_SPEED)
-      // et c'est une vitesse que l'entité a réellement en chasse (paliers de tybayn compris)
-      expect(realSpeeds(e.ghost), e.ghost.id).toContain(STANDARD_SPEED)
-      expect(e.values, e.ghost.id).toEqual([STANDARD_SPEED])
-    }
-    const ids = normal.entries.map((e) => e.ghost.id)
-    for (const id of RANGES) expect(ids, id).not.toContain(id)
-    // les quinze entités qui n'ont que 1,7 m/s, puis celles qui y sont par moments
-    expect(normal.entries.filter((e) => !e.several).map((e) => e.ghost.id).sort()).toEqual([...ALWAYS_NORMAL].sort())
-    expect(normal.entries.filter((e) => e.several).map((e) => e.ghost.id).sort()).toEqual(['dayan', 'gallu', 'jinn', 'kormos', 'raiju', 'the-mimic'])
-  })
-
-  it('une plage va bien de lent à rapide : ses paliers (tybayn) commencent sous 1,7 m/s et finissent au-dessus', () => {
-    for (const id of RANGES) {
-      const g = ghost(id)
-      const steps = realSpeeds(g)
-      expect(Math.min(...steps), id).toBe(g.speed.min)
-      expect(Math.max(...steps), id).toBe(g.speed.max)
-      expect(g.speed.min, id).toBeLessThan(STANDARD_SPEED)
-      expect(g.speed.max!, id).toBeGreaterThan(STANDARD_SPEED)
-      expect(columnsOf(groups, g), id).toEqual(['slow', 'fast'])
-    }
-  })
-
-  it('face au critère « Vitesse en chasse » du carnet de preuves : mêmes colonnes, sauf les plages, que le filtre garde au milieu', () => {
-    const ranges = new Set(RANGES.map(ghost))
-    for (const c of SPEED_ORDER) {
-      const kept = new Set(filterGhosts(GHOSTS, { ...EMPTY_FILTER, speed: [c] }))
-      const column = new Set(groups.find((grp) => grp.id === c)!.entries.map((e) => e.ghost))
-      // le filtre élimine : une plage qui traverse 1,7 m/s reste possible quand on entend des pas normaux
-      if (c === 'normal') for (const g of ranges) expect(kept.has(g), g.id).toBe(true)
-      const expected = c === 'normal' ? new Set([...kept].filter((g) => !ranges.has(g))) : kept
-      expect(column, c).toEqual(expected)
-    }
-  })
-
-  it('le filtre du carnet garde ces plages sous « normale » : leurs paliers passent par 1,7 m/s ou tout près (0,05 m/s au plus)', () => {
+describe('Carnet de preuves : les plages que le critère « normale » garde', () => {
+  it('leurs paliers passent par 1,7 m/s ou tout près (0,05 m/s au plus), sans en faire des entités normales', () => {
     expect(nearStandardRanges(GHOSTS).map((g) => g.id)).toEqual(['hantu', 'moroi', 'thaye', 'deildegast'])
     const nearest = (id: string) => Math.min(...realSpeeds(ghost(id)).map((v) => Math.abs(v - STANDARD_SPEED)))
     // 1,75 m/s entre 12 et 15 °C ; 1,66 et 1,749 m/s ; 1,7 m/s pile au 6e vieillissement ; 1,7 m/s pile au 13e objet
@@ -119,91 +36,13 @@ describe('Registre rangé par vitesse : lentes, normales, rapides', () => {
     expect(nearest('moroi')).toBeCloseTo(0.04, 6)
     expect(nearest('thaye')).toBe(0)
     expect(nearest('deildegast')).toBe(0)
-    // aucune de ces entités n'est pour autant rangée parmi les normales
-    for (const g of nearStandardRanges(GHOSTS)) expect(speedGroupsOf(g).has('normal'), g.id).toBe(false)
-  })
-
-  it('« toujours » puis « par moments » : une entité est « toujours » dans sa colonne quand elle n’en a pas d’autre', () => {
-    expect(PART_ORDER).toEqual(['always', 'sometimes'])
-    expect(PART_LABEL).toEqual({ always: 'toujours', sometimes: 'par moments' })
-    for (const grp of groups) for (const e of grp.entries) expect(partOf(e), `${e.ghost.id} ${grp.id}`).toBe(columnsOf(groups, e.ghost).length > 1 ? 'sometimes' : 'always')
-    const always = (c: SpeedClass) => groups.find((grp) => grp.id === c)!.entries.filter((e) => partOf(e) === 'always').map((e) => e.ghost.id)
-    expect(always('slow')).toEqual(['aswang'])
-    expect(always('normal').sort()).toEqual([...ALWAYS_NORMAL].sort())
-    // aucune entité n'est toujours rapide : la colonne l'écrit en toutes lettres
-    expect(always('fast')).toEqual([])
-    expect(SPEED_COPY.fast.none).toBe('aucune entité n’est toujours rapide')
-  })
-
-  it('dans chaque colonne, l’ordre du journal du jeu et son numéro', () => {
-    for (const grp of groups) {
-      const ns = grp.entries.map((e) => e.n)
-      expect(ns).toEqual([...ns].sort((a, b) => a - b))
-      for (const e of grp.entries) expect(GHOSTS[e.n - 1]).toBe(e.ghost)
+    // le filtre les garde quand on coche « normale » (comme celui de tybayn)
+    const kept = new Set(filterGhosts(GHOSTS, { ...EMPTY_FILTER, speed: ['normal'] }))
+    for (const g of nearStandardRanges(GHOSTS)) {
+      expect(kept.has(g), g.id).toBe(true)
+      // et aucune n'est rangée parmi les normales dans le classement du coach
+      expect(speedFamily(g), g.id).not.toBe('normale')
     }
-  })
-
-  it('rien d’inventé : chaque valeur écrite est un champ min, max ou alt de la fiche, du bon côté de 1,7 m/s', () => {
-    const side = (v: number, c: SpeedClass) => (c === 'slow' ? v < STANDARD_SPEED : c === 'fast' ? v > STANDARD_SPEED : v === STANDARD_SPEED)
-    for (const grp of groups)
-      for (const e of grp.entries) {
-        const s = e.ghost.speed
-        const fields = [s.min, s.max, s.alt].filter((v): v is number => v != null)
-        for (const v of e.values) expect(fields, `${e.ghost.id} ${grp.id}`).toContain(v)
-        if (e.kind === 'copy') {
-          expect(copiesBehavior(e.ghost)).toBe(true)
-          expect(e.values).toEqual([])
-        } else if (e.kind === 'values') {
-          expect(s.isRange, e.ghost.id).toBe(false)
-          expect(e.values.length, `${e.ghost.id} ${grp.id}`).toBeGreaterThan(0)
-          for (const v of e.values) expect(side(v, grp.id), `${e.ghost.id} ${grp.id} ${v}`).toBe(true)
-        } else {
-          // une plage : sa borne du côté de la colonne, et pas de ligne au milieu
-          expect(s.isRange, e.ghost.id).toBe(true)
-          const lo = Math.min(...fields)
-          const hi = Math.max(...fields)
-          expect(grp.id, e.ghost.id).not.toBe('normal')
-          if (grp.id === 'slow') expect([e.kind, e.values]).toEqual(['low', [lo]])
-          if (grp.id === 'fast') expect([e.kind, e.values]).toEqual(['high', [hi]])
-          expect(side(e.values[0], grp.id), e.ghost.id).toBe(true)
-        }
-      }
-  })
-
-  it('aucune vitesse de la fiche n’est perdue : hors plage, chacune est écrite dans une colonne et une seule', () => {
-    for (const g of GHOSTS) {
-      if (copiesBehavior(g) || g.speed.isRange) continue
-      const fields = [...new Set([g.speed.min, g.speed.max, g.speed.alt].filter((v): v is number => v != null))].sort((a, b) => a - b)
-      const written = groups.flatMap((grp) => grp.entries.filter((e) => e.ghost === g).flatMap((e) => e.values)).sort((a, b) => a - b)
-      expect(written, g.id).toEqual(fields)
-    }
-  })
-
-  it('`several` : l’entité figure dans plusieurs colonnes, et seulement alors', () => {
-    for (const grp of groups) for (const e of grp.entries) expect(e.several, `${e.ghost.id} ${grp.id}`).toBe(columnsOf(groups, e.ghost).length > 1)
-    expect(entryOf(groups, 'slow', 'aswang').several).toBe(false)
-    expect(columnsOf(groups, ghost('dayan'))).toEqual(['slow', 'normal', 'fast'])
-    expect(columnsOf(groups, ghost('the-twins'))).toEqual(['slow', 'fast'])
-  })
-
-  it('ce qui s’écrit sur la ligne : la valeur de la colonne, la borne d’une plage, ou « copie… » pour le Mimic', () => {
-    expect(speedEntryText(entryOf(groups, 'slow', 'aswang'))).toBe(`1,53${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'dayan'))).toBe(`1,2${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'normal', 'dayan'))).toBe(`1,7${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'fast', 'dayan'))).toBe(`2,25${NBSP}m/s`)
-    // une plage : sa borne, sans dire dans quel sens l'entité la parcourt (le Thayé ne fait que ralentir, le Moroi qu'accélérer)
-    expect(speedEntryText(entryOf(groups, 'slow', 'hantu'))).toBe(`1,4${NBSP}m/s au plus lent`)
-    expect(groups.find((grp) => grp.id === 'normal')!.entries.some((e) => e.ghost.id === 'hantu')).toBe(false)
-    expect(speedEntryText(entryOf(groups, 'fast', 'hantu'))).toBe(`2,7${NBSP}m/s au plus rapide`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'deildegast'))).toBe(`0,4${NBSP}m/s au plus lent`)
-    expect(speedEntryText(entryOf(groups, 'fast', 'thaye'))).toBe(`2,75${NBSP}m/s au plus rapide`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'moroi'))).toBe(`1,5${NBSP}m/s au plus lent`)
-    for (const grp of groups) for (const e of grp.entries) expect(speedEntryText(e), e.ghost.id).not.toMatch(/descend|monte/)
-    // le résumé de la fiche, tel quel, sans sa majuscule
-    expect(speedEntryText(entryOf(groups, 'normal', 'the-mimic'))).toBe('copie la vitesse de l’entité imitée')
-    // toujours un nombre de la fiche suivi de son unité (espace insécable), sauf pour l'entité qui en copie une autre
-    for (const grp of groups)
-      for (const e of grp.entries) if (e.kind !== 'copy') expect(speedEntryText(e), e.ghost.id).toMatch(new RegExp(`\\d${NBSP}m/s(?: au plus (?:lent|rapide))?$`))
   })
 })
 
@@ -257,6 +96,8 @@ describe('Registre rangé par seuil de chasse : tôt, normal, tard', () => {
   })
 
   it('« toujours » pour un seul seuil : le Démon chasse toujours tôt, l’Ombre et le Deogen toujours tard', () => {
+    expect(PART_ORDER).toEqual(['always', 'sometimes'])
+    expect(PART_LABEL).toEqual({ always: 'toujours', sometimes: 'par moments' })
     const always = (c: SanityClass) => groups.find((grp) => grp.id === c)!.entries.filter((e) => partOf(e) === 'always').map((e) => e.ghost.id)
     expect(always('early')).toEqual(['demon'])
     expect(always('late').sort()).toEqual(['deogen', 'shade'])
@@ -277,66 +118,21 @@ describe('Registre rangé par seuil de chasse : tôt, normal, tard', () => {
   })
 })
 
-describe('Registre : l’accélération en ligne de vue et le mot de la vitesse', () => {
-  it('« accélère », « n’accélère pas », ou « selon les conditions » : d’après speed.los et speed.losVaries', () => {
-    for (const g of GHOSTS) {
-      const los = losOf(g)
-      if (copiesBehavior(g)) expect(los, g.id).toBeNull()
-      else if (g.speed.losVaries) expect(los, g.id).toBe('varies')
-      else expect(los, g.id).toBe(g.speed.los ? 'yes' : 'no')
-    }
-    expect(losEntryText(ghost('spirit'))).toBe('accélère en ligne de vue')
-    expect(losEntryText(ghost('hantu'))).toBe('n’accélère pas en ligne de vue')
-    expect(losEntryText(ghost('kormos'))).toBe('accélère en ligne de vue selon les conditions')
-    // le Mimic copie aussi cela : sa ligne dit seulement qu'il copie
-    expect(losEntryText(ghost('the-mimic'))).toBeNull()
-  })
-
-  it('« lente », « normale », « rapide » pour une seule classe ; « variable » dès qu’il y en a plusieurs', () => {
-    const groups = speedGroups(GHOSTS)
-    const one = { slow: 'lente', normal: 'normale', fast: 'rapide' } as const
-    for (const g of GHOSTS) {
-      const cols = columnsOf(groups, g)
-      expect(speedWord(g), g.id).toBe(cols.length > 1 ? 'variable' : one[cols[0]])
-    }
-    expect(speedWord(ghost('aswang'))).toBe('lente')
-    expect(speedWord(ghost('spirit'))).toBe('normale')
-    expect(speedWord(ghost('hantu'))).toBe('variable')
-    expect(speedWord(ghost('the-mimic'))).toBe('variable')
-  })
-
-  it('après le mot, les m/s de la fiche ; le Mimic, « variable », dit qu’il copie au lieu d’écrire ses 1,7 m/s', () => {
-    for (const g of GHOSTS) {
-      if (copiesBehavior(g)) expect(rowSpeedText(g), g.id).not.toMatch(/\d/)
-      else expect(rowSpeedText(g), g.id).toBe(speedText(g))
-    }
-    expect(rowSpeedText(ghost('the-mimic'))).toBe('copie l’entité imitée')
-    expect(rowSpeedText(ghost('spirit'))).toBe(`1,7${NBSP}m/s`)
-  })
-})
-
 describe('Registre : titres des colonnes et adresse', () => {
   it('typographie française : apostrophe courbe, espace insécable entre le nombre et son unité', () => {
-    const texts = [...Object.values(SPEED_COPY), ...Object.values(SANITY_COPY)].flatMap((c) => [c.title, c.def, c.play, c.label, c.none])
+    const texts = Object.values(SANITY_COPY).flatMap((c) => [c.title, c.def, c.play, c.label, c.none])
     for (const t of texts) {
       expect(t).not.toContain("'")
       expect(t).not.toMatch(/\d (?:%|m\/s)/)
     }
-    expect(SPEED_COPY.slow.def).toBe(`moins de 1,7${NBSP}m/s`)
-    expect(SPEED_COPY.normal.def).toBe(`1,7${NBSP}m/s`)
-    expect(SPEED_COPY.fast.def).toBe(`plus de 1,7${NBSP}m/s`)
     expect(SANITY_COPY.early.def).toBe(`peut chasser au-dessus de 50${NBSP}%`)
     expect(SANITY_COPY.normal.def).toBe(`50${NBSP}%`)
     expect(SANITY_COPY.late.def).toBe(`sous 50${NBSP}%`)
-    expect([SPEED_COPY.slow.title, SPEED_COPY.normal.title, SPEED_COPY.fast.title]).toEqual(['Lentes', 'Normales', 'Rapides'])
     expect([SANITY_COPY.early.title, SANITY_COPY.normal.title, SANITY_COPY.late.title]).toEqual(['Tôt', 'Normal', 'Tard'])
   })
 
-  it('« la plupart des entités » : plus de la moitié sont bien à 1,7 m/s, et à 50 %', () => {
-    expect(speedGroups(GHOSTS)[1].entries.length).toBeGreaterThan(GHOSTS.length / 2)
+  it('« la plupart des entités » : plus de la moitié sont bien à 50 %', () => {
     expect(sanityGroups(GHOSTS)[1].entries.length).toBeGreaterThan(GHOSTS.length / 2)
-    // et la moitié des entités n'ont que cette vitesse, plus de la moitié que ce seuil
-    expect(speedGroups(GHOSTS)[1].entries.filter((e) => !e.several).length).toBeGreaterThanOrEqual(GHOSTS.length / 2)
     expect(sanityGroups(GHOSTS)[1].entries.filter((e) => !e.several).length).toBeGreaterThan(GHOSTS.length / 2)
   })
 
