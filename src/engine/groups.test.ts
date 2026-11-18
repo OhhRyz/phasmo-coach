@@ -130,8 +130,9 @@ describe('Registre rangé par vitesse : lentes, normales, rapides', () => {
     const always = (c: SpeedClass) => groups.find((grp) => grp.id === c)!.entries.filter((e) => partOf(e) === 'always').map((e) => e.ghost.id)
     expect(always('slow')).toEqual(['aswang'])
     expect(always('normal').sort()).toEqual([...ALWAYS_NORMAL].sort())
-    // aucune entité n'est toujours rapide : la colonne l'écrit (« aucune entité »)
+    // aucune entité n'est toujours rapide : la colonne l'écrit en toutes lettres
     expect(always('fast')).toEqual([])
+    expect(SPEED_COPY.fast.none).toBe('aucune entité n’est toujours rapide')
   })
 
   it('dans chaque colonne, l’ordre du journal du jeu et son numéro', () => {
@@ -190,17 +191,19 @@ describe('Registre rangé par vitesse : lentes, normales, rapides', () => {
     expect(speedEntryText(entryOf(groups, 'slow', 'dayan'))).toBe(`1,2${NBSP}m/s`)
     expect(speedEntryText(entryOf(groups, 'normal', 'dayan'))).toBe(`1,7${NBSP}m/s`)
     expect(speedEntryText(entryOf(groups, 'fast', 'dayan'))).toBe(`2,25${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'hantu'))).toBe(`descend à 1,4${NBSP}m/s`)
+    // une plage : sa borne, sans dire dans quel sens l'entité la parcourt (le Thayé ne fait que ralentir, le Moroi qu'accélérer)
+    expect(speedEntryText(entryOf(groups, 'slow', 'hantu'))).toBe(`1,4${NBSP}m/s au plus lent`)
     expect(groups.find((grp) => grp.id === 'normal')!.entries.some((e) => e.ghost.id === 'hantu')).toBe(false)
-    expect(speedEntryText(entryOf(groups, 'fast', 'hantu'))).toBe(`monte à 2,7${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'deildegast'))).toBe(`descend à 0,4${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'fast', 'thaye'))).toBe(`monte à 2,75${NBSP}m/s`)
-    expect(speedEntryText(entryOf(groups, 'slow', 'moroi'))).toBe(`descend à 1,5${NBSP}m/s`)
+    expect(speedEntryText(entryOf(groups, 'fast', 'hantu'))).toBe(`2,7${NBSP}m/s au plus rapide`)
+    expect(speedEntryText(entryOf(groups, 'slow', 'deildegast'))).toBe(`0,4${NBSP}m/s au plus lent`)
+    expect(speedEntryText(entryOf(groups, 'fast', 'thaye'))).toBe(`2,75${NBSP}m/s au plus rapide`)
+    expect(speedEntryText(entryOf(groups, 'slow', 'moroi'))).toBe(`1,5${NBSP}m/s au plus lent`)
+    for (const grp of groups) for (const e of grp.entries) expect(speedEntryText(e), e.ghost.id).not.toMatch(/descend|monte/)
     // le résumé de la fiche, tel quel, sans sa majuscule
     expect(speedEntryText(entryOf(groups, 'normal', 'the-mimic'))).toBe('copie la vitesse de l’entité imitée')
     // toujours un nombre de la fiche suivi de son unité (espace insécable), sauf pour l'entité qui en copie une autre
     for (const grp of groups)
-      for (const e of grp.entries) if (e.kind !== 'copy') expect(speedEntryText(e), e.ghost.id).toMatch(new RegExp(`\\d${NBSP}m/s$`))
+      for (const e of grp.entries) if (e.kind !== 'copy') expect(speedEntryText(e), e.ghost.id).toMatch(new RegExp(`\\d${NBSP}m/s(?: au plus (?:lent|rapide))?$`))
   })
 })
 
@@ -314,7 +317,7 @@ describe('Registre : l’accélération en ligne de vue et le mot de la vitesse'
 
 describe('Registre : titres des colonnes et adresse', () => {
   it('typographie française : apostrophe courbe, espace insécable entre le nombre et son unité', () => {
-    const texts = [...Object.values(SPEED_COPY), ...Object.values(SANITY_COPY)].flatMap((c) => [c.title, c.def, c.play, c.label])
+    const texts = [...Object.values(SPEED_COPY), ...Object.values(SANITY_COPY)].flatMap((c) => [c.title, c.def, c.play, c.label, c.none])
     for (const t of texts) {
       expect(t).not.toContain("'")
       expect(t).not.toMatch(/\d (?:%|m\/s)/)

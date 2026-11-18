@@ -395,16 +395,13 @@ const RANK_HEAD: Record<Rank, string> = {
 const RANK_HINT: Record<Exclude<Rank, 'numero'>, [string, string]> = {
   vitesse: [
     'vitesses de la fiche, hors accélération en ligne de vue',
-    '« toujours » : l’entité n’a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver',
+    '« toujours » : l’entité n’a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où tombe une vitesse de sa fiche',
   ],
   seuil: [
     'santé mentale moyenne à partir de laquelle une chasse peut démarrer',
-    '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver',
+    '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche',
   ],
 }
-
-/** Une colonne sans aucune entité « toujours » (aucune entité n'est toujours rapide) : on l'écrit, c'est un fait du jeu. */
-const PART_NONE = 'aucune entité'
 
 /** « le Hantu, le Moroi, le Thayé et le Deildegast » */
 const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? ''))
@@ -413,12 +410,26 @@ const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).jo
  * Sous le critère « Vitesse en chasse », quand « normale » est cochée : pourquoi des entités que le registre ne
  * range pas parmi les normales restent possibles (leurs paliers passent par 1,7 m/s ou tout près, voir
  * nearStandardRanges). Le filtre élimine, il ne classe pas : les barrer ferait écarter la bonne entité.
+ * `ghosts` : les entités que le carnet laisse possibles. La note ne nomme que celles qui le sont encore (une
+ * autre preuve a pu écarter le Hantu), et se tait quand il n'en reste aucune.
  */
 export function normalSpeedNote(ghosts: readonly Ghost[]): string | null {
   const names = nearStandardRanges(ghosts).map((g) => le(g.name))
   if (!names.length) return null
   const one = names.length === 1
   const text = `${listed(names)} ${one ? 'reste possible' : 'restent possibles'} : ${one ? 'sa' : 'leur'} vitesse change par paliers et passe par 1,7 m/s ou tout près`
+  return fr(text.charAt(0).toUpperCase() + text.slice(1))
+}
+
+/**
+ * Sous « Ranger par vitesse » : pourquoi les entités dont la vitesse change par paliers n'ont pas de ligne au
+ * milieu, même quand un palier vaut 1,7 m/s (le Thayé au 6e vieillissement, le Deildegast au 13e objet).
+ */
+export function rangesNote(ghosts: readonly Ghost[]): string | null {
+  const names = ghosts.filter((g) => g.speed.isRange).map((g) => le(g.name))
+  if (!names.length) return null
+  const one = names.length === 1
+  const text = `${listed(names)} ${one ? 'change' : 'changent'} de vitesse par paliers : ${one ? 'rangé' : 'rangés'} à ${one ? 'son' : 'leur'} plus lent et à ${one ? 'son' : 'leur'} plus rapide`
   return fr(text.charAt(0).toUpperCase() + text.slice(1))
 }
 
@@ -429,7 +440,7 @@ export interface LedgerColumn {
   lines: { entry: GroupEntry; value: string; los: string | null }[]
 }
 
-/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans toutes celles où elle peut se trouver. */
+/** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans chacune de celles où tombe une valeur de sa fiche. */
 export function ledgerColumns(ghosts: readonly Ghost[], rank: Exclude<Rank, 'numero'>): LedgerColumn[] {
   if (rank === 'vitesse')
     return speedGroups(ghosts).map((grp) => ({
@@ -499,8 +510,10 @@ export function Codex() {
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
   const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
-  // « normale » cochée : pourquoi le Hantu, le Moroi, le Thayé et le Deildegast restent possibles (voir normalSpeedNote)
-  const normalNote = useMemo(() => normalSpeedNote(GHOSTS), [])
+  // « normale » cochée : pourquoi le Hantu, le Moroi, le Thayé et le Deildegast restent possibles tant que le reste
+  // du carnet ne les écarte pas (voir normalSpeedNote), et sous « Ranger par vitesse », pourquoi ils n'ont pas de ligne au milieu
+  const normalNote = useMemo(() => normalSpeedNote(pool), [pool])
+  const stepsNote = useMemo(() => rangesNote(GHOSTS), [])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
@@ -934,6 +947,12 @@ export function Codex() {
                 {fr(RANK_HINT[rank][0])}
                 <br />
                 {fr(RANK_HINT[rank][1])}
+                {rank === 'vitesse' && stepsNote && (
+                  <>
+                    <br />
+                    {stepsNote}
+                  </>
+                )}
               </p>
             )}
           </div>
@@ -969,7 +988,7 @@ export function Codex() {
                               ))}
                             </ul>
                           ) : (
-                            <p className="cx-part-none pencil-note">{PART_NONE}</p>
+                            <p className="cx-part-none pencil-note">{col.copy.none}</p>
                           )}
                         </div>
                       ) : null,

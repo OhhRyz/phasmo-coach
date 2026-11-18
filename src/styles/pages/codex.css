@@ -77,6 +77,8 @@
 .cx-more .field { gap: 0; }
 .cx-more .opts { margin-left: -10px; }
 .cx-field-hint { font-size: 18px; }
+/* « normale » cochée : pourquoi des entités à paliers restent possibles, détaché de l'indication qui précède */
+.cx-field-why { display: block; margin-top: 4px; }
 
 /* la conclusion : il ne reste qu'une entité */
 .cx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }

@@ -9,7 +9,7 @@ import { speedGroupsOf } from '../engine/groups'
 import { pairZeroVariants, testException } from '../engine/fiche'
 import { StoreProvider } from '../store/store'
 import { ToastProvider } from '../components/Toast'
-import { Codex, normalSpeedNote } from './Codex'
+import { Codex, normalSpeedNote, rangesNote } from './Codex'
 import { FROM_CODEX, TO_REGISTRY } from './codexReturn'
 import { GhostPage } from './GhostPage'
 import { InstallPage } from './Install'
@@ -236,15 +236,15 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(cols[0].parts[0].names).toEqual([name('aswang')])
     // aucune entité n'est toujours rapide : la colonne l'écrit
     expect(cols[2].parts[0].names).toEqual([])
-    expect(cols[2].parts[0].none).toBe('aucune entité')
+    expect(cols[2].parts[0].none).toBe("aucune entité n'est toujours rapide")
     expect(cols[0].parts[0].none).toBe('')
     const line = (i: number, id: string) => text(named(cols[i].rows, GHOSTS.find((g) => g.id === id)!)[0])
     expect(line(0, 'aswang')).toBe('Aswang : 1,53 m/s · accélère en ligne de vue')
     expect(line(0, 'dayan')).toBe('Dayan : 1,2 m/s · accélère en ligne de vue selon les conditions')
     expect(line(1, 'dayan')).toContain(' : 1,7 m/s · ')
     expect(line(2, 'dayan')).toContain(' : 2,25 m/s · ')
-    expect(line(0, 'hantu')).toBe("Hantu : descend à 1,4 m/s · n'accélère pas en ligne de vue")
-    expect(line(2, 'hantu')).toContain(' : monte à 2,7 m/s · ')
+    expect(line(0, 'hantu')).toBe("Hantu : 1,4 m/s au plus lent · n'accélère pas en ligne de vue")
+    expect(line(2, 'hantu')).toContain(' : 2,7 m/s au plus rapide · ')
     expect(line(1, 'the-mimic')).toBe("Le Mimic : copie la vitesse de l'entité imitée")
     // typographie de fr() : le nombre tient à son unité, l'apostrophe est courbe
     const raw = cols[0].grp.textContent ?? ''
@@ -253,8 +253,13 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(raw).toContain('n’accélère pas en ligne de vue')
     expect(el.querySelector('.cx-ledger')!.textContent).not.toMatch(/\d (?:m\/s|%)|'/)
     expect(text(el.querySelector('.cx-rank-hint'))).toBe(
-      "vitesses de la fiche, hors accélération en ligne de vue« toujours » : l'entité n'a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver",
+      "vitesses de la fiche, hors accélération en ligne de vue« toujours » : l'entité n'a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où tombe une vitesse de sa fiche" +
+        'Le Hantu, le Moroi, le Thayé et le Deildegast changent de vitesse par paliers : rangés à leur plus lent et à leur plus rapide',
     )
+    // la troisième ligne nomme les entités dont la fiche donne une plage, et elles seules
+    expect(text({ textContent: rangesNote(GHOSTS) } as Element)).toBe('Le Hantu, le Moroi, le Thayé et le Deildegast changent de vitesse par paliers : rangés à leur plus lent et à leur plus rapide')
+    expect(rangesNote(GHOSTS.filter((g) => !g.speed.isRange))).toBeNull()
+    expect(text({ textContent: rangesNote(GHOSTS.filter((g) => g.id === 'hantu')) } as Element)).toBe('Le Hantu change de vitesse par paliers : rangé à son plus lent et à son plus rapide')
   })
 
   it('?rang=seuil : « Tôt », « Normal », « Tard », chaque entité dans chacune de ses classes de seuil', () => {
@@ -292,7 +297,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect([line(0, 'gallu'), line(1, 'gallu'), line(2, 'gallu')]).toEqual(['Gallu : 60 %', 'Gallu : 50 %', 'Gallu : 40 %'])
     expect(line(0, 'demon')).toBe('Démon : 70 % ou 100 %')
     expect(text(el.querySelector('.cx-rank-hint'))).toBe(
-      "santé mentale moyenne à partir de laquelle une chasse peut démarrer« toujours » : l'entité n'a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver",
+      "santé mentale moyenne à partir de laquelle une chasse peut démarrer« toujours » : l'entité n'a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où tombe un seuil de sa fiche",
     )
     expect(el.querySelector('.cx-ledger')!.textContent).toContain(`50${NBSP}%`)
     // pas d'accélération en ligne de vue dans ce classement
@@ -336,6 +341,32 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
       const g = GHOSTS.find((o) => o.id === id)!
       for (const li of named(cols.flatMap((c) => c.rows), g)) expect(li.classList.contains('is-out'), id).toBe(true)
     }
+  })
+
+  it('« normale » avec une autre preuve ou un autre critère : la note ne nomme que les entités encore possibles', () => {
+    const note = (filter: object) => {
+      sessionStorage.setItem(FILTER_KEY, JSON.stringify({ filter: { evidenceCount: 3, evidence: {}, speed: ['normal'], huntAbove: null, los: null, ...filter }, query: '' }))
+      const el = renderCodex('?rang=vitesse')
+      return { el, note: el.querySelector('.cx-field-why') }
+    }
+    const struck = (el: HTMLElement, id: string) => {
+      const g = GHOSTS.find((o) => o.id === id)!
+      const lines = named(columns(el).flatMap((c) => c.rows), g)
+      expect(lines.length, id).toBeGreaterThan(0)
+      return lines.every((li) => li.classList.contains('is-out'))
+    }
+    // EMF 5 trouvé : des quatre, seul le Deildegast a cette preuve
+    const emf = note({ evidence: { emf: 'found' } })
+    expect(text(emf.note)).toBe('Le Deildegast reste possible : sa vitesse change par paliers et passe par 1,7 m/s ou tout près')
+    expect(['hantu', 'moroi', 'thaye'].map((id) => struck(emf.el, id))).toEqual([true, true, true])
+    expect(struck(emf.el, 'deildegast')).toBe(false)
+    // accélère en ligne de vue : des quatre, seul le Moroi
+    const los = note({ los: true })
+    expect(text(los.note)).toBe('Le Moroi reste possible : sa vitesse change par paliers et passe par 1,7 m/s ou tout près')
+    // le carnet écarte les quatre (EMF 5, UV et températures glaciales : le Djinn) : plus de note
+    const jinn = note({ evidence: { emf: 'found', uv: 'found', freezing: 'found' } })
+    expect(jinn.note).toBeNull()
+    expect(normalSpeedNote([])).toBeNull()
   })
 
   it('une preuve cochée barre les mêmes entités dans les colonnes que dans le registre', () => {

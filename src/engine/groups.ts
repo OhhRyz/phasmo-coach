@@ -64,7 +64,7 @@ export interface GroupEntry {
   kind: EntryKind
   /** valeurs de la fiche, par ordre croissant (m/s ou %) ; vide pour `copy` et `unknown` */
   values: number[]
-  /** l'entité figure dans plusieurs classes (« par moments », « change de vitesse ») ; sinon elle n'a que celle-ci (« toujours ») */
+  /** l'entité figure dans plusieurs classes (« par moments ») ; sinon elle n'a que celle-ci (« toujours ») */
   several: boolean
 }
 
@@ -145,7 +145,7 @@ function sanityEntry(g: Ghost, n: number, c: SanityClass, several: boolean): Gro
   return { ...base, kind: 'values', values: values.filter((v) => inSanityClass(v, c)) }
 }
 
-/** Les 30 entités rangées par vitesse : lentes, normales, rapides ; chacune dans toutes les classes où elle peut se trouver, dans l'ordre du journal. */
+/** Les 30 entités rangées par vitesse : lentes, normales, rapides ; chacune dans chaque classe où tombe une vitesse de sa fiche (voir speedGroupsOf), dans l'ordre reçu. */
 export function speedGroups(ghosts: readonly Ghost[]): Group<SpeedClass>[] {
   return SPEED_ORDER.map((id) => ({
     id,
@@ -167,7 +167,11 @@ export function sanityGroups(ghosts: readonly Ghost[]): Group<SanityClass>[] {
   }))
 }
 
-/** La vitesse écrite sur la ligne : « 1,53 m/s », « 1,2 m/s », « descend à 1,4 m/s », « monte à 2,7 m/s », « copie la vitesse de l’entité imitée ». */
+/**
+ * La vitesse écrite sur la ligne : « 1,53 m/s », « 1,2 m/s », « copie la vitesse de l’entité imitée ». Pour une plage,
+ * sa borne sans dire dans quel sens l'entité la parcourt (le Thayé part de 2,75 m/s et ne fait que ralentir, le
+ * Moroi part de 1,5 m/s et accélère) : « 1,4 m/s au plus lent », « 2,7 m/s au plus rapide ».
+ */
 export function speedEntryText(e: GroupEntry): string {
   const v = e.values.map(num)
   switch (e.kind) {
@@ -176,9 +180,9 @@ export function speedEntryText(e: GroupEntry): string {
     case 'unknown':
       return 'vitesse inconnue'
     case 'low':
-      return fr(`descend à ${v[0]} m/s`)
+      return fr(`${v[0]} m/s au plus lent`)
     case 'high':
-      return fr(`monte à ${v[0]} m/s`)
+      return fr(`${v[0]} m/s au plus rapide`)
     default:
       return fr(`${v.join(' ou ')} m/s`)
   }
@@ -244,12 +248,20 @@ export interface GroupCopy {
   def: string
   play: string
   label: string
+  /** écrit sous « toujours » quand aucune entité n'a que cette classe : un fait du jeu, pas un effet du carnet de preuves */
+  none: string
 }
 
 export const SPEED_COPY: Record<SpeedClass, GroupCopy> = {
-  slow: { title: 'Lentes', def: fr('moins de 1,7 m/s'), play: 'des pas plus lents que la normale', label: 'Entités lentes' },
-  normal: { title: 'Normales', def: fr('1,7 m/s'), play: 'les pas de référence, ceux de la plupart des entités', label: 'Entités à vitesse normale' },
-  fast: { title: 'Rapides', def: fr('plus de 1,7 m/s'), play: 'des pas plus rapides que la normale', label: 'Entités rapides' },
+  slow: { title: 'Lentes', def: fr('moins de 1,7 m/s'), play: 'des pas plus lents que la normale', label: 'Entités lentes', none: 'aucune entité n’est toujours lente' },
+  normal: {
+    title: 'Normales',
+    def: fr('1,7 m/s'),
+    play: 'les pas de référence, ceux de la plupart des entités',
+    label: 'Entités à vitesse normale',
+    none: 'aucune entité n’est toujours normale',
+  },
+  fast: { title: 'Rapides', def: fr('plus de 1,7 m/s'), play: 'des pas plus rapides que la normale', label: 'Entités rapides', none: 'aucune entité n’est toujours rapide' },
 }
 
 export const SANITY_COPY: Record<SanityClass, GroupCopy> = {
@@ -258,12 +270,14 @@ export const SANITY_COPY: Record<SanityClass, GroupCopy> = {
     def: fr('peut chasser au-dessus de 50 %'),
     play: 'une chasse alors que l’équipe a encore plus de la moitié de sa santé mentale',
     label: 'Entités qui peuvent chasser tôt',
+    none: 'aucune entité ne chasse toujours tôt',
   },
-  normal: { title: 'Normal', def: fr('50 %'), play: 'le seuil de la plupart des entités', label: 'Entités au seuil de chasse normal' },
+  normal: { title: 'Normal', def: fr('50 %'), play: 'le seuil de la plupart des entités', label: 'Entités au seuil de chasse normal', none: 'aucune entité n’a toujours ce seuil' },
   late: {
     title: 'Tard',
     def: fr('sous 50 %'),
     play: 'la santé mentale moyenne doit descendre plus bas avant une chasse',
     label: 'Entités qui peuvent chasser tard',
+    none: 'aucune entité ne chasse toujours tard',
   },
 }
