@@ -15,6 +15,10 @@ import { EMPTY_FILTER, filterGhosts, marked, matchesEvidence, possibleEvidence, 
 import { fr, NNBSP, type SpeedClass } from '../engine/format'
 import {
   losEntryText,
+  nearStandardRanges,
+  PART_LABEL,
+  PART_ORDER,
+  partOf,
   rankFromSearch,
   SANITY_COPY,
   sanityEntryText,
@@ -25,6 +29,7 @@ import {
   withRank,
   type GroupCopy,
   type GroupEntry,
+  type Part,
   type Rank,
 } from '../engine/groups'
 import { entityMentions } from '../engine/mentions'
@@ -386,17 +391,42 @@ const RANK_HEAD: Record<Rank, string> = {
   vitesse: 'Rangé par vitesse',
   seuil: 'Rangé par seuil de chasse',
 }
-/** Sous le sélecteur : ce que mesure le classement, et pourquoi un nom revient dans plusieurs colonnes. */
-const RANK_HINT: Record<Exclude<Rank, 'numero'>, string> = {
-  vitesse: 'vitesses de la fiche, hors accélération en ligne de vue · une entité qui change de vitesse figure dans chaque colonne où elle peut se trouver',
-  seuil: 'santé mentale moyenne à partir de laquelle une chasse peut démarrer · une entité qui change de seuil figure dans chaque colonne où elle peut se trouver',
+/** Sous le sélecteur : ce que mesure le classement, puis ce que veulent dire « toujours » et « par moments ». */
+const RANK_HINT: Record<Exclude<Rank, 'numero'>, [string, string]> = {
+  vitesse: [
+    'vitesses de la fiche, hors accélération en ligne de vue',
+    '« toujours » : l’entité n’a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver',
+  ],
+  seuil: [
+    'santé mentale moyenne à partir de laquelle une chasse peut démarrer',
+    '« toujours » : l’entité n’a que ce seuil · « par moments » : elle en change, et figure dans chaque colonne où elle peut se trouver',
+  ],
+}
+
+/** Une colonne sans aucune entité « toujours » (aucune entité n'est toujours rapide) : on l'écrit, c'est un fait du jeu. */
+const PART_NONE = 'aucune entité'
+
+/** « le Hantu, le Moroi, le Thayé et le Deildegast » */
+const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? ''))
+
+/**
+ * Sous le critère « Vitesse en chasse », quand « normale » est cochée : pourquoi des entités que le registre ne
+ * range pas parmi les normales restent possibles (leurs paliers passent par 1,7 m/s ou tout près, voir
+ * nearStandardRanges). Le filtre élimine, il ne classe pas : les barrer ferait écarter la bonne entité.
+ */
+export function normalSpeedNote(ghosts: readonly Ghost[]): string | null {
+  const names = nearStandardRanges(ghosts).map((g) => le(g.name))
+  if (!names.length) return null
+  const one = names.length === 1
+  const text = `${listed(names)} ${one ? 'reste possible' : 'restent possibles'} : ${one ? 'sa' : 'leur'} vitesse change par paliers et passe par 1,7 m/s ou tout près`
+  return fr(text.charAt(0).toUpperCase() + text.slice(1))
 }
 
 /** Une colonne du registre rangé : son titre, et ses lignes telles qu'elles s'écrivent. */
 export interface LedgerColumn {
   id: string
   copy: GroupCopy
-  lines: { entry: GroupEntry; value: string; los: string | null; note: string | null }[]
+  lines: { entry: GroupEntry; value: string; los: string | null }[]
 }
 
 /** Le registre rangé par vitesse ou par seuil : trois colonnes, chaque entité dans toutes celles où elle peut se trouver. */
@@ -405,12 +435,12 @@ export function ledgerColumns(ghosts: readonly Ghost[], rank: Exclude<Rank, 'num
     return speedGroups(ghosts).map((grp) => ({
       id: grp.id,
       copy: SPEED_COPY[grp.id],
-      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost), note: entry.several ? 'change de vitesse' : null })),
+      lines: grp.entries.map((entry) => ({ entry, value: speedEntryText(entry), los: losEntryText(entry.ghost) })),
     }))
   return sanityGroups(ghosts).map((grp) => ({
     id: grp.id,
     copy: SANITY_COPY[grp.id],
-    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null, note: entry.several ? 'change de seuil' : null })),
+    lines: grp.entries.map((entry) => ({ entry, value: sanityEntryText(entry), los: null })),
   }))
 }
 
@@ -469,6 +499,8 @@ export function Codex() {
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
   const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
+  // « normale » cochée : pourquoi le Hantu, le Moroi, le Thayé et le Deildegast restent possibles (voir normalSpeedNote)
+  const normalNote = useMemo(() => normalSpeedNote(GHOSTS), [])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
@@ -488,17 +520,23 @@ export function Codex() {
     if (rank === 'numero') return null
     const shown = new Map(rows.map((r) => [r.g, r.snippet]))
     const quoted = new Set<Ghost>()
-    return ledgerColumns(GHOSTS, rank).map((col) => ({
-      ...col,
-      lines: col.lines
+    return ledgerColumns(GHOSTS, rank).map((col) => {
+      const lines = col.lines
         .filter((l) => shown.has(l.entry.ghost))
         .map((l) => {
           const g = l.entry.ghost
           const snippet = quoted.has(g) ? null : (shown.get(g) ?? null)
           quoted.add(g)
           return { ...l, snippet }
-        }),
-    }))
+        })
+      // « toujours » puis « par moments » ; `bare` : la colonne n'a aucune entité de cette partie, même sans filtre
+      const parts = PART_ORDER.map((id: Part) => ({
+        id,
+        lines: lines.filter((l) => partOf(l.entry) === id),
+        bare: !col.lines.some((l) => partOf(l.entry) === id),
+      }))
+      return { ...col, lines, parts }
+    })
   }, [rank, rows])
 
   // sur ordinateur, le carnet de preuves reste à l'écran pendant qu'on parcourt le registre (s'il tient en hauteur)
@@ -769,6 +807,7 @@ export function Codex() {
               <span className="pencil-note cx-field-hint">
                 vitesse de base, sans ligne de vue · normale = 1,7 m/s (la plupart accélèrent jusqu’à 1,65 fois leur vitesse de base quand elles te voient)
               </span>
+              {filter.speed.includes('normal') && normalNote && <span className="pencil-note cx-field-hint cx-field-why">{normalNote}</span>}
             </div>
             <div className="field">
               <span>Une chasse a démarré au-dessus de</span>
@@ -890,7 +929,13 @@ export function Codex() {
           <div className="cx-rank">
             <span className="typed-label">Ranger par</span>
             <Seg label="Ranger le registre par" value={rank} onChange={setRank} options={RANKS} />
-            {rank !== 'numero' && <p className="pencil-note cx-rank-hint">{fr(RANK_HINT[rank])}</p>}
+            {rank !== 'numero' && (
+              <p className="pencil-note cx-rank-hint">
+                {fr(RANK_HINT[rank][0])}
+                <br />
+                {fr(RANK_HINT[rank][1])}
+              </p>
+            )}
           </div>
 
           {rows.length > 0 && ledger && (
@@ -900,25 +945,37 @@ export function Codex() {
                   <h3 className="cx-grp-h">{col.copy.title}</h3>
                   <p className="cx-grp-def">{col.copy.def}</p>
                   <p className="cx-grp-play pencil-note">{col.copy.play}</p>
-                  {col.lines.length > 0 ? (
-                    <ul className="cx-reg cx-grp-list">
-                      {col.lines.map(({ entry, value, los, note, snippet }) => (
-                        <GroupRow
-                          key={entry.ghost.id}
-                          seed={col.id}
-                          ghost={entry.ghost}
-                          value={value}
-                          los={los}
-                          note={note}
-                          dimmed={!matching.includes(entry.ghost)}
-                          circled={deduced && only === entry.ghost}
-                          snippet={snippet}
-                        />
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="cx-grp-none pencil-note">aucune ici</p>
-                  )}
+                  <div className="cx-grp-body">
+                    {col.parts.map((part) =>
+                      part.lines.length > 0 || part.bare ? (
+                        <div key={part.id} className="cx-part">
+                          <h4 className="typed-label cx-part-h">
+                            <span className="sr-only">{col.copy.title}, </span>
+                            {PART_LABEL[part.id]}
+                          </h4>
+                          {part.lines.length > 0 ? (
+                            <ul className="cx-reg">
+                              {part.lines.map(({ entry, value, los, snippet }) => (
+                                <GroupRow
+                                  key={entry.ghost.id}
+                                  seed={col.id}
+                                  ghost={entry.ghost}
+                                  value={value}
+                                  los={los}
+                                  dimmed={!matching.includes(entry.ghost)}
+                                  circled={deduced && only === entry.ghost}
+                                  snippet={snippet}
+                                />
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="cx-part-none pencil-note">{PART_NONE}</p>
+                          )}
+                        </div>
+                      ) : null,
+                    )}
+                    {col.lines.length === 0 && col.parts.every((part) => !part.bare) && <p className="cx-grp-none pencil-note">aucune ici</p>}
+                  </div>
                 </div>
               ))}
             </div>

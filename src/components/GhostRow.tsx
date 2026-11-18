@@ -125,14 +125,14 @@ export function GhostRow({
 
 /**
  * Une ligne du registre rangé par vitesse ou par seuil de chasse : le nom (lien vers la fiche, toute la ligne
- * l'ouvre), la valeur qui met l'entité dans cette colonne, tapée petit, et au crayon ce qui la fait figurer
- * dans plusieurs colonnes. Éliminée par le carnet de preuves : barrée au crayon, comme dans le registre.
+ * l'ouvre) et, tapée petit, la valeur qui met l'entité dans cette colonne. Le titre de sa partie dit si elle n'a
+ * que cette valeur (« toujours ») ou si elle en change (« par moments »). Éliminée par le carnet de preuves :
+ * barrée au crayon, comme dans le registre.
  */
 export function GroupRow({
   ghost,
   value,
   los,
-  note,
   dimmed,
   circled,
   snippet,
@@ -143,8 +143,6 @@ export function GroupRow({
   value: string
   /** « accélère en ligne de vue » : seulement dans le registre rangé par vitesse */
   los?: string | null
-  /** « change de vitesse », « change de seuil » */
-  note?: string | null
   dimmed?: boolean
   circled?: boolean
   snippet?: Snippet | null
@@ -164,7 +162,6 @@ export function GroupRow({
           )}
           {dimmed && <span className="sr-only"> (éliminée)</span>}
         </Link>
-        {note && <span className="cx-gnote pencil-note">{note}</span>}
       </span>
       <span className="cx-gval">
         <span className="sr-only"> : </span>
