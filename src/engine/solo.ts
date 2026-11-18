@@ -1,11 +1,9 @@
 import type { Ghost, Mechanics } from '../data/types'
-import { de, fitsToo, isFeminine, le, mentionsEvidence, MIMIC, namesGhost, needsEvidence, numbersFit, restatedBy, reverseTells, tellNumbers, testNeedsEvidence, TESTS_PER_GHOST, withoutEvidenceAsides, zeroTests } from './cards'
+import { de, isFeminine, le, mentionsEvidence, MIMIC, namesGhost, reverseTells, tellNumbers, testNeedsEvidence, TESTS_PER_GHOST, withoutEvidenceAsides, zeroTests } from './cards'
 import { fr, NNBSP, redactGhostName as redact } from './format'
 import {
   agrees,
-  apartFrom,
   asksOf,
-  asOther,
   balancedRanks,
   cap,
   closeLengths,
@@ -19,19 +17,19 @@ import {
   hintAlone,
   hints,
   homogeneous,
-  huntsAlready,
   keepsSense,
   losAsked,
   losQuestion,
   namesAny,
   nearSpeed,
+  NEEDS_CONTEXT,
   noLeadingMais,
   numberQuestion,
-  OBJECT_MASC,
   plainSign,
   plural,
   pronounClash,
   quoteFor,
+  REDACTED,
   rivals,
   screenOf,
   SENTENCES,
@@ -41,9 +39,9 @@ import {
   SPEED_OR_SANITY,
   standsOut,
   strayCheck,
-  SUBJ,
   summaryQuestion,
   themesOf,
+  TRUE_OF_ALL,
   whichTest,
   withoutAsides,
   wrongClaimsFor,
@@ -54,19 +52,23 @@ import {
   type Sign,
   type SignStyle,
 } from './quiz'
-import { shuffle, weightedPick, type Rng } from './random'
+import { createRng, shuffle, weightedPick, type Rng } from './random'
 
 /**
  * La copie sur une seule entité (« Me tester sur X »). Deux règles :
- *  - savoir que la copie porte sur X ne rapporte rien : aucun choix de quatre noms, et là où X est l'une de deux
- *    réponses (« de qui parle-t-on ? »), il l'est une fois sur deux ;
- *  - chaque question porte sur X, ou compare X à une entité qu'on confond avec lui. Aucune autre entité n'est le
- *    sujet d'une question, et toutes s'inscrivent sur X (ghostId).
+ *  - savoir que la copie porte sur X ne rapporte rien : aucun choix entre des noms d'entités, et chaque réponse fixe
+ *    (vrai ou faux, oui ou non) sort autant que l'autre ;
+ *  - chaque question porte sur X, et son contenu vient de la fiche de X. Aucune autre entité n'est le sujet d'une
+ *    question (le coach, 18 novembre 2026 : « dans un test sur X, chaque question parle de X »), et toutes
+ *    s'inscrivent sur X (ghostId). Ni « de qui parle-t-on : X ou Y ? », ni scène tirée de la fiche d'une entité
+ *    proche : la première demandait un nom, la seconde montrait le comportement d'une autre.
  *
- * Ce qui est présenté comme faux pour X, ou comme l'excluant, vient toujours des fiches : un signe d'une entité
- * qu'on confond avec X et qui ne lui convient en rien (les mêmes garde-fous que les mauvaises réponses du quiz), un
- * test d'élimination de X, une observation décisive d'une entité proche. Le Mimic copie l'entité imitée : aucun
- * comportement n'est jamais présenté comme faux pour lui, et il n'est jamais l'entité proche.
+ * Ce qui reste d'une autre fiche : le signe d'une entité qu'on confond avec X, cité comme FAUX pour X (« Vrai ou
+ * faux pour X ? ») ou parmi les mauvaises réponses, sans nom (« Lequel de ces signes est celui de X ? »), sous les
+ * mêmes garde-fous que les mauvaises réponses du quiz : il ne convient en rien à X. Et le départage dans le seul
+ * sens où sa réponse parle de X (« à quoi reconnais-tu X plutôt que Y ? »). Ce qui exclut X vient de ses propres
+ * tests d'élimination. Le Mimic copie l'entité imitée : aucun comportement d'une autre fiche n'est jamais présenté
+ * comme faux pour lui, et il n'est jamais l'entité proche.
  *
  * Ce module importe quiz.ts, qui l'importe à son tour (buildQuiz confie les listes d'une seule entité à
  * buildSoloQuiz) : rien de quiz.ts ne sert ici au chargement du module, seulement à l'intérieur des fonctions.
@@ -79,10 +81,10 @@ export const SOLO_COUNT = 10
  * Les sortes de questions d'une copie sur une seule entité, reconnues au début de leur identifiant :
  * T1 nombres et profil (q:san, q:spd, q:sansum, q:spdsum, q:los), T2 signe de X (q:sign-of), T3a test de X
  * (q:test-of), T3b « ce test suffit-il ? » (q:suffit), T4 ce qui exclut X (q:exclut), T5 l'intrus (q:intrus),
- * T6 vrai ou faux (q:vf), T7a départage (q:dist), T7b « de qui parle-t-on ? » (q:duel), T8 observation
- * (q:constat), et les questions rédigées de la fiche (q:auth).
+ * T6 vrai ou faux (q:vf), T7a départage (q:dist), T8 « tu observes ceci : est-ce que ça suffit ? » (q:constat), et
+ * les questions rédigées de la fiche (q:auth).
  */
-export type SoloType = 'T1' | 'T2' | 'T3a' | 'T3b' | 'T4' | 'T5' | 'T6' | 'T7a' | 'T7b' | 'T8' | 'auth'
+export type SoloType = 'T1' | 'T2' | 'T3a' | 'T3b' | 'T4' | 'T5' | 'T6' | 'T7a' | 'T8' | 'auth'
 
 const PREFIXES: readonly [string, SoloType][] = [
   ['q:san:', 'T1'],
@@ -97,7 +99,6 @@ const PREFIXES: readonly [string, SoloType][] = [
   ['q:intrus:', 'T5'],
   ['q:vf:', 'T6'],
   ['q:dist:', 'T7a'],
-  ['q:duel:', 'T7b'],
   ['q:constat:', 'T8'],
   ['q:auth:', 'auth'],
 ]
@@ -108,11 +109,14 @@ export function soloType(q: Pick<Question, 'id'> | string): SoloType | null {
   return PREFIXES.find(([p]) => id.startsWith(p))?.[1] ?? null
 }
 
-/** Les réponses fixes de « ce test suffit-il ? » (T3b), de « vrai ou faux » (T6) et de l'observation (T8). */
+/**
+ * Les réponses fixes : « est-ce que ça suffit ? » (un test, T3b ; une observation, T8) et « vrai ou faux » (T6).
+ * L'observation n'a plus que deux réponses : la troisième (« Non, ça l'exclut ») ne valait que pour les scènes
+ * d'une autre entité, qui ne se posent plus.
+ */
 export const SOLO_ANSWERS = {
   enough: { yes: 'yes', no: 'no' },
   trueFalse: { true: 'true', false: 'false' },
-  observation: { confirms: 'confirms', fits: 'fits', excludes: 'excludes' },
 } as const
 
 export interface SoloOptions {
@@ -129,43 +133,52 @@ export interface SoloOptions {
   onlyListed?: boolean
   /**
    * Jusqu'où compléter la copie d'une fiche trop courte pour dix questions : le dernier palier permis de LADDER
-   * (par défaut, tous). 0 : un objet, une question, deux départages.
+   * (par défaut, tous). 0 : un objet, une question.
    */
   relax?: number
 }
 
 /**
  * Les paliers d'une copie de dix qui ne se remplit pas, du plus strict au plus souple. Aucun ne redemande un fait,
- * ni ne demande une réponse déjà montrée, ni ne touche à la variété de la copie (voir TWO_MAX, FEW_MAX) : ils jouent
- * sur la finesse des faits et sur le nombre de départages.
- *  0. chaque objet en bloc (un objet, une question, voir FACETS), deux départages, une observation ou deux ;
- *  1. les faits d'un même objet se distinguent (la cadence des lancers du Poltergeist, puis son explosion) ;
- *  2. un départage de plus avec une entité proche ;
- *  3. une troisième observation, un quatrième départage ;
- *  4. un cinquième départage : une fiche qui dit peu de choses de son entité se complète par ce qui la distingue
- *     des entités qu'on confond avec elle.
+ * ni ne demande une réponse déjà montrée, ni ne touche à la variété de la copie (voir FEW_MAX, TWO_FREE) : ils
+ * jouent sur la finesse des faits.
+ *  0. chaque objet en bloc (un objet, une question, voir FACETS) ;
+ *  1. les faits d'un même objet se distinguent (la cadence des lancers du Poltergeist, puis son explosion ; la
+ *     vitesse du Revenant sans cible, puis ce qui le fait accélérer).
  * Une fiche qui n'a pas dix questions à ce prix donne une copie plus courte.
  *
  * Le départage ne se pose que dans un sens : « à quoi reconnais-tu X plutôt que Y ? », dont la réponse parle de X.
  * Posé à l'envers (« à quoi reconnais-tu Y plutôt que X ? »), il demandait de connaître Y : une question sur une
  * autre entité, que le coach a écartée (18 novembre 2026). Une copie sur X parle de X ; mieux vaut cinq questions
- * sur lui que sept dont deux sur celles qu'on confond avec lui.
+ * sur lui que sept dont deux sur celles qu'on confond avec lui. Un seul départage par copie : deux départages
+ * d'une même entité citent le plus souvent le même trait (voir duelSeeds).
  */
-const LADDER = [
-  { fine: false, three: 2, duels: 2 },
-  { fine: true, three: 2, duels: 2 },
-  { fine: true, three: 2, duels: 3 },
-  { fine: true, three: 3, duels: 4 },
-  { fine: true, three: 3, duels: 5 },
-] as const
+const LADDER = [{ fine: false }, { fine: true }] as const
+/** Le dernier palier se retente : une question à quatre phrases ne se compose pas à chaque tirage (voir MISSES). */
+const LAST_ROUNDS = 3
 /**
- * La variété d'une copie de dix, à tous les paliers : trois questions à deux réponses au plus (une sur deux se
- * trouve au hasard), et cinq questions au plus à moins de quatre réponses, donc cinq à quatre réponses au moins.
- * Une copie plus courte garde les mêmes plafonds : une fiche qui n'a presque que des questions à deux ou trois
- * réponses (le Mimic) donne une copie courte plutôt qu'une copie qui se devine.
+ * La variété d'une copie. Les questions à deux réponses (vrai ou faux, « est-ce que ça suffit ? », la ligne de vue)
+ * sont les plus simples à lire, et une sur deux se trouve au hasard : jusqu'à trois dans toute copie (TWO_FREE),
+ * et au-delà pas plus de la moitié de la copie telle qu'elle est (quatre sur sept ou huit, cinq sur neuf ou dix).
+ * Les questions à moins de quatre réponses ne dépassent jamais cinq sur dix (FEW_MAX) : une copie de dix compte
+ * cinq questions à quatre réponses au moins. Une fiche qui n'a presque que des questions à deux réponses (le Mimic)
+ * donne une copie courte plutôt qu'une copie qui se devine.
  */
-const TWO_MAX = 3
+const TWO_FREE = 3
 const FEW_MAX = 5
+/** Au plus autant de questions en nombres par copie de dix sur le seuil, et autant sur la vitesse (le Gallu a trois états, donc six nombres). */
+const NUMBERS_MAX = 2
+/** Au plus autant de « ce test suffit-il ? » (T3b) et de « tu observes ceci : est-ce que ça suffit ? » (T8) par copie de dix. */
+const WORTH_MAX = { T3b: 1, T8: 2 } as const
+/**
+ * Au plus autant de questions par copie de dix qui puisent dans la fiche d'une autre entité : un vrai ou faux dont le
+ * « Faux » serait le signe d'une entité proche (il se tire à pile ou face entre ce signe et un signe de X, et compte
+ * quelle que soit sa réponse), ou l'intrus. Une copie sur X parle de X : ce qu'elle dit faux pour lui vient d'abord de
+ * sa propre fiche (ses tests d'élimination, voir `own`), et jamais plus d'une affirmation ne vient d'ailleurs. Compter
+ * le tirage, et non la seule réponse « Faux », garde chaque réponse indépendante des précédentes : arrêter après le
+ * premier « Faux » faisait du premier vrai ou faux d'une copie un « Faux » 55 fois sur 100, et des suivants des « Vrai ».
+ */
+const FOREIGN_MAX = 1
 
 /* ---------- ce qu'une question demande, ce qu'elle montre ---------- */
 
@@ -242,6 +255,10 @@ interface Seed {
   gate?: 'stdSan' | 'stdSpd' | 'stdAuth' | 'los'
   /** à essayer après les autres de sa sorte (un signe qui ne parle que de vitesse ou de seuil) */
   late?: boolean
+  /** ce qu'elle cite vient de la fiche d'une autre entité (un signe d'une entité proche, dit faux pour X) : voir FOREIGN_MAX */
+  foreign?: boolean
+  /** la citation jugée (vrai ou faux, « est-ce que ça suffit ? »), pour l'apparier à une citation de même longueur qui a l'autre réponse */
+  text?: string
   /**
    * Ce que la question demandera à coup sûr, connu sans la composer : si la copie le demande déjà, inutile de
    * chercher ses mauvaises réponses (la recherche de réponses de même forme est ce qui coûte).
@@ -267,7 +284,20 @@ const isFine = (k: string) => k.includes('|§')
  * et ne distingue ses faits que pour se compléter (voir LADDER). À relire quand une fiche change : une ligne
  * nouvelle qui ne dit aucun de ces faits reste prudente (elle les recoupe tous), jamais fausse.
  */
-const FACETS: Readonly<Record<string, Readonly<Record<string, readonly (readonly [string, RegExp])[]>>>> = {
+type Facets = readonly (readonly [string, RegExp])[]
+/** Le Deildegast : sa vitesse et les objets que les joueurs manipulent sont un seul sujet, quatre faits. */
+const DEILDEGAST_SPEED: Facets = [
+  // 3,0 m/s si personne n'a rien touché ; retour à 3,0 m/s après chaque chasse
+  ['départ', /3,0|(?<![\d,])3\s?m\/s|rien touché|plus personne ne touche|revient|retour à|remonte|ultra-rapide|extrêmement rapide/iu],
+  // −0,1 m/s par objet différent, jusqu'à 0,4 m/s (26 actions)
+  ['par objet', /0,1|0,4|minimum|(?<!\d)26(?!\d)|(?<!\d)13(?!\d)|par action|chaque action|nombre d[’']objets|combien d[’']objets|quinzaine/iu],
+  // ce qui compte : un objet ramassé ou utilisé par un joueur (même mort), une seule fois par objet
+  ['ce qui compte', /ramass|interrupteur|robinet|qu[’']une fois|même chaussure|lancés? par l[’']entité|projeté par|manipulés par|(?<!\p{L})mort/iu],
+  // vitesse verrouillée pendant toute la chasse : ni accélération en ligne de vue, ni ralentissement
+  ['fixe', /fixe|verrouill|ligne de vue|constante|ne bouge pas|pas d[’']accélération|sans accélérer|réguliers/iu],
+]
+
+const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
   poltergeist: {
     objets: [
       // la cadence des lancers pendant une chasse, et le test des objets alignés sur son passage
@@ -329,9 +359,18 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, readonly (readonly
   },
   raiju: {
     electronique: [
-      ['vitesse', /vitesse|2,5|accél|rapide|allumer? (?:et|puis) éte/iu],
+      // (« l'accélération » seule ne dit pas la vitesse : « quel équipement déclenche l'accélération du Raiju ? »)
+      ['vitesse', /vitesse|2,5|accélèr|n[’']accélère|rapide|allumer? (?:et|puis) éte/iu],
       ['perturbations', /perturb|15\s?m(?!\p{L})/iu],
       ['seuil', /6[35]\s?%|chasser (?:dès|à)|peut chasser|chasse démarre|niveau de santé/iu],
+      // quel appareil compte : posé ou tenu en main, celui du joueur, allumé
+      ['quel appareil', /posés?(?!\p{L})|tenus?(?!\p{L})|en main|quel équipement|éteint ne déclenche/iu],
+    ],
+    vitesse: [
+      // 2,5 m/s près d'un appareil électronique actif, 1,7 m/s loin de lui
+      ['près de l’électronique', /2,5|1,7|vitesse (?:fixe|accrue|standard)|plus rapides?|accélèr|n[’']accélère|monte et redescend/iu],
+      ['quel appareil', /posés?(?!\p{L})|tenus?(?!\p{L})|en main|quel équipement|éteint ne déclenche/iu],
+      ['ligne de vue', /ligne de vue|plateaux/iu],
     ],
   },
   yurei: {
@@ -381,6 +420,59 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, readonly (readonly
       ['posture', /posture/iu],
     ],
   },
+  aswang: {
+    cachette: [
+      ['la chasse s’arrête', /s[’']arrête|s[’']est arrêtée|se termine|terminée|prend fin|met fin/iu],
+      ['chasse suivante', /suivante|précédente|marche (?:droit )?vers/iu],
+    ],
+    vitesse: [
+      // sa vitesse de base, un peu lente
+      ['base', /1,53|1,5\s?m\/s|vitesse de base de|pas de départ|démarrent|un peu (?:plus )?lents?/iu],
+      // sa prise de vitesse en ligne de vue : 8,7 s au lieu de 13 s
+      ['ligne de vue', /8,7|8,667|9\s?s(?!\p{L})|13\s?s(?!\p{L})|ligne de vue|en vue|maximale|pointe/iu],
+    ],
+  },
+  // les fiches dont presque toutes les lignes parlent de vitesse : sans ces faits, une seule question sur la vitesse
+  // (un nombre) écartait de la copie tout ce que la fiche en dit d'autre
+  revenant: {
+    vitesse: [
+      // 1,0 m/s tant qu'il n'a détecté personne
+      ['sans cible', /1,0|(?<![\d,])1\s?m\/s|sans cible|aucun joueur|n[’']a (?:repéré|détecté) personne|habituelle|très lents?|extrêmement lents/iu],
+      // 3,0 m/s dès qu'il détecte un joueur : par la vue, la voix, un appareil électronique
+      ['détection', /3,0|(?<![\d,])3\s?m\/s|dès qu[’']\p{L}+ (?:te |t[’'])?(?:détecte|repère|voit)|où il détecte|laisses détecter|es repéré|voix|électronique|appareil|pleine vitesse|très rapides?/iu],
+      // d'un coup, jamais peu à peu : pas d'accélération en ligne de vue
+      ['d’un coup', /instantan|d[’']un coup|immédiat|jamais progressive|montée progressive|peu à peu pendant|saute|ligne de vue|brusqu|aussitôt|n[’']augmente plus|déjà au maximum/iu],
+      // il garde sa vitesse jusqu'à ta dernière position connue, puis ralentit peu à peu
+      ['ralentit', /ralenti|dernière position|là où elle t[’']a perdu/iu],
+    ],
+  },
+  dayan: {
+    vitesse: [
+      // à moins de 10 m : 2,25 m/s si tu bouges, 1,2 m/s si tu restes immobile
+      ['près', /2,25|1,2(?!\d)|bouge|immobile|marche|t[’']arrêtes|repars|très lent|ralentit soudainement/iu],
+      // dans ce rayon, sa vitesse est fixe : plus d'accélération en ligne de vue
+      ['fixe', /fix[eé]|plus d[’']accélération|ne gagne plus|ne s[’']applique plus|accumul|semble-t-elle disparaître/iu],
+      ['loin', /1,7|plus de 10\s?m|de loin|au-delà/iu],
+    ],
+  },
+  deogen: {
+    vitesse: [
+      // il fonce de loin (3,0 m/s) et ralentit une fois sur toi (0,4 m/s)
+      ['loin puis près', /3,0|0,4|fonce|ralenti|chute|très élevée|toute vitesse|très lent|au ralenti/iu],
+      ['ligne de vue', /ligne de vue/iu],
+    ],
+  },
+  thaye: {
+    vitesse: [
+      // de 2,75 m/s jeune à 1,0 m/s vieux : plus lent d'une chasse à l'autre
+      ['âge', /2,75|1,0|(?<![\d,])1\s?m\/s|0,175|vieilli|jeune|vieux|plus lente?(?!\p{L})|ralentit d[’']une chasse|diminue|exposé|toute vitesse|très rapide|très lents?/iu],
+      ['ligne de vue', /ligne de vue|accél|te voit|en vue/iu],
+    ],
+  },
+  deildegast: {
+    vitesse: DEILDEGAST_SPEED,
+    objets: DEILDEGAST_SPEED,
+  },
   shade: {
     // ce que l'Ombre ne fait pas dans la pièce où se trouve un joueur
     presence: [
@@ -388,11 +480,37 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, readonly (readonly
       ['activité', /interact|EMF|événement/iu],
       ['flamme', /bougie|flamme|souffl/iu],
     ],
+    evenement: [
+      ['chant', /chant/iu],
+      // aucun événement dans la pièce où se trouve un joueur
+      ['même pièce', /(?<!\p{L})pièce(?!\p{L})|joueur/iu],
+      // aucun événement à 100 % de santé mentale, de plus en plus quand elle baisse
+      ['santé', /100\s?%|santé|début de partie/iu],
+      // en silhouette noire aux événements des objets maudits
+      ['silhouette', /silhouette|noire|cercle|boîte à musique|patte de singe|apparence complète/iu],
+      ['brume', /brume|bulle/iu],
+    ],
   },
-  aswang: {
-    cachette: [
-      ['la chasse s’arrête', /s[’']arrête|s[’']est arrêtée|se termine|terminée|prend fin|met fin/iu],
-      ['chasse suivante', /suivante|précédente|marche (?:droit )?vers/iu],
+  oni: {
+    evenement: [
+      // ses événements coûtent 20 % de santé mentale au lieu de 10 %
+      ['santé', /20\s?%|10\s?%|20 points|santé|draine/iu],
+      ['brume', /brume|bulle|sifflement/iu],
+      ['apparence', /apparence complète/iu],
+      ['activité', /activité|actif|plusieurs/iu],
+    ],
+    visible: [
+      // plus visible en chasse : il clignote plus fréquemment
+      ['clignote', /clignot|plus visibles?|suis facilement/iu],
+      ['apparence', /apparence complète/iu],
+    ],
+  },
+  spirit: {
+    encens: [
+      // 180 s sans pouvoir chasser après un encens, au lieu de 90 s
+      ['délai', /180\s?s(?!\p{L})|3 minutes|90\s?s(?!\p{L})|attend(?!s)|rechass|ne lance aucune chasse/iu],
+      // le test du double encens : le second entre 150 et 170 s, puis une chasse dans la minute
+      ['double encens', /150|170|160|2\smin\s40|double|second|deuxième|de nouveau|une première fois/iu],
     ],
   },
 }
@@ -466,16 +584,49 @@ function keysOf(who: string, text: string): string[] {
   return keys
 }
 
+/**
+ * Les thèmes des signes (voir THEMES, quiz.ts) sont taillés large : ils écartent une mauvaise réponse au moindre
+ * doute, et là un doute de trop ne coûte rien. Ici, un thème reconnu à tort fait de deux faits sans rapport « le
+ * même fait », et la copie perd une question : « sans objet maudit » et « lance un chronomètre » ne parlent pas des
+ * objets qu'une entité lance (tous les tests du Démon se recoupaient ainsi) ; « portée du crucifix +50 % », « 33 % de
+ * chances », « −25 % de santé » ne disent rien du seuil de chasse ; « portée » n'est pas une porte ; « tes
+ * déplacements » (ce que le Kormos détecte) ne sont pas ceux de l'entité. Chaque règle ne fait que retirer un thème
+ * reconnu à tort : les valeurs communes et les mots communs (voir sameSaid) continuent de reconnaître un même fait.
+ */
+const NOT_OBJECTS =
+  /objets?\s+maudits?|(?<!\p{L})(?:re)?lanc\p{L}*(?:\s+(?:pas|plus|jamais|aucune?|ou|ni|(?:re)?lanc\p{L}*))*\s+(?:(?:une?|la|sa|ses|des|les|de|d[’'])\s*)?(?:nouvelle\s+)?(?:chasses?|chrono\p{L}*|tentatives?|événements?)|chasses?\s+(?:\p{L}+\s+)?lancées?/giu
+const OBJECTS = /objets?(?!\p{L})|lance|projet/iu
+/** « seuil », « chasse dès 60 % », « chasse à toute santé mentale », « chasse selon la santé de sa cible » (pas « d'une chasse à l'autre », ni « chasse à 1,7 m/s »). */
+const THRESHOLD = /seuil|chass\p{L}*\s+(?:(?:dès|à|sous|avant|jusqu[’']à)\s+\d+(?:,\d+)?\s?%|à\s+(?:n[’']importe|toute?s?\s)|selon\s+la\s+santé)/iu
+/** Un pourcentage dit d'une chasse ou de la santé mentale moyenne… */
+const PERCENT_OF_HUNT = /chass|santé\s+(?:mentale\s+)?moyenne/iu
+/** … sauf une durée ou une vitesse (« 20 % plus courte », « 15 % plus rapides », « vitesse d'entité de 100 % »). */
+const PERCENT_OF_ELSE = /plus\s+(?:courte?s?|rapides?|vite)|de\s+moins|durée|vitesse\s+d[’']entité|de\s+chances/iu
+const CLAUSE = /\s*(?:[;·:()]|[.!?…](?=\s|$))\s*/u
+const DOOR = /(?<!\p{L})portes?(?!\p{L})/iu
+const PLAYER_MOVES = /(?<!\p{L})(?:tes|ton|vos)\s+déplacements?/giu
+const ROAMING = /(?<!\p{L})erre|errance|pièce favorite|de pièce|s[’']éloigne|déplacement|téléport|abords/iu
+function refined(who: string, text: string, keys: Set<string>): void {
+  const drop = (theme: string) => keys.delete(`${who}|~${theme}`)
+  if (!OBJECTS.test(text.replace(NOT_OBJECTS, ' '))) drop('objets')
+  // un pourcentage ne parle du seuil que dans une proposition qui parle d'une chasse ou de la santé moyenne
+  const level = (clause: string) => /\d\s?%/u.test(clause) && PERCENT_OF_HUNT.test(clause) && !PERCENT_OF_ELSE.test(clause)
+  if (!THRESHOLD.test(text) && !text.split(CLAUSE).some(level)) drop('seuil')
+  if (!DOOR.test(text)) drop('porte')
+  if (!ROAMING.test(text.replace(PLAYER_MOVES, ' '))) drop('errance')
+}
+
 function computeKeys(who: string, text: string): string[] {
   const all = factKeys({ ghostId: who, prompt: text, choices: [], correct: [] })
   // la vitesse ou le seuil en général comptent aussi pour une phrase chiffrée : « fonce à 3,0 m/s puis ralentit à 0,4 m/s
   // en arrivant sur toi » redit « arrive à toute vitesse, puis tombe presque au ralenti une fois tout près ». Entre deux
   // phrases chiffrées, ce sont les valeurs qui disent si c'est le même fait (voir sameFact)
-  // une valeur à deux décimales se lit aussi arrondie : « près de 3,7 m/s » (une observation) donne « 3,71 m/s »
+  // une valeur à deux décimales ou plus se lit aussi arrondie : « près de 3,7 m/s » (une observation) donne
+  // « 3,71 m/s » ; « en 8,7 s » (une question rédigée de l'Aswang) redit « en 8,667 s » (son signe, son corrigé)
   const rounded = all.flatMap((k) => {
-    const m = /^(.+\|)(\d+),(\d)\d$/u.exec(k)
+    const m = /^(.+\|)(\d+),(\d)(\d+)$/u.exec(k)
     if (!m) return []
-    const v = Number(`${m[2]}.${k.slice(-2)}`)
+    const v = Number(`${m[2]}.${m[3]}${m[4]}`)
     return [`${m[1]}${m[2]},${m[3]}`, `${m[1]}${(Math.round(v * 10) / 10).toFixed(1).replace('.', ',')}`]
   })
   // une vitesse dite sans décimale (« à pas très lents (environ 1 m/s) », une observation) donne « 1,0 m/s »
@@ -484,6 +635,7 @@ function computeKeys(who: string, text: string): string[] {
     return m ? [`${m[1]}${m[2]},0`] : []
   })
   const keys = new Set([...all, ...rounded, ...whole])
+  refined(who, text, keys)
   if (OWN_ROOM.test(text)) keys.add(`${who}|~errance`)
   // une allure dite sans nombre (« des pas extrêmement lents tant que l'entité n'a repéré personne ») parle de la vitesse
   if (PACE.test(text)) keys.add(`${who}|~vitesse`)
@@ -547,8 +699,13 @@ function parts(s: Stmt): { hard: string[]; soft: string[]; sort: (typeof SORTS)[
   const keys = keysOf(s.who, s.text)
   const hard = keys.filter((k) => !isSoft(k))
   const whole = keys.filter(isSoft)
-  return { hard, soft: [...whole, ...whole.flatMap((k) => facetsOf(s.who, k, s.text))], sort: sortOf(!!s.key, hard.length > 0) }
+  // une scène (un rapport de terrain, un test) cite des nombres pour l'exemple (« vers 60 % », « environ 1 m/s ») :
+  // elle redit le fait de son objet quelles que soient ses valeurs, comme une phrase sans nombre
+  const valued = hard.length > 0 && !(s.item && SCENE_LINE.test(s.item))
+  return { hard, soft: [...whole, ...whole.flatMap((k) => facetsOf(s.who, k, s.text))], sort: sortOf(!!s.key, valued) }
 }
+/** Une ligne de fiche qui décrit une scène : un rapport de terrain (`#O2`), un test de confirmation (`#C0`) ou d'élimination (`#E1`). */
+const SCENE_LINE = /#[OCE]\d+$/u
 
 /** Ce que demande une question qui pose cette phrase : ses valeurs et son objet (à qui est-ce ?), ou ce qu'elle vaut. */
 function askKeys(s: Stmt): string[] {
@@ -619,6 +776,8 @@ const saidOf = (s: Stmt, asking: boolean): Said => ({
 
 function built(q: Question, type: SoloType, asked: readonly Stmt[], shown: readonly Stmt[] = [], extra: readonly string[] = []): Built {
   const asks = new Set([...asked.flatMap(askKeys), ...extra])
+  // tout ce qu'elle demande est montré une fois corrigée, son objet sous toutes les sortes qui diraient le même fait :
+  // deux questions qui DEMANDENT le même objet (ou le même fait de cet objet, voir FACETS) ne vont jamais ensemble
   const shows = new Set([...asks, ...asked.flatMap(showKeys), ...shown.flatMap(showKeys)])
   // une question en nombres demande une valeur telle qu'on la lit : elle passe avant toute question dont l'énoncé, la
   // citation, une réponse ou le corrigé l'écrit, de qui qu'elle parle (ses propres mauvaises valeurs ne montrent rien)
@@ -639,8 +798,7 @@ function listOf(parts: readonly string[]): string {
   return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`
 }
 
-/** « le », « la », « les » devant un verbe (« ça suffit à le confirmer ») ; « l’ », « les » devant une voyelle. */
-const them = (g: Ghost) => (plural(g) ? 'les' : isFeminine(g.name) ? 'la' : 'le')
+/** « l’ », « les » devant un verbe qui commence par une voyelle (« ils ne l’excluent pas »). */
 const themElided = (g: Ghost) => (plural(g) ? 'les ' : 'l’')
 /** « C’est le Deogen », « Ce sont les Jumeaux » */
 const itIs = (g: Ghost) => `${plural(g) ? 'Ce sont' : 'C’est'} ${le(g.name)}`
@@ -792,6 +950,26 @@ const ownEliminations = memo((x): { i: number; text: string; body: string }[] =>
   }),
 )
 
+/**
+ * Un test dit comme ce qu'on observe (voir situationOf), sans le nom de x (« … déclencher la capacité du
+ * Cauchemar » : son nom dirait déjà que la scène est la sienne) ni celui d'une autre entité, et assez court pour se
+ * lire d'un coup d'œil.
+ */
+function sceneOfTest(body: string, x: Ghost, all: readonly Ghost[]): string | null {
+  const said = situationOf(body)
+  const quote = said && redact(said, x)
+  return quote && quote.length <= QUOTE_MAX && !namesAny(quote, all) ? quote : null
+}
+
+/** Les rapports de terrain de la fiche de x qui se citent sans preuve ni nom d'entité : ce qu'on observe avec lui. */
+const ownScenes = memo((x, all): { i: number; text: string; quote: string; strength: Ghost['observations'][number]['strength']; why?: string }[] =>
+  x.observations.flatMap((o, i) => {
+    if (o.requires) return []
+    const quote = quoteFor(o.text, x)
+    return quote && !namesAny(quote, all) ? [{ i, text: o.text, quote, strength: o.strength, ...(o.why ? { why: o.why } : {}) }] : []
+  }),
+)
+
 /* ---------- T1 : nombres et profil ---------- */
 
 /**
@@ -799,7 +977,7 @@ const ownEliminations = memo((x): { i: number; text: string; body: string }[] =>
  * 22 entités chassent d'habitude à 50 %, 20 à 1,7 m/s. Posée plus souvent, la valeur standard, toujours parmi
  * les choix, gagnerait d'office ; la copie préfère les nombres propres à l'entité.
  */
-const SOLO_STANDARD = { san: 0.06, spd: 0.012, authored: 0.5 } as const
+const SOLO_STANDARD = { san: 0.08, spd: 0.12, authored: 0.5 } as const
 /** Une question rédigée dont la bonne réponse est la valeur standard elle-même : elle passe une copie sur deux (`authored`). */
 const STANDARD_ANSWER = /^(?:50\s?%|1,7\s?m\/s)$/u
 
@@ -817,10 +995,31 @@ const losChance = memoList((all) => {
 /** Une copie sur deux, pour une entité qui n'accélère pas : la question revient ainsi rarement deux copies de suite. */
 const LOS_NO = 0.5
 
+/** « cet interrupteur », « ces 3,0 m/s », « dans ce rayon » : une précision de la fiche qui renvoie à la phrase d'avant. */
+const POINTS_BACK = /(?<!\p{L})(?:cet|cette|ces)\s+[\p{L}\d]|(?<!\p{L})ce\s+(?!qui(?!\p{L})|que(?!\p{L})|qu[’']|sont(?!\p{L})|n[’']|ne\s)\p{L}/iu
+
+/**
+ * Le corrigé d'une question en nombres, dans une copie sur une seule entité : la précision de la fiche qui cite la
+ * valeur demandée, et elle seule (« Dès qu'il détecte un joueur (…), il accélère immédiatement à 3,0 m/s. »). Le
+ * corrigé du quiz général recopie le résumé entier et deux précisions : toutes les vitesses de la fiche étaient
+ * alors montrées dès la première question, et plus aucune ne pouvait se demander dans la copie. Une précision qui
+ * renvoie à la phrase d'avant (« Chasse dès 60 % si cet interrupteur… ») la reprend avec elle. Null si aucune
+ * précision ne cite la valeur : le corrigé du quiz général reste.
+ */
+function leanNumber(details: readonly string[], value: number, unit: '%' | 'm/s'): string | null {
+  const n = unit === '%' ? String(value) : mpsNumber(value)
+  const cited = new RegExp(`(?<![\\d,])${n.replace('.', '\\.')}(?![\\d,])${unit === '%' ? '\\s?%' : ''}`, 'u')
+  const at = details.findIndex((d) => cited.test(d))
+  if (at < 0) return null
+  return POINTS_BACK.test(details[at]) && at > 0 ? `${details[at - 1]} ${details[at]}` : details[at]
+}
+/** « 1,0 », « 2,25 », « 1,7 » : une vitesse telle que les fiches l'écrivent, sans son unité. */
+const mpsNumber = (v: number) => (Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? v.toFixed(1) : v.toFixed(2)).replace('.', ',')
+
 function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
   if (x.id === MIMIC) return []
   const out: Seed[] = []
-  /** la question telle que le quiz la compose : ce qu'elle demande (sa valeur), ce que montre son corrigé (le résumé entier) */
+  /** la question telle que le quiz la compose : ce qu'elle demande (sa valeur), ce que montre son corrigé */
   const wrap = (q: Question | null): Built | null => {
     if (!q) return null
     const right = q.choices.filter((c) => q.correct.includes(c.id)).map((c) => c.label)
@@ -828,21 +1027,29 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
     // « vitesse très élevée, qui chute près du joueur » redit « 3,0 m/s loin → 0,4 m/s près » : la question demande aussi
     // la vitesse (ou le seuil) en général, comme une phrase chiffrée face à une phrase sans nombre
     const theme = q.topic === 'sanity' ? 'seuil' : 'vitesse'
-    const broad = [`${x.id}|~${theme}`, `${x.id}|§${theme}:*`]
+    // en bloc, et fait par fait quand la fiche en distingue plusieurs (voir FACETS) : la vitesse du Revenant sans
+    // cible n'est pas ce qui le fait accélérer
+    const whole = `${x.id}|~${theme}`
+    const broad = [whole, ...facetsOf(x.id, whole, [q.prompt, ...right].join(' '))]
     // un résumé se reconnaît aussi à sa condition (« 35 % · jamais dans la même pièce qu'un joueur ») : il demande les
     // objets de sa bonne réponse, comme une phrase (une valeur seule, « 70 % », ne demande que sa valeur)
     const told = /^q:(?:sansum|spdsum):/u.test(q.id) ? right.map((text) => ({ who: x.id, text })) : []
     const objects = told.flatMap((t) => parts(t).soft)
-    const b = built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], [
-      ...asks,
-      ...[...broad, ...objects].flatMap((k) => SORTS.filter((o) => sameFact('V', o)).map((o) => `${k}/${o}`)),
-    ])
+    const general = [...broad, ...objects].flatMap((k) => SORTS.filter((o) => sameFact('V', o)).map((o) => `${k}/${o}`))
+    const b = built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], [...asks, ...general])
+    // ce qu'elle montre de la vitesse (ou du seuil) en général est une phrase chiffrée, et rien d'autre : une phrase sans
+    // nombre la redirait (elle passe avant, ou ne se pose pas), mais un signe chiffré qui ne cite aucune de ses valeurs
+    // (« enragé : 1,96 m/s, chasse dès 60 % », après le seuil normal du Gallu) reste un autre fait. Demander la
+    // vitesse « en général » n'est pas l'avoir montrée sous toutes ses formes : sans cela, une question en nombres
+    // écartait de la copie tous les signes chiffrés de la fiche (le Gallu, l'Obambo, la Dayan n'avaient aucun vrai ou faux)
+    for (const k of general) b.shows.delete(k)
     for (const k of broad) b.shows.add(`${k}/V`)
     b.said.push(...told.map((t) => saidOf(t, true)))
     return b
   }
   for (const kind of ['san', 'spd'] as const) {
     const topic: QuizTopic = kind === 'san' ? 'sanity' : 'speed'
+    const details = kind === 'san' ? x.huntSanity.details : x.speed.details
     for (const a of asksOf(kind, x)) {
       out.push({
         id: a.key,
@@ -851,7 +1058,11 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
         width: 4,
         group: kind,
         ...(a.weight < 1 ? { gate: kind === 'san' ? ('stdSan' as const) : ('stdSpd' as const) } : {}),
-        make: (rng) => wrap(numberQuestion(a, ctxFor(x, all, rng))),
+        make: (rng) => {
+          const q = numberQuestion(a, ctxFor(x, all, rng))
+          const lean = q && leanNumber(details, a.value, kind === 'san' ? '%' : 'm/s')
+          return wrap(q && lean ? { ...q, explain: lean } : q)
+        },
       })
     }
     out.push({
@@ -860,7 +1071,14 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
       topic,
       width: 4,
       group: kind,
-      make: (rng) => wrap(summaryQuestion(kind, x, ctxFor(x, all, rng))),
+      // le résumé demande toutes les valeurs à la fois (« 1,0 m/s · 3,0 m/s en te détectant · … ») : posé d'abord, il ne
+      // laisserait plus rien à demander sur la vitesse. Il passe après les valeurs que la fiche permet de demander une à une
+      late: asksOf(kind, x).some((a) => a.weight >= 1),
+      make: (rng) => {
+        // la bonne réponse est le résumé de la fiche : le corrigé n'ajoute que sa première précision
+        const q = summaryQuestion(kind, x, ctxFor(x, all, rng))
+        return wrap(q && details.length ? { ...q, explain: details[0] } : q)
+      },
     })
   }
   // la ligne de vue : son corrigé ne donne que ce qui la concerne, pour ne pas souffler une vitesse demandée ensuite
@@ -984,6 +1202,7 @@ function testSeeds(x: Ghost, all: Ghost[]): Seed[] {
       topic: 'zero',
       width: 2,
       cls: t.definitive ? 'yes' : 'no',
+      text: t.body,
       make: () => {
         const explain = `${t.definitive ? 'Oui, ce test suffit.' : 'Non, ce n’est qu’un indice.'} ${verdictOf(t.text, x)}${t.why ? ` ${t.why}` : ''}`
         return built(
@@ -1160,6 +1379,7 @@ function intruderSeeds(x: Ghost, all: Ghost[]): Seed[] {
         topic: 'behavior',
         width: 4,
         register: style,
+        foreign: true,
         pre: () => askKeys({ who: y.id, text: sign.text, key: style === 'key' }),
         make: (rng) => {
           const found = truthsAround(rng, x, labels, pool)
@@ -1194,27 +1414,7 @@ interface NearClaim {
   z: Ghost
   /** la phrase qui nomme l'entité de la question à la place de z */
   label: string
-  /** la phrase sans nom : « Cette entité fonce à 3,0 m/s de loin… » */
-  quote: string | null
   explain: string
-}
-
-/** Un nom féminin, pour vérifier qu'une phrase s'accorde avec « cette entité ». */
-const asEntity = (g: Ghost): Ghost => ({ ...g, name: 'La chose' })
-/**
- * Un pronom qui dirait le genre de l'entité (« il », « lui », ou « ce qui le rend plus visible », voir OBJECT_MASC)
- * dans une phrase dont le sujet est « cette entité ».
- */
-const MASCULINE = /(?<!\p{L})(?:ils?|lui|eux)(?!\p{L})(?!\s+(?:faut|suffit|y\s+a)(?!\p{L}))/iu
-
-function anonymous(text: string, about: Ghost): string | null {
-  const bare = asOther(text, about)
-  const said = bare.replaceAll(SUBJ, '')
-  if (bare.split(SUBJ).length !== 2 || MASCULINE.test(said) || OBJECT_MASC.test(said) || !agrees(bare, about, asEntity(about))) return null
-  return bare
-    .replace(new RegExp(`(?<![\\p{L}])([Dd]e|[Àà]) ${SUBJ}`, 'gu'), '$1 cette entité')
-    .replace(new RegExp(`(^|[.!?]\\s+)${SUBJ}`, 'gu'), (_m, lead: string) => `${lead}Cette entité`)
-    .replaceAll(SUBJ, 'cette entité')
 }
 
 /** Ce que la fiche de `host` dit de l'entité z qu'on confond avec lui, qui est faux pour `host` (voir wrongClaimsFor). */
@@ -1226,10 +1426,56 @@ function claimsAbout(host: Ghost, z: Ghost, all: Ghost[]): NearClaim[] {
   return wrongClaimsFor(host, all)
     .filter((c) => c.y.id === host.id && c.z.id === z.id && !nearSpeed(c.text, host))
     .filter((c) => (seen.has(c.label) ? false : (seen.add(c.label), true)))
-    .map((c) => ({ y: c.y, z: c.z, label: c.label, quote: anonymous(c.text, c.z), explain }))
+    .map((c) => ({ y: c.y, z: c.z, label: c.label, explain }))
 }
 
+/** « Idée reçue : … », « Bug connu : … », « Cette faiblesse… » : une ligne qui ne se juge pas seule en vrai ou faux. */
+const NOT_A_STATEMENT = /^(?:Idée reçue|Bug connu|Bizarrerie|Contrairement|Ciblage|Règles? générales?|Ce(?:t|tte|s)?\s)/u
+
+/**
+ * Les comportements et les capacités de la fiche de x qui se citent tels quels, comme ses signes « 0 preuve » (les
+ * mêmes filtres que distractorSigns : ni preuve, ni nom d'entité, ni genre, ni phrase vraie de toutes les entités) :
+ * des affirmations vraies de plus pour « Vrai ou faux pour X ? ». `tag` : B ou A, et le rang de la ligne dans la fiche.
+ */
+const ownLines = memo((x, all): { tag: string; text: string }[] =>
+  (
+    [
+      ['B', x.behaviors],
+      ['A', x.abilities],
+    ] as const
+  ).flatMap(([letter, lines]) =>
+    lines.flatMap((l, i) => {
+      if (!l.zeroEvidence) return []
+      const text = redact(withoutEvidenceAsides(l.text), x)
+      const fits = !REDACTED.test(text) && plainSign(text) && !GENDER_TALK.test(text) && !NEEDS_CONTEXT.test(text) && !TRUE_OF_ALL.test(text) && !NOT_A_STATEMENT.test(text) && text.length <= 200 && !namesAny(text, all)
+      return fits ? [{ tag: `${letter}${i}`, text }] : []
+    }),
+  ),
+)
+
 /* ---------- T6 : vrai ou faux ---------- */
+
+/** Un pronom qui renverrait au sujet retiré (« … alors qu'elle est dans la même pièce »), ou l'entité nommée une seconde fois. */
+const SUBJECT_AGAIN = /(?<!\p{L})(?:elles?|ils?|l[’']entité)(?!\p{L})/iu
+/**
+ * La condition d'un test d'élimination, dite comme un signe de la fiche : « L'entité rallume le disjoncteur. »
+ * devient « Rallume le disjoncteur. », de la même forme que « Ne peut pas rallumer le disjoncteur. » (un signe
+ * du Hantu). Seulement une phrase seule qui s'ouvre sur « L'entité » et ne la reprend pas ensuite ; les autres
+ * restent des scènes (« Tu entends l'entité entre 12 m et 20 m de toi pendant une chasse. »).
+ */
+function asSign(scene: string): string {
+  const m = /^L[’']entité\s+(\p{Ll}[^.!?]*[.!?]?)$/u.exec(scene)
+  return m && !SUBJECT_AGAIN.test(m[1]) ? cap(m[1]) : scene
+}
+/**
+ * La tournure d'une affirmation jugée en vrai ou faux : un signe écrit sans sujet (« Ne rallume jamais le
+ * disjoncteur »), une phrase qui s'ouvre sur « L'entité », ou une scène (elle parle de l'entité, ou s'adresse au
+ * joueur). Un « Vrai » et un « Faux » tirés de la fiche de X ne s'apparient que dans la même tournure.
+ */
+const SCENE_LIKE = /l[’']entité|(?<!\p{L})(?:tu|toi|ton|ta|tes|t[’'])(?!\p{L})/iu
+const formOf = (text: string) => (/^L[’']entité(?!\p{L})/u.test(text) ? 'led' : SCENE_LIKE.test(text) ? 'scene' : 'sign')
+/** Deux citations de longueur voisine (voir closeLengths) : la longueur ne dit pas laquelle des deux est posée. */
+const sameSize = (a: string, b: string) => closeLengths(Math.min(a.length, b.length), Math.max(a.length, b.length))
 
 const TRUE_FALSE = [
   { id: SOLO_ANSWERS.trueFalse.true, label: 'Vrai' },
@@ -1237,9 +1483,54 @@ const TRUE_FALSE = [
 ]
 
 function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
-  if (x.id === MIMIC) return []
   const out: Seed[] = []
   const about = `Vrai ou faux pour ${le(x.name)}${NNBSP}?`
+  // Ce que la fiche de X dit elle-même faux pour lui : ses tests d'élimination (« si l'entité rallume le
+  // disjoncteur, ce n'est pas un Hantu » : un Hantu ne le rallume jamais). Le corrigé est la ligne de la fiche, mot
+  // pour mot. Chacun se pose face à une affirmation vraie de la même fiche, de même forme et de même longueur (voir
+  // l'emplacement `own` de la copie) : ses observations (`scene`), ses signes, ses comportements. Pour le Mimic aussi :
+  // c'est sa propre fiche qui le dit
+  for (const o of ownScenes(x, all)) {
+    const id = `q:vf:${x.id}:${x.id}:O${o.i}`
+    out.push({
+      id,
+      type: 'T6',
+      topic: 'behavior',
+      width: 2,
+      cls: 'true',
+      register: 'scene',
+      text: o.quote,
+      make: () =>
+        built(
+          { id, topic: 'behavior', ghostId: x.id, prompt: about, quote: o.quote, multi: false, choices: TRUE_FALSE, correct: [SOLO_ANSWERS.trueFalse.true], explain: `Vrai. C’est l’une des observations de la fiche ${de(x.name)}.`, cardId: `g:${x.id}:tells` },
+          'T6',
+          [{ who: x.id, text: o.text, item: `${x.id}#O${o.i}` }],
+        ),
+    })
+  }
+  for (const e of ownEliminations(x, all)) {
+    const scene = sceneOfTest(e.body, x, all)
+    if (!scene) continue
+    const quote = asSign(scene)
+    const id = `q:vf:${x.id}:${x.id}:E${e.i}`
+    out.push({
+      id,
+      type: 'T6',
+      topic: 'behavior',
+      width: 2,
+      cls: 'false',
+      register: 'own',
+      text: quote,
+      make: () =>
+        built(
+          { id, topic: 'behavior', ghostId: x.id, prompt: about, quote, multi: false, choices: TRUE_FALSE, correct: [SOLO_ANSWERS.trueFalse.false], explain: `Faux. ${e.text}` },
+          'T6',
+          [{ who: x.id, text: e.body, item: `${x.id}#E${e.i}` }],
+          // le test d'élimination entier, que cite le corrigé
+          [{ who: x.id, text: e.text }],
+        ),
+    })
+  }
   const seed = (id: string, register: string, truth: boolean, prompt: string, quote: string, explain: string, asked: Stmt, topic: QuizTopic, cardId?: string, shown: Stmt[] = []) =>
     out.push({
       id,
@@ -1248,6 +1539,9 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: 2,
       cls: truth ? 'true' : 'false',
       register,
+      text: quote,
+      // ces vrai ou faux tirent leurs « Faux » de la fiche d'une entité proche (voir FOREIGN_MAX)
+      foreign: !truth,
       make: () =>
         built(
           { id, topic, ghostId: x.id, prompt, quote, multi: false, choices: TRUE_FALSE, correct: [truth ? SOLO_ANSWERS.trueFalse.true : SOLO_ANSWERS.trueFalse.false], explain, ...(cardId ? { cardId } : {}) },
@@ -1258,18 +1552,23 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
     })
   for (const style of STYLES) {
     const own = ownSigns(x, all, style)
+    // d'autres phrases de la fiche de X, écrites comme ses signes « 0 preuve » : ses comportements, ses capacités
+    const more = style === 'tell' ? ownLines(x, all).filter((l) => !own.some((o) => lineKey(x.id, o.text) === lineKey(x.id, l.text))) : []
+    // (aucun pour le Mimic, qui copie : rien d'une autre fiche n'est faux pour lui)
     const wrong = falseSigns(x, all, style).filter((o) => o.label === o.value.text)
-    // les deux réponses viennent de la même sorte de phrases, sinon la forme dirait la réponse
-    if (!own.length || !wrong.length) continue
+    // les deux réponses d'un tirage viennent de la même sorte de phrases, sinon la forme dirait la réponse : sans
+    // « Faux » de cette sorte, ces « Vrai » ne servent que face à un test d'élimination de X (voir `own`)
     const source = style === 'key' ? `C’est l’un des signes clés ${de(x.name)}.` : `C’est écrit sur la fiche ${de(x.name)}.`
     for (const s of own) {
       seed(`q:vf:${x.id}:${x.id}:${letter(style)}${signRank(s, style)}`, style, true, about, s.text, `Vrai. ${source}`, { who: x.id, text: s.text, key: style === 'key' }, 'behavior', `g:${x.id}:tells`)
     }
+    for (const l of more) seed(`q:vf:${x.id}:${x.id}:${l.tag}`, style, true, about, l.text, `Vrai. ${source}`, { who: x.id, text: l.text }, 'behavior', `g:${x.id}:tells`)
     for (const o of wrong) {
       const y = o.value.ghost
       seed(`q:vf:${x.id}:${y.id}:${letter(style)}${signRank(o.value, style)}`, style, false, about, o.label, `Faux. C’est un signe ${de(y.name)}, pas ${de(x.name)}.`, { who: y.id, text: o.label, key: style === 'key' }, 'behavior', `g:${x.id}:tells`)
     }
   }
+  if (x.id === MIMIC) return out
   // les phrases de départage : ce qu'une fiche proche dit de X (vrai), ce que la fiche de X dit d'une entité proche (faux pour X)
   const truths = plural(x) ? [] : duelsFor(x, all)
   const lies = rivalsOf(x, all).flatMap((z) => claimsAbout(x, z, all).slice(0, 1))
@@ -1338,221 +1637,144 @@ function duelSeeds(x: Ghost, all: Ghost[]): Seed[] {
     },
   })
   if (!plural(x)) for (const d of duelsFor(x, all)) if (near.some((o) => o.id === d.x.id)) out.push(duel(d.x))
-
-  // T7b « De qui parle-t-on ? » : une phrase sans nom, deux réponses, X et Y
-  const who = (id: string, y: Ghost, owner: Ghost, register: string, quote: string, explain: string, asked: Stmt, shown: Stmt[] = []) => {
-    const other = owner.id === x.id ? y : x
-    // le mot que souffle le nom de la bonne réponse (« objets » pour le Poltergeist) la désignerait
-    if (hints(owner, quote) || namesAny(quote, all) || needsEvidence(quote)) return
-    out.push({
-      id,
-      type: 'T7b',
-      topic: 'zero',
-      width: 2,
-      cls: owner.id === x.id ? 'x' : 'y',
-      register,
-      make: (rng) => {
-        const [a, b] = shuffle(rng, [x, y])
-        return built(
-          {
-            id,
-            topic: 'zero',
-            ghostId: x.id,
-            prompt: `De qui parle-t-on${NNBSP}: ${de(a.name)} ou ${de(b.name)}${NNBSP}?`,
-            quote,
-            multi: false,
-            choices: [a, b].map((g) => ({ id: g.id, label: g.name })),
-            correct: [owner.id],
-            explain,
-          },
-          'T7b',
-          [asked],
-          [...shown, { who: other.id, text: explain }],
-        )
-      },
-    })
-  }
-  for (const y of near) {
-    // ce que la fiche de X dit de Y (faux pour X), ce que la fiche de Y dit de X (faux pour Y)
-    for (const [host, z] of [
-      [x, y],
-      [y, x],
-    ] as const) {
-      const c = claimsAbout(host, z, all).find((k) => k.quote)
-      if (!c?.quote) continue
-      const source = restates(c.explain, c.quote) ? `${itIs(z)}${NNBSP}: c’est ainsi que la fiche ${de(host.name)} ${them(z)} distingue.` : `${itIs(z)}. ${c.explain}`
-      who(`q:duel:${x.id}:${y.id}:${z.id}:L`, y, z, 'claim', c.quote, source, { who: z.id, text: c.label, item: `${host.id}>${z.id}` }, [{ who: z.id, text: c.explain }])
-    }
-    // un signe clé de l'une, faux pour l'autre ; entre deux entités de même genre, pour qu'aucun accord ne tranche
-    if (isFeminine(x.name) !== isFeminine(y.name)) continue
-    const mine = new Set(ownSigns(x, all, 'key').map((s) => s.text))
-    for (const o of signVersions(y, all, 'key')) {
-      if (o.value.ghost.id !== x.id || o.label !== o.value.text || !mine.has(o.label) || pronounClash(o.label, y)) continue
-      who(`q:duel:${x.id}:${y.id}:${x.id}:K${signRank(o.value, 'key')}`, y, x, 'key', o.label, `C’est un signe ${de(x.name)}, pas ${de(y.name)}.`, { who: x.id, text: o.label, key: true })
-    }
-    for (const o of falseSigns(x, all, 'key')) {
-      if (o.value.ghost.id !== y.id || o.label !== o.value.text) continue
-      who(`q:duel:${x.id}:${y.id}:${y.id}:K${signRank(o.value, 'key')}`, y, y, 'key', o.label, `C’est un signe ${de(y.name)}, pas ${de(x.name)}.`, { who: y.id, text: o.label, key: true })
-    }
-  }
   return out
 }
 
-/* ---------- T8 : une observation, trois réponses ---------- */
+/* ---------- T8 : « Tu observes ceci. Est-ce que ça suffit pour confirmer X ? » ---------- */
 
 /** La même scène, dite avec les mêmes mots (voir sameSaid) ? */
 const echoes = (a: string, b: string) => sameSaid({ who: '', words: gist(a), worth: [] }, { who: '', words: gist(b), worth: [] })
 
+/** « Est-ce que ça suffit ? » : les deux réponses, pour un test (T3b) comme pour une observation (T8). */
+const ENOUGH = [SOLO_ANSWERS.enough.yes, SOLO_ANSWERS.enough.no] as const
+
 /**
- * Une scène qui ne montre qu'un ralentissement (« tu prends des pilules en pleine chasse et l'entité ralentit juste
- * après », décisif pour le Moroï), sans vitesse citée ni accélération : toute entité ralentit quand elle a perdu le
- * joueur et rejoint sa dernière position connue. La scène peut donc se voir avec X : elle ne l'exclut jamais.
+ * Les rapports de terrain de la fiche de X, et eux seuls : ce qu'on observe avec X suffit-il à le confirmer ? Deux
+ * réponses, celles de « ce test suffit-il ? » : « Oui, ça suffit » pour un rapport que la fiche dit décisif, « Non,
+ * ce n'est qu'un indice » pour les autres. La troisième réponse d'avant (« Non, ça l'exclut ») ne valait que pour
+ * les scènes tirées de la fiche d'une entité proche, qui ne se posent plus : sans elles, elle n'était juste que
+ * 7 fois sur 100. Les tests de la fiche dits comme une scène se lisaient comme des consignes (« Place du sel… ») :
+ * ils se demandent sous leur forme de test (T3b). Les tests d'élimination de X sont jugés en vrai ou faux (T6).
  */
-const SLOWS = /(?<!sans\s)(?<!ne\s)(?<!au\s)ralenti/iu
-const QUICKENS = /accél|rapide|plus vite|fonce|toute vitesse|allure/iu
-const onlySlows = (scene: string) => SLOWS.test(scene) && !QUICKENS.test(scene) && !/\d\s?m\/s/u.test(scene)
-
-/** Une entité qui ne poursuit que sa cible (la Banshee) ignore les autres joueurs… */
-const TARGET_ONLY = /ne poursuit que sa cible/iu
-/** … une scène où l'entité ne réagit pas à quelqu'un (« tu parles à voix haute : pas de réaction ») ne l'exclut donc jamais. */
-const NO_REACTION = /pas de réaction|sans réagir|ne réagit pas|ne (?:l[’']|t[’'])attire (?:pas|jamais)|ne se tourne pas|(?:poursuit|continue) son chemin|son chemin continue|(?:l[’']|t[’'])ignore/iu
-
-const OBSERVED = ['A', 'B', 'C'] as const
-type Observed = (typeof OBSERVED)[number]
-/** D'où vient ce qu'on observe : un rapport de terrain de la fiche, ou l'un de ses tests dit comme ce qu'on voit. */
-const SCENES = ['obs', 'case'] as const
-/** La scène d'une observation, d'après son identifiant : un rapport de terrain (`O`), ou un test (`C`, `E`). */
-const sceneOf = (id: string): (typeof SCENES)[number] => (/:O\d+$/u.test(id) ? 'obs' : 'case')
-
 function observationSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
   const choices = [
-    { id: SOLO_ANSWERS.observation.confirms, label: `Oui, et ça suffit à ${them(x)} confirmer` },
-    { id: SOLO_ANSWERS.observation.fits, label: `Oui, mais ça ne suffit pas à ${them(x)} confirmer` },
-    { id: SOLO_ANSWERS.observation.excludes, label: `Non, ça ${themElided(x)}exclut` },
+    { id: SOLO_ANSWERS.enough.yes, label: 'Oui, ça suffit' },
+    { id: SOLO_ANSWERS.enough.no, label: 'Non, ce n’est qu’un indice' },
   ]
-  const seed = (id: string, register: (typeof SCENES)[number], cls: Observed, quote: string, explain: string, asked: Stmt, cardId?: string) => {
+  const decisive = [...x.confirmationTests.filter((t) => t.definitive).map((t) => t.text), ...x.observations.filter((o) => o.strength === 'definitive').map((o) => o.text)]
+  for (const o of ownScenes(x, all)) {
+    // « ça ne suffit pas » ne se dit jamais d'une scène qu'un test décisif de la même fiche décrit avec d'autres mots
+    // (« ton coéquipier se retrouve au contact de l'entité et survit », un indice fort de la Banshee ; « ceux-ci peuvent
+    // la toucher sans mourir, c'est une Banshee », son test) : la copie enseignerait les deux verdicts. Les mots ne
+    // suffisent pas à reconnaître ces paires. Un indice fort ne se pose donc que sur une fiche où rien n'est décisif ;
+    // un simple indice, que s'il ne reprend les mots d'aucun test ou rapport décisif.
+    if (o.strength === 'strong' && decisive.length) continue
+    if (o.strength === 'hint' && decisive.some((d) => echoes(o.text, d))) continue
+    const sure = o.strength === 'definitive'
+    const id = `q:constat:${x.id}:${x.id}:O${o.i}`
+    const why = o.why ? ` ${o.why}` : ''
+    const explain = sure
+      ? `Oui, ça suffit${NNBSP}: sur la fiche ${de(x.name)}, cette observation est décisive.${why}`
+      : `Non${NNBSP}: sur la fiche ${de(x.name)}, c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'}, pas une confirmation.${why}`
+    const asked: Stmt = { who: x.id, text: o.text, item: `${x.id}#O${o.i}`, aspect: sure ? 'proof' : 'hint' }
     out.push({
       id,
       type: 'T8',
       topic: 'behavior',
-      width: 3,
-      cls,
-      register,
+      width: 2,
+      cls: sure ? SOLO_ANSWERS.enough.yes : SOLO_ANSWERS.enough.no,
+      text: o.quote,
       make: () =>
         built(
           {
             id,
             topic: 'behavior',
             ghostId: x.id,
-            prompt: `Tu soupçonnes ${le(x.name)} et tu observes ceci. Est-ce compatible${NNBSP}?`,
-            quote,
+            prompt: `Tu observes ceci. Est-ce que ça suffit pour confirmer ${le(x.name)}${NNBSP}?`,
+            quote: o.quote,
             multi: false,
             choices,
-            correct: [choices[OBSERVED.indexOf(cls)].id],
+            correct: [sure ? SOLO_ANSWERS.enough.yes : SOLO_ANSWERS.enough.no],
             explain,
-            ...(cardId ? { cardId } : {}),
+            cardId: `g:${x.id}:tells`,
           },
           'T8',
           [asked],
-          [{ who: asked.who, text: explain }],
+          [{ who: x.id, text: explain }],
         ),
     })
-  }
-  const yes = `Oui, et ça suffit${NNBSP}:`
-  const partly = `Oui, mais ça ne suffit pas${NNBSP}:`
-  const no = `Non, ça ${themElided(x)}exclut${NNBSP}:`
-  // les rapports de terrain de la fiche
-  const decisive = [...x.confirmationTests.filter((t) => t.definitive).map((t) => t.text), ...x.observations.filter((o) => o.strength === 'definitive').map((o) => o.text)]
-  x.observations.forEach((o, i) => {
-    if (o.requires) return
-    const quote = quoteFor(o.text, x)
-    if (!quote) return
-    // « ça ne suffit pas » ne se dit jamais d'une scène qu'un test décisif de la même fiche décrit avec d'autres mots
-    // (« ton coéquipier se retrouve au contact de l'entité et survit », un indice fort de la Banshee ; « ceux-ci peuvent
-    // la toucher sans mourir, c'est une Banshee », son test) : la copie enseignerait les deux verdicts. Les mots ne
-    // suffisent pas à reconnaître ces paires. Un indice fort ne se pose donc que sur une fiche où rien n'est décisif ;
-    // un simple indice, que s'il ne reprend les mots d'aucun test ou rapport décisif.
-    if (o.strength === 'strong' && decisive.length) return
-    if (o.strength === 'hint' && decisive.some((d) => echoes(o.text, d))) return
-    const why = o.why ? ` ${o.why}` : ''
-    const asked: Stmt = { who: x.id, text: o.text, item: `${x.id}#O${i}`, aspect: o.strength === 'definitive' ? 'proof' : 'hint' }
-    if (o.strength === 'definitive') seed(`q:constat:${x.id}:${x.id}:O${i}`, 'obs', 'A', quote, `${yes} sur la fiche ${de(x.name)}, cette observation est décisive.${why}`, asked, `g:${x.id}:tells`)
-    else seed(`q:constat:${x.id}:${x.id}:O${i}`, 'obs', 'B', quote, `${partly} sur la fiche ${de(x.name)}, c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'}, pas une confirmation.${why}`, asked, `g:${x.id}:tells`)
-  })
-  // une observation décisive d'une entité proche prouve cette entité : elle exclut X (jamais pour le Mimic, qui copie)
-  const apart = apartFrom(x, true)
-  const targetOnly = x.keyTells.some((t) => TARGET_ONLY.test(t))
-  for (const y of rivalsOf(x, all)) {
-    y.observations.forEach((o, i) => {
-      if (o.requires || o.strength !== 'definitive') return
-      const quote = quoteFor(o.text, y)
-      if (!quote || namesAny(quote, all)) return
-      if (fitsToo(quote, all, true)(x) || numbersFit(quote, x) || restatedBy(quote, x, all) || huntsAlready(quote, x) || nearSpeed(quote, x)) return
-      // ni une scène qui touche un objet ou un geste dont parlent les signes de X : sa propre fiche pourrait l'expliquer
-      // (20 points perdus après un événement, face au Fantôme qui draine la santé pendant les événements ; le sel resté
-      // intact, face au Gallu, qui enragé ne le perturbe pas non plus). Dans le doute, la scène n'exclut pas.
-      if (!apart(quote)) return
-      if (onlySlows(quote) || (targetOnly && NO_REACTION.test(quote))) return
-      seed(`q:constat:${x.id}:${y.id}:O${i}`, 'obs', 'C', quote, `${no} cette observation est décisive pour ${le(y.name)}.${o.why ? ` ${o.why}` : ''}`, { who: y.id, text: o.text, item: `${y.id}#O${i}` })
-    })
-  }
-  // les tests de la fiche, dits comme ce qu'on observe : un test qui suffit, un test qui ne donne qu'un indice, un test d'élimination
-  // le corrigé reprend ce que la fiche en conclut (« … : dans ce cas, ça pourrait être un Aswang. »)
-  const said = (text: string) => {
-    const verdict = verdictOf(text, x)
-    return verdict.startsWith('Dans ce cas') ? `d${verdict.slice(1)}` : verdict
-  }
-  const cards = new Map(zeroTests(x).map((t, p) => [t.text, p < TESTS_PER_GHOST ? `g:${x.id}:test:${t.k}` : undefined]))
-  // la scène ne nomme pas X (« … déclencher la capacité du Cauchemar ») : son nom dirait déjà que l'observation est la sienne
-  const scene = (body: string) => {
-    const said = situationOf(body)
-    const quote = said && redact(said, x)
-    return quote && quote.length <= QUOTE_MAX && !namesAny(quote, all) ? quote : null
-  }
-  for (const t of ownTests(x, all)) {
-    const quote = scene(t.body)
-    if (!quote) continue
-    const asked: Stmt = { who: x.id, text: t.body, item: `${x.id}#C${t.i}`, aspect: t.definitive ? 'proof' : 'hint' }
-    if (t.definitive) seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'A', quote, `${yes} ${said(t.text)}${t.why ? ` ${t.why}` : ''}`, asked, cards.get(t.text))
-    else seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'B', quote, `${partly} ${said(t.text)}`, asked)
-  }
-  for (const e of ownEliminations(x, all)) {
-    const quote = scene(e.body)
-    if (quote) seed(`q:constat:${x.id}:${x.id}:E${e.i}`, 'case', 'C', quote, `${no} ${said(e.text)}`, { who: x.id, text: e.body, item: `${x.id}#E${e.i}` })
   }
   return out
 }
 
+/** Les deux « est-ce que ça suffit ? » : sur un test de la fiche (T3b), sur l'une de ses observations (T8). */
+const WORTH = ['T3b', 'T8'] as const
+type Worth = (typeof WORTH)[number]
 /**
- * Les réponses possibles de l'observation pour chaque entité et chaque sorte de scène, et leurs chances : choisies
- * ensemble (voir balancedRanks) pour qu'au fil des copies les trois réponses sortent autant, alors que bien des
- * fiches n'ont pas d'observation décisive, ou pas de test d'élimination. Une scène ne se pose que si chacune de
- * ses réponses possibles a de quoi se poser à cet instant, et une seule fois par copie s'il lui en manque une
- * (voir fillSlot) : sans cela, les fiches sans observation décisive, qui posent la question plus facilement que les
- * autres, feraient pencher toutes les copies vers « ça ne suffit pas » et « ça l'exclut ».
+ * Une entité qui n'a qu'une réponse possible à l'une de ces questions (tous ses tests suffisent, ou aucun ; aucune de
+ * ses observations n'est décisive) : la part des copies où elle la pose. Pour les tests, neuf fiches n'ont que des
+ * tests définitifs et deux n'en ont aucun : les premières posent la question deux copies sur dix, les secondes six
+ * sur dix, pour qu'au fil des copies « Oui » sorte autant que « Non » (mesuré sur 1 200 copies : 48 % de « Oui »).
+ * Pour les observations, six fiches n'ont rien de décisif et une n'a que cela : elles posent la question dans toute
+ * copie, et ce sont les fiches à deux réponses qui penchent vers « Oui » pour compenser (voir worthPlan).
  */
-const observationPlan = memoList((all) => {
-  const out = new Map<string, { cls: Observed; weight: number }[]>()
-  for (const scene of SCENES) {
-    const cases = all.flatMap((g) => {
-      const classes = new Set(seedsFor(g, all).filter((s) => s.type === 'T8' && s.register === scene).map((s) => s.cls))
-      const counts = OBSERVED.flatMap((c, k) => (classes.has(c) ? [k] : []))
-      return counts.length ? [{ id: g.id, counts, share: 1 }] : []
+const ONE_SIDED = { T3b: { yes: 0.2, no: 0.6 }, T8: { yes: 1, no: 1 } } as const
+
+/**
+ * « Est-ce que ça suffit ? » a deux énoncés : « Ce test suffit-il… ? » (T3b) et « Tu observes ceci… » (T8). Chacun
+ * s'équilibre seul : les tests des fiches sont presque tous définitifs, leurs observations presque toutes de simples
+ * indices, et qui répondrait « Oui » aux tests et « Non » aux observations gagnerait deux fois sur trois si les deux
+ * se compensaient l'un l'autre (mesuré : 70 % de « Oui » aux tests, 36 % aux observations). Pour chaque entité et
+ * chaque énoncé, les réponses possibles et leurs chances, choisies ensemble (voir balancedRanks) pour qu'au fil des
+ * copies « Oui » sorte autant que « Non », alors que bien des fiches n'ont rien de décisif (le Yurei, le Kormos, les
+ * Jumeaux : toujours « Non ») et que d'autres n'ont que cela. La question ne se pose que si chacune des réponses
+ * possibles pour X a de quoi se poser à cet instant, et une seule fois par copie quand X n'en a qu'une (voir
+ * addWorth) : sans cela, la réponse la plus facile à composer sortirait plus souvent que l'autre. `typical` : la
+ * longueur médiane des citations de chaque réponse, toutes fiches confondues (voir addWorth).
+ */
+const worthPlan = memoList((all) => {
+  const plan = new Map<string, { cls: string; weight: number }[]>()
+  /** la longueur médiane des citations, par énoncé et par réponse (`T8|yes`), toutes fiches confondues */
+  const typical = new Map<string, number>()
+  for (const type of WORTH) {
+    const seeds = all.map((g) => seedsFor(g, all).filter((s) => s.type === type))
+    const cases = all.flatMap((g, i) => {
+      const classes = new Set(seeds[i].map((s) => s.cls))
+      const counts = ENOUGH.flatMap((c, k) => (classes.has(c) ? [k] : []))
+      return counts.length ? [{ id: g.id, counts, share: counts.length === 1 ? ONE_SIDED[type][ENOUGH[counts[0]]] : 1 }] : []
     })
-    const weights = balancedRanks(cases, 2)
-    for (const c of cases) out.set(`${c.id}|${scene}`, c.counts.map((k, i) => ({ cls: OBSERVED[k], weight: weights.get(c.id)![i] * (OBSERVED[k] === 'B' ? FITS_SHARE : 1) })))
+    const weights = balancedRanks(cases, 1)
+    for (const c of cases) plan.set(`${c.id}|${type}`, c.counts.map((k, i) => ({ cls: ENOUGH[k] as string, weight: weights.get(c.id)![i] })))
+    for (const cls of ENOUGH) {
+      const lengths = seeds.flatMap((list) => list.filter((s) => s.cls === cls).map((s) => s.text!.length)).sort((a, b) => a - b)
+      if (lengths.length) typical.set(`${type}|${cls}`, lengths[lengths.length >> 1])
+    }
   }
-  return out
+  return { plan, typical }
 })
-/**
- * « Oui, mais ça ne suffit pas » pèse moins que son tour : c'est la seule réponse des tests du Kormos et des Jumeaux
- * dits comme une scène (aucun ne suffit), posés à presque chaque copie, et les simples indices ne s'épuisent pas
- * comme les faits décisifs. Sans ce poids, elle sortait 38 fois sur 100 ; mesuré sur 1 800 copies (voir solo.test.ts).
- */
-const FITS_SHARE = 0.8
 
 /* ---------- questions rédigées de la fiche ---------- */
+
+/** Au-delà, une phrase de contexte n'est plus courte : le corrigé s'en tient au fait demandé. */
+const CONTEXT_MAX = 140
+
+/**
+ * Le corrigé d'une question rédigée, dans une copie sur une seule entité : sa première phrase (le fait demandé), et
+ * la suivante si elle est courte et ne parle que de X. La fiche explique souvent ensuite pourquoi les autres
+ * réponses étaient fausses (« 1,7 m/s est la vitesse standard, 1,4 m/s celle d'un Hantu au chaud… ») : dans une
+ * copie sur X, ce sont les nombres d'autres entités, et chaque valeur de X ainsi récitée ne pouvait plus se
+ * demander. Aucune phrase n'est réécrite : celles qui restent sont celles de la fiche, mot pour mot.
+ */
+function leanExplain(explain: string, x: Ghost, all: readonly Ghost[]): string {
+  const [first, second] = explain.split(SENTENCES)
+  if (!second) return explain
+  const others = all.some((o) => o.id !== x.id && namesGhost(second, o))
+  return !others && second.length <= CONTEXT_MAX ? `${first} ${second}` : first
+}
+
+/** « Seule entité qui peut… », « le seul à… » : la phrase dit que le fait désigne l'entité. */
+const SAYS_ONLY = /(?<!\p{L})seule?s?\s+(?:entités?|à)(?!\p{L})/iu
 
 function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
@@ -1563,6 +1785,7 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
     // ni dans son corrigé (« interaction EMF (écriture, …) ») ; sauf sur la fiche du Mimic, dont les orbes à 0 preuve
     // sont une capacité : c'est justement ce qu'il faut savoir sans preuve
     if (x.id !== MIMIC && mentionsEvidence(a.explain)) return
+    const explain = leanExplain(a.explain, x, all)
     if (a.choices.every((c) => namesAny(c, all)) || a.choices.some((c) => redact(c, x) !== c)) return
     // ni la seule réponse qui contient le mot que souffle le nom de X (« disparaît » pour le Fantôme) : dans une copie
     // qui ne parle que de lui, elle se trouverait sans rien savoir
@@ -1584,15 +1807,25 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
           multi: false,
           choices: shuffle(rng, a.choices.map((label, k) => ({ id: String(k), label }))),
           correct: [String(a.answer)],
-          explain: a.explain,
+          explain,
         }
         // « Tu hésites entre un Esprit et un Spectre. Quel test les départage ? » : elle demande aussi un fait du Spectre
         const asked = `${a.q} \n ${a.choices[a.answer]}`
         const named = all.filter((o) => o.id !== x.id && namesGhost(a.q, o))
         // « Combien de santé mentale fait perdre l'explosion ? 2 % par objet lancé » : la réponse est une valeur, c'est elle qu'on demande
-        const aspect = keysOf(x.id, a.choices[a.answer]).some((k) => !isSoft(k)) ? ('value' as const) : ('own' as const)
-        // son corrigé peut dire ce que vaut le fait (« c'est un test définitif ») : par prudence, il le montre
-        const b = built(q, 'auth', [{ who: x.id, text: asked, aspect }, ...named.map((o) => ({ who: o.id, text: asked }))], [{ who: x.id, text: a.explain, aspect: 'any' }])
+        const answered = keysOf(x.id, a.choices[a.answer]).filter((k) => !isSoft(k))
+        const aspect = answered.length ? ('value' as const) : ('own' as const)
+        // son corrigé, phrase par phrase : chacune montre ce qu'elle dit de X. Ce que vaut le fait (une preuve, un simple
+        // indice) n'est montré que si l'énoncé, la réponse ou le corrigé le disent (« c'est un test de confirmation »,
+        // « la seule entité qui… », « c'est un indice fort ») ; alors, par prudence, pour tout ce que dit le corrigé
+        const worth = saidWorth(`${asked} ${explain}`)
+        const says = SAYS_ONLY.test(`${asked} ${explain}`) || worth.includes('!preuve') ? (worth.includes('!indice') ? ('any' as const) : ('proof' as const)) : worth.includes('!indice') ? ('hint' as const) : undefined
+        const b = built(
+          q,
+          'auth',
+          [{ who: x.id, text: asked, aspect }, ...named.map((o) => ({ who: o.id, text: asked }))],
+          explain.split(SENTENCES).map((text) => ({ who: x.id, text, ...(says ? { aspect: says } : {}) })),
+        )
         const bounds = keysOf(x.id, a.choices[a.answer]).flatMap((k) => {
           const m = /^[^|]+\|(\d+) (\S+)$/u.exec(k)
           return m ? [{ n: Number(m[1]), unit: m[2] }] : []
@@ -1647,14 +1880,16 @@ export function soloQuestion(x: Ghost, all: Ghost[], id: string, rng: Rng): Ques
  * Les sortes de questions d'une copie de dix. D'abord la ligne de vue (les entités qui n'accélèrent pas en
  * parlent partout : posée après, « Non » sortirait moins que « Oui »), les nombres et un signe de l'entité, le
  * cœur de la copie ; puis les autres sortes dans le désordre ; le reste se complète (voir FILL). L'ordre des
- * questions dans la copie, lui, se décide à la fin.
+ * questions dans la copie, lui, se décide à la fin. `T3` : une question sur un test de la fiche, « ce test suffit-il ? »
+ * (T3b) quand elle peut se poser, sinon « quel test confirme X ? » (T3a) ; `T8` : une observation, « est-ce que ça
+ * suffit ? » ; `T6` : un vrai ou faux, d'abord sur ce que la fiche de X dit elle-même faux pour lui.
  */
 const FIRST = ['T1los', 'T1san', 'T1spd', 'T2'] as const
 const BLUEPRINT = ['T2', 'T3', 'T4', 'T5', 'T8'] as const
-/** Les départages après le reste : ils citent le trait le plus connu de l'entité, que d'autres sortes demandent mieux. */
-const DUELS = ['T7a', 'T7b'] as const
+/** Le départage après le reste : il cite le trait le plus connu de l'entité, que d'autres sortes demandent mieux. */
+const DUELS = ['T7a'] as const
 /** De quoi compléter une copie : un vrai ou faux, une question rédigée, puis une de plus des autres sortes. */
-const FILL = ['T6', 'auth', 'T8', 'T3', 'T2', 'T7a', 'T5', 'T6', 'auth', 'T4', 'T1san', 'T1spd', 'T7b'] as const
+const FILL = ['T6', 'auth', 'T8', 'T3', 'T2', 'T7a', 'T5', 'T6', 'auth', 'T4', 'T1san', 'T1spd'] as const
 /**
  * L'intrus montre trois signes de X pour n'en demander aucun : sur une fiche qui en a moins que cela, il ne fait
  * pas partie du plan (il prendrait la place de deux questions sur ces signes) et ne sert qu'à compléter la copie.
@@ -1664,11 +1899,6 @@ type Slot = (typeof FIRST)[number] | (typeof BLUEPRINT)[number] | (typeof DUELS)
 
 /** Après autant d'essais sans se composer (pas de mauvaises réponses de même forme, ou déjà lues), une question n'est plus tentée dans la copie. */
 const MISSES = 4
-
-/** Une fois sur combien la question sur un test est « ce test suffit-il ? » plutôt que « quel test confirme X ? ». */
-const ENOUGH_SHARE = 0.4
-/** Une entité dont tous les tests suffisent (ou aucun) : la réponse serait toujours la même, la question est plus rare. */
-const ENOUGH_ONE_SIDED = 0.5
 
 /**
  * Compose la copie sur une seule entité : `count` questions (dix), toutes sur elle. Une question déjà posée dans
@@ -1684,35 +1914,96 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const { ghost: x, allGhosts: all, rng } = opts
   const count = Math.max(0, Math.floor(opts.count ?? SOLO_COUNT))
   if (!count) return []
+  const los = losChance(all)
+  // ce qui décide des réponses se tire une fois, pour tous les essais : quelles questions rares se posent (valeur
+  // standard, ligne de vue), et la réponse de chaque question à réponses fixes (vrai ou faux, oui ou non), dans
+  // l'ordre où elles entrent. Garder la plus longue des copies ne fait donc pencher aucune réponse
+  const draw: Draw = {
+    gates: { stdSan: rng() < SOLO_STANDARD.san, stdSpd: rng() < SOLO_STANDARD.spd, los: rng() < (x.speed.los ? los.yes : los.no), stdAuth: rng() < SOLO_STANDARD.authored, oneSided: rng() },
+    worth: Array.from({ length: COINS }, () => rng()),
+    trueFalse: Array.from({ length: COINS }, () => rng()),
+  }
+  let best: Built[] = []
+  for (let attempt = 0; attempt < ATTEMPTS + MORE_ATTEMPTS; attempt++) {
+    // au-delà des essais de toute copie : seulement tant qu'elle reste très courte
+    if (attempt >= ATTEMPTS && best.length >= Math.min(count, SHORT)) break
+    const made = compose(opts, count, draw, createRng(Math.floor(rng() * 0x100000000)))
+    if (made.length > best.length) best = made
+    if (best.length >= count) break
+  }
+  // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
+  return best.map((b) => {
+    const q = { ...b.q, prompt: fr(b.q.prompt), explain: fr(noLeadingMais(b.q.explain)) }
+    ledgers.set(q, b)
+    return q
+  })
+}
+
+/**
+ * L'ordre dans lequel les questions entrent dans une copie décide de sa longueur : un signe qui dit deux faits de la
+ * fiche (« Ne change jamais seul de pièce favorite et s'en éloigne peu »), posé d'abord, ne laisse plus rien à
+ * demander sur l'un ni sur l'autre. La copie se compose donc plusieurs fois, dans des ordres différents, et la plus
+ * longue est gardée. Deux essais : mesuré, +0,3 question par copie pour 20 ms de plus (médiane) ; le troisième
+ * rapportait deux fois moins.
+ */
+const ATTEMPTS = 2
+/** Une copie de moins de cinq questions se retente encore deux fois : ces copies-là se composent en quelques millisecondes. */
+const MORE_ATTEMPTS = 2
+const SHORT = 5
+/** Autant de réponses tirées d'avance par sorte de question à réponses fixes (une copie de trente en compte au plus quinze). */
+const COINS = 16
+interface Draw {
+  gates: { stdSan: boolean; stdSpd: boolean; los: boolean; stdAuth: boolean; oneSided: number }
+  worth: number[]
+  trueFalse: number[]
+}
+
+/** Une composition de la copie (voir buildSoloQuiz) : ses questions, dans l'ordre où les poser. */
+function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[] {
+  const { ghost: x, allGhosts: all } = opts
   const seen = opts.seen instanceof Set ? (opts.seen as ReadonlySet<string>) : new Set(opts.seen ?? [])
   const topics = opts.topics ? new Set<QuizTopic>(opts.topics) : null
   const seeds = seedsFor(x, all).filter((s) => !topics || topics.has(s.topic))
   if (!seeds.length) return []
   const stray = opts.onlyListed ? strayCheck(all.filter((o) => o.id !== x.id)) : null
-  const los = losChance(all)
-  const gates = { stdSan: rng() < SOLO_STANDARD.san, stdSpd: rng() < SOLO_STANDARD.spd, los: rng() < (x.speed.los ? los.yes : los.no), stdAuth: rng() < SOLO_STANDARD.authored }
+  const gates = draw.gates
+  /** le rang de la prochaine réponse tirée d'avance, par sorte */
+  const drawn = { worth: 0, trueFalse: 0 }
   const scale = count / SOLO_COUNT
-  /** le palier en cours (voir LADDER), et ses plafonds à la mesure de la copie */
+  /** le palier en cours (voir LADDER) */
   let level = 0
-  const cap = () => {
-    const l = LADDER[level]
-    return { two: Math.max(1, Math.floor(TWO_MAX * scale)), few: Math.max(1, Math.floor(FEW_MAX * scale)), three: Math.max(1, Math.floor(l.three * scale)), duels: Math.max(1, Math.ceil(l.duels * scale)) }
+  /** les plafonds, à la mesure de la copie demandée */
+  const caps = {
+    twoFree: Math.max(1, Math.floor(TWO_FREE * scale)),
+    few: Math.max(1, Math.floor(FEW_MAX * scale)),
+    numbers: Math.max(1, Math.round(NUMBERS_MAX * scale)),
+    T3b: Math.max(1, Math.round(WORTH_MAX.T3b * scale)),
+    T8: Math.max(1, Math.round(WORTH_MAX.T8 * scale)),
+    foreign: Math.max(1, Math.round(FOREIGN_MAX * scale)),
   }
 
   const picked: Built[] = []
   const ids = new Set<string>()
   const screens = new Set<string>()
+  /** les citations de la copie : une même scène ne se relit pas sous une autre question (vrai ou faux, puis « est-ce que ça suffit ? ») */
+  const quotes = new Set<string>()
+  /** le nombre de questions de la copie tirées parmi les signes d'autres fiches (voir FOREIGN_MAX) */
+  let mixed = 0
+  /** la copie pose déjà un « est-ce que ça suffit ? » dont la réponse est la seule possible pour X (voir addWorth) */
+  let forced = false
   /** before[i] : les questions qui doivent passer avant la question i */
   const before: Set<number>[] = []
   const widthOf = (n: number) => picked.filter((b) => b.q.choices.length === n).length
   const countOf = (pred: (b: Built) => boolean) => picked.filter(pred).length
+  /** seuil ou vitesse : le groupe d'une question en nombres déjà dans la copie */
+  const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : null)
   const roomFor = (s: Seed) => {
-    const c = cap()
-    if (s.width === 2 && widthOf(2) >= c.two) return false
-    if (s.width === 3 && widthOf(3) >= c.three) return false
-    if (s.width < 4 && picked.length - widthOf(4) >= c.few) return false
-    if ((s.type === 'T7a' || s.type === 'T7b') && countOf((b) => b.type === 'T7a' || b.type === 'T7b') >= c.duels) return false
-    if (s.type === 'T3b' && countOf((b) => b.type === 'T3b') >= Math.max(1, Math.round(scale))) return false
+    // deux réponses : trois dans toute copie ; au-delà, pas plus de la moitié de la copie telle qu'elle serait avec elle
+    if (s.width === 2 && widthOf(2) + 1 > Math.max(caps.twoFree, Math.ceil((picked.length + 1) / 2))) return false
+    if (s.width < 4 && picked.length - widthOf(4) >= caps.few) return false
+    if (s.type === 'T1' && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
+    if ((s.type === 'T3b' || s.type === 'T8') && countOf((b) => b.type === s.type) >= caps[s.type]) return false
+    if (s.type === 'T5' && mixed >= caps.foreign) return false
     return true
   }
   /** Les clés qui comptent au palier en cours : les valeurs et les phrases toujours ; l'objet en bloc, ou fait par fait (voir LADDER). */
@@ -1789,12 +2080,12 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const wrongOf = (b: Built): string[] => {
     if (!b.sentences) {
       const sentences = b.type === 'T2' || b.type === 'T3a' || b.type === 'T4' || b.type === 'T7a'
-      // le signe d'une entité proche, cité comme faux pour X (vrai ou faux, intrus, « de qui parle-t-on ? ») : relu parmi
-      // les réponses d'une autre question, il s'écarterait de même
+      // ce qui est cité comme faux pour X (vrai ou faux, intrus : le signe d'une entité proche, un test d'élimination de
+      // X) : relu parmi les réponses d'une autre question, il s'écarterait de même
       const foreign =
         b.type === 'T5'
           ? b.q.choices.filter((c) => b.q.correct.includes(c.id)).map((c) => c.label)
-          : (b.type === 'T6' && b.q.correct[0] === SOLO_ANSWERS.trueFalse.false) || (b.type === 'T7b' && b.q.correct[0] !== x.id)
+          : b.type === 'T6' && b.q.correct[0] === SOLO_ANSWERS.trueFalse.false
             ? [b.q.quote ?? '']
             : []
       b.sentences = (sentences ? b.q.choices.map((c) => c.label) : foreign).filter(Boolean).map((l) => nameless(l, all))
@@ -1824,6 +2115,8 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     picked.push(b)
     ids.add(b.q.id)
     screens.add(screenOf(b.q))
+    if (b.q.quote) quotes.add(b.q.quote)
+    if (b.type === 'T5') mixed++
     before.push(new Set(at.after))
     for (const i of at.first) before[i].add(n)
     for (const w of wrongOf(b)) read.add(w)
@@ -1858,7 +2151,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
       let b = s.make(rng)
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
       if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
-      if (!b || screens.has(screenOf(b.q)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) {
+      if (!b || screens.has(screenOf(b.q)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) {
         failed.set(s.id, (failed.get(s.id) ?? 0) + 1)
         continue
       }
@@ -1877,22 +2170,85 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   }
   const of = (type: SoloType, pred: (s: Seed) => boolean = () => true) => seeds.filter((s) => s.type === type && pred(s))
   /**
-   * La copie pose-t-elle « ce test suffit-il ? » : décidé une fois (le plan retente ses sortes pour se compléter, ce
-   * qui la poserait presque à chaque copie), et deux fois moins souvent pour une entité dont tous les tests
-   * suffisent, ou aucun : sa réponse serait toujours la même.
-   */
-  const sides = new Set(of('T3b').map((s) => s.cls))
-  const enough = sides.size > 0 && rng() < ENOUGH_SHARE * (sides.size === 2 ? 1 : ENOUGH_ONE_SIDED)
-  /**
-   * Une question dont la réponse se tire entre `classes` (vrai ou faux, X ou Y, oui ou non) : elle ne se pose que
-   * si chaque réponse a de quoi se poser à cet instant, puis la réponse se tire (`chance` : celles de la première).
+   * Une question dont la réponse se tire entre `classes` (vrai ou faux) : elle ne se pose que si chaque réponse a de
+   * quoi se poser à cet instant, dans la même sorte de phrases (`register`), puis la réponse se tire à pile ou face.
    * Sinon la réponse la plus facile à composer sortirait plus souvent que l'autre.
    */
-  const addEither = (type: SoloType, classes: readonly [string, string], chance = 0.5): boolean => {
+  const addEither = (type: SoloType, classes: readonly [string, string]): boolean => {
     for (const r of shuffle(rng, [...new Set(of(type).map((s) => s.register))])) {
+      // une sorte de phrases qui puise dans les autres fiches : leur part de la copie est comptée (voir FOREIGN_MAX)
+      const borrowed = of(type, (s) => s.register === r).some((s) => s.foreign)
+      if (borrowed && mixed >= caps.foreign) continue
       const found = classes.map((c) => find(of(type, (s) => s.register === r && s.cls === c), 6))
       if (!found[0] || !found[1]) continue
-      commit(found[rng() < chance ? 0 : 1]!)
+      commit(found[draw.trueFalse[drawn.trueFalse++ % COINS] < 0.5 ? 0 : 1]!)
+      if (borrowed) mixed++
+      return true
+    }
+    return false
+  }
+  /**
+   * Un vrai ou faux tiré de la seule fiche de X : un de ses tests d'élimination (faux pour lui), ou une affirmation
+   * vraie de sa fiche de même forme (une scène face à une scène, un signe face à un signe) et de longueur voisine.
+   * Les deux doivent pouvoir se poser à cet instant, puis la réponse se tire : ni la longueur de la phrase, ni sa
+   * tournure ne disent laquelle des deux est posée.
+   */
+  const addOwn = (): boolean => {
+    const truths = of('T6', (s) => s.cls === 'true' && !!s.text && s.register !== 'claim')
+    for (const f of shuffle(rng, of('T6', (s) => s.register === 'own'))) {
+      const wrong = find([f], 1)
+      if (!wrong) continue
+      const form = formOf(f.text!)
+      const right = find(truths.filter((t) => formOf(t.text!) === form && sameSize(t.text!, f.text!)), 6)
+      if (!right) continue
+      commit(draw.trueFalse[drawn.trueFalse++ % COINS] < 0.5 ? right : wrong)
+      return true
+    }
+    return false
+  }
+  /** « Est-ce que ça suffit ? », sur un test (T3b) ou sur une observation (T8) : voir worthPlan. */
+  const addWorth = (type: Worth): boolean => {
+    const mine = (cls: string) => of(type, (s) => s.cls === cls)
+    // les réponses possibles pour X, et leurs chances
+    const { plan: plans, typical } = worthPlan(all)
+    const plan = (plans.get(`${x.id}|${type}`) ?? []).filter((p) => mine(p.cls).length)
+    if (!plan.length) return false
+    /** les citations d'une réponse, la plus proche de `length` caractères d'abord */
+    const nearest = (list: readonly Seed[], length: number) => [...list].sort((a, b) => Math.abs(a.text!.length - length) - Math.abs(b.text!.length - length))
+    // une entité qui n'a qu'une réponse possible (rien de décisif sur sa fiche, ou rien d'autre) ne la pose qu'une
+    // fois par copie, tests et observations confondus : qui a lu la première sait répondre à la suivante (les
+    // Jumeaux, le Kormos : « Non » aux deux) ; et, pour ses tests, dans une partie des copies seulement (voir
+    // ONE_SIDED). Sa citation : au hasard parmi la moitié (deux au moins) dont la longueur est la plus proche de ce
+    // que l'autre réponse cite d'habitude ; la plus proche à chaque fois, et le Yurei poserait toujours la même
+    if (plan.length < ENOUGH.length) {
+      if (forced || gates.oneSided >= ONE_SIDED[type][plan[0].cls as 'yes' | 'no']) return false
+      const other = ENOUGH.find((c) => c !== plan[0].cls)!
+      const close = nearest(mine(plan[0].cls), typical.get(`${type}|${other}`) ?? 0)
+      for (const s of shuffle(rng, close.slice(0, Math.max(2, Math.ceil(close.length / 2))))) {
+        if (!add([s], 1)) continue
+        forced = true
+        return true
+      }
+      return false
+    }
+    // chaque réponse possible pour X doit avoir de quoi se poser à cet instant, à tous les paliers, puis la réponse
+    // se tire : sinon le tirage pencherait vers « Non » (« ça suffit » repose sur les faits décisifs de la fiche,
+    // les premiers épuisés). Et jamais « l'autre réponse d'office » après la première : dans une copie, la réponse
+    // d'une question ne se déduit pas de celle d'avant.
+    // Une citation au hasard pour l'une des réponses, et pour l'autre la citation de longueur la plus proche : sur
+    // les fiches, un fait décisif se décrit en détail et un simple indice tient en une ligne, si bien que « Oui aux
+    // longues citations » gagnait 61 fois sur 100 aux observations. Ainsi appariées : 58 (les tests : 51). Le reste
+    // tient aux fiches (l'observation décisive du Revenant, du Mimic, de l'Onryo est deux fois plus longue que tous
+    // leurs indices) : n'apparier que des longueurs voisines leur ôtait la question
+    const lead = rng() < 0.5 ? 0 : 1
+    for (const s of shuffle(rng, mine(plan[lead].cls))) {
+      const one = find([s], 1)
+      if (!one) continue
+      let other: Found | null = null
+      for (const o of nearest(mine(plan[1 - lead].cls), s.text!.length)) if ((other = find([o], 1))) break
+      if (!other) continue
+      const coin = draw.worth[drawn.worth++ % COINS]
+      commit(weightedPick(() => coin, [{ ...plan[0], f: lead ? other : one }, { ...plan[1], f: lead ? one : other }], (p) => p.weight).f)
       return true
     }
     return false
@@ -1908,39 +2264,17 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
       case 'T2':
         return add(of('T2'))
       case 'T3':
-        // « ce test suffit-il ? » : la copie l'a décidé à son premier tirage (voir enough), sinon « quel test confirme X ? »
-        if (enough && (sides.size === 2 ? addEither('T3b', ['yes', 'no'], enoughPlan(all)) : add(of('T3b')))) return true
-        return add(of('T3a'))
+        return addWorth('T3b') || add(of('T3a'))
       case 'T4':
         return add(of('T4'))
       case 'T5':
         return add(of('T5'), 6)
       case 'T6':
-        return addEither('T6', ['true', 'false'])
-      case 'T7a': {
-        const [a, b] = rng() < 0.5 ? ['x', 'y'] : ['y', 'x']
-        return add(of('T7a', (s) => s.cls === a), 5) || add(of('T7a', (s) => s.cls === b), 5)
-      }
-      case 'T7b':
-        return addEither('T7b', ['x', 'y'])
-      case 'T8': {
-        for (const scene of shuffle(rng, SCENES)) {
-          const plan = observationPlan(all).get(`${x.id}|${scene}`)
-          if (!plan) continue
-          // une scène qui n'a pas les trois réponses pour X (pas d'observation décisive, pas de test d'élimination) ne se
-          // pose qu'une fois par copie : qui sait que la copie porte sur X n'hésite plus qu'entre deux réponses
-          if (plan.length < OBSERVED.length && countOf((b) => b.type === 'T8' && sceneOf(b.q.id) === scene) >= 1) continue
-          // chaque réponse possible pour X doit avoir de quoi se poser, à tous les paliers : sinon le tirage pencherait
-          // vers les autres (« ça suffit » repose sur les faits décisifs de la fiche, les premiers épuisés : posée sans
-          // eux, l'observation répondait « ça ne suffit pas » ou « ça l'exclut » quatre fois sur cinq)
-          const found = plan.map((p) => ({ ...p, f: find(of('T8', (s) => s.register === scene && s.cls === p.cls), 6) }))
-          const left = found.filter((p) => p.f)
-          if (left.length < found.length) continue
-          commit(weightedPick(rng, left, (p) => p.weight).f!)
-          return true
-        }
-        return false
-      }
+        return addOwn() || addEither('T6', ['true', 'false'])
+      case 'T7a':
+        return add(of('T7a'), 5)
+      case 'T8':
+        return addWorth('T8')
       case 'auth':
         return add(of('auth'))
     }
@@ -1969,6 +2303,8 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   for (const repeat of seen.size ? [false, true] : [false]) {
     again = repeat
     for (level = 0; level <= last && picked.length < count; level++) fill()
+    level = last
+    for (let round = 1; round < LAST_ROUNDS && picked.length < count; round++) fill()
   }
   level = last
 
@@ -1996,12 +2332,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     order.push(next)
     placed.add(next)
   }
-  // typographie française sur ce que l'app compose (les textes des fiches le sont déjà au chargement)
-  return order.map((i) => {
-    const q = { ...picked[i].q, prompt: fr(picked[i].q.prompt), explain: fr(noLeadingMais(picked[i].q.explain)) }
-    ledgers.set(q, picked[i])
-    return q
-  })
+  return order.map((i) => picked[i])
 }
 
 /** Ce que chaque question d'une copie composée demande et montre (voir soloFacts). */
@@ -2019,16 +2350,3 @@ export function soloFacts(q: Question): { asks: string[]; shows: string[] } | nu
   const b = ledgers.get(q)
   return b ? { asks: [...b.asks].filter((k) => !isSoft(k)), shows: [...b.shows].filter((k) => !isSoft(k)) } : null
 }
-
-/**
- * Les chances que « ce test suffit-il ? » porte sur un test qui suffit, pour une entité qui a des tests qui
- * suffisent et d'autres qui ne donnent qu'un indice : choisies pour qu'au fil des copies « Oui » sorte autant que
- * « Non », malgré les entités dont tous les tests suffisent (plus nombreuses, et posées moins souvent).
- */
-const enoughPlan = memoList((all) => {
-  const classes = all.map((g) => new Set(seedsFor(g, all).filter((s) => s.type === 'T3b').map((s) => s.cls)))
-  const only = (c: string) => classes.filter((s) => s.size === 1 && s.has(c)).length
-  const both = classes.filter((s) => s.size === 2).length
-  // oui : only('yes') × ENOUGH_ONE_SIDED + both × p ; non : only('no') × ENOUGH_ONE_SIDED + both × (1 − p)
-  return both ? Math.min(0.9, Math.max(0.1, 0.5 + (ENOUGH_ONE_SIDED * (only('no') - only('yes'))) / (2 * both))) : 0.5
-})
