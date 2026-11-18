@@ -5,7 +5,7 @@ import { notebookStats, NotebookStats } from '../components/Registry'
 import { CheckLine, FileHead, H, Notebook, Page, PaperButton, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { useToast } from '../components/Toast'
 import { Modal, Seg } from '../components/ui'
-import { GHOSTS } from '../data'
+import { JOURNAL_GHOSTS } from '../data'
 import { fr, NNBSP, safeDate } from '../engine/format'
 import { isStandalone, platform } from '../engine/device'
 import { coachNameOf } from '../engine/notes'
@@ -282,7 +282,7 @@ export function Profile() {
                 {fr(`Limiter les nouvelles questions à ces entités ${focus.length ? `(${focus.length})` : '(aucune : toutes)'}`)}
               </span>
               <div className="focus-names" role="group" aria-labelledby="lbl-focus">
-                {GHOSTS.map((g) => {
+                {JOURNAL_GHOSTS.map((g) => {
                   const on = focus.includes(g.id)
                   return (
                     <button

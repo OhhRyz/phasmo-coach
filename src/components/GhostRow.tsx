@@ -25,8 +25,8 @@ export function losText(ghost: Ghost): string {
   return ghost.speed.los ? 'Oui' : 'Non'
 }
 
-/** Trait de crayon qui barre une ligne du registre (se dessine à l'arrivée). */
-function Strike({ seed }: { seed: string }) {
+/** Trait de crayon qui barre une ligne du registre, ou un nom dans la grille du journal (se dessine à l'arrivée). */
+export function Strike({ seed }: { seed: string }) {
   const r = roughRng('strike-' + seed)
   const d = roughLine(0.5, 5.5 + r() * 2, 99.5, 3 + r() * 2.5, r, 0.9)
   return (
@@ -139,7 +139,7 @@ export function GroupRow({
   seed,
 }: {
   ghost: Ghost
-  /** « 1,53 m/s », « descend à 1,4 m/s », « 60 % » */
+  /** « 1,53 m/s », « 1,4 m/s au plus lent », « 60 % » */
   value: string
   /** « accélère en ligne de vue » : seulement dans le registre rangé par vitesse */
   los?: string | null

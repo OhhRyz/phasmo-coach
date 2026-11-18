@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type MutableRefObject } from 'react'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import { firstLineTitle, noteQuestion, type CoachNote } from '../engine/cards'
 import { NNBSP } from '../engine/format'
 import { keepNoteAsCard, makesCard, noteAsCard, skipsOwnReview } from '../engine/notes'
@@ -285,7 +285,7 @@ export function NoteEditor({
         <span>Entité concernée</span>
         <select className="select" value={ghost ?? ''} onChange={(e) => setGhost(e.target.value || null)}>
           <option value="">Général (aucune entité)</option>
-          {GHOSTS.map((g) => (
+          {JOURNAL_GHOSTS.map((g) => (
             <option key={g.id} value={g.id}>
               {g.name}
             </option>

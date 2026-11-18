@@ -16,7 +16,7 @@ import {
 } from '../components/journal/Journal'
 import { roughEllipse, roughLine, roughRng } from '../components/journal/rough'
 import { focusPageTitle, Modal, ProgressBar, Seg } from '../components/ui'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import { createFootsteps, speedToBpm, type Footsteps } from '../engine/audio'
 import { platform } from '../engine/device'
 import { NBSP, NNBSP, fr, num } from '../engine/format'
@@ -60,7 +60,7 @@ const IOS_HINT = `Pas de son${NNBSP}? Vérifie que le bouton silencieux est dés
 
 /** Les entités qui peuvent avoir cette vitesse de base : une valeur de leur fiche, ou un palier du tableau de tybayn à ± 0,05 m/s. */
 function ghostsAt(v: number): string[] {
-  return GHOSTS.filter((g) => hasSpeed(g, v, g.speed.isRange ? 0.05 : 0.01)).map((g) => g.name)
+  return JOURNAL_GHOSTS.filter((g) => hasSpeed(g, v, g.speed.isRange ? 0.05 : 0.01)).map((g) => g.name)
 }
 
 /* ------------------------------------------------------------------ la bande de papier */

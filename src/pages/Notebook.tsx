@@ -16,7 +16,7 @@ import { NoteActionLinks, NoteName, useNoteActions } from '../components/NoteAct
 import { NoteEditor } from '../components/NoteEditor'
 import { useToast } from '../components/Toast'
 import { Empty } from '../components/ui'
-import { GHOSTS, getGhost } from '../data'
+import { JOURNAL_GHOSTS, getGhost } from '../data'
 import type { CoachNote } from '../engine/cards'
 import { fr, NNBSP, plural, relativeDays, safeDate, validTime } from '../engine/format'
 import { coachNameOf, isCoachNote, isOwnNote, makesCard, skipsOwnReview, sortNotes } from '../engine/notes'
@@ -461,7 +461,7 @@ function Carnet() {
                   <select className="select" value={activeGhost} onChange={(e) => setGhost(e.target.value)} aria-label="Filtrer par entité">
                     <option value="">Toutes les notes ({total})</option>
                     <option value="general">Générales</option>
-                    {GHOSTS.filter((g) => state.notes.some((n) => n.ghostId === g.id)).map((g) => (
+                    {JOURNAL_GHOSTS.filter((g) => state.notes.some((n) => n.ghostId === g.id)).map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
                       </option>

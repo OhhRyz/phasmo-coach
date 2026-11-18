@@ -2,12 +2,13 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { EvidenceTracker, TrackerHow } from '../components/EvidenceTracker'
 import { GhostRow, GroupRow } from '../components/GhostRow'
+import { JournalGrid } from '../components/JournalGrid'
 import { FROM_CODEX, wantsRegistry } from './codexReturn'
 import { useToast } from '../components/Toast'
 import { UvPrint } from '../components/journal/Charts'
 import { Consigne, FileHead, H, Notebook, Page, RoughCircle, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Empty, Seg, useMedia } from '../components/ui'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import { EVIDENCE_IDS } from '../data/evidence'
 import type { Ghost } from '../data/types'
 import { le } from '../engine/cards'
@@ -380,9 +381,9 @@ export function searchTarget<T>(matching: readonly T[], out: readonly T[]): T | 
 
 const PHONE = '(max-width: 759px)'
 
-/** « Ranger par » : l'ordre du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
+/** « Ranger par » : l'ordre du journal du jeu (les lignes détaillées), ou trois colonnes par vitesse ou par seuil de chasse (voir engine/groups). */
 const RANKS: { value: Rank; label: string }[] = [
-  { value: 'numero', label: 'numéro' },
+  { value: 'numero', label: 'ordre du jeu' },
   { value: 'vitesse', label: 'vitesse' },
   { value: 'seuil', label: 'seuil de chasse' },
 ]
@@ -505,15 +506,16 @@ export function Codex() {
     filter.los !== null ||
     filter.evidenceCount !== 3
 
-  const { matching, out } = useMemo(() => searchCodex(GHOSTS, query, filter), [filter, query])
+  // tout ce que la page affiche suit l'ordre du journal du jeu (JOURNAL_GHOSTS) : registre, colonnes, listes de noms
+  const { matching, out } = useMemo(() => searchCodex(JOURNAL_GHOSTS, query, filter), [filter, query])
 
   // ce que dit le carnet de preuves seul, sans la recherche (le compte du carnet et sa conclusion)
-  const pool = useMemo(() => filterGhosts(GHOSTS, filter), [filter])
+  const pool = useMemo(() => filterGhosts(JOURNAL_GHOSTS, filter), [filter])
   const possible = useMemo(() => possibleEvidence(pool, filter), [pool, filter])
-  // « normale » cochée : pourquoi le Hantu, le Moroi, le Thayé et le Deildegast restent possibles tant que le reste
+  // « normale » cochée : pourquoi le Deildegast, le Hantu, le Moroi et le Thayé restent possibles tant que le reste
   // du carnet ne les écarte pas (voir normalSpeedNote), et sous « Ranger par vitesse », pourquoi ils n'ont pas de ligne au milieu
   const normalNote = useMemo(() => normalSpeedNote(pool), [pool])
-  const stepsNote = useMemo(() => rangesNote(GHOSTS), [])
+  const stepsNote = useMemo(() => rangesNote(JOURNAL_GHOSTS), [])
   // la recherche ne trouve que des entités écartées par le carnet : on les montre barrées, avec la raison
   const searchedOut = query.trim() !== '' && matching.length === 0 && out.length > 0
   const showOut = outPref ?? (searchedOut || (phone ? false : matching.length > 3))
@@ -522,7 +524,7 @@ export function Codex() {
   // fiche (pas par son nom) : un extrait montre le mot dans sa phrase
   const rows = useMemo(() => {
     const keep = new Set([...matching, ...(showOut ? out : [])])
-    return GHOSTS.map((g, i) => ({ g, n: i + 1 }))
+    return JOURNAL_GHOSTS.map((g, i) => ({ g, n: i + 1 }))
       .filter(({ g }) => keep.has(g))
       .map((r) => ({ ...r, snippet: query.trim() ? searchSnippet(r.g, query) : null }))
   }, [matching, out, showOut, query])
@@ -533,7 +535,7 @@ export function Codex() {
     if (rank === 'numero') return null
     const shown = new Map(rows.map((r) => [r.g, r.snippet]))
     const quoted = new Set<Ghost>()
-    return ledgerColumns(GHOSTS, rank).map((col) => {
+    return ledgerColumns(JOURNAL_GHOSTS, rank).map((col) => {
       const lines = col.lines
         .filter((l) => shown.has(l.entry.ghost))
         .map((l) => {
@@ -899,6 +901,15 @@ export function Codex() {
             )}
             {!searching && <span className="pencil-note cx-count-note">coche une preuve : ce qui ne colle plus sera barré</span>}
           </div>
+
+          {/* comme la page « Preuves » du journal du jeu : les 30 noms à leur place, barrés par le carnet. Une
+              recherche est une consultation, pas une déduction : la grille lui laisse la place */}
+          {searched === '' && (
+            <div className="jg-wrap">
+              <JournalGrid isOut={(g) => !pool.includes(g)} only={deduced ? only : null} />
+              <p className="pencil-note jg-note">à la même place que dans le journal du jeu</p>
+            </div>
+          )}
 
           {searchedOut ? (
             <Empty title={out.length === 1 ? 'Entité écartée par ton carnet' : 'Entités écartées par ton carnet'}>

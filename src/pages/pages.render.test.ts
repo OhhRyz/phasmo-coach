@@ -2,7 +2,7 @@ import { act, createElement as h, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS, JOURNAL_ORDER } from '../data'
 import { copiesBehavior } from '../engine/filter'
 import { NBSP, sanityClasses, speedClasses } from '../engine/format'
 import { speedGroupsOf } from '../engine/groups'
@@ -159,30 +159,33 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     }))
   const named = (rows: Element[], g: { name: string }) => rows.filter((li) => li.querySelector('.cx-link')?.firstChild?.textContent === g.name)
 
-  it('par numéro (d’office) : les 30 lignes dans l’ordre du journal, chacune avec le mot de sa vitesse', () => {
+  it('dans l’ordre du jeu (d’office) : les 30 lignes dans l’ordre du journal du jeu, chacune avec le mot de sa vitesse', () => {
     const el = renderCodex()
     const group = el.querySelector('.cx-rank [role="group"]')!
     expect(group.getAttribute('aria-label')).toBe('Ranger le registre par')
     expect(text(el.querySelector('.cx-rank .typed-label'))).toBe('Ranger par')
-    expect([...group.querySelectorAll('button')].map(text)).toEqual(['numéro', 'vitesse', 'seuil de chasse'])
-    expect(pressed(el)).toEqual(['numéro'])
+    expect([...group.querySelectorAll('button')].map(text)).toEqual(['ordre du jeu', 'vitesse', 'seuil de chasse'])
+    expect(pressed(el)).toEqual(['ordre du jeu'])
     expect(el.querySelector('.cx-ledger')).toBeNull()
     expect(text(el.querySelector('.cx-right .filehead'))).toContain('Ordre du journal du jeu')
     const rows = [...el.querySelectorAll('ol.cx-reg > li')]
-    expect(rows.map((li) => li.querySelector('.cx-link')?.textContent)).toEqual(GHOSTS.map((g) => g.name))
+    expect(rows.map((li) => li.querySelector('.cx-link')?.textContent)).toEqual(JOURNAL_GHOSTS.map((g) => g.name))
+    // numérotées de 01 à 30 dans cet ordre : Aswang en tête, Yurei en dernier
+    expect(rows.map((li) => text(li.querySelector('.cx-num')))).toEqual(JOURNAL_GHOSTS.map((_, i) => String(i + 1).padStart(2, '0')))
+    expect([rows[0], rows[29]].map((li) => li.querySelector('.cx-link')?.textContent)).toEqual(['Aswang', 'Yurei'])
     rows.forEach((li, i) => {
-      const g = GHOSTS[i]
+      const g = JOURNAL_GHOSTS[i]
       const several = copiesBehavior(g) || speedClasses(g).size > 1
       const word = text(li.querySelector('.cx-cls'))
       expect(word, g.id).toMatch(/^Vitesse : (lente|normale|rapide|variable)$/)
       expect(word.endsWith('variable'), g.id).toBe(several)
     })
-    const word = (id: string) => text(rows[GHOSTS.findIndex((g) => g.id === id)].querySelector('.cx-cls'))
+    const word = (id: string) => text(rows[JOURNAL_ORDER.indexOf(id)].querySelector('.cx-cls'))
     expect(word('aswang')).toBe('Vitesse : lente')
     expect(word('spirit')).toBe('Vitesse : normale')
     expect(word('the-twins')).toBe('Vitesse : variable')
     // après le mot, les m/s ; le Mimic, « variable », n'écrit pas ses 1,7 m/s à côté : il dit qu'il copie
-    const speed = (id: string) => text(rows[GHOSTS.findIndex((g) => g.id === id)].querySelector('.cx-speed'))
+    const speed = (id: string) => text(rows[JOURNAL_ORDER.indexOf(id)].querySelector('.cx-speed'))
     expect(speed('spirit')).toBe(', 1,7 m/s')
     expect(speed('the-mimic')).toBe(", copie l'entité imitée")
   })
@@ -223,10 +226,11 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
       ['Rapides, toujours', 'Rapides, par moments'],
     ])
     // le retour du coach : au milieu, d'abord les quinze entités qui n'ont que 1,7 m/s ; ni Hantu, ni Moroi, ni Thayé, ni Deildegast
+    // dans chaque partie, l'ordre du journal du jeu
     expect(cols[1].parts[0].names).toEqual(
-      ['spirit', 'wraith', 'phantom', 'poltergeist', 'banshee', 'mare', 'shade', 'demon', 'yurei', 'oni', 'yokai', 'goryo', 'myling', 'onryo', 'obake'].map(name),
+      ['banshee', 'demon', 'goryo', 'mare', 'myling', 'obake', 'oni', 'onryo', 'phantom', 'poltergeist', 'shade', 'spirit', 'wraith', 'yokai', 'yurei'].map(name),
     )
-    expect(cols[1].parts[1].names).toEqual(['jinn', 'raiju', 'the-mimic', 'gallu', 'dayan', 'kormos'].map(name))
+    expect(cols[1].parts[1].names).toEqual(['dayan', 'gallu', 'jinn', 'kormos', 'raiju', 'the-mimic'].map(name))
     for (const id of ['hantu', 'moroi', 'thaye', 'deildegast']) {
       const g = GHOSTS.find((o) => o.id === id)!
       expect(named(cols[1].rows, g), id).toHaveLength(0)
@@ -254,9 +258,9 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(el.querySelector('.cx-ledger')!.textContent).not.toMatch(/\d (?:m\/s|%)|'/)
     expect(text(el.querySelector('.cx-rank-hint'))).toBe(
       "vitesses de la fiche, hors accélération en ligne de vue« toujours » : l'entité n'a que cette vitesse · « par moments » : elle en change, et figure dans chaque colonne où tombe une vitesse de sa fiche" +
-        'Le Hantu, le Moroi, le Thayé et le Deildegast changent de vitesse par paliers : rangés à leur plus lent et à leur plus rapide',
+        'Le Deildegast, le Hantu, le Moroi et le Thayé changent de vitesse par paliers : rangés à leur plus lent et à leur plus rapide',
     )
-    // la troisième ligne nomme les entités dont la fiche donne une plage, et elles seules
+    // la troisième ligne nomme les entités dont la fiche donne une plage, et elles seules (sur la page, dans l'ordre du journal du jeu)
     expect(text({ textContent: rangesNote(GHOSTS) } as Element)).toBe('Le Hantu, le Moroi, le Thayé et le Deildegast changent de vitesse par paliers : rangés à leur plus lent et à leur plus rapide')
     expect(rangesNote(GHOSTS.filter((g) => !g.speed.isRange))).toBeNull()
     expect(text({ textContent: rangesNote(GHOSTS.filter((g) => g.id === 'hantu')) } as Element)).toBe('Le Hantu change de vitesse par paliers : rangé à son plus lent et à son plus rapide')
@@ -289,7 +293,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     ])
     const name = (id: string) => GHOSTS.find((g) => g.id === id)!.name
     expect(cols[0].parts[0].names).toEqual([name('demon')])
-    expect(cols[2].parts[0].names).toEqual([name('shade'), name('deogen')])
+    expect(cols[2].parts[0].names).toEqual([name('deogen'), name('shade')])
     // aucune partie vide dans ce classement
     expect(cols.flatMap((c) => c.parts.map((p) => p.none))).toEqual(['', '', '', '', '', ''])
     const line = (i: number, id: string) => text(named(cols[i].rows, GHOSTS.find((g) => g.id === id)!)[0])
@@ -312,7 +316,7 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(columns(el).map((c) => c.title)).toEqual(['Lentes', 'Normales', 'Rapides'])
     act(() => button('seuil de chasse').click())
     expect(columns(el).map((c) => c.title)).toEqual(['Tôt', 'Normal', 'Tard'])
-    act(() => button('numéro').click())
+    act(() => button('ordre du jeu').click())
     expect(el.querySelector('.cx-ledger')).toBeNull()
     expect(el.querySelectorAll('ol.cx-reg > li')).toHaveLength(GHOSTS.length)
   })
@@ -322,11 +326,15 @@ describe('Codex : le registre se range par numéro, par vitesse ou par seuil de 
     expect(normalSpeedNote(GHOSTS)).toBe(
       `Le Hantu, le Moroi, le Thayé et le Deildegast restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
     )
+    // sur la page, dans l'ordre du journal du jeu
+    expect(normalSpeedNote(JOURNAL_GHOSTS)).toBe(
+      `Le Deildegast, le Hantu, le Moroi et le Thayé restent possibles${NNBSP}: leur vitesse change par paliers et passe par 1,7${NBSP}m/s ou tout près`,
+    )
     // sans le critère : pas de note
     expect(renderCodex('?rang=vitesse').querySelector('.cx-field-why')).toBeNull()
     sessionStorage.setItem(FILTER_KEY, JSON.stringify({ filter: { evidenceCount: 3, evidence: {}, speed: ['normal'], huntAbove: null, los: null }, query: '' }))
     const el = renderCodex('?rang=vitesse')
-    expect(text(el.querySelector('.cx-field-why'))).toBe('Le Hantu, le Moroi, le Thayé et le Deildegast restent possibles : leur vitesse change par paliers et passe par 1,7 m/s ou tout près')
+    expect(text(el.querySelector('.cx-field-why'))).toBe('Le Deildegast, le Hantu, le Moroi et le Thayé restent possibles : leur vitesse change par paliers et passe par 1,7 m/s ou tout près')
     const cols = columns(el)
     for (const id of ['hantu', 'moroi', 'thaye', 'deildegast']) {
       const g = GHOSTS.find((o) => o.id === id)!

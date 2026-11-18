@@ -192,6 +192,24 @@
 .cx-book .cx-foot { margin: 14px 0 0; font-size: 19px; text-align: right; }
 
 /* ==========================================================================
+   La grille du journal du jeu : les 30 noms sur trois colonnes, à la même place que dans le jeu
+   ========================================================================== */
+.jg-wrap { margin: 4px 0 20px; }
+.jg { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--jg-cols, 3), minmax(0, 1fr)); column-gap: 16px; border-top: 1.5px solid var(--ink-2); }
+.jg-cell { min-width: 0; border-bottom: 1px solid var(--rule); }
+.jg-link { display: flex; align-items: center; min-height: 34px; padding: 2px 4px; font-family: "Fell", serif; font-size: 19px; line-height: 1.15; color: var(--ink); text-decoration: none; white-space: nowrap; transition: background-color .2s ease; }
+.jg-name { position: relative; display: inline-block; }
+@media (hover: hover) {
+  .jg-link:hover { color: var(--red-pen); background-color: color-mix(in srgb, var(--ink) 4%, transparent); }
+}
+.jg-link:focus-visible { outline: 2px dashed var(--red-pen); outline-offset: -2px; }
+/* écartée par le carnet : elle garde sa case, barrée au crayon comme dans le jeu */
+.jg-cell.is-out .jg-link { color: var(--ink-3); }
+.jg .cx-strike { left: -6px; top: 50%; width: calc(100% + 12px); margin-top: -5px; }
+.jg-cell.is-only .rough { color: var(--red-pen); }
+.cx-book .jg-note { margin: 5px 0 0; font-size: 17px; line-height: 1.1; text-align: right; }
+
+/* ==========================================================================
    « Ranger par » : l'ordre du journal du jeu, ou trois colonnes par vitesse ou par seuil de chasse
    ========================================================================== */
 .cx-rank { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin: 0 0 12px; }
@@ -303,6 +321,8 @@
   .cx-book .cx-foot { text-align: left; }
 
   /* rangé par vitesse ou par seuil : les trois colonnes l'une sous l'autre, chacune sous son titre */
+  .jg { column-gap: 10px; }
+  .jg-link { min-height: 40px; padding: 2px 2px; }
   .cx-rank { gap: 0 10px; }
   .cx-ledger { display: block; border-top: 0; }
   .cx-grp { display: block; padding: 10px 0 0; border-top: 1.5px solid var(--ink-2); }
@@ -312,4 +332,11 @@
   .cx-row--grp { padding: 7px 0 6px; }
   .cx-row--grp .cx-link { font-size: 20px; }
   .cx-row--grp .cx-strike { top: 14px; }
+}
+
+/* petit téléphone : trois tiers égaux seraient trop étroits pour « Les Jumeaux ». Chaque colonne prend la largeur
+   de son nom le plus long, et les trois se répartissent sur la page */
+@media (max-width: 359px) {
+  .jg { grid-template-columns: repeat(var(--jg-cols, 3), auto); justify-content: space-between; column-gap: 6px; }
+  .jg-link { font-size: 16.5px; padding: 2px 0; }
 }

@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { FileHead, H, IndexCard, JournalBox, Notebook, Page, RoughCircle, Stamp, Tape, TapeButton, TypedLink } from '../components/journal/Journal'
 import { Mastery } from '../components/ui'
-import { GHOSTS } from '../data'
+import { GHOSTS, JOURNAL_GHOSTS } from '../data'
 import { formatDate, fr, NBSP, num, safeDate } from '../engine/format'
 import { masteryLevel, WEAK_COUNT } from '../engine/progress'
 import { decodePayload, readReportPayload, type ReportNote, type ReportPayload } from '../engine/share'
@@ -309,7 +309,7 @@ export function Report() {
           </H>
           <p className="registry-legend">{fr('La maîtrise est surlignée et chiffrée en\u00a0% ; les entités acquises sont entourées.')}</p>
           <ol className="registry">
-            {GHOSTS.map((g, i) => {
+            {JOURNAL_GHOSTS.map((g, i) => {
               const m = (data.mastery[g.id] ?? 0) / 100
               const ok = m >= 0.85
               const cls = ok ? 'ok' : m === 0 ? 'zero' : m < 0.4 ? 'weak' : undefined
