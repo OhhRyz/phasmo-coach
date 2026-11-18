@@ -34,7 +34,7 @@ export function codexRankPath(rank: Rank): string {
 
 /** La vitesse standard (tybayn) : en dessous une entité est lente, au-dessus rapide (voir speedClasses). */
 export const STANDARD_SPEED = 1.7
-/** Le seuil de chasse standard, en % de santé mentale moyenne (voir sanityClasses). */
+/** Le seuil de chasse standard, en % de santé mentale moyenne. */
 export const STANDARD_SANITY = 50
 
 /**

@@ -97,7 +97,8 @@ export function speedFamilies(ghosts: readonly Ghost[]): { id: SpeedFamily; ghos
  * chasse tard (en dessous), seuil qui change selon la situation, ou normale (50 %). À côté du nom, le seuil de la
  * fiche et ce qui le change : « Démon, 70 % · à toute santé mentale avec sa capacité ».
  *
- * Ce n'est pas le critère « peut chasser au-dessus de… » du carnet de preuves, qui élimine : voir sanityClasses.
+ * Ce n'est pas le critère « peut chasser au-dessus de… » du carnet de preuves, qui élimine (voir huntAbove dans
+ * engine/filter).
  */
 export type SanityFamily = 'tot' | 'tard' | 'variable' | 'normale'
 

@@ -42,7 +42,6 @@ export function sanityText(g: Ghost): string {
 }
 
 export type SpeedClass = 'slow' | 'normal' | 'fast'
-export type SanityClass = 'late' | 'normal' | 'early'
 
 /** Convention propre à l'app : comparaison à la vitesse standard de tybayn (1,7 m/s) ; lent < 1,7 m/s, rapide > 1,7 m/s. */
 export function speedClasses(g: Ghost): Set<SpeedClass> {
@@ -55,20 +54,6 @@ export function speedClasses(g: Ghost): Set<SpeedClass> {
   if (lo < 1.7) out.add('slow')
   if (hi > 1.7) out.add('fast')
   if (values.includes(1.7) || (s.isRange && lo <= 1.7 && hi >= 1.7)) out.add('normal')
-  return out
-}
-
-/** Tard < 50 %, normal = 50 %, tôt > 50 % (seuil de chasse). */
-export function sanityClasses(g: Ghost): Set<SanityClass> {
-  const h = g.huntSanity
-  const out = new Set<SanityClass>()
-  if ([h.low, h.normal, h.high].every((v) => v < 0)) return new Set(['late', 'normal', 'early'])
-  for (const v of [h.low, h.normal, h.high]) {
-    if (v < 0) continue
-    if (v < 50) out.add('late')
-    else if (v > 50) out.add('early')
-    else out.add('normal')
-  }
   return out
 }
 
