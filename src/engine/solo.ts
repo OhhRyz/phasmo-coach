@@ -1,5 +1,5 @@
 import type { Ghost, Mechanics } from '../data/types'
-import { de, fitsToo, isFeminine, le, mentionsEvidence, MIMIC, needsEvidence, numbersFit, restatedBy, reverseTells, tellNumbers, testNeedsEvidence, TESTS_PER_GHOST, withoutEvidenceAsides, zeroTests } from './cards'
+import { de, fitsToo, isFeminine, le, mentionsEvidence, MIMIC, namesGhost, needsEvidence, numbersFit, restatedBy, reverseTells, tellNumbers, testNeedsEvidence, TESTS_PER_GHOST, withoutEvidenceAsides, zeroTests } from './cards'
 import { fr, NNBSP, redactGhostName as redact } from './format'
 import {
   agrees,
@@ -124,12 +124,13 @@ export interface SoloOptions {
   /** aucune question ne nomme une autre entité (un débutant qui n'a étudié que celle-ci) */
   onlyListed?: boolean
   /**
-   * Jusqu'où compléter la copie d'une fiche trop courte pour dix questions (2 par défaut) :
+   * Jusqu'où compléter la copie d'une fiche trop courte pour dix questions (1 par défaut) :
    * 0, rien que ce que la fiche donne sans redite ; 1, un départage de plus avec une entité proche ;
    * 2, en dernier recours, un vrai ou faux, un « de qui parle-t-on ? » ou une observation de plus, qui peut
    * reprendre une fois un objet ou un geste déjà demandé (jamais une même valeur ni une même phrase) : sa réponse
-   * se tire, elle porte donc aussi souvent sur un fait d'une entité proche. Pour mesurer ce qu'une fiche donne, ou
-   * vérifier une copie sans redite : 0 ou 1.
+   * se tire, elle porte donc aussi souvent sur un fait d'une entité proche. À 2, les copies sont plus longues, mais
+   * certaines redisent un fait (« tu entends le cri unique : est-ce que ça suffit ? », deux fois) : par défaut, une
+   * fiche courte donne plutôt une copie plus courte.
    */
   relax?: 0 | 1 | 2
 }
@@ -166,10 +167,10 @@ interface Built {
   type: SoloType
   asks: Set<string>
   shows: Set<string>
-  /** l'intrus : ses trois affirmations vraies (lignes de la fiche de X) ; une seule au plus est connue par une autre question */
-  truths?: string[]
-  /** ses mauvaises réponses en phrases (signes, tests, départages d'autres entités), sans nom d'entité : aucune ne se relit dans la copie */
-  wrong?: string[]
+  /** l'intrus : ce que demanderait chacune de ses trois affirmations vraies ; une seule au plus est connue par une autre question */
+  truths?: string[][]
+  /** ses réponses en phrases (signes, tests, départages), sans nom d'entité : aucune ne se relit dans la copie */
+  sentences?: string[]
 }
 
 /** Une question possible sur X : son identifiant, stable, et de quoi la composer pour un tirage. */
@@ -189,23 +190,61 @@ interface Seed {
   gate?: 'stdSan' | 'stdSpd' | 'los'
   /** à essayer après les autres de sa sorte (un signe qui ne parle que de vitesse ou de seuil) */
   late?: boolean
+  /**
+   * Ce que la question demandera à coup sûr, connu sans la composer : si la copie le demande déjà, inutile de
+   * chercher ses mauvaises réponses (la recherche de réponses de même forme est ce qui coûte).
+   */
+  pre?: () => string[]
   make: (rng: Rng) => Built | null
 }
 
-/** La vitesse ou le seuil en général : trop large pour dire « le même fait » (les valeurs, elles, comptent). */
-const BROAD = /\|~(?:vitesse|seuil)$/u
 const isSoft = (k: string) => k.includes('|~')
+/** La vitesse ou le seuil en général (voir keysOf et les questions en nombres). */
+const BROAD = /\|~(?:vitesse|seuil)$/u
 /** L'objet ou le geste d'une clé souple, quel que soit l'angle sous lequel on le demande. */
 const themeOf = (k: string) => k.replace(/[/!].*$/u, '')
 
 /** « Quitte rarement sa pièce », « reste dans sa pièce » : le même fait que « s'éloigne peu de sa pièce favorite » (thème `errance` de factKeys). */
 const OWN_ROOM = /(?<!\p{L})(?:sa|leur)\s+pièce(?!\p{L})/iu
 
+/** Les clés déjà calculées : les mêmes phrases des fiches reviennent d'une question à l'autre, d'une copie à l'autre. */
+const keyCache = new Map<string, string[]>()
+
 /** Les clés du fait que porte un texte sur une entité (voir factKeys) : valeurs, objets et gestes, ligne de vue. */
 function keysOf(who: string, text: string): string[] {
-  const keys = factKeys({ ghostId: who, prompt: text, choices: [], correct: [] }).filter((k) => !BROAD.test(k))
+  const id = `${who}\u0000${text}`
+  let keys = keyCache.get(id)
+  if (!keys) {
+    if (keyCache.size > 20_000) keyCache.clear()
+    keyCache.set(id, (keys = computeKeys(who, text)))
+  }
+  return keys
+}
+
+function computeKeys(who: string, text: string): string[] {
+  const all = factKeys({ ghostId: who, prompt: text, choices: [], correct: [] })
+  // la vitesse ou le seuil en général ne comptent que pour une phrase sans nombre (« vitesse très élevée, qui chute près
+  // du joueur ») : entre deux phrases chiffrées, ce sont les valeurs qui disent si c'est le même fait
+  const keys = all.some((k) => !isSoft(k)) ? all.filter((k) => !BROAD.test(k)) : all
   const room = `${who}|~errance`
   return OWN_ROOM.test(text) && !keys.includes(room) ? [...keys, room] : keys
+}
+
+/** Le début d'une réponse, tous noms d'entités retirés : la même phrase dite de deux entités se reconnaît. */
+const namelessCache = new Map<string, string>()
+function nameless(label: string, all: readonly Ghost[]): string {
+  let v = namelessCache.get(label)
+  if (v === undefined) {
+    if (namelessCache.size > 20_000) namelessCache.clear()
+    v = all
+      .reduce((t, o) => redact(t, o), label)
+      .toLocaleLowerCase('fr')
+      .replace(/[^\p{L}\d]+/gu, ' ')
+      .trim()
+      .slice(0, 60)
+    namelessCache.set(label, v)
+  }
+  return v
 }
 
 /** Une phrase reconnue à son début, quelle que soit sa version (entière, sans apartés, première partie). */
@@ -218,6 +257,12 @@ const lineKey = (who: string, text: string) =>
 
 /** La clé d'un objet ou d'un geste, quand on demande ce que le fait vaut (preuve, ou simple indice) et non à qui il est. */
 const worthOf = (aspect: Stmt['aspect']): string[] => (aspect === 'proof' || aspect === 'ownProof' ? ['!preuve'] : aspect === 'hint' ? ['!indice'] : aspect === 'any' ? ['!preuve', '!indice'] : [])
+/** Une phrase qui dit elle-même ce qu'elle vaut (« un pas manquant après le sel le confirme », « 90 ans ou plus : signe certain ») le montre. */
+const SAYS_PROOF = /confirm|(?<!\p{L})certaine?s?(?!\p{L})|prouv|décisi|définiti|à coup sûr/iu
+/** « …, c'est un Aswang » : une majuscule après l'article, donc un nom d'entité. */
+const SAYS_NAME = /c[’']est (?:une? |le |la |l[’']|les )\p{Lu}/u
+const SAYS_HINT = /(?<!\p{L})indices?(?!\p{L})|pourrait|peut-être/iu
+const saidWorth = (text: string): string[] => [...(SAYS_PROOF.test(text) || SAYS_NAME.test(text) ? ['!preuve'] : []), ...(SAYS_HINT.test(text) ? ['!indice'] : [])]
 const lineKeys = (s: Stmt): string[] => [lineKey(s.who, s.text), ...(s.item ? [s.item] : [])]
 
 /**
@@ -249,7 +294,8 @@ function askKeys(s: Stmt): string[] {
 /** Ce que montre une phrase une fois la question corrigée : à qui elle est, toujours ; ce qu'elle vaut, si la question le disait. */
 function showKeys(s: Stmt): string[] {
   const { hard, soft, sort } = parts(s)
-  return [...hard, ...soft.map((k) => `${k}/${sort}`), ...soft.flatMap((k) => worthOf(s.aspect).map((w) => `${k}${w}`)), ...lineKeys(s)]
+  const worth = [...new Set([...worthOf(s.aspect), ...saidWorth(s.text)])]
+  return [...hard, ...soft.map((k) => `${k}/${sort}`), ...soft.flatMap((k) => worth.map((w) => `${k}${w}`)), ...lineKeys(s)]
 }
 
 /** Un pourcentage ou une vitesse, tels qu'on les lit : « 50 % », « 1,7 m/s ». */
@@ -434,7 +480,7 @@ const ownEliminations = memo((x): { i: number; text: string; body: string }[] =>
  * 22 entités chassent d'habitude à 50 %, 20 à 1,7 m/s. Posée plus souvent, la valeur standard, toujours parmi
  * les choix, gagnerait d'office ; la copie préfère les nombres propres à l'entité.
  */
-const SOLO_STANDARD = { san: 0.06, spd: 0.02 } as const
+const SOLO_STANDARD = { san: 0.06, spd: 0.012 } as const
 
 /**
  * Les chances que la ligne de vue se demande dans une copie : souvent pour les rares entités qui n'accélèrent
@@ -458,7 +504,12 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
     if (!q) return null
     const right = q.choices.filter((c) => q.correct.includes(c.id)).map((c) => c.label)
     const asks = factKeys(q).filter((k) => !k.startsWith('carte:') && !isSoft(k))
-    return built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], asks)
+    // « vitesse très élevée, qui chute près du joueur » redit « 3,0 m/s loin → 0,4 m/s près » : la question demande aussi
+    // la vitesse (ou le seuil) en général, comme une phrase chiffrée face à une phrase sans nombre
+    const broad = `${x.id}|~${q.topic === 'sanity' ? 'seuil' : 'vitesse'}`
+    const b = built(q, 'T1', [], [{ who: x.id, text: [q.prompt, ...right, q.explain].join(' \n ') }], [...asks, ...SORTS.filter((o) => sameFact('V', o)).map((o) => `${broad}/${o}`)])
+    b.shows.add(`${broad}/V`)
+    return b
   }
   for (const kind of ['san', 'spd'] as const) {
     const topic: QuizTopic = kind === 'san' ? 'sanity' : 'speed'
@@ -532,6 +583,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
     width: 4 as const,
     register: 'key',
     late: SPEED_OR_SANITY.test(t),
+    pre: () => askKeys({ who: x.id, text: t, key: true }),
     make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k), t, `g:${x.id}:tells`, true),
   }))
   // les signes « 0 preuve » rédigés en phrases, face à des phrases d'autres fiches
@@ -548,6 +600,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: 4,
       register: 'tell',
       late: true,
+      pre: () => askKeys({ who: x.id, text }),
       make: (rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), { text, k: `t${k}` }), text, reverse.has(k) ? `g:${x.id}:rev:${k}` : `g:${x.id}:tells`, false),
     })
   }
@@ -568,6 +621,7 @@ function testSeeds(x: Ghost, all: Ghost[]): Seed[] {
       type: 'T3a',
       topic: 'zero',
       width: 4,
+      pre: () => [`${x.id}#C${i}`],
       make: (rng) => {
         const q = whichTest(x, t, ctxFor(x, all, rng), p < TESTS_PER_GHOST ? `g:${x.id}:test:${t.k}` : `g:${x.id}:tells`)
         if (!q) return null
@@ -754,6 +808,7 @@ function intruderSeeds(x: Ghost, all: Ghost[]): Seed[] {
         topic: 'behavior',
         width: 4,
         register: style,
+        pre: () => askKeys({ who: y.id, text: sign.text, key: style === 'key' }),
         make: (rng) => {
           const found = truthsAround(rng, x, labels, pool)
           if (!found) return null
@@ -771,7 +826,7 @@ function intruderSeeds(x: Ghost, all: Ghost[]): Seed[] {
           const key = style === 'key'
           const truths = found.truths.map((o) => ({ who: x.id, text: o.value.text, key }))
           // les trois signes de X sont jugés eux aussi : un seul au plus est connu par une autre question de la copie
-          return { ...built(q, 'T5', [{ who: y.id, text: sign.text, key }], truths), truths: truths.map((t) => lineKey(t.who, t.text)) }
+          return { ...built(q, 'T5', [{ who: y.id, text: sign.text, key }], truths), truths: truths.map(askKeys) }
         },
       })
     }
@@ -893,15 +948,19 @@ function duelSeeds(x: Ghost, all: Ghost[]): Seed[] {
     topic: 'zero',
     width: 4,
     cls: forward ? 'x' : 'y',
+    pre: () => [`${g.id}|départage`],
     make: (rng) => {
       const made = duelQuestion(g, ctxFor(g, all, rng), other)
       if (!made) return null
       const { cardId: _card, ...rest } = made
       const owners = made.choices.filter((c) => !made.correct.includes(c.id)).map((c) => byId.get(c.id))
       // le corrigé du quiz (ce que la fiche dit pour les départager), et de qui parlent les trois autres réponses
-      const explain = owners.every((o) => o) ? `${made.explain} Les trois autres réponses décrivent, dans l’ordre, ${listOf(owners.map((o) => le(o!.name)))}.` : made.explain
+      const right = made.choices.find((c) => made.correct.includes(c.id))!.label
+      const tail = (t: string) => t.replace(/[\s.]+$/u, '').slice(-40)
+      // la fiche ne dit rien de plus que la bonne réponse : le corrigé dit d'où elle vient, sans la redire
+      const source = tail(made.explain) === tail(right) ? `C’est ce que la fiche ${de(other.name)} dit ${de(g.name)}.` : made.explain
+      const explain = owners.every((o) => o) ? `${source} Les trois autres réponses décrivent, dans l’ordre, ${listOf(owners.map((o) => le(o!.name)))}.` : source
       const q: Question = { ...rest, explain, ghostId: x.id, ...(forward ? { cardId: `g:${x.id}:tells` } : {}) }
-      const right = q.choices.find((c) => q.correct.includes(c.id))!.label
       return built(
         q,
         'T7a',
@@ -1042,17 +1101,22 @@ function observationSeeds(x: Ghost, all: Ghost[]): Seed[] {
     })
   }
   // les tests de la fiche, dits comme ce qu'on observe : un test qui suffit, un test qui ne donne qu'un indice, un test d'élimination
+  // le corrigé reprend ce que la fiche en conclut (« … : dans ce cas, ça pourrait être un Aswang. »)
+  const said = (text: string) => {
+    const verdict = verdictOf(text, x)
+    return verdict.startsWith('Dans ce cas') ? `d${verdict.slice(1)}` : verdict
+  }
   const cards = new Map(zeroTests(x).map((t, p) => [t.text, p < TESTS_PER_GHOST ? `g:${x.id}:test:${t.k}` : undefined]))
   for (const t of ownTests(x, all)) {
     const quote = situationOf(t.body)
     if (!quote || quote.length > QUOTE_MAX) continue
     const asked: Stmt = { who: x.id, text: t.body, item: `${x.id}#C${t.i}`, aspect: t.definitive ? 'proof' : 'hint' }
-    if (t.definitive) seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'A', quote, `${yes} c’est un test de confirmation ${de(x.name)}. ${verdictOf(t.text, x)}${t.why ? ` ${t.why}` : ''}`, asked, cards.get(t.text))
-    else seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'B', quote, `${partly} sur la fiche ${de(x.name)}, ce n’est qu’un indice. ${verdictOf(t.text, x)}`, asked)
+    if (t.definitive) seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'A', quote, `${yes} ${said(t.text)}${t.why ? ` ${t.why}` : ''}`, asked, cards.get(t.text))
+    else seed(`q:constat:${x.id}:${x.id}:C${t.i}`, 'case', 'B', quote, `${partly} ${said(t.text)}`, asked)
   }
   for (const e of ownEliminations(x, all)) {
     const quote = situationOf(e.body)
-    if (quote && quote.length <= QUOTE_MAX) seed(`q:constat:${x.id}:${x.id}:E${e.i}`, 'case', 'C', quote, `${no} c’est un test d’élimination ${de(x.name)}. ${verdictOf(e.text, x)}`, { who: x.id, text: e.body, item: `${x.id}#E${e.i}` })
+    if (quote && quote.length <= QUOTE_MAX) seed(`q:constat:${x.id}:${x.id}:E${e.i}`, 'case', 'C', quote, `${no} ${said(e.text)}`, { who: x.id, text: e.body, item: `${x.id}#E${e.i}` })
   }
   return out
 }
@@ -1102,8 +1166,11 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
           correct: [String(a.answer)],
           explain: a.explain,
         }
+        // « Tu hésites entre un Esprit et un Spectre. Quel test les départage ? » : elle demande aussi un fait du Spectre
+        const asked = `${a.q} \n ${a.choices[a.answer]}`
+        const named = all.filter((o) => o.id !== x.id && namesGhost(a.q, o))
         // son corrigé peut dire ce que vaut le fait (« c'est un test définitif ») : par prudence, il le montre
-        return built(q, 'auth', [{ who: x.id, text: `${a.q} \n ${a.choices[a.answer]}` }], [{ who: x.id, text: a.explain, aspect: 'any' }])
+        return built(q, 'auth', [{ who: x.id, text: asked }, ...named.map((o) => ({ who: o.id, text: asked }))], [{ who: x.id, text: a.explain, aspect: 'any' }])
       },
     })
   })
@@ -1171,9 +1238,9 @@ const ENOUGH_ONE_SIDED = 0.5
  * fois, et aucune réponse n'a été montrée plus tôt dans la copie : une question qui en montrerait une autre passe
  * après elle, ou ne se pose pas. Un même objet, un même geste (la cachette de l'Aswang, les objets du Poltergeist)
  * se demande une fois pour dire à qui il est, puis pour dire ce qu'il vaut (une preuve, un simple indice), jamais
- * deux fois sous le même angle (voir Stmt). Quand la fiche n'a pas de quoi remplir la copie : un départage de plus
- * avec une entité proche ; puis, en dernier recours, un objet ou un geste repris une fois (voir SoloOptions.relax).
- * Une fiche vraiment courte donne une copie de moins de `count` questions. Le tirage ne dépend que de `rng`.
+ * deux fois sous le même angle (voir Stmt). Quand la fiche n'a pas de quoi remplir la copie, un départage de plus
+ * avec une entité proche la complète ; une fiche vraiment courte donne une copie de moins de `count` questions,
+ * plutôt qu'une question dont la réponse vient d'être lue (voir SoloOptions.relax). Le tirage ne dépend que de `rng`.
  */
 export function buildSoloQuiz(opts: SoloOptions): Question[] {
   const { ghost: x, allGhosts: all, rng } = opts
@@ -1207,6 +1274,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     // pour remplir la copie d'une fiche courte (ease 1), un départage de plus : il porte sur ce qui distingue une entité proche de X
     if ((s.type === 'T7a' || s.type === 'T7b') && countOf((b) => b.type === 'T7a' || b.type === 'T7b') >= cap.duels + Math.min(1, ease)) return false
     if (s.type === 'T7a' && s.cls === 'y' && countOf((b) => b.type === 'T7a' && !b.q.cardId) >= cap.reverse + Math.min(1, ease)) return false
+    if (s.type === 'T3b' && countOf((b) => b.type === 'T3b') >= Math.max(1, Math.round(scale))) return false
     return true
   }
   /** Ce que a demande et que b montre une fois corrigée : `hard`, une valeur ou une phrase de fiche ; `soft`, des objets ou des gestes. */
@@ -1245,9 +1313,9 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     }
     for (const k of again) if (repeated.has(k)) return null
     // un intrus dont deux des trois affirmations vraies sont déjà connues par d'autres questions n'en serait plus un
-    const all = [...picked, b]
-    for (const p of all) {
-      if (p.truths && p.truths.filter((t) => all.some((o) => o !== p && o.shows.has(t))).length > 1) return null
+    const chosen = [...picked, b]
+    for (const p of chosen) {
+      if (p.truths && p.truths.filter((t) => chosen.some((o) => o !== p && t.some((k) => !isSoft(k) && o.shows.has(k)))).length > 1) return null
     }
     // b avant `first`, après `after` : impossible si une question de `first` doit déjà passer avant une de `after`
     if (first.length && after.length) {
@@ -1264,28 +1332,35 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   }
   type Found = { b: Built; at: { first: number[]; after: number[]; again: string[] } }
   /**
-   * Les mauvaises réponses en phrases d'une question (signes, tests, départages), le nom de l'entité retiré : lue une
-   * fois, corrigée, une mauvaise réponse qui reviendrait s'écarterait d'emblée (« … chasse à 1,53 m/s de base » dans
-   * deux départages de suite).
+   * Les réponses en phrases d'une question (signes, tests, départages), le nom de l'entité retiré : lue une fois,
+   * corrigée, une réponse qui reviendrait s'écarterait d'emblée (« … chasse à 1,53 m/s de base » dans deux
+   * départages de suite ; la bonne réponse d'un départage parmi les mauvaises du suivant).
    */
   const wrongOf = (b: Built): string[] => {
-    if (!b.wrong) {
+    if (!b.sentences) {
       const sentences = b.type === 'T2' || b.type === 'T3a' || b.type === 'T4' || b.type === 'T7a'
-      b.wrong = sentences ? b.q.choices
-            .filter((c) => !b.q.correct.includes(c.id))
-            .map((c) =>
-              all
-                .reduce((t, o) => redact(t, o), c.label)
-                .toLocaleLowerCase('fr')
-                .replace(/[^\p{L}\d]+/gu, ' ')
-                .trim()
-                .slice(0, 60),
-            )
-        : []
+      b.sentences = sentences ? b.q.choices.map((c) => nameless(c.label, all)) : []
     }
-    return b.wrong
+    return b.sentences
   }
   const read = new Set<string>()
+  /** tout ce que la copie demande déjà */
+  const askedAll = new Set<string>()
+  const doomed = (s: Seed) => !!s.pre && s.pre().some((k) => askedAll.has(k))
+  /**
+   * Ce que l'énoncé et le corrigé d'une question rédigée montrent d'une autre entité qu'ils nomment (« le Spectre ne
+   * touche jamais au sel ; l'Esprit le perturbe normalement », dans le corrigé d'une question sur l'Esprit), phrase
+   * par phrase : une question qui le demanderait passe avant, ou ne se pose pas. Les questions composées, elles,
+   * disent déjà de qui parle chacune de leurs phrases.
+   */
+  const noted = new WeakSet<Built>()
+  const mentions = (b: Built) => {
+    if (b.type !== 'auth' || noted.has(b)) return
+    noted.add(b)
+    for (const sentence of `${b.q.prompt} ${b.q.explain}`.split(SENTENCES)) {
+      for (const o of all) if (o.id !== x.id && namesGhost(sentence, o)) for (const k of showKeys({ who: o.id, text: sentence })) b.shows.add(k)
+    }
+  }
   const commit = ({ b, at }: Found) => {
     const n = picked.length
     picked.push(b)
@@ -1295,6 +1370,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     for (const i of at.first) before[i].add(n)
     for (const k of at.again) repeated.add(k)
     for (const w of wrongOf(b)) read.add(w)
+    for (const k of b.asks) askedAll.add(k)
   }
   /** « Encore 10 » : les questions des copies précédentes ne reviennent qu'une fois les autres épuisées, et pour la moitié de la copie au plus */
   let again = false
@@ -1302,7 +1378,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   /** Les questions possibles d'une sorte, dans l'ordre où les essayer. */
   const ordered = (list: readonly Seed[]) => {
     const room = again && repeats() < Math.floor(count / 2)
-    const usable = shuffle(rng, list.filter((s) => !ids.has(s.id) && (!s.gate || gates[s.gate]) && roomFor(s) && (room || !seen.has(s.id) || s.gate === 'los')))
+    const usable = shuffle(rng, list.filter((s) => !ids.has(s.id) && (!s.gate || gates[s.gate]) && roomFor(s) && (room || !seen.has(s.id) || s.gate === 'los') && !doomed(s)))
     const rank = (s: Seed) => (seen.has(s.id) ? 2 : 0) + (s.late ? 1 : 0)
     return usable
       .map((s, i) => ({ s, i }))
@@ -1318,6 +1394,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
       if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
       if (!b || screens.has(screenOf(b.q)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) continue
+      mentions(b)
       const at = place(b)
       if (at) return { b, at }
     }
@@ -1409,7 +1486,7 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
   }
   // compléter : d'abord sans redite ; puis un départage de plus ; puis des questions d'une copie précédente ; et, en
   // dernier recours, un objet ou un geste repris une fois
-  const levels = ([0, 1, 2] as const).slice(0, (opts.relax ?? 2) + 1)
+  const levels = ([0, 1, 2] as const).slice(0, (opts.relax ?? 1) + 1)
   for (const repeat of seen.size ? [false, true] : [false]) {
     again = repeat
     for (const level of levels) {

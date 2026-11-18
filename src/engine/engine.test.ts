@@ -37,9 +37,11 @@ import {
   questionForCard,
   QUIZ_TOPICS,
   type Question,
+  standsOut,
   type QuizTopic,
   warmQuiz,
 } from './quiz'
+import { buildSoloQuiz, soloQuestion, soloType, SOLO_COUNT } from './solo'
 import {
   askKey,
   buildReviewQueue,
@@ -78,6 +80,12 @@ const DAY = 86_400_000
 const T0 = new Date('2026-10-31T10:00:00').getTime()
 /** « 65 % » → 65, « 1,96 m/s » → 1.96 */
 const valueOf = (label: string) => Number(label.replace(/[^\d,]/gu, '').replace(',', '.'))
+/**
+ * L'entité dont parlent les réponses d'une question : dans un départage, celle qu'on reconnaît (la dernière de
+ * l'identifiant). Une copie sur une seule entité inscrit toutes ses questions sur elle (ghostId), même le départage
+ * qui demande de reconnaître l'entité proche.
+ */
+const aboutOf = (q: Question): Ghost => getGhost(q.id.startsWith('q:dist:') ? q.id.split(':')[3] : q.ghostId!)!
 
 describe('répétition espacée', () => {
   it('une nouvelle carte juste du premier coup passe à demain, sans repasser dans la séance', () => {
@@ -223,20 +231,18 @@ describe('quiz', () => {
   })
 
   /**
-   * Toutes les questions d'un thème qui portent sur une entité, sur plusieurs tirages : celles de sa série
-   * (« Me tester sur X ») et celles des séries des autres entités où elle est la bonne réponse.
+   * Toutes les questions d'un thème qui portent sur une entité, sur plusieurs tirages du quiz sur toutes les
+   * entités (la copie sur une seule entité n'a plus de question à choix de noms : elle a ses propres tests).
    */
-  const soloByTopic = new Map<QuizTopic, Question[]>()
+  const byTopic = new Map<QuizTopic, Question[]>()
   const allFor = (g: Ghost, topic: QuizTopic, prefix: string): Question[] => {
-    if (!soloByTopic.has(topic)) {
+    if (!byTopic.has(topic)) {
       const qs: Question[] = []
-      for (const x of GHOSTS) {
-        for (let seed = 1; seed <= 6; seed++) qs.push(...buildQuiz({ topics: [topic], ghosts: [x], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed * 101) }))
-      }
-      soloByTopic.set(topic, qs)
+      for (let seed = 1; seed <= 80; seed++) qs.push(...buildQuiz({ topics: [topic], ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 40, rng: createRng(seed * 101) }))
+      byTopic.set(topic, qs)
     }
     const out = new Map<string, Question>()
-    for (const q of soloByTopic.get(topic)!) if (q.ghostId === g.id && q.id.startsWith(prefix)) out.set(q.id + q.choices.map((c) => c.id).join(), q)
+    for (const q of byTopic.get(topic)!) if (q.ghostId === g.id && q.id.startsWith(prefix)) out.set(q.id + q.choices.map((c) => c.id).join(), q)
     return [...out.values()]
   }
   const nameRe = (g: Ghost) =>
@@ -326,7 +332,7 @@ describe('quiz', () => {
     expect(covered.size).toBeGreaterThanOrEqual(20)
     // ce qu'on dit de x lui-même sert souvent de mauvaise réponse
     expect(aboutRival).toBeGreaterThan(50)
-  })
+  }, 60_000)
 
   it('« Quelle entité peut … ? » : une seule bonne réponse, sans nom qui la souffle', () => {
     const covered = new Set<string>()
@@ -343,7 +349,7 @@ describe('quiz', () => {
       }
     }
     expect(covered.size).toBeGreaterThanOrEqual(15)
-  })
+  }, 60_000)
 
   it('profils de vitesse et de seuil : aucune mauvaise réponse ne partage une valeur citée', () => {
     const speeds = (g: Ghost) => [g.speed.min, g.speed.max, g.speed.alt].filter((v) => v != null && v >= 0 && v !== 1.7)
@@ -371,7 +377,7 @@ describe('quiz', () => {
     const special = (pred: (g: Ghost) => boolean) => GHOSTS.filter((g) => g.id !== 'the-mimic' && pred(g)).length
     expect(covered.speed.size).toBe(special((g) => g.speed.min >= 0 && !(g.speed.min === 1.7 && g.speed.max == null && g.speed.alt == null && g.speed.los && !g.speed.losVaries)))
     expect(covered.sanity.size).toBe(special((g) => !(g.huntSanity.low === 50 && g.huntSanity.normal === 50 && g.huntSanity.high === 50)))
-  })
+  }, 60_000)
 
   it('les faits de mécaniques « bon à savoir » (preuves) restent hors révision et hors quiz', () => {
     const m = {
@@ -560,10 +566,12 @@ describe('révision et quiz : seulement ce qui sert sans preuve', () => {
       const all = GHOSTS.map((g) => (g.id === id ? { ...g, tells: [{ text, zeroEvidence: true }] } : g))
       const g = all.find((x) => x.id === id)!
       const qs: Question[] = []
-      for (let seed = 1; seed <= 30; seed++) {
-        qs.push(...buildQuiz({ topics: ['behavior'], ghosts: [g], allGhosts: all, mechanics: MECHANICS, count: 6, rng: createRng(seed) }))
+      // le quiz sur toutes les entités, celle-ci tirée plus souvent que les autres (les moins maîtrisées sortent d'abord)
+      const mastery = Object.fromEntries(all.map((o) => [o.id, o.id === g.id ? 0 : 1]))
+      for (let seed = 1; seed <= 80; seed++) {
+        qs.push(...buildQuiz({ topics: ['behavior'], ghosts: all, allGhosts: all, mechanics: MECHANICS, count: 20, rng: createRng(seed), mastery }))
       }
-      // les questions sur ce signe (la série en pose aussi sur d'autres entités, celle-ci parmi les mauvaises réponses)
+      // les questions sur ce signe
       return qs.filter((q) => q.id.startsWith(`q:tell:${id}:`))
     }
     const genders = (qs: Question[]) => new Set(qs.flatMap((q) => q.choices.map((c) => isFeminine(ghost(c.id).name))))
@@ -1131,8 +1139,12 @@ describe('des réponses de même forme', () => {
   const named = (q: Question) => q.choices.every((c) => getGhost(c.id) && c.label === label(getGhost(c.id)!))
   const NUMBER = /^\d+(?:,\d+)?\s?(%|m\/s|s|min|m|°C)$/u
   const unit = (l: string) => NUMBER.exec(l)?.[1] ?? 'texte'
-  /** Les questions rédigées (fiches, mécaniques, notes) ont leurs propres vérifications : seules comptent ici celles que l'app compose. */
-  const composed = (q: Question) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id)
+  /**
+   * Les questions rédigées (fiches, mécaniques, notes) ont leurs propres vérifications : seules comptent ici celles
+   * que l'app compose. Les questions à réponses fixes d'une copie sur une seule entité (« Vrai / Faux », « ce test
+   * suffit-il ? », les trois réponses d'une observation) n'ont pas de choix à composer.
+   */
+  const composed = (q: Question) => !/^q:(?:auth|fact|note|tf|vf|suffit|constat):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id)
 
   /** Toutes les questions composées : chaque thème pour chaque entité, sur plusieurs tirages, et chaque carte sur plusieurs jours. */
   let questions: Question[] = []
@@ -1220,13 +1232,15 @@ describe('des réponses de même forme', () => {
       const kind = id.split(':')[1]
       const found = [...questions, ...extra].find((x) => x.id === id)
       if (found) return found
-      for (let seed = 1; seed <= 300; seed++) {
-        const q = buildQuiz({ topics: [kind === 'san' ? 'sanity' : 'speed'], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) }).find((x) => x.id === id)
+      // la copie sur une seule entité pose rarement sa valeur standard : la question se compose seule (voir soloQuestion)
+      for (let seed = 1; seed <= 20; seed++) {
+        const q = soloQuestion(g, GHOSTS, id, createRng(seed))
         if (q) {
           extra.push(q)
           return q
         }
       }
+      void kind
       return undefined
     }
     for (const g of GHOSTS) for (const kind of ['san', 'spd'] as const) if (!noBase[kind].includes(g.id)) expect(find(g, `q:${kind}:${g.id}`), `q:${kind}:${g.id}`).toBeDefined()
@@ -1293,6 +1307,13 @@ describe('des réponses de même forme', () => {
       const lengths = labels.map((l) => l.length)
       const [min, max] = [Math.min(...lengths), Math.max(...lengths)]
       expect(max <= 1.6 * min || (max <= 20 && max - min <= 12), show).toBe(true)
+      // l'intrus et « dans quel cas exclure X ? » : trois réponses viennent de la fiche de X elle-même, et entre elles une
+      // marque ne désigne rien ; c'est la bonne réponse, venue d'ailleurs, qui ne doit pas se remarquer
+      if (/^q:(?:intrus|exclut):/u.test(q.id)) {
+        const right = q.choices.find((c) => q.correct.includes(c.id))!.label
+        expect(standsOut(right, labels.filter((l) => l !== right)), show).toBe(false)
+        continue
+      }
       expect(homogeneous(q.choices), show).toBe(true)
     }
     expect(shaped).toBeGreaterThan(1000)
@@ -1419,8 +1440,10 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
   beforeAll(() => {
     for (const g of GHOSTS) {
       const runs: Question[][] = []
+      // une graine par entité et par copie : la copie décide à son premier tirage si la valeur standard se demande, et
+      // la même graine pour les trente entités la demanderait à toutes ou à aucune
       for (let seed = 1; seed <= 30; seed++) {
-        runs.push(buildQuiz({ topics: DEFAULT_TOPICS, ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed * 31 + 7) }))
+        runs.push(buildQuiz({ topics: DEFAULT_TOPICS, ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed * 31 + 7 + GHOSTS.indexOf(g) * 104729) }))
       }
       solo.set(g.id, runs)
     }
@@ -1439,76 +1462,56 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         }
       }
     }
-    composed = [...out.values()].filter((q) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
+    // sans les questions rédigées, ni les questions à réponses fixes d'une copie sur une seule entité
+    composed = [...out.values()].filter((q) => !/^q:(?:auth|fact|note|tf|vf|suffit|constat):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
   }, 120_000)
 
-  it('« Me tester sur X » : dix questions, et X n’est pas d’office la bonne réponse', () => {
-    let namedCount = 0
-    let selfCount = 0
+  it('« Me tester sur X » : chaque question porte sur X, sans choix entre quatre noms', () => {
+    const sizes: number[] = []
     for (const g of GHOSTS) {
-      const runs = solo.get(g.id)!
-      // le Mimic copie tout : il n'est jamais une mauvaise réponse, et ses questions à choix de noms seraient
-      // gagnées d'avance ; il lui reste ses tests (deux énoncés différents), complétés de ses questions rédigées
-      if (g.id === 'the-mimic') {
-        for (const qs of runs) {
-          expect(qs.length, g.id).toBeGreaterThanOrEqual(4)
-          expect(new Set(qs.map((q) => q.prompt)).size, qs.map((q) => q.prompt).join(' | ')).toBe(qs.length)
+      for (const qs of solo.get(g.id)!) {
+        sizes.push(qs.length)
+        // dix questions au plus : une fiche courte donne une copie plus courte, jamais une question sur une autre entité
+        expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
+        expect(qs.length, g.id).toBeGreaterThanOrEqual(3)
+        expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
+        for (const q of qs) {
+          // toutes s'inscrivent sur X, et chacune est d'une sorte connue de la copie
+          expect(q.ghostId, q.id).toBe(g.id)
+          expect(soloType(q), q.id).not.toBeNull()
+          expect(q.correct, q.id).toHaveLength(1)
+          expect(q.choices.map((c) => c.id), q.id).toContain(q.correct[0])
+          // des noms pour seuls choix : seulement « de qui parle-t-on ? », entre X et une entité qu'on confond avec lui
+          if (!named(q)) continue
+          expect(soloType(q), q.id).toBe('T7b')
+          expect(q.choices, q.id).toHaveLength(2)
+          expect(q.choices.map((c) => c.id), q.id).toContain(g.id)
+          expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
         }
-      } else for (const qs of runs) expect(qs.length, g.id).toBe(10)
-      let n = 0
-      let self = 0
-      for (const q of runs.flat()) {
-        if (!named(q)) continue
-        n++
-        // X est parmi les choix : la bonne réponse, ou une mauvaise d'une question sur une entité qu'on confond avec lui
-        expect(q.choices.map((c) => c.id), q.id).toContain(g.id)
-        if (q.correct[0] === g.id) self++
-        else expect(q.ghostId, q.id).not.toBe(g.id)
       }
-      if (n >= 40) {
-        expect(self / n, `${g.id} : ${self}/${n}`).toBeGreaterThanOrEqual(0.12)
-        expect(self / n, `${g.id} : ${self}/${n}`).toBeLessThanOrEqual(0.4)
-      }
-      namedCount += n
-      selfCount += self
-      // et des questions dont les choix sont des faits sur X : signes, nombres, résumés, tests, départages
-      expect(runs.flat().some((q) => q.ghostId === g.id && !named(q)), g.id).toBe(true)
     }
-    // répondre « X » à chaque fois ne rapporte pas plus que le hasard (une chance sur quatre)
-    expect(selfCount / namedCount, `${selfCount}/${namedCount}`).toBeGreaterThanOrEqual(0.2)
-    expect(selfCount / namedCount, `${selfCount}/${namedCount}`).toBeLessThanOrEqual(0.3)
-    // une question rédigée qui nomme X parmi ses réponses (« Qui suspectes-tu ? ») n'entre pas dans sa série :
-    // juste, il serait toujours la bonne réponse ; faux, jamais
+    // la plupart des fiches donnent huit questions ou plus
+    expect(sizes.reduce((a, b) => a + b, 0) / sizes.length).toBeGreaterThanOrEqual(7.5)
+    // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
+    // celles dont les choix sont des noms d'entités ou nomment X
     for (const g of GHOSTS) {
-      for (let seed = 1; seed <= 8; seed++) {
-        for (const q of buildQuiz({ topics: ['expert'], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) })) {
+      for (let seed = 1; seed <= 2; seed++) {
+        for (const q of buildSoloQuiz({ ghost: g, allGhosts: GHOSTS, rng: createRng(seed) })) {
+          if (soloType(q) !== 'auth') continue
           for (const c of q.choices) expect(namesGhost(c.label, g), `${q.id} : ${c.label}`).toBe(false)
         }
       }
     }
-  })
+  }, 60_000)
 
-  it('« Me tester sur X » : ni « 50 % », ni « 1,7 m/s », ni X ne gagnent d’office', () => {
+  it('« Me tester sur X » : ni « 50 % », ni « 1,7 m/s » ne gagnent d’office', () => {
     const all = [...solo.values()].flat(2)
     for (const value of ['50\u00a0%', '1,7\u00a0m/s']) {
       const shown = all.filter((q) => q.choices.some((c) => c.label === value) && /^q:(?:san|spd):/u.test(q.id))
       const won = shown.filter((q) => rightOf(q).label === value)
-      expect(shown.length, value).toBeGreaterThan(40)
+      // la copie préfère les nombres propres à l'entité : la valeur standard se propose moins souvent qu'avant
+      expect(shown.length, value).toBeGreaterThan(20)
       expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.4)
-    }
-    // « Laquelle de ces entités a un seuil de 50 %, comme une entité standard ? » ne porte pas sur X lui-même :
-    // à 50 %, il ne pourrait jamais en être une mauvaise réponse
-    for (const id of ['q:san:std', 'q:spd:std']) {
-      let n = 0
-      let focus = 0
-      for (const [g, runs] of solo) {
-        for (const q of runs.flat()) {
-          if (q.id !== id) continue
-          n++
-          if (q.correct[0] === g) focus++
-        }
-      }
-      expect(focus / Math.max(1, n), `${id} : ${focus}/${n}`).toBeLessThanOrEqual(0.35)
     }
   })
 
@@ -1547,7 +1550,7 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
     let checked = 0
     for (const q of composed) {
       if (!/^q:(?:dist|sign-of|test-of):|^q:card:g:[^:]+:(?:tells|test:\d+)$/u.test(q.id)) continue
-      const g = getGhost(q.ghostId!)!
+      const g = aboutOf(q)
       for (const c of wrongOf(q)) {
         checked++
         if (!/\d/u.test(c.label)) expect(lost.has(tail(c.label)), `${q.id} : ${c.label}`).toBe(false)
@@ -1571,7 +1574,7 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       expect(q.note, q.id).toBeUndefined()
       if (!q.id.startsWith('q:dist:')) continue
       dist++
-      const g = getGhost(q.ghostId!)!
+      const g = aboutOf(q)
       expect(q.prompt.startsWith(`Sans preuve, à quoi reconnais-tu ${le(g.name)} plutôt que `), q.id).toBe(true)
       for (const c of q.choices) expect(namesGhost(c.label, g), `${q.id} : ${c.label}`).toBe(true)
     }
@@ -1688,7 +1691,8 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       const runs = [2, 3, 4, 5, 6].map((seed) => run(topics, seed))
       const ms = runs.map((r) => r.ms).sort((a, b) => a - b)
       expect(ms[2], `${topics} : ${ms.map((x) => x.toFixed(0)).join(' / ')} ms`).toBeLessThan(300)
-      if (topics[0] === 'behavior') for (const r of runs) expect(r.n).toBe(30)
+      // la copie ne porte plus que sur lui : elle a les questions que sa fiche donne, sans redite
+      if (topics[0] === 'behavior') for (const r of runs) expect(r.n).toBeGreaterThan(0)
     }
   })
 
@@ -2063,7 +2067,7 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
         }
       }
     }
-    asked = asked.filter((q) => !/^q:(?:auth|fact|note|tf):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
+    asked = asked.filter((q) => !/^q:(?:auth|fact|note|tf|vf|suffit|constat):/u.test(q.id) && !/^q:card:[mn]:/u.test(q.id))
   }, 180_000)
 
   it('les choix d’entités sont leur nom seul, et le Mimic n’en fait jamais partie', () => {
@@ -2123,10 +2127,10 @@ describe('rien ne se devine sans savoir : ni la liste, ni la carte d’avant, ni
     }
     let checked = 0
     for (const q of asked) {
-      const re = q.ghostId && HINTS[q.ghostId]
+      const re = q.ghostId && HINTS[aboutOf(q).id]
       if (!re || named(q) || !/^q:(?:dist|sign-of|test-of):|^q:card:g:[^:]+:(?:tells|test:\d+|rev:\d+)$/u.test(q.id)) continue
       checked++
-      const g = getGhost(q.ghostId!)!
+      const g = aboutOf(q)
       const has = q.choices.map((c) => re.test(redactGhostName(c.label, g)))
       const alone = has.filter(Boolean).length === 1 && q.correct.includes(q.choices[has.indexOf(true)].id)
       expect(alone, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(false)
@@ -2572,10 +2576,12 @@ describe('Esprit : le double encensement s’explique dans la correction', () =>
 
   it('au quiz, l’observation du double encensement s’explique de même ; les autres gardent le résumé de la fiche', () => {
     const seen = new Set<string>()
+    // la copie sur l'Esprit seul : son observation (« … après le second encensement »), son test cité ou à choisir
     for (let seed = 1; seed <= 120 && seen.size < 2; seed++) {
       const qs = buildQuiz({ topics: ['behavior', 'zero'], ghosts: [spirit], allGhosts: GHOSTS, mechanics: MECHANICS, count: 10, rng: createRng(seed) })
-      for (const q of qs.filter((x) => x.id.startsWith('q:obs:spirit:') || x.id.startsWith('q:zero:spirit:'))) {
-        if (!/second encensement/.test(q.quote ?? '')) continue
+      for (const q of qs.filter((x) => /^q:(?:constat:spirit:spirit|suffit:spirit|test-of:spirit):/.test(x.id))) {
+        const shown = [q.quote ?? '', ...q.choices.filter((c) => q.correct.includes(c.id)).map((c) => c.label)].join(' ')
+        if (!/second encensement|seconde utilisation de l’encens/.test(plainly(shown))) continue
         seen.add(q.id)
         expect(plainly(q.explain)).toMatch(/nouveau minuteur d’encens/)
       }
