@@ -38,7 +38,7 @@
   "keyTells": [
     "En chasse : 1,0 m/s sans cible, 3,0 m/s dès qu'il te détecte",
     "Accélération instantanée, jamais progressive (pas d'accélération standard en ligne de vue)",
-    "Ralentit peu à peu une fois arrivé à ta dernière position connue"
+    "Garde 3,0 m/s jusqu'à ta dernière position connue, puis ralentit peu à peu jusqu'à 1,0 m/s"
   ],
   "tells": [
     {
@@ -58,7 +58,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si elle n'est ni à 1,0 m/s ni à 3,0 m/s (en dehors de la courte phase où il ralentit progressivement), ce n'est pas un Revenant. Vitesses valables à vitesse d'entité 100 % et hors Lune de sang (+15 %)."
+      "text": "Pendant une chasse, écoute la vitesse de l'entité. Si elle n'est ni à 1,0 m/s ni à 3,0 m/s (en dehors de la courte phase où l'entité ralentit progressivement), ce n'est pas un Revenant. Vitesses valables à vitesse d'entité 100 % et hors Lune de sang (+15 %)."
     }
   ],
   "confusions": [

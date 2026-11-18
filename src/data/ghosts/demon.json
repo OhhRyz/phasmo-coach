@@ -140,17 +140,17 @@
   ],
   "observations": [
     {
-      "text": "Une chasse démarre environ une minute après que tu as encensé l'entité, bien avant les 90 secondes habituelles.",
+      "text": "Sans objet maudit, une chasse démarre environ une minute après que tu as encensé l'entité, bien avant les 90 secondes habituelles.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Une nouvelle chasse commence à peine 20 secondes après la fin de la précédente.",
+      "text": "Une nouvelle chasse commence à peine 20 secondes après la fin de la précédente, sans objet maudit.",
       "kind": "hunt",
       "strength": "definitive"
     },
     {
-      "text": "Ton crucifix vient de brûler en empêchant une chasse, et une chasse démarre à peine 20 secondes plus tard.",
+      "text": "Ton crucifix vient de brûler en empêchant une chasse, et une chasse démarre à peine 20 secondes plus tard, sans objet maudit.",
       "kind": "hunt",
       "strength": "definitive"
     },
