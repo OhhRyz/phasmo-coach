@@ -1993,7 +1993,10 @@ export function buildSoloQuiz(opts: SoloOptions): Question[] {
     const last = order.length ? picked[order[order.length - 1]].type : null
     // la copie s'ouvre sur X : un départage à l'envers, dont la réponse parle de l'entité proche, ne vient pas en premier
     const opening = order.length ? pool : pool.filter((i) => !(picked[i].type === 'T7a' && !picked[i].q.cardId))
-    const from = opening.length ? opening : pool
+    // … et sur du simple quand la copie en a : un nombre de sa fiche (vitesse, seuil) ou l'un de ses signes, avant
+    // les tests, les observations et les questions expertes
+    const simple = order.length ? [] : opening.filter((i) => picked[i].type === 'T1' || picked[i].type === 'T2')
+    const from = simple.length ? simple : opening.length ? opening : pool
     const varied = from.filter((i) => picked[i].type !== last)
     const next = shuffle(rng, varied.length ? varied : from)[0]
     order.push(next)

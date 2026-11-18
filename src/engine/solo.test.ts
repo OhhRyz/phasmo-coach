@@ -1250,6 +1250,24 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
     expect(opened).toBeGreaterThan(100)
   }, 60_000)
 
+  it('la copie s’ouvre sur du simple : un nombre de la fiche (vitesse, seuil) ou un signe de l’entité, presque toujours quand elle en a un', () => {
+    const easy = (q: Question) => soloType(q) === 'T1' || soloType(q) === 'T2'
+    let having = 0
+    let opening = 0
+    for (const [k, x] of GHOSTS.entries()) {
+      for (let seed = 1; seed <= 12; seed++) {
+        const qs = buildSoloQuiz({ ghost: x, allGhosts: GHOSTS, rng: createRng(seed * 104_729 + k * 31) })
+        if (!qs.some(easy)) continue
+        having++
+        if (easy(qs[0])) opening++
+      }
+    }
+    // une question simple ne passe pas en premier quand elle montrerait ce qu'une autre question de la copie demande :
+    // mesuré, 85 copies sur 100 s’ouvrent sur du simple (41 sur 100 quand l’ordre est laissé au hasard)
+    expect(having).toBeGreaterThan(300)
+    expect(opening / having).toBeGreaterThan(0.75)
+  }, 120_000)
+
   it('les énoncés et les corrigés : la Dayan « si tu bouges près d’elle », le Revenant sans « elle… il », aucun corrigé rédigé sur les preuves', () => {
     const dayan = supply.filter((d) => d.q.id === 'q:spd:dayan:2.25')
     expect(dayan.length).toBeGreaterThan(0)
