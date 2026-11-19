@@ -4,7 +4,6 @@ import { fr, NNBSP, redactGhostName as redact } from './format'
 import {
   agrees,
   asksOf,
-  balancedRanks,
   cap,
   closeLengths,
   confusionWithoutEvidence,
@@ -64,8 +63,9 @@ import { createRng, shuffle, weightedPick, type Rng } from './random'
  *    proche : la première demandait un nom, la seconde montrait le comportement d'une autre.
  *
  * Ce qui reste d'une autre fiche : le signe d'une entité qu'on confond avec X, cité comme FAUX pour X (« Vrai ou
- * faux pour X ? ») ou parmi les mauvaises réponses, sans nom (« Lequel de ces signes est celui de X ? »), sous les
- * mêmes garde-fous que les mauvaises réponses du quiz : il ne convient en rien à X. Et le départage dans le seul
+ * faux pour X ? » : une question sur cinq au plus, voir FOREIGN_EVERY) ou parmi les mauvaises réponses, sans nom
+ * (« Lequel de ces signes est celui de X ? »), sous les mêmes garde-fous que les mauvaises réponses du quiz : il ne
+ * convient en rien à X. Et le départage dans le seul
  * sens où sa réponse parle de X (« à quoi reconnais-tu X plutôt que Y ? »). Ce qui exclut X vient de ses propres
  * tests d'élimination. Le Mimic copie l'entité imitée : aucun comportement d'une autre fiche n'est jamais présenté
  * comme faux pour lui, et il n'est jamais l'entité proche.
@@ -171,14 +171,17 @@ const NUMBERS_MAX = 2
 /** Au plus autant de « ce test suffit-il ? » (T3b) et de « tu observes ceci : est-ce que ça suffit ? » (T8) par copie de dix. */
 const WORTH_MAX = { T3b: 1, T8: 2 } as const
 /**
- * Au plus autant de questions par copie de dix qui puisent dans la fiche d'une autre entité : un vrai ou faux dont le
- * « Faux » serait le signe d'une entité proche (il se tire à pile ou face entre ce signe et un signe de X, et compte
- * quelle que soit sa réponse), ou l'intrus. Une copie sur X parle de X : ce qu'elle dit faux pour lui vient d'abord de
- * sa propre fiche (ses tests d'élimination, voir `own`), et jamais plus d'une affirmation ne vient d'ailleurs. Compter
- * le tirage, et non la seule réponse « Faux », garde chaque réponse indépendante des précédentes : arrêter après le
- * premier « Faux » faisait du premier vrai ou faux d'une copie un « Faux » 55 fois sur 100, et des suivants des « Vrai ».
+ * Une question sur cinq au plus puise dans la fiche d'une autre entité (une dans une copie de cinq questions ou
+ * moins, deux au-delà) : un vrai ou faux dont le « Faux » serait le signe d'une entité proche (il se tire à pile ou
+ * face entre ce signe et un signe de X, et compte quelle que soit sa réponse), ou l'intrus. Une copie sur X parle de
+ * X : ce qu'elle dit faux pour lui vient d'abord de sa propre fiche (ses tests d'élimination, voir `own`). Compter le
+ * tirage, et non la seule réponse « Faux », garde chaque réponse indépendante des précédentes : arrêter après le
+ * premier « Faux » faisait du premier vrai ou faux d'une copie un « Faux » 55 fois sur 100, et des suivants des
+ * « Vrai ». Mesuré sur 1 200 copies : une affirmation d'une autre fiche dans une copie sur deux en moyenne, deux dans
+ * une copie sur dix ; 6,6 questions par copie (6,3 avec un seul tirage par copie, 6,7 avec trois, 7,4 sans limite,
+ * mais alors une question sur deux est un vrai ou faux et une sur sept cite une autre fiche).
  */
-const FOREIGN_MAX = 1
+const FOREIGN_EVERY = 5
 
 /* ---------- ce qu'une question demande, ce qu'elle montre ---------- */
 
@@ -255,7 +258,7 @@ interface Seed {
   gate?: 'stdSan' | 'stdSpd' | 'stdAuth' | 'los'
   /** à essayer après les autres de sa sorte (un signe qui ne parle que de vitesse ou de seuil) */
   late?: boolean
-  /** ce qu'elle cite vient de la fiche d'une autre entité (un signe d'une entité proche, dit faux pour X) : voir FOREIGN_MAX */
+  /** ce qu'elle cite vient de la fiche d'une autre entité (un signe d'une entité proche, dit faux pour X) : voir FOREIGN_EVERY */
   foreign?: boolean
   /** la citation jugée (vrai ou faux, « est-ce que ça suffit ? »), pour l'apparier à une citation de même longueur qui a l'autre réponse */
   text?: string
@@ -368,7 +371,7 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
     ],
     vitesse: [
       // 2,5 m/s près d'un appareil électronique actif, 1,7 m/s loin de lui
-      ['près de l’électronique', /2,5|1,7|vitesse (?:fixe|accrue|standard)|plus rapides?|accélèr|n[’']accélère|monte et redescend/iu],
+      ['près de l’électronique', /2,5|1,7|vitesse (?:fixe|accrue|standard)|plus rapides?|rapide près|accélèr|n[’']accélère|monte et redescend/iu],
       ['quel appareil', /posés?(?!\p{L})|tenus?(?!\p{L})|en main|quel équipement|éteint ne déclenche/iu],
       ['ligne de vue', /ligne de vue|plateaux/iu],
     ],
@@ -437,7 +440,7 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
   revenant: {
     vitesse: [
       // 1,0 m/s tant qu'il n'a détecté personne
-      ['sans cible', /1,0|(?<![\d,])1\s?m\/s|sans cible|aucun joueur|n[’']a (?:repéré|détecté) personne|habituelle|très lents?|extrêmement lents/iu],
+      ['sans cible', /1,0|(?<![\d,])1\s?m\/s|sans cible|aucun joueur|n[’']a (?:repéré|détecté) personne|sans t[’']avoir détecté|habituelle|très lents?|extrêmement lents/iu],
       // 3,0 m/s dès qu'il détecte un joueur : par la vue, la voix, un appareil électronique
       ['détection', /3,0|(?<![\d,])3\s?m\/s|dès qu[’']\p{L}+ (?:te |t[’'])?(?:détecte|repère|voit)|où il détecte|laisses détecter|es repéré|voix|électronique|appareil|pleine vitesse|très rapides?/iu],
       // d'un coup, jamais peu à peu : pas d'accélération en ligne de vue
@@ -656,6 +659,23 @@ function nameless(label: string, all: readonly Ghost[]): string {
       .trim()
       .slice(0, 60)
     namelessCache.set(label, v)
+  }
+  return v
+}
+
+/** Un texte tel qu'on le relirait : sans nom d'entité, sans ponctuation ni majuscules. */
+const plainCache = new Map<string, string>()
+function plainText(text: string, all: readonly Ghost[]): string {
+  let v = plainCache.get(text)
+  if (v === undefined) {
+    if (plainCache.size > 20_000) plainCache.clear()
+    v = all
+      .reduce((t, o) => redact(t, o), text)
+      .toLocaleLowerCase('fr')
+      .replace(/cette entité/gu, ' ')
+      .replace(/[^\p{L}\d]+/gu, ' ')
+      .trim()
+    plainCache.set(text, v)
   }
   return v
 }
@@ -975,9 +995,12 @@ const ownScenes = memo((x, all): { i: number; text: string; quote: string; stren
 /**
  * Les chances qu'une entité au seuil (ou à la vitesse) standard ait sa valeur standard demandée dans une copie :
  * 22 entités chassent d'habitude à 50 %, 20 à 1,7 m/s. Posée plus souvent, la valeur standard, toujours parmi
- * les choix, gagnerait d'office ; la copie préfère les nombres propres à l'entité.
+ * les choix, gagnerait d'office ; la copie préfère les nombres propres à l'entité. Aussi haut que le permettent les
+ * deux verrous (la valeur standard n'est la bonne réponse que 40 fois sur 100 au plus quand elle est proposée) :
+ * mesuré, « 50 % » 34 fois sur 100 dans les copies entières (les questions rédigées la demandent aussi), « 1,7 m/s »
+ * 32 fois sur 100 parmi les questions en nombres (44 fois à 0,12 : trop).
  */
-const SOLO_STANDARD = { san: 0.08, spd: 0.12, authored: 0.5 } as const
+const SOLO_STANDARD = { san: 0.08, spd: 0.08, authored: 0.5 } as const
 /** Une question rédigée dont la bonne réponse est la valeur standard elle-même : elle passe une copie sur deux (`authored`). */
 const STANDARD_ANSWER = /^(?:50\s?%|1,7\s?m\/s)$/u
 
@@ -1488,9 +1511,16 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
   // Ce que la fiche de X dit elle-même faux pour lui : ses tests d'élimination (« si l'entité rallume le
   // disjoncteur, ce n'est pas un Hantu » : un Hantu ne le rallume jamais). Le corrigé est la ligne de la fiche, mot
   // pour mot. Chacun se pose face à une affirmation vraie de la même fiche, de même forme et de même longueur (voir
-  // l'emplacement `own` de la copie) : ses observations (`scene`), ses signes, ses comportements. Pour le Mimic aussi :
-  // c'est sa propre fiche qui le dit
-  for (const o of ownScenes(x, all)) {
+  // l'emplacement `own` de la copie) : ses observations (`scene`), ses signes, ses comportements.
+  // Seulement une condition qui tient en une phrase : précédée de sa mise en place (« Place des détecteurs de
+  // mouvement aux entrées de la pièce et encense l'entité. Elle quitte la pièce avant 90 s. »), elle se lirait comme
+  // une consigne, pas comme une affirmation à juger
+  const eliminations = ownEliminations(x, all).flatMap((e) => {
+    const scene = sceneOfTest(e.body, x, all)
+    return scene && scene.split(SENTENCES).length === 1 ? [{ ...e, quote: asSign(scene) }] : []
+  })
+  // (sans test d'élimination à leur opposer, ses observations ne se jugent pas en vrai ou faux : « Vrai » sortirait toujours)
+  for (const o of eliminations.length ? ownScenes(x, all) : []) {
     const id = `q:vf:${x.id}:${x.id}:O${o.i}`
     out.push({
       id,
@@ -1508,10 +1538,8 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
         ),
     })
   }
-  for (const e of ownEliminations(x, all)) {
-    const scene = sceneOfTest(e.body, x, all)
-    if (!scene) continue
-    const quote = asSign(scene)
+  for (const e of eliminations) {
+    const quote = e.quote
     const id = `q:vf:${x.id}:${x.id}:E${e.i}`
     out.push({
       id,
@@ -1540,7 +1568,7 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
       cls: truth ? 'true' : 'false',
       register,
       text: quote,
-      // ces vrai ou faux tirent leurs « Faux » de la fiche d'une entité proche (voir FOREIGN_MAX)
+      // ces vrai ou faux tirent leurs « Faux » de la fiche d'une entité proche (voir FOREIGN_EVERY)
       foreign: !truth,
       make: () =>
         built(
@@ -1554,10 +1582,13 @@ function trueFalseSeeds(x: Ghost, all: Ghost[]): Seed[] {
     const own = ownSigns(x, all, style)
     // d'autres phrases de la fiche de X, écrites comme ses signes « 0 preuve » : ses comportements, ses capacités
     const more = style === 'tell' ? ownLines(x, all).filter((l) => !own.some((o) => lineKey(x.id, o.text) === lineKey(x.id, l.text))) : []
-    // (aucun pour le Mimic, qui copie : rien d'une autre fiche n'est faux pour lui)
-    const wrong = falseSigns(x, all, style).filter((o) => o.label === o.value.text)
     // les deux réponses d'un tirage viennent de la même sorte de phrases, sinon la forme dirait la réponse : sans
-    // « Faux » de cette sorte, ces « Vrai » ne servent que face à un test d'élimination de X (voir `own`)
+    // « Vrai » de cette sorte, aucun « Faux » (le Revenant, la Dayan : aucune phrase rédigée à juger) ; sans « Faux »
+    // de cette sorte, ces « Vrai » ne servent que face à un test d'élimination de X (voir `own`) ; et sans l'un ni
+    // l'autre, rien ne se juge (le Mimic, qui copie : rien d'une autre fiche n'est faux pour lui, et son test
+    // d'élimination ne se dit pas en une phrase)
+    const wrong = own.length + more.length ? falseSigns(x, all, style).filter((o) => o.label === o.value.text) : []
+    if (!wrong.length && !eliminations.length) continue
     const source = style === 'key' ? `C’est l’un des signes clés ${de(x.name)}.` : `C’est écrit sur la fiche ${de(x.name)}.`
     for (const s of own) {
       seed(`q:vf:${x.id}:${x.id}:${letter(style)}${signRank(s, style)}`, style, true, about, s.text, `Vrai. ${source}`, { who: x.id, text: s.text, key: style === 'key' }, 'behavior', `g:${x.id}:tells`)
@@ -1715,44 +1746,140 @@ type Worth = (typeof WORTH)[number]
  * Une entité qui n'a qu'une réponse possible à l'une de ces questions (tous ses tests suffisent, ou aucun ; aucune de
  * ses observations n'est décisive) : la part des copies où elle la pose. Pour les tests, neuf fiches n'ont que des
  * tests définitifs et deux n'en ont aucun : les premières posent la question deux copies sur dix, les secondes six
- * sur dix, pour qu'au fil des copies « Oui » sorte autant que « Non » (mesuré sur 1 200 copies : 48 % de « Oui »).
- * Pour les observations, six fiches n'ont rien de décisif et une n'a que cela : elles posent la question dans toute
- * copie, et ce sont les fiches à deux réponses qui penchent vers « Oui » pour compenser (voir worthPlan).
+ * sur dix, pour qu'au fil des copies « Oui » sorte autant que « Non ». Pour les observations, six fiches n'ont rien
+ * de décisif et une n'a que cela : elles posent la question dans toute copie, et ce sont les fiches à deux réponses
+ * qui compensent (voir worthPlan). Une fiche qui n'a qu'une réponse aux deux questions (les Jumeaux, le Kormos :
+ * « Non » aux tests comme aux observations) n'en pose qu'une des deux par copie (voir addWorth), donc chacune moins
+ * souvent que sa part. Mesuré sur 1 200 copies : 51 % de « Oui » aux tests, 46 % aux observations (50 % sur les 900
+ * copies du verrou, dont une sur deux est un « Encore 10 »).
  */
 const ONE_SIDED = { T3b: { yes: 0.2, no: 0.6 }, T8: { yes: 1, no: 1 } } as const
+
+/**
+ * Deux citations « de longueur voisine » : moins de trente caractères d'écart, et d'autant plus voisines que l'écart
+ * est petit. Sur les fiches, un fait décisif se décrit en détail (ses conditions, sa suite) et un simple indice tient
+ * en une ligne : sans précaution, qui répondrait « Oui » aux longues observations et « Non » aux courtes gagnerait
+ * deux fois sur trois (mesuré sur 2 700 copies avant ce réglage : 68 %).
+ */
+const NEAR = 30
+const nearness = (a: number, b: number) => Math.max(0, 1 - Math.abs(a - b) / NEAR)
+/**
+ * Ce que l'équilibre par longueur ne retire jamais (voir worthPlan) : une fiche qui a les deux réponses pose chacune
+ * au moins une fois sur quatre. Sur une fiche qui a des tests décisifs et d'autres non, on demande les uns et les
+ * autres.
+ */
+const BOTH = 0.25
+
+/**
+ * Les « est-ce que ça suffit ? » qui ne se posent pas : une citation qu'aucune citation de l'autre réponse n'approche
+ * en longueur, toutes fiches confondues (deux observations décisives de plus de 220 caractères, quand aucun simple
+ * indice n'en fait 200 ; deux simples indices de 50 caractères au plus, quand aucune observation décisive n'en fait
+ * moins de 85 ; un test de 325 caractères qui ne suffit pas). Sa longueur dirait sa réponse ; ce qu'elle décrit se
+ * demande autrement (le test de la même fiche, ses signes, ses questions rédigées). Sauf si elle est la seule de sa réponse sur sa fiche (l'observation décisive du Revenant, du
+ * Mimic, de l'Onryo, de l'Obambo) : la fiche ne poserait plus que l'autre réponse, comme si rien n'y était décisif.
+ * Celle-là reste, et sa réponse se pose le moins souvent possible (voir BOTH).
+ */
+const unmatched = memoList((all): ReadonlySet<string> => {
+  const out = new Set<string>()
+  for (const type of WORTH) {
+    const fiches = all.map((g) => everySeed(g, all).filter((s) => s.type === type))
+    const quotes = fiches.flat()
+    for (const mine of fiches) {
+      for (const q of mine) {
+        const alone = !mine.some((o) => o !== q && o.cls === q.cls)
+        if (!alone && !quotes.some((o) => o.cls !== q.cls && nearness(q.text!.length, o.text!.length) > 0)) out.add(q.id)
+      }
+    }
+  }
+  return out
+})
 
 /**
  * « Est-ce que ça suffit ? » a deux énoncés : « Ce test suffit-il… ? » (T3b) et « Tu observes ceci… » (T8). Chacun
  * s'équilibre seul : les tests des fiches sont presque tous définitifs, leurs observations presque toutes de simples
  * indices, et qui répondrait « Oui » aux tests et « Non » aux observations gagnerait deux fois sur trois si les deux
- * se compensaient l'un l'autre (mesuré : 70 % de « Oui » aux tests, 36 % aux observations). Pour chaque entité et
- * chaque énoncé, les réponses possibles et leurs chances, choisies ensemble (voir balancedRanks) pour qu'au fil des
- * copies « Oui » sorte autant que « Non », alors que bien des fiches n'ont rien de décisif (le Yurei, le Kormos, les
- * Jumeaux : toujours « Non ») et que d'autres n'ont que cela. La question ne se pose que si chacune des réponses
- * possibles pour X a de quoi se poser à cet instant, et une seule fois par copie quand X n'en a qu'une (voir
- * addWorth) : sans cela, la réponse la plus facile à composer sortirait plus souvent que l'autre. `typical` : la
- * longueur médiane des citations de chaque réponse, toutes fiches confondues (voir addWorth).
+ * se compensaient l'un l'autre (mesuré : 70 % de « Oui » aux tests, 36 % aux observations).
+ *
+ * Pour chaque énoncé, les chances de chaque réponse sur chaque fiche, choisies ensemble pour qu'au fil des copies, à
+ * longueur voisine, « Oui » sorte autant que « Non » : ni la réponse, ni la longueur de la citation ne doivent rapporter
+ * à qui ne sait rien. Bien des fiches n'ont rien de décisif (le Yurei, le Kormos, les Jumeaux : toujours « Non ») et
+ * d'autres n'ont que cela : ce sont les autres fiches qui compensent, et d'abord celles dont les citations ont la
+ * longueur qui manque à une réponse (une fiche dont l'observation décisive est courte pose plus souvent « Oui », une
+ * fiche dont elle est longue plus souvent « Non »). Le calcul : à chaque tour, une réponse gagne des chances sur une
+ * fiche si, parmi les citations de longueur voisine de toutes les fiches, l'autre réponse se pose plus souvent que
+ * la sienne, et en perd dans le cas contraire ; puis les chances des deux réponses d'une fiche sont ramenées à un
+ * total de 1 (la même idée que balancedRanks, quiz.ts, par longueur au lieu de par rang). Les citations d'une même
+ * réponse gardent des chances égales : toutes se posent au fil des copies.
+ *
+ * Mesuré sur 2 700 copies : au pire seuil de longueur, « Oui » aux longues citations gagne encore 63 fois sur 100
+ * aux observations (68 avant ce plan). Aux tests, rien de mesurable ne change (60 fois sur 100, 62 avant) : leurs
+ * tests définitifs ne sont pas plus longs que les autres, et peu de fiches ont les deux. Le reste tient aux fiches
+ * (une observation décisive se décrit plus longuement qu'un simple indice) et à ce que le calcul suppose : que
+ * chaque fiche pose la question une fois par copie, alors qu'elle la pose de 0,4 à 1,8 fois selon ce que le reste
+ * de la copie laisse à demander, et plus souvent quand elle penche vers « Non » (après un « Non », il lui reste de
+ * quoi poser les deux réponses). C'est aussi pourquoi « Non » sort un peu plus que « Oui » aux observations (53 fois
+ * sur 100 sur ces 2 700 copies). Donner en plus à chaque citation ses propres chances (les plus longues pour
+ * « Non », les plus courtes pour « Oui ») ne rapportait rien de sûr, et la même citation revenait alors six fois sur
+ * dix sur certaines fiches.
+ *
+ * `plan` : pour chaque entité et chaque énoncé, ses réponses possibles et leurs chances. La question ne se pose que
+ * si chacune des réponses possibles pour X a de quoi se poser à cet instant, et une seule fois par copie quand X n'en
+ * a qu'une (voir addWorth) : sans cela, la réponse la plus facile à composer sortirait plus souvent que l'autre.
  */
 const worthPlan = memoList((all) => {
   const plan = new Map<string, { cls: string; weight: number }[]>()
-  /** la longueur médiane des citations, par énoncé et par réponse (`T8|yes`), toutes fiches confondues */
-  const typical = new Map<string, number>()
+  const rows: { id: string; type: Worth; who: string; answer: string; length: number; share: number; odds: number }[] = []
   for (const type of WORTH) {
-    const seeds = all.map((g) => seedsFor(g, all).filter((s) => s.type === type))
-    const cases = all.flatMap((g, i) => {
-      const classes = new Set(seeds[i].map((s) => s.cls))
-      const counts = ENOUGH.flatMap((c, k) => (classes.has(c) ? [k] : []))
-      return counts.length ? [{ id: g.id, counts, share: counts.length === 1 ? ONE_SIDED[type][ENOUGH[counts[0]]] : 1 }] : []
+    const fiches = all.flatMap((g) => {
+      const mine = seedsFor(g, all).filter((s) => s.type === type)
+      if (!mine.length) return []
+      const classes = ENOUGH.filter((c) => mine.some((s) => s.cls === c))
+      // la part des copies où l'entité pose la question : toutes, sauf si elle n'a qu'une réponse possible
+      const share = classes.length === 1 ? ONE_SIDED[type][classes[0]] : 1
+      return [{ who: g.id, classes, quotes: mine.map((s) => ({ id: s.id, cls: s.cls!, length: s.text!.length, share, p: 1 / mine.length })) }]
     })
-    const weights = balancedRanks(cases, 1)
-    for (const c of cases) plan.set(`${c.id}|${type}`, c.counts.map((k, i) => ({ cls: ENOUGH[k] as string, weight: weights.get(c.id)![i] })))
-    for (const cls of ENOUGH) {
-      const lengths = seeds.flatMap((list) => list.filter((s) => s.cls === cls).map((s) => s.text!.length)).sort((a, b) => a - b)
-      if (lengths.length) typical.set(`${type}|${cls}`, lengths[lengths.length >> 1])
+    const quotes = fiches.flatMap((f) => f.quotes)
+    for (let step = 0; step < 200; step++) {
+      const next = quotes.map((q) => {
+        let same = 0
+        let other = 0
+        for (const o of quotes) {
+          const k = nearness(q.length, o.length) * o.share * o.p
+          if (o.cls === q.cls) same += k
+          else other += k
+        }
+        // (la racine : un pas prudent, pour que les chances ne balancent pas d'un tour à l'autre)
+        return q.p * Math.sqrt(other / same)
+      })
+      quotes.forEach((q, i) => (q.p = next[i]))
+      for (const f of fiches) {
+        const sum = f.quotes.reduce((n, q) => n + q.p, 0)
+        for (const cls of f.classes) {
+          const mine = f.quotes.filter((q) => q.cls === cls)
+          // les chances de cette réponse sur la fiche : jamais moins d'une fois sur quatre quand la fiche a les deux
+          const weight = f.classes.length < 2 ? 1 : Math.min(1 - BOTH, Math.max(BOTH, mine.reduce((n, q) => n + q.p, 0) / sum))
+          // et des chances égales entre ses citations
+          for (const q of mine) q.p = weight / mine.length
+        }
+      }
+    }
+    for (const f of fiches) {
+      plan.set(`${f.who}|${type}`, f.classes.map((cls) => ({ cls: cls as string, weight: f.quotes.reduce((n, q) => n + (q.cls === cls ? q.p : 0), 0) })))
+      for (const q of f.quotes) rows.push({ id: q.id, type, who: f.who, answer: q.cls, length: q.length, share: q.share, odds: q.p })
     }
   }
-  return { plan, typical }
+  return { plan, rows }
 })
+
+/**
+ * Le plan des « est-ce que ça suffit ? » (voir worthPlan), pour le relire et le vérifier : chaque citation qui peut se
+ * poser, sa réponse, sa longueur, la part des copies où son entité pose la question (`share`) et ses chances d'être
+ * la citation posée (`odds` : les chances de sa réponse, partagées entre les citations de cette réponse ; leur total
+ * vaut 1 par entité et par énoncé).
+ */
+export function soloWorthPlan(all: Ghost[]): { id: string; type: 'T3b' | 'T8'; who: string; answer: string; length: number; share: number; odds: number }[] {
+  return worthPlan(all).rows
+}
 
 /* ---------- questions rédigées de la fiche ---------- */
 
@@ -1842,19 +1969,25 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
 
 /* ---------- toutes les questions possibles sur X ---------- */
 
-const seedsFor = memo((x, all): Seed[] => {
+/** Tout ce que la fiche de x permet de composer, avant ce que les autres fiches font écarter (voir unmatched). */
+const everySeed = memo((x, all): Seed[] => {
   if (!NAME_WORDS.size) for (const g of all) for (const w of `${g.name} ${g.nameEn}`.toLocaleLowerCase('fr').match(/\p{L}+/gu) ?? []) if (w.length >= 3 && !HOLLOW.has(w)) NAME_WORDS.add(stem(w))
   return [
-  ...numberSeeds(x, all),
-  ...signSeeds(x, all),
-  ...testSeeds(x, all),
-  ...exclusionSeeds(x, all),
-  ...intruderSeeds(x, all),
-  ...trueFalseSeeds(x, all),
-  ...duelSeeds(x, all),
+    ...numberSeeds(x, all),
+    ...signSeeds(x, all),
+    ...testSeeds(x, all),
+    ...exclusionSeeds(x, all),
+    ...intruderSeeds(x, all),
+    ...trueFalseSeeds(x, all),
+    ...duelSeeds(x, all),
     ...observationSeeds(x, all),
     ...authoredSeeds(x, all),
   ]
+})
+
+const seedsFor = memo((x, all): Seed[] => {
+  const out = unmatched(all)
+  return everySeed(x, all).filter((s) => !out.has(s.id))
 })
 
 /** Les identifiants de toutes les questions qu'une copie sur x peut poser (certaines ne se composent pas à chaque tirage). */
@@ -1961,7 +2094,9 @@ interface Draw {
 /** Une composition de la copie (voir buildSoloQuiz) : ses questions, dans l'ordre où les poser. */
 function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[] {
   const { ghost: x, allGhosts: all } = opts
-  const seen = opts.seen instanceof Set ? (opts.seen as ReadonlySet<string>) : new Set(opts.seen ?? [])
+  // un signe de X déjà demandé (« lequel de ces signes… ») l'est aussi sous son autre forme (« vrai ou faux… »)
+  const asked = [...(opts.seen ?? [])]
+  const seen: ReadonlySet<string> = new Set([...asked, ...asked.flatMap(sameSign)])
   const topics = opts.topics ? new Set<QuizTopic>(opts.topics) : null
   const seeds = seedsFor(x, all).filter((s) => !topics || topics.has(s.topic))
   if (!seeds.length) return []
@@ -1979,7 +2114,6 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     numbers: Math.max(1, Math.round(NUMBERS_MAX * scale)),
     T3b: Math.max(1, Math.round(WORTH_MAX.T3b * scale)),
     T8: Math.max(1, Math.round(WORTH_MAX.T8 * scale)),
-    foreign: Math.max(1, Math.round(FOREIGN_MAX * scale)),
   }
 
   const picked: Built[] = []
@@ -1987,7 +2121,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const screens = new Set<string>()
   /** les citations de la copie : une même scène ne se relit pas sous une autre question (vrai ou faux, puis « est-ce que ça suffit ? ») */
   const quotes = new Set<string>()
-  /** le nombre de questions de la copie tirées parmi les signes d'autres fiches (voir FOREIGN_MAX) */
+  /** le nombre de questions de la copie tirées parmi les signes d'autres fiches (voir FOREIGN_EVERY) */
   let mixed = 0
   /** la copie pose déjà un « est-ce que ça suffit ? » dont la réponse est la seule possible pour X (voir addWorth) */
   let forced = false
@@ -1997,13 +2131,15 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const countOf = (pred: (b: Built) => boolean) => picked.filter(pred).length
   /** seuil ou vitesse : le groupe d'une question en nombres déjà dans la copie */
   const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : null)
+  /** La copie peut-elle encore tirer une question parmi les signes d'autres fiches ? Une par tranche de cinq questions commencée. */
+  const borrowing = () => mixed < Math.ceil((picked.length + 1) / FOREIGN_EVERY)
   const roomFor = (s: Seed) => {
     // deux réponses : trois dans toute copie ; au-delà, pas plus de la moitié de la copie telle qu'elle serait avec elle
     if (s.width === 2 && widthOf(2) + 1 > Math.max(caps.twoFree, Math.ceil((picked.length + 1) / 2))) return false
     if (s.width < 4 && picked.length - widthOf(4) >= caps.few) return false
     if (s.type === 'T1' && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
     if ((s.type === 'T3b' || s.type === 'T8') && countOf((b) => b.type === s.type) >= caps[s.type]) return false
-    if (s.type === 'T5' && mixed >= caps.foreign) return false
+    if (s.type === 'T5' && !borrowing()) return false
     return true
   }
   /** Les clés qui comptent au palier en cours : les valeurs et les phrases toujours ; l'objet en bloc, ou fait par fait (voir LADDER). */
@@ -2093,6 +2229,22 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     return b.sentences
   }
   const read = new Set<string>()
+  /**
+   * Deux questions jugent-elles la même phrase (vrai ou faux, « est-ce que ça suffit ? ») ? « Quand la lumière est
+   * allumée dans la pièce où se trouve l'entité, elle en sort plus souvent » : un comportement du Cauchemar, jugé en
+   * vrai ou faux, et l'une de ses observations, presque mot pour mot. Deux angles sur un même fait vont ensemble (à
+   * qui est-il, que vaut-il), pas deux fois la même phrase : l'élève croirait relire la question d'avant. La
+   * citation de l'une commence comme un passage de l'autre (ses soixante premiers caractères, noms d'entités retirés).
+   */
+  const rereads = (b: Built) => {
+    if (!b.q.quote) return false
+    const mine = plainText(b.q.quote, all)
+    return picked.some((p) => {
+      if (!p.q.quote) return false
+      const theirs = plainText(p.q.quote, all)
+      return (mine.length >= 20 && theirs.includes(mine.slice(0, 60))) || (theirs.length >= 20 && mine.includes(theirs.slice(0, 60)))
+    })
+  }
   /** tout ce que la copie demande déjà */
   const askedAll = new Set<string>()
   const doomed = (s: Seed) => !!s.pre && s.pre().some((k) => counts(k) && askedAll.has(k))
@@ -2151,7 +2303,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
       let b = s.make(rng)
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
       if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
-      if (!b || screens.has(screenOf(b.q)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w))) {
+      if (!b || screens.has(screenOf(b.q)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w)) || rereads(b)) {
         failed.set(s.id, (failed.get(s.id) ?? 0) + 1)
         continue
       }
@@ -2176,9 +2328,9 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
    */
   const addEither = (type: SoloType, classes: readonly [string, string]): boolean => {
     for (const r of shuffle(rng, [...new Set(of(type).map((s) => s.register))])) {
-      // une sorte de phrases qui puise dans les autres fiches : leur part de la copie est comptée (voir FOREIGN_MAX)
+      // une sorte de phrases qui puise dans les autres fiches : leur part de la copie est comptée (voir FOREIGN_EVERY)
       const borrowed = of(type, (s) => s.register === r).some((s) => s.foreign)
-      if (borrowed && mixed >= caps.foreign) continue
+      if (borrowed && !borrowing()) continue
       const found = classes.map((c) => find(of(type, (s) => s.register === r && s.cls === c), 6))
       if (!found[0] || !found[1]) continue
       commit(found[draw.trueFalse[drawn.trueFalse++ % COINS] < 0.5 ? 0 : 1]!)
@@ -2210,48 +2362,37 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const addWorth = (type: Worth): boolean => {
     const mine = (cls: string) => of(type, (s) => s.cls === cls)
     // les réponses possibles pour X, et leurs chances
-    const { plan: plans, typical } = worthPlan(all)
-    const plan = (plans.get(`${x.id}|${type}`) ?? []).filter((p) => mine(p.cls).length)
+    const plan = (worthPlan(all).plan.get(`${x.id}|${type}`) ?? []).filter((p) => mine(p.cls).length)
     if (!plan.length) return false
-    /** les citations d'une réponse, la plus proche de `length` caractères d'abord */
-    const nearest = (list: readonly Seed[], length: number) => [...list].sort((a, b) => Math.abs(a.text!.length - length) - Math.abs(b.text!.length - length))
+    /** La première citation de cette réponse qui peut se poser à cet instant, essayées dans le désordre. */
+    const candidate = (cls: string): Found | null => {
+      for (const s of shuffle(rng, mine(cls))) {
+        const found = find([s], 1)
+        if (found) return found
+      }
+      return null
+    }
     // une entité qui n'a qu'une réponse possible (rien de décisif sur sa fiche, ou rien d'autre) ne la pose qu'une
     // fois par copie, tests et observations confondus : qui a lu la première sait répondre à la suivante (les
     // Jumeaux, le Kormos : « Non » aux deux) ; et, pour ses tests, dans une partie des copies seulement (voir
-    // ONE_SIDED). Sa citation : au hasard parmi la moitié (deux au moins) dont la longueur est la plus proche de ce
-    // que l'autre réponse cite d'habitude ; la plus proche à chaque fois, et le Yurei poserait toujours la même
+    // ONE_SIDED)
     if (plan.length < ENOUGH.length) {
       if (forced || gates.oneSided >= ONE_SIDED[type][plan[0].cls as 'yes' | 'no']) return false
-      const other = ENOUGH.find((c) => c !== plan[0].cls)!
-      const close = nearest(mine(plan[0].cls), typical.get(`${type}|${other}`) ?? 0)
-      for (const s of shuffle(rng, close.slice(0, Math.max(2, Math.ceil(close.length / 2))))) {
-        if (!add([s], 1)) continue
-        forced = true
-        return true
-      }
-      return false
+      const only = candidate(plan[0].cls)
+      if (!only) return false
+      commit(only)
+      forced = true
+      return true
     }
     // chaque réponse possible pour X doit avoir de quoi se poser à cet instant, à tous les paliers, puis la réponse
     // se tire : sinon le tirage pencherait vers « Non » (« ça suffit » repose sur les faits décisifs de la fiche,
     // les premiers épuisés). Et jamais « l'autre réponse d'office » après la première : dans une copie, la réponse
-    // d'une question ne se déduit pas de celle d'avant.
-    // Une citation au hasard pour l'une des réponses, et pour l'autre la citation de longueur la plus proche : sur
-    // les fiches, un fait décisif se décrit en détail et un simple indice tient en une ligne, si bien que « Oui aux
-    // longues citations » gagnait 61 fois sur 100 aux observations. Ainsi appariées : 58 (les tests : 51). Le reste
-    // tient aux fiches (l'observation décisive du Revenant, du Mimic, de l'Onryo est deux fois plus longue que tous
-    // leurs indices) : n'apparier que des longueurs voisines leur ôtait la question
-    const lead = rng() < 0.5 ? 0 : 1
-    for (const s of shuffle(rng, mine(plan[lead].cls))) {
-      const one = find([s], 1)
-      if (!one) continue
-      let other: Found | null = null
-      for (const o of nearest(mine(plan[1 - lead].cls), s.text!.length)) if ((other = find([o], 1))) break
-      if (!other) continue
-      const coin = draw.worth[drawn.worth++ % COINS]
-      commit(weightedPick(() => coin, [{ ...plan[0], f: lead ? other : one }, { ...plan[1], f: lead ? one : other }], (p) => p.weight).f)
-      return true
-    }
-    return false
+    // d'une question ne se déduit pas de celle d'avant
+    const found = plan.map((p) => candidate(p.cls))
+    if (!found[0] || !found[1]) return false
+    const coin = draw.worth[drawn.worth++ % COINS]
+    commit(weightedPick(() => coin, plan.map((p, i) => ({ weight: p.weight, f: found[i]! })), (p) => p.weight).f)
+    return true
   }
   const fillSlot = (slot: Slot): boolean => {
     switch (slot) {
@@ -2333,6 +2474,19 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     placed.add(next)
   }
   return order.map((i) => picked[i])
+}
+
+/**
+ * Le même signe de X sous son autre forme : « Lequel de ces signes est celui de X ? » (q:sign-of:x:2, q:sign-of:x:t3)
+ * et « Vrai ou faux pour X ? » (q:vf:x:x:K2, q:vf:x:x:T3) demandent le même fait. Dans « Encore 10 », la liste des
+ * questions déjà posées ne connaît que des identifiants : sans cela, le signe de la copie précédente revenait sous
+ * l'autre forme (mesuré : 42 copies enchaînées sur 450 reprenaient plus de la moitié des faits de la précédente).
+ */
+function sameSign(id: string): string[] {
+  const sign = /^q:sign-of:([^:]+):(t?)(\d+)$/u.exec(id)
+  if (sign) return [`q:vf:${sign[1]}:${sign[1]}:${sign[2] ? 'T' : 'K'}${sign[3]}`]
+  const judged = /^q:vf:([^:]+):\1:([KT])(\d+)$/u.exec(id)
+  return judged ? [`q:sign-of:${judged[1]}:${judged[2] === 'T' ? 't' : ''}${judged[3]}`] : []
 }
 
 /** Ce que chaque question d'une copie composée demande et montre (voir soloFacts). */

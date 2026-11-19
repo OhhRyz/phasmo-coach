@@ -573,7 +573,7 @@ export function Quiz() {
               {solo ? (
                 <p className="qz-lead">
                   Des questions à choix multiple sur une seule entité{NNBSP}: sa vitesse, son seuil de chasse, ses signes, ses tests, et
-                  les entités à ne pas confondre avec elle. Une erreur sur une carte déjà apprise la remet dans ta révision du jour.
+                  ce qui suffit ou non à la confirmer. Une erreur sur une carte déjà apprise la remet dans ta révision du jour.
                 </p>
               ) : (
                 <p className="qz-lead">

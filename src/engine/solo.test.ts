@@ -1,12 +1,24 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 // solo.ts d'abord, avant quiz.ts : les deux modules s'importent l'un l'autre, et rien ne doit en dépendre au chargement
-import { buildSoloQuiz, soloFacets, soloFacetsOf, soloFacts, soloQuestion, soloSupply, soloType, SOLO_ANSWERS, SOLO_COUNT, type SoloType } from './solo'
+import { buildSoloQuiz, soloFacets, soloFacetsOf, soloFacts, soloQuestion, soloSupply, soloType, soloWorthPlan, SOLO_ANSWERS, SOLO_COUNT, type SoloType } from './solo'
 import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
-import { evidenceIn, fitsToo, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, numbersFit, restatedBy, zeroTests } from './cards'
+import { evidenceIn, fitsToo, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, numbersFit, restatedBy, withoutEvidenceAsides, zeroTests } from './cards'
 import { redactGhostName } from './format'
 import { apartFrom, buildQuiz, DEFAULT_TOPICS, factKeys, hints, homogeneous, nearSpeed, pronounClash, QUIZ_TOPICS, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
 import { createRng } from './random'
+
+/**
+ * Le plan des « est-ce que ça suffit ? » (worthPlan, solo.ts) équilibre « Oui » et « Non » à longueur voisine en
+ * réglant les chances des deux réponses de chaque fiche, sans jamais en faire tomber une sous une question sur
+ * quatre : ce garde-fou, et les fiches qui n'ont qu'une réponse, lui laissent un écart, prévu ici seuil par seuil.
+ * Mesuré le 18 novembre 2026 : au plus 9,4 points pour les observations (à 150 caractères), 8,2 pour les tests (à 80) ;
+ * sans équilibre par longueur (le calcul de worthPlan réduit à zéro tour : les deux réponses d'une fiche à chances
+ * égales), 15,8 et 9,1, et « Oui » ne serait prévu que 37 fois sur 100 aux observations. Les plafonds laissent une
+ * marge à une fiche qui change ; ce que les copies donnent vraiment se mesure au verrou c.
+ */
+const PLAN_LENGTHS = [80, 100, 120, 135, 150, 170, 200] as const
+const PLAN_EDGE = { T3b: 9, T8: 10.5 } as const
 
 /** Les copies telles que la fiche les lance : tous les thèmes, dix questions, puis « Encore 10 ». */
 const copies = (id: string, seed: number) => {
@@ -57,25 +69,48 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     }
   }, 60_000)
 
-  it('rien n’est jamais présenté comme faux pour le Mimic hors de sa propre fiche', () => {
+  it('rien n’est jamais présenté comme faux pour le Mimic : ni signe d’une autre fiche, ni vrai ou faux', () => {
     const mimic = getGhost('the-mimic')!
     const types = new Set(soloSupply(mimic, GHOSTS).map((s) => s.type))
-    // ni signe d'une autre fiche à écarter, ni intrus, ni départage : il copie les autres entités
-    for (const t of ['T2', 'T5', 'T7a'] as const) expect(types.has(t), t).toBe(false)
-    let own = 0
-    for (const s of soloSupply(mimic, GHOSTS)) {
-      const q = soloQuestion(mimic, GHOSTS, s.id, createRng(3))
-      if (s.type !== 'T6') continue
-      // ses vrai ou faux ne citent que sa fiche ; « Faux » : seulement son propre test d'élimination (pas d'orbes dans la pièce favorite)
-      expect(s.id, s.id).toMatch(/^q:vf:the-mimic:the-mimic:/u)
-      if (q?.correct[0] === SOLO_ANSWERS.trueFalse.false) {
-        own++
-        expect(s.id).toMatch(/^q:vf:the-mimic:the-mimic:E\d+$/u)
-      }
-    }
-    expect(own).toBeGreaterThan(0)
+    // ni signe d'une autre fiche à écarter, ni intrus, ni départage : il copie les autres entités. Ni vrai ou faux :
+    // aucun « Faux » ne viendrait d'une autre fiche, et son seul test d'élimination ne se dit pas en une phrase (« Vérifie
+    // la pièce favorite à la recherche d'orbes… S'il n'y en a pas… ») ; sans « Faux », « Vrai » sortirait toujours
+    for (const t of ['T2', 'T5', 'T6', 'T7a'] as const) expect(types.has(t), t).toBe(false)
+    for (const t of ['T3a', 'T3b', 'T8', 'auth'] as const) expect(types.has(t), t).toBe(true)
     // et il n'est jamais l'entité proche d'une autre copie
     for (const g of GHOSTS) for (const s of soloSupply(g, GHOSTS)) if (g.id !== 'the-mimic') expect(s.id.split(':').slice(2), s.id).not.toContain('the-mimic')
+  })
+
+  it('un vrai ou faux ne juge jamais une consigne : la condition d’un test d’élimination ne se cite que si elle tient en une phrase, et aucune fiche ne garde des « Vrai » sans « Faux »', () => {
+    const lone: string[] = []
+    for (const g of GHOSTS) {
+      const mine = soloSupply(g, GHOSTS).filter((s) => s.type === 'T6')
+      const judged = mine.flatMap((s) => {
+        const q = soloQuestion(g, GHOSTS, s.id, createRng(7))
+        return q ? [q] : []
+      })
+      for (const q of judged) {
+        if (!/^q:vf:[^:]+:[^:]+:E\d+$/u.test(q.id)) continue
+        // une seule phrase, qui ne s'adresse pas au joueur à l'impératif (« Place… », « Lance… », « Vérifie… »)
+        expect(q.quote!.split(/(?<=[.!?…])\s+/u), `${q.id} : « ${q.quote} »`).toHaveLength(1)
+        expect(q.quote!, q.id).not.toMatch(/^(?:Place|Lance|Vérifie|Écoute|Allume-|Pose|Attends|Reste|Observe|Regarde)(?!\p{L})/u)
+      }
+      // une fiche qui n'a aucun « Faux » (ni test d'élimination en une phrase, ni signe d'une entité proche) ne pose aucun vrai ou faux
+      const anyFalse = judged.some((q) => q.correct[0] === SOLO_ANSWERS.trueFalse.false)
+      if (mine.length && !anyFalse) lone.push(g.id)
+      // et ses observations ne se jugent « Vrai » que face à l'un de ses tests d'élimination
+      const hasE = mine.some((s) => /:E\d+$/u.test(s.id))
+      if (!hasE) expect(mine.filter((s) => /^q:vf:[^:]+:[^:]+:O\d+$/u.test(s.id)).map((s) => s.id), g.id).toEqual([])
+    }
+    expect(lone).toEqual([])
+    // les tests d'élimination précédés d'une mise en place ne se posent pas en vrai ou faux (ils se lisaient comme des consignes)
+    for (const [id, tag] of [['spirit', 'E0'], ['mare', 'E1'], ['revenant', 'E0'], ['yurei', 'E1'], ['the-mimic', 'E0']] as const) {
+      expect(soloSupply(getGhost(id)!, GHOSTS).map((s) => s.id), `${id} ${tag}`).not.toContain(`q:vf:${id}:${id}:${tag}`)
+    }
+    // les autres se posent : « Rallume le disjoncteur. », faux pour le Hantu
+    const hantu = soloQuestion(getGhost('hantu')!, GHOSTS, 'q:vf:hantu:hantu:E1', createRng(1))
+    expect(hantu?.quote).toBe('Rallume le disjoncteur.')
+    expect(hantu?.correct).toEqual([SOLO_ANSWERS.trueFalse.false])
   })
 
   it('dix questions au plus, toutes sur X, sans doublon ; ce qui est cité comme faux pour X ne se relit pas parmi les réponses d’une autre question', () => {
@@ -120,8 +155,8 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     const asked = new Map<string, number>()
     for (let seed = 1; seed <= 120; seed++) {
       const ids = buildSoloQuiz({ ghost: mimic, allGhosts: GHOSTS, rng: createRng(seed * 17) }).map((q) => q.id)
-      // l'observation (« est-ce que ça suffit ? », ou jugée en vrai ou faux) et le test qui décrit la même scène
-      const same = ['q:constat:the-mimic:the-mimic:O1', 'q:suffit:the-mimic:1', 'q:vf:the-mimic:the-mimic:O1'].filter((id) => ids.includes(id))
+      // l'observation (« est-ce que ça suffit ? ») et le test qui décrit la même scène
+      const same = ['q:constat:the-mimic:the-mimic:O1', 'q:suffit:the-mimic:1'].filter((id) => ids.includes(id))
       for (const id of same) asked.set(id, (asked.get(id) ?? 0) + 1)
       expect(same.length, `tirage ${seed} : ${same.join(', ')}`).toBeLessThanOrEqual(1)
     }
@@ -129,6 +164,71 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     expect(asked.get('q:constat:the-mimic:the-mimic:O1') ?? 0, JSON.stringify([...asked])).toBeGreaterThan(0)
     expect(asked.get('q:suffit:the-mimic:1') ?? 0, JSON.stringify([...asked])).toBeGreaterThan(0)
   }, 30_000)
+
+  it('une même phrase ne se juge pas deux fois dans une copie : « erre davantage quand la lumière est allumée… », un comportement du Cauchemar, et son observation, presque mot pour mot', () => {
+    const mare = getGhost('mare')!
+    const plain = (t: string) =>
+      GHOSTS.reduce((text, g) => redactGhostName(text, g), t)
+        .toLocaleLowerCase('fr')
+        .replace(/cette entité/gu, ' ')
+        .replace(/[^\p{L}\d]+/gu, ' ')
+        .trim()
+    const asked = new Map<string, number>()
+    // des copies de trente questions (le quiz général réduit à une entité en demande jusqu'à trente) : presque toute la
+    // fiche y passe, et sans le garde-fou les deux phrases s'y retrouvent ensemble dans une copie sur quatre (dans une
+    // copie de dix, une fois sur quatre-vingts seulement : trop rare pour qu'un test le voie à coup sûr)
+    for (let seed = 1; seed <= 60; seed++) {
+      const qs = buildSoloQuiz({ ghost: mare, allGhosts: GHOSTS, rng: createRng(seed * 7 + 5), count: seed % 3 ? 30 : SOLO_COUNT })
+      const judged = qs.filter((q) => q.quote).map((q) => ({ id: q.id, text: plain(q.quote!) }))
+      for (const q of judged) asked.set(q.id, (asked.get(q.id) ?? 0) + 1)
+      // la citation de l'une ne commence jamais comme un passage de la citation d'une autre
+      for (const a of judged) for (const b of judged) if (a !== b) expect(a.text.length >= 20 && b.text.includes(a.text.slice(0, 60)), `tirage ${seed} : ${a.id} et ${b.id}`).toBe(false)
+    }
+    // le test mord : le comportement (jugé en vrai ou faux) et l'observation (« est-ce que ça suffit ? », ou vrai ou
+    // faux) se posent bien l'un et l'autre au fil des copies, jamais ensemble
+    expect(asked.get('q:vf:mare:mare:B0') ?? 0, JSON.stringify([...asked])).toBeGreaterThan(0)
+    expect((asked.get('q:constat:mare:mare:O6') ?? 0) + (asked.get('q:vf:mare:mare:O6') ?? 0), JSON.stringify([...asked])).toBeGreaterThan(0)
+  }, 60_000)
+
+  it('le plan des « est-ce que ça suffit ? » : toutes les citations se posent, une fiche à deux réponses pose l’une et l’autre, et à longueur voisine « Oui » est prévu autant que « Non »', () => {
+    const rows = soloWorthPlan(GHOSTS)
+    const predicted: string[] = []
+    for (const type of ['T3b', 'T8'] as const) {
+      const mine = rows.filter((r) => r.type === type)
+      expect(mine.length, type).toBeGreaterThan(60)
+      // le plan couvre toute la réserve, et elle seule : une citation hors plan ne se poserait jamais
+      const supply = GHOSTS.flatMap((g) => soloSupply(g, GHOSTS).filter((s) => s.type === type).map((s) => s.id))
+      expect(mine.map((r) => r.id).sort(), type).toEqual([...supply].sort())
+      for (const who of new Set(mine.map((r) => r.who))) {
+        const fiche = mine.filter((r) => r.who === who)
+        expect(fiche.reduce((n, r) => n + r.odds, 0), `${type} ${who}`).toBeCloseTo(1, 6)
+        // aucune citation ne disparaît : celles d'une même réponse ont des chances égales
+        for (const r of fiche) expect(r.odds, r.id).toBeCloseTo(fiche.find((o) => o.answer === r.answer)!.odds, 9)
+        // une fiche qui a des faits décisifs et d'autres non pose les uns et les autres : jamais moins d'une fois sur quatre
+        const yes = fiche.filter((r) => r.answer === SOLO_ANSWERS.enough.yes).reduce((n, r) => n + r.odds, 0)
+        if (new Set(fiche.map((r) => r.answer)).size === 2) {
+          expect(yes, `${type} ${who} : « Oui » ${(100 * yes).toFixed(0)} %`).toBeGreaterThanOrEqual(0.25 - 1e-9)
+          expect(yes, `${type} ${who} : « Oui » ${(100 * yes).toFixed(0)} %`).toBeLessThanOrEqual(0.75 + 1e-9)
+        } else expect([0, 1], `${type} ${who}`).toContain(Math.round(yes * 1e6) / 1e6)
+      }
+      // ce que le plan prévoit, chaque fiche posant la question dans sa part des copies : autant de « Oui » que de « Non »…
+      const rate = (pred: (r: (typeof mine)[number]) => boolean) => mine.filter(pred).reduce((n, r) => n + r.share * r.odds, 0)
+      const yes = rate((r) => r.answer === SOLO_ANSWERS.enough.yes)
+      const no = rate((r) => r.answer === SOLO_ANSWERS.enough.no)
+      expect(yes / (yes + no), `${type} : « Oui » prévu ${((100 * yes) / (yes + no)).toFixed(1)} %`).toBeGreaterThanOrEqual(0.45)
+      expect(yes / (yes + no), `${type} : « Oui » prévu ${((100 * yes) / (yes + no)).toFixed(1)} %`).toBeLessThanOrEqual(0.55)
+      // … et à toute longueur : l'avance prévue de qui répondrait « Oui » aux citations d'au moins tant de caractères, et
+      // « Non » aux autres (la moitié de l'écart entre les parts de « Oui » et de « Non » au-dessus du seuil)
+      let worst = 0
+      for (const cut of PLAN_LENGTHS) {
+        const edge = 50 * (rate((r) => r.answer === SOLO_ANSWERS.enough.yes && r.length >= cut) / yes - rate((r) => r.answer === SOLO_ANSWERS.enough.no && r.length >= cut) / no)
+        predicted.push(`${type} ≥ ${cut} : ${edge.toFixed(1)}`)
+        worst = Math.max(worst, Math.abs(edge))
+      }
+      expect(worst, `${type} : ${predicted.join(' ; ')}`).toBeLessThanOrEqual(PLAN_EDGE[type])
+    }
+    if (import.meta.env.VITE_SOLO_MEASURES) console.info(`plan : avance prévue du joueur « Oui aux longues citations », en points : ${predicted.join(' ; ')}`)
+  })
 
   it('aucune question ne demande « quelle entité ? » : pas un nom d’entité parmi les réponses', () => {
     const names = new Set(GHOSTS.flatMap((g) => [g.name, g.nameEn]))
@@ -168,47 +268,68 @@ const COPIES = 30
  * Le plus petit nombre de questions des copies de chaque entité dans le corpus. Aucune fiche ne remplit toujours une
  * copie de dix aujourd'hui : la copie reste courte plutôt que de reposer une réponse déjà lue, de pencher vers une
  * réponse, d'aligner les questions à deux réponses, de dire faux ce que la fiche de X explique, ou de poser une
- * question sur une autre entité (le départage à l'envers, « à quoi reconnais-tu Y plutôt que X ? », que le coach a
- * écarté le 18 novembre 2026 : mieux vaut cinq questions sur X que sept dont deux sur celles qu'on confond avec
- * lui). En moyenne, 5,9 questions.
+ * question sur une autre entité (le coach, 18 novembre 2026 : mieux vaut cinq questions sur X que sept dont deux sur
+ * celles qu'on confond avec lui). Recalibré le 18 novembre 2026, quand la copie a cessé de puiser dans les fiches des
+ * entités proches (plus de « de qui parle-t-on ? », plus de scène d'une autre fiche) : en moyenne 6,4 questions sur
+ * ce corpus (5,9 avant, dont 0,4 sur une autre entité), et onze fiches descendent encore sous cinq questions.
  * À vider à mesure que des questions rédigées complètent ces fiches : une entité retirée de la liste doit atteindre
  * dix à chaque copie, et le test le vérifie.
  */
 const SHORT_COPIES: Readonly<Record<string, number>> = {
-  'the-twins': 7,
+  mare: 7,
+  onryo: 7,
   kormos: 7,
-  phantom: 6,
-  mare: 6,
-  onryo: 6,
+  oni: 6,
+  'the-twins': 6,
+  moroi: 6,
+  thaye: 6,
+  phantom: 5,
   poltergeist: 5,
   banshee: 5,
   shade: 5,
+  demon: 5,
   yurei: 5,
   yokai: 5,
   myling: 5,
-  thaye: 5,
+  raiju: 5,
+  gallu: 5,
   obambo: 5,
+  aswang: 5,
+  // sous cinq questions dans une partie de leurs copies (leur nombre sur trente, entre parenthèses) : des fiches qui
+  // tiennent en un ou deux faits sans preuve, que leurs signes, leurs observations, leurs tests et leurs questions
+  // rédigées redisent ; un fait ne se demande qu'une fois sous chaque angle
+  // (6) l'encens (180 s au lieu de 90 s, et le test du double encens) ; seuil et vitesse standard
   spirit: 4,
+  // (2, des « Encore 10 ») le sel (jamais perturbé, pas de ralentissement au sel de rang 3) et la téléportation
   wraith: 4,
+  // (4) le disjoncteur : 2,5 m/s quand il est allumé, il ne le coupe jamais, sa capacité s'y lit
   jinn: 4,
-  demon: 4,
-  oni: 4,
+  // (3, des « Encore 10 ») une seule mécanique (1,0 m/s, 3,0 m/s dès qu'il te détecte, d'un coup, puis il ralentit)
+  revenant: 4,
+  // (5) le froid (sa vitesse, sa buée) et le disjoncteur (il ne le rallume jamais)
   hantu: 4,
-  raiju: 4,
+  // (1) ses transformations en chasse ; cinq de ses neuf observations passent par une preuve
   obake: 4,
-  // ses questions sont presque toutes à deux ou trois réponses (tests, observations) : cinq au plus par copie
+  // (13, des « Encore 10 ») ni nombres, ni signes à départager, ni vrai ou faux (il copie) : ses tests, ses
+  // observations et ses questions rédigées, presque toutes à deux ou trois réponses
   'the-mimic': 4,
-  moroi: 4,
+  // (18) 3,0 m/s de loin, 0,4 m/s de près, 40 % : trois de ses quatre signes clés ne se composent pas en « lequel de ces signes »
   deogen: 4,
-  gallu: 4,
-  dayan: 3,
-  aswang: 3,
-  deildegast: 3,
-  // sa fiche tient en une idée (1,0 m/s, puis 3,0 m/s dès qu'il te détecte) : les questions en nombres la demandent déjà
-  revenant: 2,
-  // pas d'observation décisive ni de test de confirmation sans preuve : peu de questions qui ne se recoupent pas
+  // (8) sa vitesse et son seuil selon que tu bouges ou non à moins de 10 m : presque toutes ses lignes le redisent
+  dayan: 4,
+  // (1, un « Encore 10 ») 6,3 questions en moyenne
+  deildegast: 4,
+  // (25) deux faits sans preuve (il ne change pas de pièce favorite, il s'en éloigne peu) ; le reste passe par le D.O.T.S
   goryo: 2,
 }
+
+/**
+ * La longueur des copies du corpus, mesurée le 18 novembre 2026 : 6,40 questions en moyenne (une copie sur deux y est
+ * un « Encore 10 », plus court : 6,2, contre 6,6 pour une première copie), et 86 copies de moins de cinq questions sur
+ * 900. Des planchers, à relever quand les fiches s'étoffent.
+ */
+const MEAN_SIZE = 6.2
+const UNDER_FIVE = 90
 
 interface View {
   q: Question
@@ -419,11 +540,19 @@ const extreme = (v: View, sign: 1 | -1): number[] => {
   return lens.flatMap((l, i) => (l === best ? [i] : []))
 }
 const at = (v: View, id: string) => [v.q.choices.findIndex((c) => c.id === id)]
-/** PLACEHOLDERS */
-const P95_MS = 400
-const NAMING_FLOOR = 0
-const CHECKED_FLOOR = 0
-const QUOTE_LENGTH_CEILING: Record<'T3b' | 'T8', (s: Score) => number> = { T3b: (s) => ceiling(s, false) + 100, T8: (s) => ceiling(s, false) + 100 }
+/**
+ * Le plafond de qui répond d'après la longueur de la citation d'un « est-ce que ça suffit ? » (« Oui » aux longues,
+ * « Non » aux courtes, ou l'inverse), à quinze seuils : le hasard plus quatorze points, et c'est un écart connu. Sur
+ * les fiches, une observation décisive se décrit en détail (ses conditions, sa suite) et un simple indice tient en
+ * une ligne. Mesuré au pire seuil : 61,1 % aux observations sur ce corpus (« Oui » à partir de 150 caractères), 62,7 %
+ * sur 2 700 copies, contre 68,2 % avant que le plan n'équilibre les réponses à longueur voisine (voir worthPlan,
+ * solo.ts) ; sans cet équilibre, 67,8 % sur ce corpus. Aux tests, 62,1 % sur ce corpus (à partir de 90 caractères),
+ * 60,1 % sur 2 700 copies, 61,6 % avant : rien de mesurable n'y change (sur les quatre cents questions de ce
+ * corpus, un écart-type du tirage vaut 2,5 points, et le plafond porte sur le pire de trente joueurs). Le plan ne
+ * descend pas plus bas sans priver une fiche de l'une de ses deux réponses (voir BOTH). À resserrer si des
+ * observations décisives courtes ou de simples indices détaillés s'ajoutent aux fiches.
+ */
+const QUOTE_LENGTH_EDGE = 14
 /** Ceux qui jouent toutes les questions : le hasard plus deux points, sans marge. */
 const EVERY_QUESTION: Record<string, Player> = {
   'la réponse la plus longue': (v) => extreme(v, 1),
@@ -482,7 +611,7 @@ const SOME_QUESTIONS: Record<string, Player> = {
  * « Oui » aux longues citations, « Non » aux courtes (ou l'inverse), à plusieurs seuils : sur les fiches, un fait
  * décisif se décrit en détail (ses conditions), un simple indice tient en une ligne.
  */
-const QUOTE_LENGTHS = [100, 120, 135, 150, 200] as const
+const QUOTE_LENGTHS = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220] as const
 /** Les joueurs qui ne jouent qu'à partir de la deuxième question d'une sorte dans la copie : quelques dizaines de questions. */
 const SEQUENCE = /qu’au précédent|qu’à la précédente/u
 const byQuoteLength = (type: SoloType, least: number, long: string): Player => (v) => (v.type === type ? at(v, v.q.quote!.length >= least ? long : flip(long)) : null)
@@ -558,8 +687,8 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       }
     }
     // le test mord : des questions nomment bien une entité proche (le départage, dans son énoncé ; quelques questions
-    // rédigées). Elles étaient plus de 300 avec « de qui parle-t-on ? », qui ne se pose plus : mesuré, NAMING
-    expect(naming).toBeGreaterThan(NAMING_FLOOR)
+    // rédigées). Elles étaient plus de 300 avec « de qui parle-t-on ? », qui ne se pose plus : 145 aujourd'hui
+    expect(naming).toBeGreaterThan(100)
     measure(`a. ${all.length} questions dans ${corpus.length} copies, dont ${naming} nomment une entité proche`)
   })
 
@@ -584,14 +713,17 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       if (v.type === 'T6' && p[4][0] !== 'L') expect(v.q.prompt.replace(/[\u00a0\u202f]/gu, ' '), v.q.id).toMatch(/^Vrai ou faux pour .+ \?$/u)
     }
     expect(faults, [...new Set(faults)].slice(0, 12).join('\n')).toEqual([])
-    // au plus une affirmation venue d'une autre fiche par copie de dix (le « Faux » d'une entité proche, l'intrus)
+    // une affirmation venue d'une autre fiche (le « Faux » d'une entité proche, l'intrus) pour cinq questions au plus :
+    // une dans une copie de cinq questions ou moins, deux au-delà
     const borrowed = (c: Copy) => c.views.filter((v) => (v.type === 'T6' && v.partner) || v.type === 'T5').length
     const most = Math.max(...corpus.map(borrowed))
     const total = corpus.reduce((n, c) => n + borrowed(c), 0)
-    measure(`b. affirmations venues d’une autre fiche : ${total} dans ${corpus.filter((c) => borrowed(c)).length} copies sur ${corpus.length} ; au plus ${most} par copie`)
-    for (const c of corpus) expect(borrowed(c), `${c.x.id} (graine ${c.seed}) : ${borrowed(c)} affirmations venues d’une autre fiche`).toBeLessThanOrEqual(1)
-    // le test mord : il s'en pose (sans quoi « Faux » ne viendrait que des tests d'élimination de X)
+    measure(`b. affirmations venues d’une autre fiche : ${total} dans ${corpus.filter((c) => borrowed(c)).length} copies sur ${corpus.length} (deux dans ${corpus.filter((c) => borrowed(c) > 1).length}) ; au plus ${most} par copie`)
+    for (const c of corpus) expect(borrowed(c), `${c.x.id} (graine ${c.seed}) : ${borrowed(c)} affirmations venues d’une autre fiche sur ${c.qs.length} questions`).toBeLessThanOrEqual(Math.ceil(c.qs.length / 5))
+    // le test mord : il s'en pose (sans quoi « Faux » ne viendrait que des tests d'élimination de X), et jamais plus
+    // d'une question sur dix au fil des copies
     expect(total).toBeGreaterThan(100)
+    expect(total / all.length, `${total} affirmations venues d’une autre fiche sur ${all.length} questions`).toBeLessThanOrEqual(0.1)
   })
 
   /* ---------- c. savoir que la copie porte sur X ne rapporte rien ---------- */
@@ -612,18 +744,19 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +${(ceiling(s, false) - s.chance).toFixed(1)})`)
       expect(s.got, `${name} : ${say(s)} (plafond ${ceiling(s, false).toFixed(1)} %)`).toBeLessThanOrEqual(ceiling(s, false))
     }
-    // la longueur de la citation d'un « est-ce que ça suffit ? »
+    // la longueur de la citation d'un « est-ce que ça suffit ? » : un écart connu, borné à ce qui se mesure (voir QUOTE_LENGTH_EDGE)
     for (const type of ['T3b', 'T8'] as const) {
+      let worst = { name: '', edge: 0 }
       for (const least of QUOTE_LENGTHS) {
         for (const long of [YES, NO]) {
           const name = `${type === 'T3b' ? 'ce test suffit-il' : 'observation'} : « ${long === YES ? 'Oui' : 'Non'} » si la citation fait ${least} caractères et plus, sinon « ${long === YES ? 'Non' : 'Oui'} »`
           const s = play(all, byQuoteLength(type, least, long))
-          const top = QUOTE_LENGTH_CEILING[type](s)
-          measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +${(top - s.chance).toFixed(1)})`)
           expect(s.n, name).toBeGreaterThan(100)
-          expect(s.got, `${name} : ${say(s)} (plafond ${top.toFixed(1)} %)`).toBeLessThanOrEqual(top)
+          if (s.got - s.chance > worst.edge) worst = { name: `${name} : ${say(s)}`, edge: s.got - s.chance }
+          expect(s.got, `${name} : ${say(s)} (plafond ${(s.chance + QUOTE_LENGTH_EDGE).toFixed(1)} %)`).toBeLessThanOrEqual(s.chance + QUOTE_LENGTH_EDGE)
         }
       }
+      measure(`c. longueur de la citation, au pire seuil : ${worst.name} (écart ${worst.edge.toFixed(1)}, plafond +${QUOTE_LENGTH_EDGE})`)
     }
     // sorte par sorte : un joueur peut ne jouer sa règle que là où elle paie (la seule réponse qui contient « disparaît »,
     // dans les questions rédigées du Fantôme). Sur ces petits nombres, et tant de mesures, trois écarts-types de marge
@@ -692,6 +825,7 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     const valueShown: string[] = []
     const askedTwice: string[] = []
     const worthFirst: string[] = []
+    const judgedTwice: string[] = []
     let twoAngles = 0
     let pairs = 0
     for (const c of corpus) {
@@ -706,6 +840,12 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
           const a = c.views[i]
           pairs++
           const tag = `${c.x.id} (graine ${c.seed}) ${a.q.id} puis ${b.q.id}`
+          // 0. deux citations jugées (vrai ou faux, « est-ce que ça suffit ? ») : aucune ne commence comme un passage de
+          // l'autre, dans un ordre comme dans l'autre. Deux angles sur un fait vont ensemble, pas deux fois la même phrase
+          if (a.q.quote && b.q.quote) {
+            const [qa, qb] = [bare(a.q.quote), bare(b.q.quote)]
+            if ((qa.length >= 20 && qb.includes(qa.slice(0, 60))) || (qb.length >= 20 && qa.includes(qb.slice(0, 60)))) judgedTwice.push(`${tag} : « ${b.q.quote.slice(0, 80)} »`)
+          }
           // 1. la phrase de la réponse, déjà lue telle quelle (énoncé, citation, réponses, corrigé)
           if (!NUMERIC.test(b.q.id) && !isLos(b.q) && start.length >= 20 && screens[i].includes(start)) readEarlier.push(`${tag} : « ${answer.slice(0, 80)} »`)
           // une valeur de la réponse, déjà montrée de la même entité ; ou deux réponses qui disent le même fait de la même entité
@@ -724,9 +864,10 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       }
     }
     const some = (list: string[]) => [...new Set(list)].slice(0, 12).join('\n')
-    measure(`e. ${pairs} paires de questions ; réponse déjà lue ${readEarlier.length}, valeur déjà montrée ${valueShown.length}, « ce que ça vaut » avant « à qui est-ce » ${worthFirst.length}, même fait sous le même angle ${askedTwice.length} ; deux angles (permis) ${twoAngles}, soit ${(twoAngles / corpus.length).toFixed(2)} par copie`)
+    measure(`e. ${pairs} paires de questions ; même phrase jugée deux fois ${judgedTwice.length}, réponse déjà lue ${readEarlier.length}, valeur déjà montrée ${valueShown.length}, « ce que ça vaut » avant « à qui est-ce » ${worthFirst.length}, même fait sous le même angle ${askedTwice.length} ; deux angles (permis) ${twoAngles}, soit ${(twoAngles / corpus.length).toFixed(2)} par copie`)
     for (const l of [...new Set(askedTwice)]) measure(`e.   même angle : ${l}`)
     for (const l of [...new Set(valueShown)]) measure(`e.   valeur montrée : ${l}`)
+    expect(judgedTwice, some(judgedTwice)).toHaveLength(0)
     expect(readEarlier, some(readEarlier)).toHaveLength(0)
     expect(valueShown, some(valueShown)).toHaveLength(0)
     expect(worthFirst, some(worthFirst)).toHaveLength(0)
@@ -814,13 +955,15 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       }
     }
     const sizes = corpus.map((c) => c.qs.length)
-    measure(`g. copies de dix : ${sizes.filter((n) => n === SOLO_COUNT).length}/${sizes.length} ; taille moyenne ${(all.length / corpus.length).toFixed(2)} ; plus petites copies : ${JSON.stringify(measured)}`)
+    const under = sizes.filter((n) => n < 5).length
+    measure(`g. copies de dix : ${sizes.filter((n) => n === SOLO_COUNT).length}/${sizes.length} ; taille moyenne ${(all.length / corpus.length).toFixed(2)} ; copies de moins de cinq questions : ${under}/${sizes.length} ; plus petites copies : ${JSON.stringify(measured)}`)
     for (const x of GHOSTS) {
       const mine = of(x)
       const over = Math.max(...mine.filter((c) => c.seen).map((c) => c.qs.filter((q) => c.seen!.includes(q.id)).length / Math.max(1, c.qs.length)))
       const kinds = new Map<string, number>()
       for (const v of mine.flatMap((c) => c.views)) kinds.set(v.type, (kinds.get(v.type) ?? 0) + 1)
-      measure(`g.   ${x.id} : min ${Math.min(...mine.map((c) => c.qs.length))}, moyenne ${(mine.reduce((n, c) => n + c.qs.length, 0) / mine.length).toFixed(1)}, dix ${mine.filter((c) => c.qs.length === SOLO_COUNT).length}/${mine.length}, reprise max ${(100 * over).toFixed(0)} %, questions distinctes ${new Set(mine.flatMap((c) => c.qs.map((q) => q.id))).size} ; ${[...kinds].map(([t, n]) => `${t} ${n}`).join(', ')}`)
+      const short = mine.filter((c) => c.qs.length < 5)
+      measure(`g.   ${x.id} : min ${Math.min(...mine.map((c) => c.qs.length))}, moyenne ${(mine.reduce((n, c) => n + c.qs.length, 0) / mine.length).toFixed(1)}, moins de cinq ${short.length}/${mine.length} (dont « Encore 10 » ${short.filter((c) => c.seen).length}), dix ${mine.filter((c) => c.qs.length === SOLO_COUNT).length}/${mine.length}, reprise max ${(100 * over).toFixed(0)} %, questions distinctes ${new Set(mine.flatMap((c) => c.qs.map((q) => q.id))).size} ; ${[...kinds].map(([t, n]) => `${t} ${n}`).join(', ')}`)
     }
     // d'une copie à la suivante, par fait et non plus par identifiant : le même signe revient parfois sous une autre
     // forme (« lequel de ces signes… », puis « vrai ou faux »), que la liste des questions déjà vues ne connaît pas
@@ -838,6 +981,9 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     }
     measure(`g. « Encore 10 », par fait : ${((100 * sum) / chained).toFixed(0)} % de la copie en moyenne reprend un fait de la précédente ; ${beyondHalf} copies sur ${chained} en reprennent plus de la moitié`)
     expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.4)
+    // mesuré : 34 copies enchaînées sur 450 (36 avant le 18 novembre 2026). Un signe déjà demandé compte désormais
+    // aussi sous son autre forme (« lequel de ces signes… », puis « vrai ou faux », voir sameSign dans solo.ts) : sans
+    // cela, 45 copies
     expect(beyondHalf / chained, `${beyondHalf} copies sur ${chained} reprennent plus de la moitié des faits de la précédente`).toBeLessThanOrEqual(0.08)
     // la part des questions dont la réponse parle de l'entité proche (départage à l'envers, signe d'une autre fiche jugé faux…)
     const rival = (c: Copy) => c.views.filter((v) => v.about.id !== c.x.id).length
@@ -867,6 +1013,9 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       } else expect(least, `${x.id} : une copie de ${least} questions (mesuré : ${JSON.stringify(measured)})`).toBe(SOLO_COUNT)
     }
     for (const id of Object.keys(SHORT_COPIES)) expect(getGhost(id), id).toBeDefined()
+    // la longueur des copies, pour qu'elle ne fonde pas sans qu'on le voie (voir MEAN_SIZE et UNDER_FIVE)
+    expect(all.length / corpus.length, 'taille moyenne des copies').toBeGreaterThanOrEqual(MEAN_SIZE)
+    expect(under, 'copies de moins de cinq questions').toBeLessThanOrEqual(UNDER_FIVE)
   })
 
   /* ---------- h. la vérité ---------- */
@@ -927,11 +1076,12 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       if (v.type === 'T5') for (const c of v.wrong) expect(from(c.label, ownLines(v.x)), `${v.q.id} : « ${c.label} » n’est pas sur la fiche de ${v.x.name}`).toBe(true)
     }
     measure(`h. dit faux pour X : ${checked} phrases d’une entité proche, ${own} tests d’élimination de X ; scènes de X dites vraies : ${scenes}`)
-    // (plus de 500 quand « de qui parle-t-on ? » et les scènes des entités proches se posaient ; une seule phrase
-    // d'une autre fiche par copie aujourd'hui, voir le verrou b)
-    expect(checked).toBeGreaterThan(CHECKED_FLOOR)
-    expect(own).toBeGreaterThan(50)
-    expect(scenes).toBeGreaterThan(50)
+    // (plus de 500 quand « de qui parle-t-on ? » et les scènes des entités proches se posaient ; une phrase d'une autre
+    // fiche pour cinq questions au plus aujourd'hui, voir le verrou b : mesuré, 493 phrases d'une entité proche, 114
+    // tests d'élimination de X, 39 de ses observations dites vraies)
+    expect(checked).toBeGreaterThan(300)
+    expect(own).toBeGreaterThan(80)
+    expect(scenes).toBeGreaterThan(25)
   })
 
   it('h. « ça suffit », « ce n’est qu’un indice », « quel test l’exclut ? » : seulement ce que la fiche prouve', () => {
@@ -984,18 +1134,17 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     for (const [k, n] of Object.entries(seenAnswers)) expect(n, k).toBeGreaterThan(0)
   })
 
-  it('h. le Mimic : rien n’est dit faux pour lui hors de sa fiche, et il n’est jamais l’entité proche', () => {
+  it('h. le Mimic : rien n’est dit faux pour lui, et il n’est jamais l’entité proche', () => {
     const mimic = getGhost(MIMIC)!
     const mine = of(mimic).flatMap((c) => c.views)
     expect(mine.length).toBeGreaterThan(60)
     for (const v of mine) {
-      // ses tests, ses observations, ses questions rédigées, et les vrai ou faux tirés de sa seule fiche : aucune entité
-      // proche, aucun signe d'une autre fiche jugé pour lui
-      expect(['T3a', 'T3b', 'T4', 'T6', 'T8', 'auth'], v.q.id).toContain(v.type)
+      // ses tests, ses observations, ses questions rédigées : aucune entité proche, aucun signe d'une autre fiche jugé
+      // pour lui, aucun vrai ou faux
+      expect(['T3a', 'T3b', 'T4', 'T8', 'auth'], v.q.id).toContain(v.type)
       expect(v.partner, v.q.id).toBeNull()
       expect(v.about.id, v.q.id).toBe(MIMIC)
       expect(namedIn(v.q, mimic), v.q.id).toHaveLength(0)
-      if (v.type === 'T6' && v.q.correct[0] === SOLO_ANSWERS.trueFalse.false) expect(v.q.id).toMatch(/^q:vf:the-mimic:the-mimic:E\d+$/u)
     }
     for (const v of all) {
       if (v.x.id === MIMIC) continue
@@ -1005,10 +1154,7 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     }
     // et dans toute la réserve, pas seulement dans le corpus
     for (const g of GHOSTS) for (const s of soloSupply(g, GHOSTS)) if (g.id !== MIMIC) expect(s.id.split(':').slice(2), s.id).not.toContain(MIMIC)
-    for (const s of soloSupply(mimic, GHOSTS)) {
-      expect(['T3a', 'T3b', 'T4', 'T6', 'T8', 'auth'], s.id).toContain(s.type)
-      if (s.type === 'T6') expect(s.id, s.id).toMatch(/^q:vf:the-mimic:the-mimic:/u)
-    }
+    for (const s of soloSupply(mimic, GHOSTS)) expect(['T3a', 'T3b', 'T4', 'T8', 'auth'], s.id).toContain(s.type)
   })
 
   /* ---------- i. le tirage ---------- */
@@ -1028,7 +1174,7 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     // Les plafonds laissent de la marge à une machine chargée (toute la suite en parallèle) : la médiane garde le sien,
     // le 95e centile passe de 250 à 400 ms, deux fois et demie la mesure comme avant
     expect(median, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(100)
-    expect(p95, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(P95_MS)
+    expect(p95, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(400)
   }, 60_000)
 
   /* ---------- j. buildQuiz ---------- */
@@ -1109,8 +1255,11 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     expect(known[0].known).toBe(true)
     expect(known[0].facts).toEqual(['cadence'])
     // une entité sans table : aucun objet à distinguer
-    expect(soloFacets('spirit')).toEqual([])
-    expect(soloFacetsOf('spirit', 'Attend 180 s après un encens')).toEqual([])
+    expect(soloFacets('phantom')).toEqual([])
+    expect(soloFacetsOf('phantom', 'Disparaît quand on la prend en photo')).toEqual([])
+    // l'Esprit a sa table depuis le 18 novembre 2026 : le délai après un encens, et le test du double encens
+    expect(soloFacets('spirit')).toEqual(['encens'])
+    expect(soloFacetsOf('spirit', 'Attend 180 s après un encens')[0].facts).toEqual(['délai'])
     // les lignes des fiches dont la copie tire ses questions (signes, observations, tests, questions rédigées)
     const unrecognised: string[] = []
     for (const g of GHOSTS) {
@@ -1291,7 +1440,8 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
         const l = (tag[0] === 'B' ? d.x.behaviors : d.x.abilities)[rank]
         expect(l.zeroEvidence, d.q.id).toBe(true)
         expect(within(d.q.quote!, l.text), `${d.q.id} : « ${d.q.quote} »`).toBeGreaterThanOrEqual(0.8)
-        expect(within(l.text, d.q.quote!), `${d.q.id} : la ligne n’est pas citée en entier`).toBeGreaterThanOrEqual(0.8)
+        // en entier, hors un aparté sur une preuve (« (impossible en revanche de lancer le livre d'écriture) », le Poltergeist)
+        expect(within(withoutEvidenceAsides(l.text), d.q.quote!), `${d.q.id} : la ligne n’est pas citée en entier`).toBeGreaterThanOrEqual(0.8)
         expect(TRUE_OF_ALL.test(d.q.quote!), `${d.q.id} : « ${d.q.quote} »`).toBe(false)
       }
     }
@@ -1435,14 +1585,13 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
     expect(opening / having).toBeGreaterThan(0.75)
   }, 120_000)
 
-  it('les énoncés et les corrigés : la Dayan « si tu bouges près d’elle », le Revenant sans « elle… il », aucun corrigé rédigé sur les preuves', () => {
+  it('les énoncés et les corrigés : la Dayan « si tu bouges près d’elle », aucun corrigé rédigé sur les preuves', () => {
     const dayan = supply.filter((d) => d.q.id === 'q:spd:dayan:2.25')
     expect(dayan.length).toBeGreaterThan(0)
     for (const d of dayan) expect(d.q.prompt.replace(/[\u00a0\u202f]/gu, ' ')).toContain('si tu bouges près d’elle')
-    // (son test d'élimination, jugé en vrai ou faux depuis que l'observation n'a plus que deux réponses)
-    const revenant = supply.filter((d) => d.q.id === 'q:vf:revenant:revenant:E0')
-    expect(revenant.length).toBeGreaterThan(0)
-    for (const d of revenant) expect(d.q.quote).not.toMatch(/(?<!\p{L})il ralentit/u)
+    // (le test d'élimination du Revenant, dit comme une scène, mêlait « elle » et « il » : précédé de sa mise en place,
+    // il ne se pose plus ni en observation ni en vrai ou faux)
+    expect(supply.filter((d) => /^q:(?:vf|constat):revenant:revenant:E0$/u.test(d.q.id))).toHaveLength(0)
     // le corrigé d'une question rédigée ne parle pas des preuves ; sauf celui du Mimic, sur ses orbes à 0 preuve
     for (const d of byType('auth')) if (d.x.id !== MIMIC) expect(mentionsEvidence(d.q.explain), `${d.q.id} : ${d.q.explain}`).toBe(false)
   })

@@ -1473,7 +1473,8 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         sizes.push(qs.length)
         // dix questions au plus : une fiche courte donne une copie plus courte, jamais une question sur une autre entité
         expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
-        // (le Mimic, sans ses questions rédigées : deux tests, et une observation par sorte de scène, voir solo.ts)
+        // (sans leurs questions rédigées, les fiches les plus courtes descendent à deux questions : l'Esprit, le Goryo,
+        // et le Mimic, qui n'a ni nombres ni signes à départager)
         expect(qs.length, g.id).toBeGreaterThanOrEqual(2)
         expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
         for (const q of qs) {
@@ -1482,20 +1483,21 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
           expect(soloType(q), q.id).not.toBeNull()
           expect(q.correct, q.id).toHaveLength(1)
           expect(q.choices.map((c) => c.id), q.id).toContain(q.correct[0])
-          // des noms pour seuls choix : seulement « de qui parle-t-on ? », entre X et une entité qu'on confond avec lui
-          if (!named(q)) continue
-          expect(soloType(q), q.id).toBe('T7b')
-          expect(q.choices, q.id).toHaveLength(2)
-          expect(q.choices.map((c) => c.id), q.id).toContain(g.id)
-          expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
+          // jamais des noms d'entités pour choix : ni entre quatre noms, ni entre deux (« de qui parle-t-on : X ou Y ? »,
+          // qui ne se pose plus depuis le 18 novembre 2026 : une question sur deux y portait sur Y)
+          expect(named(q), q.id).toBe(false)
+          expect(q.id, q.id).not.toMatch(/^q:duel:/u)
+          // et « tu observes ceci » ne cite que les observations de la fiche de X
+          if (q.id.startsWith('q:constat:')) expect(q.id, q.id).toMatch(new RegExp(`^q:constat:${g.id}:${g.id}:O\\d+$`, 'u'))
         }
       }
     }
-    // cinq questions environ, sans les questions rédigées (les thèmes par défaut) : plus aucun départage à l'envers
-    // (« à quoi reconnais-tu Y plutôt que X ? »), la copie reste courte plutôt que de parler d'une autre entité (les
-    // tailles par entité se mesurent dans solo.test.ts)
+    // cinq questions environ, sans les questions rédigées (les thèmes par défaut) : ni départage à l'envers (« à quoi
+    // reconnais-tu Y plutôt que X ? »), ni « de qui parle-t-on ? », ni scène d'une autre fiche, la copie reste courte
+    // plutôt que de parler d'une autre entité (mesuré le 18 novembre 2026 : 5,2 ; les tailles par entité se mesurent
+    // dans solo.test.ts)
     const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length
-    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(4.5)
+    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(5)
     for (const g of GHOSTS) for (const qs of solo.get(g.id)!) for (const q of qs) expect(q.id.startsWith('q:dist:') && q.id.split(':')[3] !== g.id, q.id).toBe(false)
     // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
     // celles dont les choix sont des noms d'entités ou nomment X
