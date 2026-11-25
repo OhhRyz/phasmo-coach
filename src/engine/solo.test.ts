@@ -308,7 +308,12 @@ const UNDER_FIVE = 520
  */
 const PAIRS_FLOOR = 6000
 const COMPOSED_FLOOR = 1200
-const CHAINED_CEILING = 0.12
+const CHAINED_CEILING = 0.2
+/** La valeur standard, là où elle est proposée : bonne réponse 85 fois sur 100 au plus, mauvaise réponse 100 fois au moins (mesuré le 25 novembre 2026 : voir le verrou c.). */
+const STANDARD_WON = 0.85
+const STANDARD_WRONG = 100
+/** Une entité « normale » : sa valeur standard est demandée dans au moins 85 de ses premières copies sur 100. */
+const STANDARD_ASKED = 0.85
 const WRONG_SIGNS_FLOOR = 1800
 /** Les fiches qui ont un test d'élimination à citer en une phrase, sans preuve : leur réserve a de quoi poser un vrai ou faux. */
 const JUDGING: readonly string[] = ['wraith', 'phantom', 'banshee', 'jinn', 'mare', 'shade', 'hantu', 'goryo', 'onryo', 'raiju', 'deogen', 'thaye']
@@ -497,6 +502,8 @@ const at = (v: View, id: string) => [v.q.choices.findIndex((c) => c.id === id)]
  * courtes ou de simples indices détaillés s'ajoutent aux fiches.
  */
 const QUOTE_LENGTH_EDGE = 14
+const SHORTEST = 'la réponse la plus courte'
+const LONGEST = 'la réponse la plus longue'
 /** Ceux qui jouent toutes les questions : le hasard plus deux points, sans marge. */
 const EVERY_QUESTION: Record<string, Player> = {
   'la réponse la plus longue': (v) => extreme(v, 1),
@@ -671,6 +678,16 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +2,0)`)
       expect(s.got, `${name} : ${say(s)}`).toBeLessThanOrEqual(ceiling(s, true))
     }
+    // Les questions en nombres, à part : la valeur standard s'y demande à chaque entité (voir SOLO_STANDARD, solo.ts),
+    // et « 1,7 m/s » s'écrit plus court que « 1,53 m/s ». Les quatre réponses ont donc la même longueur (voir le
+    // verrou « des réponses de même forme »), et ni la plus courte ni la plus longue n'y gagne rien
+    const numeric = all.filter((v) => NUMERIC.test(v.q.id))
+    expect(numeric.length).toBeGreaterThan(800)
+    for (const name of [SHORTEST, LONGEST]) {
+      const s = play(numeric, EVERY_QUESTION[name])
+      measure(`c. ${name}, sur les nombres : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +2,0)`)
+      expect(s.got, `${name}, sur les nombres : ${say(s)}`).toBeLessThanOrEqual(ceiling(s, true))
+    }
     for (const [name, player] of Object.entries(SOME_QUESTIONS)) {
       const s = play(all, player)
       // (une seule réponse qui souffle X : il en reste peu, et tant mieux ; les autres joueurs ont des centaines de questions)
@@ -754,13 +771,57 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     measure(`c. sur quatre phrases, la bonne est la plus longue (ou l’une des plus longues) : ${share.toFixed(1)} % de ${four.length}`)
     expect(share, `${share.toFixed(1)} % de ${four.length}`).toBeGreaterThanOrEqual(15)
     expect(share, `${share.toFixed(1)} % de ${four.length}`).toBeLessThanOrEqual(35)
-    // partout où la valeur standard est l'une des réponses, questions rédigées comprises (« À partir de quel seuil un Goryo peut-il chasser ? »)
-    for (const value of ['50\u00a0%', '1,7\u00a0m/s']) {
-      const shown = all.filter((v) => v.q.choices.some((c) => c.label === value))
-      const won = shown.filter((v) => v.right.label === value)
+    // La valeur standard (« 50 % », « 1,7 m/s ») se demande à toute entité qui l'a : c'est un fait de sa fiche, et le
+    // plus simple à retenir (les cases « Normales » du Codex). Elle est donc souvent la bonne réponse là où elle est
+    // proposée : deux entités sur trois sont « normales ». Ce qui reste verrouillé : elle se propose aussi comme
+    // mauvaise réponse (sinon « 50 % est là, donc c'est 50 % » gagnerait à coup sûr), et pas plus souvent bonne que
+    // ce qui se mesure aujourd'hui (STANDARD_WON)
+    // (« 1,70 m/s » : la vitesse standard quand les quatre réponses s'alignent sur deux décimales)
+    for (const [value, is] of [
+      ['50 %', /^50\u00a0%$/u],
+      ['1,7 m/s', /^1,70?\u00a0m\/s$/u],
+    ] as const) {
+      const shown = all.filter((v) => v.q.choices.some((c) => is.test(c.label)))
+      const won = shown.filter((v) => is.test(v.right.label))
       measure(`c. « ${value} » proposé ${shown.length} fois, bonne réponse ${won.length} fois (${((100 * won.length) / Math.max(1, shown.length)).toFixed(1)} %)`)
-      expect(shown.length, value).toBeGreaterThanOrEqual(20)
-      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.4)
+      expect(shown.length, value).toBeGreaterThanOrEqual(200)
+      expect(shown.length - won.length, `${value} : proposé comme mauvaise réponse`).toBeGreaterThanOrEqual(STANDARD_WRONG)
+      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(STANDARD_WON)
+    }
+  })
+
+  it('c. des réponses de même forme aux questions en nombres : quatre valeurs de même longueur (« 1,70 m/s » à côté de « 1,53 m/s »), pour que la vitesse standard ne se repère pas à sa longueur', () => {
+    const numeric = all.filter((v) => NUMERIC.test(v.q.id))
+    expect(numeric.length).toBeGreaterThan(800)
+    for (const v of numeric) expect(new Set(v.q.choices.map((c) => c.label.length)).size, `${v.q.id} : ${v.q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
+    // et sur toute la réserve : chaque question en nombres de chaque fiche, à vingt tirages
+    let drawn = 0
+    for (const x of GHOSTS) {
+      for (const s of soloSupply(x, GHOSTS).filter((k) => NUMERIC.test(k.id))) {
+        for (let r = 1; r <= 20; r++) {
+          const q = soloQuestion(x, GHOSTS, s.id, createRng(r * 7919 + 11))
+          if (!q) continue
+          drawn++
+          expect(new Set(q.choices.map((c) => c.label.length)).size, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
+        }
+      }
+    }
+    expect(drawn).toBeGreaterThan(1000)
+  })
+
+  it('c. une entité « normale » se voit demander ce qui la rend normale : sa vitesse (1,7 m/s) et son seuil (50 %) sont dans presque toutes ses copies', () => {
+    // Le Codex range ces entités dans ses cases « Normales » : le savoir est un fait de leur fiche, et la question la
+    // plus simple de la copie. (Jusqu'au 25 novembre 2026, la valeur standard ne se demandait que 8 fois sur 100.)
+    const first = corpus.filter((c) => !c.seen)
+    for (const [value, is, standard] of [
+      ['1,7 m/s', /^1,70?\u00a0m\/s$/u, (x: Ghost) => x.speed.min === 1.7 && !x.speed.isRange && x.id !== MIMIC],
+      ['50 %', /^50\u00a0%$/u, (x: Ghost) => x.huntSanity.normal === 50 && x.id !== MIMIC],
+    ] as const) {
+      const mine = first.filter((c) => standard(c.x))
+      const asked = mine.filter((c) => c.views.some((v) => is.test(v.right.label)))
+      measure(`c. « ${value} » demandé dans ${asked.length} premières copies sur ${mine.length} des entités qui l’ont (${((100 * asked.length) / mine.length).toFixed(1)} %)`)
+      expect(mine.length, value).toBeGreaterThan(200)
+      expect(asked.length / mine.length, `${value} : ${asked.length}/${mine.length}`).toBeGreaterThanOrEqual(STANDARD_ASKED)
     }
   })
 
@@ -953,9 +1014,12 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       if (again > c.views.length / 2) beyondHalf++
     }
     measure(`g. « Encore 10 », par fait : ${((100 * sum) / chained).toFixed(0)} % de la copie en moyenne reprend un fait de la précédente ; ${beyondHalf} copies sur ${chained} en reprennent plus de la moitié`)
-    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.4)
+    // (0,40 avant le 25 novembre 2026 : la vitesse et le seuil standard, demandés à chaque copie, reviennent d'une copie à la suivante)
+    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.45)
     // Un signe déjà demandé compte aussi sous son autre forme (« lequel de ces signes… », puis « vrai ou faux », voir
-    // sameSign dans solo.ts). Mesuré : 40 copies sur 444
+    // sameSign dans solo.ts). Mesuré : 74 copies sur 444 (40 avant le 25 novembre 2026 : la vitesse et le seuil
+    // standard, demandés à chaque copie, reviennent forcément d'une copie à la suivante ; la page ne propose pas
+    // encore « Encore 10 », ce chemin ne sert qu'aux tests)
     expect(beyondHalf / chained, `${beyondHalf} copies sur ${chained} reprennent plus de la moitié des faits de la précédente`).toBeLessThanOrEqual(CHAINED_CEILING)
     const mix = new Map<string, number>()
     for (const v of all) mix.set(v.type, (mix.get(v.type) ?? 0) + 1)
@@ -1401,6 +1465,27 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       }
     }
     expect(seen).toBeGreaterThan(0)
+    // « peut chasser à N % » : la réserve échantillonnée ne tire que rarement ce signe face à une entité qui chasse tôt
+    // (9 fois sur 44 000 mauvaises réponses sans le garde-fou, toutes face au Thayé). On relit donc, pour chaque entité
+    // qui chasse au-dessus de 50 %, chaque question « lequel de ces signes… ? » sur 120 tirages
+    let early = 0
+    for (const x of GHOSTS) {
+      const top = Math.max(...thresholds(x))
+      if (top <= 50) continue
+      for (const s of soloSupply(x, GHOSTS).filter((k) => k.type === 'T2')) {
+        for (let r = 1; r <= 120; r++) {
+          const q = soloQuestion(x, GHOSTS, s.id, createRng(r * 104_729 + 3))
+          if (!q) continue
+          for (const c of q.choices) {
+            if (q.correct.includes(c.id)) continue
+            early++
+            const label = c.label.replace(/[\u00a0\u202f]/gu, ' ')
+            for (const m of label.matchAll(/(?:peut|peuvent)\s+chasser[^.;·]*?(\d+)\s?%/giu)) expect(Number(m[1]), `${s.id} : « ${label} » face à ${x.name}, qui chasse jusqu’à ${top} %`).toBeGreaterThan(top)
+          }
+        }
+      }
+    }
+    expect(early).toBeGreaterThan(5000)
     const aswang = getGhost('aswang')!
     expect(nearSpeed('Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse', aswang)).toBe(true)
     // la phrase du Revenant porte ses vitesses : elle n'est plus vraie de toute entité qui accélère en ligne de vue
@@ -1820,7 +1905,7 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
         qs.forEach((q, i) => {
           if (soloType(q) !== 'T1') return
           for (const c of q.choices.filter((k) => q.correct.includes(k.id))) {
-            for (const m of plain(c.label).matchAll(/(?<![\d,])(\d+),0 m\/s/gu)) {
+            for (const m of plain(c.label).matchAll(/(?<![\d,])(\d+),00? m\/s/gu)) {
               const said = new RegExp(`(?<![\\d,])${m[1]} m/s`, 'u')
               for (const before of qs.slice(0, i)) {
                 const shown = plain([before.prompt, before.quote ?? '', before.explain, ...before.choices.filter((k) => before.correct.includes(k.id)).map((k) => k.label)].join(' '))

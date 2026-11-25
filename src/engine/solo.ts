@@ -1,6 +1,6 @@
 import type { Ghost, Mechanics } from '../data/types'
 import { de, le, mentionsEvidence, MIMIC, namesGhost, reverseTells, tellNumbers, testNeedsEvidence, TESTS_PER_GHOST, thresholds, withoutEvidenceAsides, zeroTests } from './cards'
-import { fr, NNBSP, redactGhostName as redact } from './format'
+import { fr, NBSP, NNBSP, redactGhostName as redact } from './format'
 import {
   asksOf,
   cap,
@@ -1096,13 +1096,15 @@ function withoutSource(text: string): string {
 
 /**
  * Les chances qu'une entité au seuil (ou à la vitesse) standard ait sa valeur standard demandée dans une copie :
- * 22 entités chassent d'habitude à 50 %, 20 à 1,7 m/s. Posée plus souvent, la valeur standard, toujours parmi
- * les choix, gagnerait d'office ; la copie préfère les nombres propres à l'entité. Aussi haut que le permettent les
- * deux verrous (la valeur standard n'est la bonne réponse que 40 fois sur 100 au plus quand elle est proposée) :
- * mesuré, « 50 % » 34 fois sur 100 dans les copies entières (les questions rédigées la demandent aussi), « 1,7 m/s »
- * 32 fois sur 100 parmi les questions en nombres (44 fois à 0,12 : trop).
+ * toujours, depuis le 25 novembre 2026. Savoir qu'une entité est « normale » (1,7 m/s, 50 %) est un fait de sa
+ * fiche, le plus simple à retenir, et celui que le Codex range dans ses cases « Normales ». Rationnée à 8 copies sur
+ * 100 (pour que « 50 % », presque toujours parmi les choix, ne gagne pas d'office), la question manquait aux copies
+ * des entités normales, qui tombaient à trois ou quatre questions. Ce qui garde la question honnête : ses quatre
+ * réponses ont la même forme (voir numberSeeds), et la valeur standard se propose aussi comme mauvaise réponse aux
+ * entités qui ne l'ont pas (verrous c. de solo.test.ts). `authored` : une question rédigée dont la bonne réponse est
+ * la valeur standard passe de même à chaque copie (une sur deux auparavant).
  */
-const SOLO_STANDARD = { san: 0.08, spd: 0.08, authored: 0.5 } as const
+const SOLO_STANDARD = { san: 1, spd: 1, authored: 1 } as const
 /** Une question rédigée dont la bonne réponse est la valeur standard elle-même : elle passe une copie sur deux (`authored`). */
 const STANDARD_ANSWER = /^(?:50\s?%|1,7\s?m\/s)$/u
 
@@ -1186,7 +1188,17 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
         make: (rng) => {
           const q = numberQuestion(a, ctxFor(x, all, rng))
           const lean = q && leanNumber(details, a.value, kind === 'san' ? '%' : 'm/s')
-          return wrap(q && lean ? { ...q, explain: lean } : q)
+          const b = wrap(q && lean ? { ...q, explain: lean } : q)
+          // Des réponses de même forme : « 1,7 m/s » parmi « 1,53 m/s », « 2,25 m/s » et « 1,96 m/s » se reconnaîtrait
+          // à sa longueur (qui prenait toujours la réponse la plus courte gagnait 8 points sur le hasard aux
+          // questions en nombres, depuis que la vitesse standard se demande à chaque entité). Quand les quatre
+          // vitesses ne s'écrivent pas avec autant de chiffres, elles s'affichent toutes avec deux décimales
+          // (« 1,70 m/s ») : les valeurs tirées, leur rang et ce que la question demande ne changent pas
+          if (b && kind === 'spd' && new Set(b.q.choices.map((c) => c.label.length)).size > 1) {
+            const valueOf = (c: { id: string }) => (b.q.correct.includes(c.id) ? a.value : Number(c.id.slice(2)))
+            b.q = { ...b.q, choices: b.q.choices.map((c) => ({ ...c, label: `${valueOf(c).toFixed(2).replace('.', ',')}${NBSP}m/s` })) }
+          }
+          return b
         },
       })
     }

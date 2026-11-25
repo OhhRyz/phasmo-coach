@@ -1258,7 +1258,9 @@ describe('des réponses de même forme', () => {
       const q = find(getGhost(id.split(':')[2])!, id)
       expect(q, id).toBeDefined()
       expect(q!.prompt, id).toBe(prompt)
-      expect(q!.choices.find((c) => q!.correct.includes(c.id))!.label, id).toBe(value)
+      // (une vitesse s'affiche avec deux décimales, « 2,50 m/s », quand les quatre réponses d'une copie sur une entité
+      // ne s'écrivent pas avec autant de chiffres : la valeur est la même)
+      expect(valueOf(q!.choices.find((c) => q!.correct.includes(c.id))!.label), id).toBe(valueOf(value))
     }
     for (const q of [...questions, ...extra]) {
       const kind = /^q:san:|^q:card:g:[^:]+:san$/u.test(q.id) && q.prompt.startsWith('Quel est') ? 'san' : /^q:spd:|^q:card:g:[^:]+:spd$/u.test(q.id) && q.prompt.startsWith('Quelle est') ? 'spd' : null
@@ -1281,7 +1283,7 @@ describe('des réponses de même forme', () => {
     expect(right('spirit', 'san')).toBe('50\u00a0%')
     expect(right('demon', 'san')).toBe('70\u00a0%')
     expect(right('mare', 'san')).toBe('60\u00a0%')
-    expect(right('spirit', 'spd')).toBe('1,7\u00a0m/s')
+    expect(right('spirit', 'spd')).toMatch(/^1,70?\u00a0m\/s$/u)
     expect(right('aswang', 'spd')).toBe('1,53\u00a0m/s')
     // le Yokai chasse jusqu'à 80 % quand on parle : « 80 % » n'est jamais une mauvaise réponse pour lui
     for (const q of [...questions, ...extra].filter((x) => x.id === 'q:san:yokai')) expect(q.choices.map((c) => c.label), q.id).not.toContain('80\u00a0%')
@@ -1511,15 +1513,23 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
     }
   }, 60_000)
 
-  it('« Me tester sur X » : ni « 50 % », ni « 1,7 m/s » ne gagnent d’office', () => {
+  it('« Me tester sur X » : la valeur standard (50 %, 1,7 m/s) se demande à l’entité qui l’a, et se propose aussi comme mauvaise réponse aux autres', () => {
+    // Depuis le 25 novembre 2026, la copie sur une entité demande sa vitesse et son seuil même quand ils sont
+    // standards : savoir qu'une entité est « normale » est un fait de sa fiche (les cases « Normales » du Codex), et
+    // la question la plus simple de la copie. La valeur standard est donc souvent la bonne réponse là où elle est
+    // proposée (deux entités sur trois sont normales) ; ce qui reste verrouillé : elle se propose aussi comme
+    // mauvaise réponse, et les quatre réponses ont la même forme (solo.test.ts, verrous c.). Le quiz général, lui,
+    // garde sa règle (la valeur standard y reste rare, voir KEEP_STANDARD_SANITY).
     const all = [...solo.values()].flat(2)
-    for (const value of ['50\u00a0%', '1,7\u00a0m/s']) {
-      const shown = all.filter((q) => q.choices.some((c) => c.label === value) && /^q:(?:san|spd):/u.test(q.id))
-      const won = shown.filter((q) => rightOf(q).label === value)
-      // la copie préfère les nombres propres à l'entité : la valeur standard se propose moins souvent qu'avant
-      expect(shown.length, value).toBeGreaterThan(20)
-      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.4)
+    for (const value of [/^50\u00a0%$/u, /^1,70?\u00a0m\/s$/u]) {
+      const shown = all.filter((q) => q.choices.some((c) => value.test(c.label)) && /^q:(?:san|spd):/u.test(q.id))
+      const won = shown.filter((q) => value.test(rightOf(q).label))
+      expect(shown.length, String(value)).toBeGreaterThan(200)
+      expect(shown.length - won.length, `${value} : proposé comme mauvaise réponse`).toBeGreaterThanOrEqual(60)
+      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.88)
     }
+    // et quatre réponses de même longueur à chaque question en nombres
+    for (const q of all) if (/^q:(?:san|spd):/u.test(q.id)) expect(new Set(q.choices.map((c) => c.label.length)).size, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
   })
 
   it('une mauvaise réponse raccourcie garde les nombres qui la rendaient fausse', () => {
