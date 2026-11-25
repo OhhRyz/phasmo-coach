@@ -63,7 +63,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Lance un chrono dès que l'entité a été encensée. Si elle chasse avant 180 s, ce n'est pas un Esprit."
+      "text": "Lance un chrono dès que l'entité a été encensée. Si elle chasse avant 180 s (chasse naturelle, sans objet maudit), ce n'est pas un Esprit."
     }
   ],
   "confusions": [

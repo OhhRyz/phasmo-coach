@@ -77,7 +77,7 @@
   ],
   "eliminationTests": [
     {
-      "text": "Si l'entité tente de chasser au-dessus de 40 % de santé mentale moyenne, ce n'est pas un Deogen."
+      "text": "Si l'entité tente de chasser au-dessus de 40 % de santé mentale moyenne (chasse naturelle, sans objet maudit), ce n'est pas un Deogen."
     }
   ],
   "confusions": [

@@ -207,7 +207,7 @@
         "Sur la porte d'entrée du lieu"
       ],
       "answer": 1,
-      "explain": "La capacité laisse un EMF 2 (ou 5) au disjoncteur, pas là où se trouve l'entité ou le joueur."
+      "explain": "La capacité laisse un EMF 2 au disjoncteur, pas là où se trouve l'entité ou le joueur."
     },
     {
       "q": "Disjoncteur coupé, comment chasse un Djinn ?",

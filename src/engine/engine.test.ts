@@ -1473,9 +1473,9 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         sizes.push(qs.length)
         // dix questions au plus : une fiche courte donne une copie plus courte, jamais une question sur une autre entité
         expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
-        // (sans leurs questions rédigées, les fiches les plus courtes descendent à deux questions : l'Esprit, le Goryo,
-        // et le Mimic, qui n'a ni nombres ni signes à départager)
-        expect(qs.length, g.id).toBeGreaterThanOrEqual(2)
+        // (sans leurs questions rédigées, les fiches les plus courtes descendent à une question : le Mimic, qui n'a ni
+        // nombres ni signes et ne pose qu'un « est-ce que ça suffit ? » par copie, et parfois le Poltergeist et l'Obake)
+        expect(qs.length, g.id).toBeGreaterThanOrEqual(1)
         expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
         for (const q of qs) {
           // toutes s'inscrivent sur X, et chacune est d'une sorte connue de la copie
@@ -1492,12 +1492,12 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         }
       }
     }
-    // cinq questions environ, sans les questions rédigées (les thèmes par défaut) : ni départage à l'envers (« à quoi
-    // reconnais-tu Y plutôt que X ? »), ni « de qui parle-t-on ? », ni scène d'une autre fiche, la copie reste courte
-    // plutôt que de parler d'une autre entité (mesuré le 18 novembre 2026 : 5,2 ; les tailles par entité se mesurent
-    // dans solo.test.ts)
+    // trois questions environ, sans les questions rédigées (les thèmes par défaut) : ni départage, ni « de qui
+    // parle-t-on ? », ni scène ou signe d'une autre fiche à juger, ni « quel test confirme X ? », et un seul « est-ce
+    // que ça suffit ? » ; la copie reste courte plutôt que de parler d'une autre entité ou de redemander un fait
+    // (mesuré le 19 novembre 2026 : 3,26 ; 5,2 la veille ; les tailles par entité se mesurent dans solo.test.ts)
     const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length
-    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(5)
+    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(3)
     for (const g of GHOSTS) for (const qs of solo.get(g.id)!) for (const q of qs) expect(q.id.startsWith('q:dist:') && q.id.split(':')[3] !== g.id, q.id).toBe(false)
     // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
     // celles dont les choix sont des noms d'entités ou nomment X
@@ -1585,7 +1585,9 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       expect(q.prompt.startsWith(`Sans preuve, à quoi reconnais-tu ${le(g.name)} plutôt que `), q.id).toBe(true)
       for (const c of q.choices) expect(namesGhost(c.label, g), `${q.id} : ${c.label}`).toBe(true)
     }
-    expect(dist).toBeGreaterThan(120)
+    // (les départages viennent des séries sur plusieurs entités et des cartes : une copie sur une seule entité n'en
+    // pose plus depuis le 19 novembre 2026. Mesuré : 94)
+    expect(dist).toBeGreaterThan(70)
   })
 
   it('aucune réponse composée ne commence par « Il » ou « Elle » : on ne saurait pas de qui elle parle', () => {
@@ -1602,17 +1604,19 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
 
   it('le Mimic n’est jamais un nom parmi les choix, et ne se trahit ni par « imitée » ni par « copie »', () => {
     // il copie tout : jamais une mauvaise réponse, il serait toujours la bonne. Ni en série, ni en révision
-    let own = 0
     for (const q of composed) {
       if (named(q)) expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
       expect(q.id, q.id).not.toMatch(/^q:card:g:the-mimic:/u)
       if (q.ghostId !== 'the-mimic') continue
-      own++
-      // ses questions à lui (ses tests) : des phrases, et rien qui souffle « Mimic » à qui lit l'anglais
+      // une question composée sur lui : une phrase, et rien qui souffle « Mimic » à qui lit l'anglais
       expect(named(q), q.id).toBe(false)
       expect(`${q.prompt} ${q.quote ?? ''}`, q.id).not.toMatch(/imit|copi/iu)
     }
-    expect(own).toBeGreaterThan(0)
+    // ses questions à lui, dans sa copie (ses tests et ses observations : « est-ce que ça suffit ? ») : jamais des
+    // noms d'entités pour choix
+    const own = solo.get('the-mimic')!.flat()
+    expect(own.length).toBeGreaterThan(0)
+    for (const q of own) expect(named(q), q.id).toBe(false)
     // les séries sur plusieurs entités ne le proposent pas non plus
     for (let seed = 1; seed <= 20; seed++) {
       for (const q of buildQuiz({ topics: DEFAULT_TOPICS, ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 30, rng: createRng(seed * 13) })) {
