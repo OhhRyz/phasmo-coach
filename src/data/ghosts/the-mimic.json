@@ -169,8 +169,8 @@
       "q": "Le Mimic peut-il changer de vitesse d'une chasse à l'autre ?",
       "choices": [
         "Oui, il prend à chaque fois celle de l'entité imitée",
-        "Non, il garde la vitesse standard d'une entité",
-        "Oui, mais il reste plus lent qu'une entité standard",
+        "Non, il imite l'entité mais garde sa propre vitesse",
+        "Oui, mais il reste plus lent que l'entité imitée",
         "Non, mais il est un peu plus rapide que la normale"
       ],
       "answer": 0,
@@ -210,7 +210,7 @@
       "explain": "Il change de comportement toutes les 30 s à 2 min, d'où un comportement incohérent au fil de la partie."
     },
     {
-      "q": "Entre quelles bornes de santé mentale moyenne le Mimic peut-il chasser ?",
+      "q": "Entre quelles bornes le seuil de chasse du Mimic peut-il se situer ?",
       "choices": [
         "De 10 % à 100 %",
         "De 35 % à 70 %",

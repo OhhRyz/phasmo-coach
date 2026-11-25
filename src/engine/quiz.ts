@@ -718,9 +718,10 @@ const sanityAsks = perGhost((g): NumberAsk[] => {
 
 /**
  * La vitesse de base du Revenant (1,0 m/s) n'a rien d'« habituel » pour qui le fuit : dès qu'il détecte un joueur, il
- * est à 3,0 m/s. L'énoncé dit quand elle vaut, comme le Codex (« lent tant qu'il ne te détecte pas »).
+ * est à 3,0 m/s. L'énoncé dit quand elle vaut, comme le Codex (« lent tant qu'il ne te détecte pas »). De même la
+ * Dayan : 1,7 m/s ne vaut qu'à plus de 10 m de tout joueur (son seuil habituel le dit déjà : « loin d'elle »).
  */
-const BASE_SPEED_WHEN: Readonly<Record<string, string>> = { revenant: 'tant qu’il ne détecte personne' }
+const BASE_SPEED_WHEN: Readonly<Record<string, string>> = { revenant: 'tant qu’il ne détecte personne', dayan: 'quand elle est loin de toi' }
 
 /** Les questions en nombres sur la vitesse d'une entité : l'habituelle, puis celles que son résumé cite sous condition. */
 const speedAsks = perGhost((g): NumberAsk[] => {
@@ -2177,6 +2178,22 @@ export function nearSpeed(text: string, o: Ghost): boolean {
   return cited.some((v) => [...speedValues(o)].some((w) => Math.abs(v - w) <= 0.1 + 1e-9))
 }
 
+/**
+ * Une distance ou une durée que cite le signe (« à moins de 4 m », « en moins de 20 s ») est-elle aussi dans les
+ * signes de o ? « A une chance d'éteindre aussitôt une lumière que tu allumes à moins de 4 m de l'entité » (le
+ * Cauchemar) face à l'Onryo, dont la flamme agit « à moins de 4 m » ; « Détecte tes déplacements : 10 m accroupi… »
+ * (le Kormos) face à la Dayan, dont tout se joue « à moins de 10 m » : la même mesure, et la mauvaise réponse se
+ * confond avec la bonne, ou paraît à moitié vraie (relevé le 25 novembre 2026). Pas les vitesses (voir nearSpeed).
+ */
+const MEASURE = /(?<![\d,])(\d+(?:,\d+)?)\s?(m|s)(?![\p{L}\d/])/gu
+const measuresOf = (text: string) => [...text.matchAll(MEASURE)].map((m) => `${m[1]} ${m[2]}`)
+const ownMeasures = new WeakMap<Ghost, ReadonlySet<string>>()
+export function sharesMeasure(text: string, o: Ghost): boolean {
+  let mine = ownMeasures.get(o)
+  if (!mine) ownMeasures.set(o, (mine = new Set([...o.keyTells, ...o.tells.filter((t) => t.zeroEvidence).map((t) => t.text)].flatMap(measuresOf))))
+  return measuresOf(text).some((v) => mine!.has(v))
+}
+
 /** L'énoncé d'une carte « Signe à reconnaître », et de signQuestion par défaut. */
 const SIGN_PROMPT = 'Quelle entité correspond à ce signe ?'
 /** Une carte « Signes clés » posée à l'envers (citation → entité) : un autre énoncé que celui des cartes « Signe à reconnaître ». */
@@ -2302,7 +2319,7 @@ export const SPEED_OR_SANITY = /m\/s|\bvitesse\b|\bseuil\b|ligne de vue|chass\p{
 /** Un signe clé gardé pour la révision : sans preuve, ni liste de preuves. */
 export const plainSign = (t: string) => !isEvidenceList(t) && !needsEvidence(t) && !mentionsEvidence(t)
 /** Un signe qui se lit seulement à la suite d'un autre (« Chasse suivante : il fonce droit sur ce joueur »). */
-export const NEEDS_CONTEXT = /^Chasse suivante\b|\bce joueur\b/u
+export const NEEDS_CONTEXT = /^Chasse suivante\b|\bce joueur\b|^Reprend(?!\p{L})|(?<!\p{L})est la suivante(?!\p{L})/u
 
 export interface Sign {
   text: string
@@ -2407,7 +2424,7 @@ export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string
         if (hintAlone(x, right, options.map((o) => o.label))) continue
         const fits = (chosen: readonly Option<Sign>[]) => {
           const labels = chosen.map((o) => o.label)
-          return apart(chosen) && !twinOf(right, labels) && !hintAlone(x, right, labels)
+          return apart(chosen) && !twinOf(right, labels) && !hintAlone(x, right, labels) && !oddOneOut(right, labels)
         }
         const wrong = matching(ctx.rng, right, options, 3, fits, ranks, true, hintNeed(x, right))
         if (!wrong) continue
@@ -2455,6 +2472,22 @@ export function twinOf(right: string, wrong: readonly string[]): boolean {
   return !starts.some((s, i) => s !== r && starts.indexOf(s) !== i)
 }
 
+/**
+ * Une réponse se remarque-t-elle à un détail que les marques (voir MARKS) ne guettent pas ? La seule à dire
+ * « jamais », ou la seule à ne pas le dire (« Ne coupe jamais… », « N'allume jamais… », « … jamais progressive » face à
+ * « Plus actif quand on parle près de lui ») ; ou trois mauvaises réponses qui commencent par le même mot (« En
+ * chasse, … », « En pleine chasse, … ») quand la bonne commence autrement (relevé le 25 novembre 2026). « jamais »
+ * n'est pas une marque : le résumé du seuil de l'Ombre (« 35 % · jamais dans la même pièce qu'un joueur ») serait
+ * alors le seul des résumés à la porter.
+ */
+const NEVER = /(?<!\p{L})jamais(?!\p{L})/iu
+const firstWord = (t: string) => t.toLocaleLowerCase('fr').match(/\p{L}+/u)?.[0] ?? ''
+export function oddOneOut(right: string, wrong: readonly string[]): boolean {
+  const never = [right, ...wrong].filter((l) => NEVER.test(l)).length
+  if (never === 1 || never === wrong.length) return true
+  return wrong.length > 1 && new Set(wrong.map(firstWord)).size === 1 && firstWord(wrong[0]) !== firstWord(right)
+}
+
 const apartCache = new WeakMap<Ghost, Map<boolean, (text: string, themes?: readonly Theme[]) => boolean>>()
 
 /**
@@ -2499,7 +2532,7 @@ export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle =
   const free = apartFrom(x)
   // « 1,5 ou 1,9 m/s » (les Jumeaux) face à l'Aswang, à 1,53 m/s : trop près pour être dit faux
   const out = distractorSigns(all, style)
-    .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x))
+    .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x) && !sharesMeasure(s.text, x))
     .flatMap((s) => [s.text, ...shortened(s.text).filter((v) => keepsSense(s.text, v) && !signFits(v, x, all))].map((label) => ({ value: s, label })))
   byGhost.set(`${style}|${x.id}`, out)
   return out

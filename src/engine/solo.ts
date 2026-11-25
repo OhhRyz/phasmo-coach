@@ -233,6 +233,8 @@ interface Seed {
   gate?: 'stdSan' | 'stdSpd' | 'stdAuth' | 'los'
   /** à essayer après les autres de sa sorte (un signe qui ne parle que de vitesse ou de seuil) */
   late?: boolean
+  /** à essayer avant les autres de sa sorte (un signe dont aucune autre question ne demande les valeurs, voir signSeeds) */
+  early?: boolean
   /** la citation jugée (vrai ou faux, « est-ce que ça suffit ? »), pour l'apparier à une citation de même longueur qui a l'autre réponse */
   text?: string
   /**
@@ -303,7 +305,7 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
   onryo: {
     flamme: [
       // sa capacité : une chasse à n'importe quelle santé mentale après trois flammes éteintes
-      ['trois flammes', /3e|(?<!\p{L})trois|3 flammes|troisième|n[’']importe quel|toute santé|80\s?%|capacité/iu],
+      ['trois flammes', /3e|(?<!\p{L})trois|3 flammes|(?<![\d,])3 fois|troisième|n[’']importe quel|toute santé|80\s?%|capacité/iu],
       // une flamme proche agit comme un crucifix, et passe avant lui
       ['comme un crucifix', /crucifix|4\s?m(?!\p{L})|au lieu de chasser|à la place|empêch/iu],
       ['seuil', /seuil|60\s?%|40\s?%|35\s?%/iu],
@@ -790,7 +792,11 @@ function parts(s: Stmt): { hard: string[]; soft: string[]; sort: (typeof SORTS)[
   const whole = keys.filter(isSoft)
   // une scène (un rapport de terrain, un test) cite des nombres pour l'exemple (« vers 60 % », « environ 1 m/s ») :
   // elle redit le fait de son objet quelles que soient ses valeurs, comme une phrase sans nombre
-  const valued = hard.length > 0 && !(s.item && SCENE_LINE.test(s.item))
+  // (chiffrée : par ses nombres. « Accélération instantanée, jamais progressive (pas d'accélération standard en ligne
+  // de vue) » n'en a aucun : la clé « ligne de vue » seule la faisait passer pour une phrase chiffrée, et le signe du
+  // Revenant se posait après le corrigé qui le donnait, « … il accélère immédiatement à 3,0 m/s », relevé le
+  // 25 novembre 2026)
+  const valued = hard.some((k) => /\d/u.test(k)) && !(s.item && SCENE_LINE.test(s.item))
   return { hard, soft: [...whole, ...whole.flatMap((k) => facetsOf(s.who, k, s.text))], sort: sortOf(!!s.key, valued) }
 }
 /** Une ligne de fiche qui décrit une scène : un rapport de terrain (`#O2`), un test de confirmation (`#C0`) ou d'élimination (`#E1`). */
@@ -1054,6 +1060,18 @@ const EARLY_HUNT =
   /(?:une|nouvelle) chasse (?:démarre|commence)|chass\p{L}*\s+(?:de nouveau\s+|naturellement\s+(?:\([^()]*\)\s+)?)?(?:avant|au-dessus|dans les)(?!\p{L})|tente de (?:chasser|lancer)|lance une chasse/iu
 const CURSED = /objets?\s+maudits?/iu
 const needsNoCurse = (line: string) => EARLY_HUNT.test(line) && !CURSED.test(line)
+
+/**
+ * « Seule entité capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée » (une capacité du
+ * Poltergeist) : la fiche réserve ce fait à X. Son test, lui, n'est qu'un indice (on ne sait jamais si l'entité est
+ * bien dans la pièce éclairée) : « Ce test suffit-il… ? Non » contredisait la ligne d'à côté, pour qui la connaît, et
+ * « Oui » était une réponse honnête (relevé le 25 novembre 2026). Un test ou une observation qui n'est pas décisif
+ * ne se pose donc pas quand une ligne de la fiche dit le même fait avec « Seule entité qui… », « Seule à… » (pas
+ * « une seule entité avec deux portées », les Jumeaux). Le même garde-fou que pour les signes (voir SAYS_ONLY).
+ */
+const ONLY_ONE = /(?<!\p{L})(?<!une\s)seule?s?\s+(?:entités?\s+(?:qui|capables?)|à\s+\p{L})/iu
+const onlyClaims = memo((x): string[] => [...x.keyTells, ...x.tells.map((t) => t.text), ...x.behaviors.map((t) => t.text), ...x.abilities.map((t) => t.text)].filter((t) => ONLY_ONE.test(t)))
+const reservedToX = (x: Ghost, all: Ghost[], scene: string) => onlyClaims(x, all).some((line) => echoes(line, scene))
 
 /** Les autres entités qu'un texte nomme. */
 const othersIn = (text: string, x: Ghost, all: readonly Ghost[]) => all.filter((o) => o.id !== x.id && namesGhost(text, o))
@@ -1341,7 +1359,9 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
   // (ses vitesses et ses seuils seulement : « à moins de 3 m » n'est pas une valeur qu'une question en nombres demande)
   const hardOf = (t: string) => keysOf(x.id, t).filter((k) => !isSoft(k) && /\|\d+(?:,\d+| %)$/u.test(k))
   const valued = new Set([
-    ...(['san', 'spd'] as const).flatMap((kind) => asksOf(kind, x).flatMap((a) => hardOf(kind === 'san' ? `${a.value} %` : `${mpsNumber(a.value)} m/s`))),
+    ...(['san', 'spd'] as const)
+      .filter((kind) => !(kind === 'san' && TARGET_SANITY.has(x.id)))
+      .flatMap((kind) => asksOf(kind, x).flatMap((a) => hardOf(kind === 'san' ? `${a.value} %` : `${mpsNumber(a.value)} m/s`))),
     ...x.quiz.filter((a) => a.answer >= 0 && a.answer < a.choices.length && bareValues(a.choices)).flatMap((a) => hardOf(a.choices[a.answer])),
   ])
   const askedElsewhere = (t: string) => {
@@ -1360,6 +1380,9 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
             topic: 'behavior' as const,
             width: 4 as const,
             late: SPEED_OR_SANITY.test(t) && askedElsewhere(t),
+            // le seul moyen de demander ce fait : il passe avant les autres signes, que des questions rédigées demandent aussi
+            // (le seuil de la Banshee, qui ne se demande pas en nombre, tient dans son signe « … la santé de sa cible »)
+            early: (SPEED_OR_SANITY.test(t) || (TARGET_SANITY.has(x.id) && /santé de sa cible/iu.test(t))) && !askedElsewhere(t),
             pre: () => askKeys({ who: x.id, text: t, key: true }),
             make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k), t, `g:${x.id}:tells`, true),
           },
@@ -1397,6 +1420,8 @@ function testSeeds(x: Ghost, all: Ghost[]): Seed[] {
     // « Oui, ce test suffit » : seulement d'un test qui tient seul (voir TOLD_APART) et, s'il conclut d'une chasse
     // partie trop tôt, qui dit « sans objet maudit »
     if (t.definitive && (!standsAlone(`${x.id}#C${t.i}`, afterConclusion(t, x), x, all) || needsNoCurse(t.text))) continue
+    // « Non, ce n'est qu'un indice » : jamais d'un fait que la fiche réserve à X (voir ONLY_ONE)
+    if (!t.definitive && reservedToX(x, all, t.body)) continue
     const cardId = cards.get(t.text)
     out.push({
       id: `q:suffit:${x.id}:${t.i}`,
@@ -1631,11 +1656,13 @@ function observationSeeds(x: Ghost, all: Ghost[]): Seed[] {
     const line = `${x.id}#O${o.i}`
     if (sure && (!standsAlone(line, `${o.text} ${o.why ?? ''}`, x, all) || needsNoCurse(o.text))) continue
     if (sure && !KEEPS_APART[line]?.test(o.text) && caveated.some((t) => echoes(o.text, t.body))) continue
+    // « Non, ce n'est qu'un indice » : jamais d'un fait que la fiche réserve à X (voir ONLY_ONE)
+    if (!sure && reservedToX(x, all, o.text)) continue
     const id = `q:constat:${x.id}:${x.id}:O${o.i}`
     const why = o.why ? ` ${o.why}` : ''
     const explain = sure
       ? `Oui, ça suffit${NNBSP}: sur la fiche ${de(x.name)}, cette observation est décisive.${why}`
-      : `Non${NNBSP}: sur la fiche ${de(x.name)}, c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'}, pas une confirmation.${why}`
+      : `Non${NNBSP}: c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'} ${de(x.name)}, pas une confirmation. À lui seul, il n’écarte pas les autres entités.${why}`
     const asked: Stmt = { who: x.id, text: o.text, item: `${x.id}#O${o.i}`, aspect: sure ? 'proof' : 'hint' }
     out.push({
       id,
@@ -1879,6 +1906,14 @@ const SHORT_SENTENCE = 30
 const NUMBER_SLOT = /[+−–-]?\d+(?:,\d+)?(?:ers?|res?|e|èmes?)?(?!\p{L})/gu
 const bareValues = (choices: readonly string[]) => new Set(choices.map((c) => c.replace(NUMBER_SLOT, '#').toLocaleLowerCase('fr').trim())).size === 1
 
+/** Une question rédigée dont la réponse est une vitesse (« 1,96 m/s ») ou un seuil de chasse (« 60 % »), et rien d'autre. */
+function valueGroup(a: Ghost['quiz'][number]): 'san' | 'spd' | undefined {
+  const right = a.choices[a.answer] ?? ''
+  if (!bareValues(a.choices)) return undefined
+  if (/\d\s?m\/s/u.test(right)) return 'spd'
+  return /\d\s?%/u.test(right) && /seuil|chass/iu.test(a.q) ? 'san' : undefined
+}
+
 function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
   x.quiz.forEach((a, i) => {
@@ -1904,6 +1939,10 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: a.choices.length as 2 | 3 | 4,
       // « À partir de quel seuil un Goryo peut-il chasser ? 50 % » : la valeur standard pour bonne réponse, une copie sur deux
       ...(STANDARD_ANSWER.test(a.choices[a.answer].trim()) ? { gate: 'stdAuth' as const } : {}),
+      // « À quelle vitesse chasse un Gallu enragé ? 1,96 m/s » : une question en nombres de plus, sous le même plafond
+      // que les autres (voir NUMBERS_MAX) ; elle venait en troisième, avec pour mauvaises réponses les deux vitesses
+      // que la copie venait de corriger (relevé le 25 novembre 2026)
+      ...(valueGroup(a) ? { group: valueGroup(a) } : {}),
       make: (rng) => {
         const q: Question = {
           id,
@@ -1928,6 +1967,10 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
         // corrigé se lit phrase par phrase et en entier : par ses objets comme par ses mots (voir sameSaid).
         const told = [asked, ...explain.split(SENTENCES), explain].map((text) => ({ who: x.id, text, aspect: 'any' as const }))
         const b = built(q, 'auth', [{ who: x.id, text: asked, aspect }], told)
+        // Ses mauvaises réponses aussi sont des valeurs : celles que la copie a déjà données pour vraies de X (« 1,7 m/s »,
+        // sa vitesse normale) s'écarteraient d'office. La question les demande donc aussi : elle passe avant les questions
+        // qui les montrent, ou ne se pose pas (ce qu'elle demande ainsi n'est pas montré pour autant)
+        if (aspect === 'value') for (const [k, c] of a.choices.entries()) if (k !== a.answer) for (const key of keysOf(x.id, c)) if (!isSoft(key) && /\d/u.test(key)) b.asks.add(key)
         const bounds = keysOf(x.id, a.choices[a.answer]).flatMap((k) => {
           const m = /^[^|]+\|(\d+) (\S+)$/u.exec(k)
           return m ? [{ n: Number(m[1]), unit: m[2] }] : []
@@ -2131,12 +2174,13 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const widthOf = (n: number) => picked.filter((b) => b.q.choices.length === n).length
   const countOf = (pred: (b: Built) => boolean) => picked.filter(pred).length
   /** seuil ou vitesse : le groupe d'une question en nombres déjà dans la copie */
-  const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : null)
+  const valueGroups = new Map(seeds.flatMap((s) => (s.type === 'auth' && s.group ? [[s.id, s.group] as const] : [])))
+  const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : (valueGroups.get(b.q.id) ?? null))
   const roomFor = (s: Seed) => {
     // deux réponses : trois dans toute copie ; au-delà, pas plus de la moitié de la copie telle qu'elle serait avec elle
     if (s.width === 2 && widthOf(2) + 1 > Math.max(caps.twoFree, Math.ceil((picked.length + 1) / 2))) return false
     if (s.width < 4 && picked.length - widthOf(4) >= caps.few) return false
-    if (s.type === 'T1' && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
+    if ((s.type === 'T1' || s.type === 'auth') && s.group && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
     if ((s.type === 'T3b' || s.type === 'T8') && countOf((b) => b.type === 'T3b' || b.type === 'T8') >= caps.worth) return false
     if (s.type === 'T2' && countOf((b) => b.type === 'T2') >= caps.signs) return false
     return true
@@ -2147,6 +2191,43 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
    * ce qui les distingue à l'écran est le signe lui-même, leur bonne réponse.
    */
   const screenIn = (b: Built) => (b.type === 'T2' ? `${b.q.prompt}|${b.q.choices.find((c) => b.q.correct.includes(c.id))?.label ?? ''}` : screenOf(b.q))
+  /**
+   * Les objets précis dont parle le signe demandé (le disjoncteur, les lumières, la cible, un état : pas la vitesse ni
+   * le seuil, dont parlent aussi les mauvaises réponses). Aucune mauvaise réponse ne touche un objet des signes de X
+   * (elle risquerait d'être à moitié vraie de lui, voir apartFrom dans quiz.ts) : la bonne réponse est donc la seule à
+   * en parler, et qui vient de lire, dans la même copie, que X a affaire au disjoncteur la trouve à ce seul mot. Deux
+   * garde-fous (relevés le 25 novembre 2026, sur douze fiches) : deux signes d'une copie ne parlent jamais du même
+   * objet (voir clashes) ; et un signe passe avant les autres questions qui parlent de son objet, quand l'ordre de
+   * la copie le permet (voir la fin de compose).
+   */
+  const BROAD_OBJECTS = new Set(['vitesse', 'seuil'])
+  const objectsOf = (b: Built): string[] => [
+    ...new Set(
+      [...b.asks].flatMap((k) => {
+        const at = k.indexOf('|~')
+        const object = at < 0 ? '' : k.slice(at + 2).split(/[/!]/u)[0]
+        return object && !BROAD_OBJECTS.has(object) ? [object] : []
+      }),
+    ),
+  ]
+  const mentions = (b: Built, object: string) => {
+    const lead = `${x.id}|~${object}`
+    for (const keys of [b.asks, b.shows]) for (const k of keys) if (k.startsWith(lead) && /^(?:[/!]|$)/u.test(k.slice(lead.length))) return true
+    return false
+  }
+  const rightOf = (b: Built) => b.q.choices.find((c) => b.q.correct.includes(c.id))?.label ?? ''
+  /** les deux premiers mots d'un signe (« peut rechasser ») */
+  const openingOf = (b: Built) => (rightOf(b).toLocaleLowerCase('fr').match(/\p{L}+/gu) ?? []).slice(0, 2).join(' ')
+  /** ce que les signes déjà dans la copie interdisent au suivant */
+  const signs = { owners: new Set<string>(), objects: new Set<string>(), openings: new Set<string>() }
+  /**
+   * Un second signe de X ne reprend ni une entité dont un signe a déjà servi de mauvaise réponse (son corrigé l'a
+   * nommée : un autre de ses signes, ou le même sous une autre rédaction, s'écarterait d'office), ni un objet du
+   * premier (voir objectsOf), ni son début (« Peut rechasser 60 s après… », « Peut rechasser 20 s après… »).
+   */
+  const clashes = (b: Built) =>
+    b.type === 'T2' &&
+    (b.q.choices.some((c) => !b.q.correct.includes(c.id) && signs.owners.has(c.id)) || objectsOf(b).some((o) => signs.objects.has(o)) || signs.openings.has(openingOf(b)))
   /** Les clés qui comptent au palier en cours : les valeurs et les phrases toujours ; l'objet en bloc, ou fait par fait (voir LADDER). */
   const counts = (k: string, fine = LADDER[level].fine) => (fine ? !isSoft(k) : !isFine(k))
   /** `a` demande-t-elle ce que `b` montre une fois corrigée ? */
@@ -2249,6 +2330,11 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     for (const i of at.first) before[i].add(n)
     for (const w of wrongOf(b)) read.add(w)
     for (const k of b.asks) askedAll.add(k)
+    if (b.type === 'T2') {
+      for (const c of b.q.choices) if (!b.q.correct.includes(c.id)) signs.owners.add(c.id)
+      for (const o of objectsOf(b)) signs.objects.add(o)
+      signs.openings.add(openingOf(b))
+    }
   }
   /** « Encore 10 » : les questions des copies précédentes ne reviennent qu'une fois les autres épuisées, et pour la moitié de la copie au plus */
   let again = false
@@ -2257,7 +2343,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const ordered = (list: readonly Seed[]) => {
     const room = again && repeats() < Math.floor(count / 2)
     const usable = shuffle(rng, list.filter((s) => !ids.has(s.id) && !spent(s) && (!s.gate || gates[s.gate]) && roomFor(s) && (room || !seen.has(s.id) || s.gate === 'los') && !doomed(s)))
-    const rank = (s: Seed) => (seen.has(s.id) ? 2 : 0) + (s.late ? 1 : 0)
+    const rank = (s: Seed) => (seen.has(s.id) ? 3 : 0) + (s.late ? 2 : s.early ? 0 : 1)
     return usable
       .map((s, i) => ({ s, i }))
       .sort((a, b) => rank(a.s) - rank(b.s) || a.i - b.i)
@@ -2278,8 +2364,8 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
       if (left-- <= 0) break
       let b = s.make(rng)
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
-      if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
-      if (!b || screens.has(screenIn(b)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w)) || rereads(b)) {
+      if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)) || clashes(b))) b = s.make(rng)
+      if (!b || screens.has(screenIn(b)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w)) || rereads(b) || clashes(b)) {
         failed.set(s.id, (failed.get(s.id) ?? 0) + 1)
         continue
       }
@@ -2332,6 +2418,17 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     commit(weightedPick(() => coin, plan.map((p, i) => ({ weight: p.weight, f: found[i]! })), (p) => p.weight).f)
     return true
   }
+  /** Le dernier palier permis (voir LADDER), et de quoi y composer une question hors de son tour. */
+  const lastLevel = Math.min(LADDER.length - 1, Math.max(0, Math.floor(opts.relax ?? LADDER.length - 1)))
+  const atLevel = <T,>(at: number, run: () => T): T => {
+    const keep = level
+    level = at
+    try {
+      return run()
+    } finally {
+      level = keep
+    }
+  }
   const fillSlot = (slot: Slot): boolean => {
     switch (slot) {
       case 'T1los':
@@ -2341,7 +2438,11 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
       case 'T1spd':
         return add(of('T1', (s) => s.group === 'spd'))
       case 'T2':
-        return add(of('T2'))
+        // D'abord le signe qu'aucune autre question ne demande (voir signSeeds, `early`), en distinguant d'emblée les
+        // faits de son objet : pris en bloc, « fonce à 2,5 m/s… » (le Djinn) passait pour le même fait que sa vitesse
+        // habituelle, déjà dans la copie, et n'y entrait plus qu'en second signe, c'est-à-dire jamais depuis que deux
+        // signes d'une copie ne parlent plus du même objet
+        return atLevel(lastLevel, () => add(of('T2', (s) => !!s.early))) || add(of('T2'))
       case 'T3':
         return addWorth('T3b')
       case 'T8':
@@ -2371,7 +2472,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     }
   }
   // compléter, palier par palier (voir LADDER) : d'abord sans aucune question d'une copie précédente, puis avec
-  const last = Math.min(LADDER.length - 1, Math.max(0, Math.floor(opts.relax ?? LADDER.length - 1)))
+  const last = lastLevel
   for (const repeat of seen.size ? [false, true] : [false]) {
     again = repeat
     for (level = 0; level <= last && picked.length < count; level++) fill()
@@ -2390,6 +2491,29 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const dropped = new Set<number>()
   for (let i = picked.length - 1; i >= 0 && repeats() - dropped.size > Math.floor((picked.length - dropped.size) / 2); i--) {
     if (seen.has(picked[i].q.id)) dropped.add(i)
+  }
+  // un signe passe avant les autres questions de la copie qui parlent de son objet (voir objectsOf) : après elles, sa
+  // bonne réponse se trouverait au seul mot « disjoncteur ». Seulement quand l'ordre de la copie le permet : une
+  // question qui doit déjà passer avant le signe (elle demande ce qu'il montre) y reste
+  const mustPrecede = (i: number): Set<number> => {
+    const reach = new Set<number>()
+    const walk = (k: number) => {
+      for (const j of before[k]) {
+        if (reach.has(j)) continue
+        reach.add(j)
+        walk(j)
+      }
+    }
+    walk(i)
+    return reach
+  }
+  for (let i = 0; i < picked.length; i++) {
+    if (picked[i].type !== 'T2' || dropped.has(i)) continue
+    const objects = objectsOf(picked[i])
+    for (let j = 0; j < picked.length && objects.length; j++) {
+      if (j === i || dropped.has(j) || picked[j].type === 'T2' || !objects.some((o) => mentions(picked[j], o))) continue
+      if (!mustPrecede(i).has(j)) before[j].add(i)
+    }
   }
   // l'ordre : une question passe avant celles qui la montreraient ; pour le reste, au hasard, deux questions de la
   // même sorte ne se suivant que faute d'autre

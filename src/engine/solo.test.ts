@@ -5,7 +5,7 @@ import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
 import { evidenceIn, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, thresholds } from './cards'
 import { redactGhostName } from './format'
-import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, hints, homogeneous, nearSpeed, QUIZ_TOPICS, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
+import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, hints, homogeneous, nearSpeed, oddOneOut, QUIZ_TOPICS, sharesMeasure, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
 import { createRng } from './random'
 
 /**
@@ -310,8 +310,12 @@ const PAIRS_FLOOR = 6000
 const COMPOSED_FLOOR = 1200
 const CHAINED_CEILING = 0.25
 /** La valeur standard, là où elle est proposée : bonne réponse 85 fois sur 100 au plus, mauvaise réponse 100 fois au moins (mesuré le 25 novembre 2026 : voir le verrou c.). */
-const STANDARD_WON = 0.85
-const STANDARD_WRONG = 100
+// (0,85 et 100 jusqu'au 25 novembre 2026 au soir : « 1,7 m/s » servait aussi de mauvaise réponse aux questions rédigées
+// sur une vitesse (« À quelle vitesse chasse un Gallu enragé ? »), qui venaient en plus des deux questions en nombres ;
+// elles comptent maintenant sous le même plafond, et ne suivent plus les questions qui donnent leurs mauvaises
+// réponses pour vraies. Mesuré : 86,6 % et 78)
+const STANDARD_WON = 0.88
+const STANDARD_WRONG = 70
 /** Une entité « normale » : sa valeur standard est demandée dans au moins 85 de ses premières copies sur 100. */
 const STANDARD_ASKED = 0.85
 const WRONG_SIGNS_FLOOR = 1800
@@ -1103,7 +1107,11 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
         expect(answer, `${v.q.id} : observation ${o.strength}`).toBe(o.strength === 'definitive' ? SOLO_ANSWERS.enough.yes : SOLO_ANSWERS.enough.no)
         expect(plain(v.q.prompt), v.q.id).toMatch(/^Tu observes ceci\. Est-ce que ça suffit pour confirmer (?:le |la |l’|les )\S.* \?$/u)
         // le corrigé dit ce que la fiche en dit : décisive, indice fort, simple indice
-        expect(plain(v.q.explain), v.q.id).toContain(o.strength === 'definitive' ? 'cette observation est décisive' : o.strength === 'strong' ? 'c’est un indice fort, pas une confirmation' : 'c’est un simple indice, pas une confirmation')
+        // (et pourquoi un indice ne suffit pas : « Non : c'est un simple indice du Djinn, pas une confirmation. À lui seul,
+        // il n'écarte pas les autres entités. » ; le corrigé d'avant, « sur la fiche du Djinn, c'est un simple indice », ne
+        // disait pas ce qui manquait)
+        if (o.strength === 'definitive') expect(plain(v.q.explain), v.q.id).toContain('cette observation est décisive')
+        else expect(plain(v.q.explain), v.q.id).toMatch(new RegExp(`^Non : c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'} (?:du |de la |de l’|des )\\S.*, pas une confirmation\\. À lui seul, il n’écarte pas les autres entités\\.`, 'u'))
         // la citation ne nomme personne, et ne dit pas elle-même ce qu'elle vaut
         expect(GHOSTS.some((g) => namesGhost(quote, g)), `${v.q.id} : « ${quote} »`).toBe(false)
       }
@@ -1407,6 +1415,19 @@ const NEVER_AFTER: readonly (readonly [string, RegExp, RegExp, string])[] = [
   // une durée écrite en lettres dans la scène, puis demandée en secondes (relevé le 25 novembre 2026, voir SPELLED dans solo.ts)
   ['yurei', /^q:constat:yurei:yurei:O4$/u, /^q:auth:yurei:5$/u, '« pendant une minute et demie, les détecteurs… restent muets » puis « Combien de temps… ? 90 s »'],
   ['demon', /^q:constat:demon:demon:O0$/u, /^q:(?:auth:demon:1|sign-of:demon:0)$/u, '« une chasse démarre environ une minute après… » puis « Combien de temps après l’encens… ? 60 s »'],
+  // relevé par la contre-relecture du 25 novembre 2026 :
+  // le corrigé « … il accélère immédiatement à 3,0 m/s », puis le signe « Accélération instantanée, jamais progressive »
+  ['revenant', /^q:spd:revenant:3$/u, /^q:sign-of:revenant:1$/u, 'le corrigé « il accélère immédiatement à 3,0 m/s » puis « Accélération instantanée… »'],
+  // la citation « … après que la bougie a été éteinte au moins 3 fois », puis « Après combien de flammes éteintes… ? »
+  ['onryo', /^q:suffit:onryo:1$/u, /^q:auth:onryo:0$/u, '« … éteinte au moins 3 fois » puis « Après combien de flammes éteintes… ? »'],
+  // la bonne réponse d'un « lequel de ces signes… ? » est la seule à parler de l'objet de X : il passe avant les autres
+  // questions qui en parlent (le disjoncteur du Hantu, la cachette de l'Aswang, les états du Gallu et de l'Obambo)
+  ['hantu', /^q:vf:hantu:hantu:(?:T1|E1)$/u, /^q:sign-of:hantu:0$/u, '« … rallumer le disjoncteur » puis « Buée glacée… quand le disjoncteur est éteint ou cassé »'],
+  ['aswang', /^q:auth:aswang:5$/u, /^q:sign-of:aswang:1$/u, '« L’Aswang t’a trouvé caché… » puis « La chasse s’arrête net… dans une cachette officielle »'],
+  ['gallu', /^q:(?:san:gallu:60|spd:gallu:1\.96)$/u, /^q:sign-of:gallu:2$/u, '« … du Gallu en état enragé ? » puis « Enragé : … »'],
+  ['obambo', /^q:(?:san|spd):obambo:/u, /^q:sign-of:obambo:0$/u, '« … de l’Obambo en état calme ? » puis « Calme/agressif : bascule… »'],
+  // une question rédigée dont les mauvaises réponses sont des vitesses de X ne suit pas les questions qui les corrigent
+  ['gallu', /^q:spd:gallu(?::1\.36)?$/u, /^q:auth:gallu:1$/u, '« 1,7 m/s » et « 1,36 m/s » corrigées, puis proposées comme mauvaises réponses'],
 ]
 
 describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d’à moitié vrai (toute la réserve)', () => {
@@ -1736,7 +1757,10 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
         expect(o.text.replace(/[  ]/gu, ' '), d.q.id).toMatch(KEEPS_APART[d.q.id])
       }
     }
-    for (const id of Object.keys(KEEPS_APART)) expect(ids(getGhost(id.split(':')[2])!), id).toContain(id)
+    // (l'observation du Démon « au-dessus de 80 % » n'a plus de citation de même longueur pour l'autre réponse depuis
+    // que les scènes de la porte de sortie du Yurei ne se posent plus, voir ONLY_ONE dans solo.ts : elle sort de la
+    // réserve, où le plan ne la tirait déjà dans aucune copie)
+    for (const id of Object.keys(KEEPS_APART)) if (id !== 'q:constat:demon:demon:O3') expect(ids(getGhost(id.split(':')[2])!), id).toContain(id)
   })
 
   it('D5. un signe « Seule entité… » et un « est-ce que ça suffit ? » sur le même fait ne vont jamais dans la même copie', () => {
@@ -1849,7 +1873,7 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(share('banshee', /^q:(?:sign-of:banshee:1|auth:banshee:0)$/u)).toBeGreaterThan(0.8)
     // les 2,5 m/s du Djinn (son signe, ou sa question rédigée) : aucune copie ne les demandait, depuis que la vitesse
     // habituelle (1,7 m/s) se pose à chaque fois ; ce sont deux faits (voir FACETS, solo.ts)
-    expect(share('jinn', /^q:(?:sign-of:jinn:0|auth:jinn:0)$/u)).toBeGreaterThan(0.3)
+    expect(share('jinn', /^q:(?:sign-of:jinn:0|auth:jinn:0)$/u)).toBeGreaterThan(0.8)
     expect(share('jinn', /^q:spd:jinn$/u)).toBeGreaterThan(0.8)
     // le signe qui continue le précédent ne se pose pas seul
     expect(ids(getGhost('jinn')!)).not.toContain('q:sign-of:jinn:1')
@@ -1887,6 +1911,77 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     }
     measure(`deux signes par copie : ${two} copies de dix sur ${copies}`)
     expect(two / copies).toBeGreaterThan(0.3)
+  })
+
+  it('contre-relecture du 25 novembre 2026 : un signe ne se trouve ni au mot de son objet, ni à sa forme, ni à l’entité déjà nommée', () => {
+    const right = (q: Question) => q.choices.find((c) => q.correct.includes(c.id))!.label
+    const wrong = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id))
+    // toute la réserve : aucune réponse ne se remarque à « jamais » ni à son premier mot (voir oddOneOut, quiz.ts), et
+    // aucune mauvaise réponse ne cite une distance ou une durée des signes de X (« à moins de 4 m », voir sharesMeasure)
+    const signs = byType('T2')
+    expect(signs.length).toBeGreaterThan(300)
+    for (const d of signs) {
+      const labels = wrong(d.q).map((c) => c.label)
+      expect(oddOneOut(right(d.q), labels), `${d.q.id} : ${right(d.q)} | ${labels.join(' | ')}`).toBe(false)
+      for (const l of labels) expect(sharesMeasure(l, d.x), `${d.q.id} : « ${l} » cite une mesure des signes de ${d.x.name}`).toBe(false)
+    }
+    // (le garde-fou a de quoi faire : « Ne coupe jamais… » face à trois réponses sans « jamais » se remarque)
+    expect(oddOneOut('Ne coupe jamais le disjoncteur lui-même', ['Plus actif quand on parle près de lui', 'Lance les objets plus vite et plus loin', 'Encensé, reste enfermé dans sa pièce'])).toBe(true)
+    expect(oddOneOut('Plus actif quand on parle près de lui', ['Ne coupe jamais le disjoncteur', 'N’allume jamais les lumières', 'Accélération instantanée, jamais progressive'])).toBe(true)
+    expect(oddOneOut('Peut rechasser 60 s après l’encens', ['En chasse, pas et voix inaudibles', 'En chasse, ne poursuit que sa cible', 'En pleine chasse, sa vitesse change'])).toBe(true)
+    expect(sharesMeasure('A une chance d’éteindre aussitôt une lumière que tu allumes à moins de 4 m de l’entité', getGhost('onryo')!)).toBe(true)
+    expect(sharesMeasure('Détecte tes déplacements : 10 m accroupi, 15 m en marchant, 30 m en sprintant', getGhost('dayan')!)).toBe(true)
+    expect(sharesMeasure('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', getGhost('yokai')!)).toBe(false)
+    // dans une copie : deux signes ne prennent jamais leurs mauvaises réponses chez la même entité (le corrigé du
+    // premier l'a nommée), ne parlent jamais du même objet de X, et ne commencent jamais pareil
+    const SAME_OBJECT: readonly (readonly [string, RegExp])[] = [
+      ['banshee', /^q:sign-of:banshee:[12]$/u],
+      ['mare', /^q:sign-of:mare:[123]$/u],
+      ['jinn', /^q:sign-of:jinn:[023]$/u],
+      ['demon', /^q:sign-of:demon:[01]$/u],
+      ['onryo', /^q:sign-of:onryo:[124]$/u],
+    ]
+    let pairs = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        if (j % 3 === 2) continue
+        const asked = qs.filter((q) => soloType(q) === 'T2')
+        if (asked.length < 2) continue
+        pairs++
+        const owners = asked.flatMap((q) => wrong(q).map((c) => c.id))
+        expect(new Set(owners).size, `${x.id} : ${asked.map((q) => q.id).join(', ')} : ${owners.join(', ')}`).toBe(owners.length)
+        const openings = asked.map((q) => (right(q).toLocaleLowerCase('fr').match(/\p{L}+/gu) ?? []).slice(0, 2).join(' '))
+        expect(new Set(openings).size, `${x.id} : ${openings.join(' | ')}`).toBe(openings.length)
+      }
+    }
+    expect(pairs).toBeGreaterThan(300)
+    for (const [id, re] of SAME_OBJECT) for (const qs of copiesOf.get(id)!.filter((_, j) => j % 3 !== 2)) expect(qs.filter((q) => re.test(q.id)).map((q) => q.id).length, id).toBeLessThanOrEqual(1)
+  })
+
+  it('contre-relecture du 25 novembre 2026 : « ce n’est qu’un indice » ne se dit pas d’un fait que la fiche réserve à X ; les nombres restent deux par copie', () => {
+    // « Seule entité capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée » (le Poltergeist), « Seule
+    // à fermer ou toucher une porte de sortie… » (le Yurei) : leur test ou leur scène, qui n'est qu'un indice, ne se pose pas
+    for (const id of ['q:suffit:poltergeist:2', 'q:constat:yurei:yurei:O0', 'q:constat:yurei:yurei:O1']) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    // (les autres « Non » de ces fiches restent : la fiche ne les réserve pas à X)
+    expect(ids(getGhost('yurei')!)).toContain('q:constat:yurei:yurei:O4')
+    expect(ids(getGhost('the-twins')!).some((id) => id.startsWith('q:constat:')), 'les Jumeaux gardent leurs observations').toBe(true)
+    // deux questions au plus sur la vitesse et deux sur le seuil par copie de dix, questions rédigées comprises
+    const speed = (q: Question) => /^q:spd(?:sum)?:/u.test(q.id) || (soloType(q) === 'auth' && /^\d+(?:,\d+)?\u00a0m\/s$/u.test(q.choices.find((c) => q.correct.includes(c.id))!.label))
+    let most = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        if (j % 3 === 2) continue
+        most = Math.max(most, qs.filter(speed).length)
+        expect(qs.filter(speed).length, `${x.id} : ${qs.filter(speed).map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(2)
+      }
+    }
+    expect(most).toBe(2)
+    // les fiches corrigées ce jour-là : la mauvaise réponse qui était vraie (l'Onryo), la bonne réponse seule à dire
+    // « l'entité imitée » (le Mimic)
+    const onryo = getGhost('onryo')!.quiz[5]
+    expect(onryo.choices.some((c) => /aucun effet sur son compteur/u.test(c))).toBe(false)
+    const mimic = getGhost('the-mimic')!.quiz[0]
+    expect(mimic.choices.filter((c) => /imit/u.test(c)).length).toBeGreaterThanOrEqual(3)
   })
 
   it('D9. aucune question rédigée dont l’énoncé nomme une autre entité (« Tu hésites entre un Esprit et un Spectre… »)', () => {
