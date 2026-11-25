@@ -26,7 +26,9 @@ import {
   confusionWithoutEvidence,
   DEFAULT_TOPICS,
   factKeys,
+  asksOf,
   homogeneous,
+  numberQuestion,
   numericAsk,
   signatureKeys,
   SOFT_FACT,
@@ -1240,7 +1242,16 @@ describe('des réponses de même forme', () => {
           return q
         }
       }
-      void kind
+      // le seuil de la Banshee ne se demande pas en nombre dans sa propre copie (il vaut pour sa cible, pas pour l'équipe :
+      // voir TARGET_SANITY, solo.ts) ; la question du quiz général, elle, se compose
+      const ask = asksOf(kind as 'san' | 'spd', g).find((a) => a.key === id)
+      for (let seed = 1; ask && seed <= 20; seed++) {
+        const q = numberQuestion(ask, { topics: [], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 1, rng: createRng(seed) })
+        if (q) {
+          extra.push(q)
+          return q
+        }
+      }
       return undefined
     }
     for (const g of GHOSTS) for (const kind of ['san', 'spd'] as const) if (!noBase[kind].includes(g.id)) expect(find(g, `q:${kind}:${g.id}`), `q:${kind}:${g.id}`).toBeDefined()

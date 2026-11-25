@@ -308,7 +308,7 @@ const UNDER_FIVE = 520
  */
 const PAIRS_FLOOR = 6000
 const COMPOSED_FLOOR = 1200
-const CHAINED_CEILING = 0.2
+const CHAINED_CEILING = 0.25
 /** La valeur standard, là où elle est proposée : bonne réponse 85 fois sur 100 au plus, mauvaise réponse 100 fois au moins (mesuré le 25 novembre 2026 : voir le verrou c.). */
 const STANDARD_WON = 0.85
 const STANDARD_WRONG = 100
@@ -691,8 +691,10 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     for (const [name, player] of Object.entries(SOME_QUESTIONS)) {
       const s = play(all, player)
       // (une seule réponse qui souffle X : il en reste peu, et tant mieux ; les autres joueurs ont des centaines de questions)
+      // (la ligne de vue ne se demande plus au Revenant depuis le 25 novembre 2026, voir LOS_TWO_ANSWERS dans quiz.ts :
+      // quatre entités qui n'accélèrent pas se la voient demander, il en reste un peu moins de cent sur les 900 copies)
       if (name.startsWith('la seule réponse')) expect(s.n, name).toBeLessThan(200)
-      else expect(s.n, name).toBeGreaterThan(100)
+      else expect(s.n, name).toBeGreaterThan(name.startsWith('ligne de vue') ? 70 : 100)
       if (!s.n) continue
       measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +${(ceiling(s, false) - s.chance).toFixed(1)})`)
       expect(s.got, `${name} : ${say(s)} (plafond ${ceiling(s, false).toFixed(1)} %)`).toBeLessThanOrEqual(ceiling(s, false))
@@ -979,7 +981,12 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       for (const c of of(x)) {
         expect(c.qs.length, x.id).toBeLessThanOrEqual(SOLO_COUNT)
         expect(new Set(c.qs.map((q) => q.id)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
-        expect(new Set(c.qs.map((q) => `${q.prompt}|${q.quote ?? ''}`)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
+        // deux questions ne se lisent jamais pareil avant leurs choix ; les signes de X, qui ont tous le même énoncé
+        // (« Lequel de ces signes est celui de X ? »), se distinguent par le signe demandé, et une copie de dix en pose
+        // deux au plus (voir SIGNS_MAX, solo.ts)
+        const screen = (q: Question) => (soloType(q) === 'T2' ? `${q.prompt}|${q.choices.find((o) => q.correct.includes(o.id))!.label}` : `${q.prompt}|${q.quote ?? ''}`)
+        expect(new Set(c.qs.map(screen)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
+        expect(c.qs.filter((q) => soloType(q) === 'T2').length, `${x.id} (graine ${c.seed}) : signes`).toBeLessThanOrEqual(2)
         // une même scène ne se relit pas sous deux questions (jugée en vrai ou faux, puis « est-ce que ça suffit ? »)
         const quotes = c.qs.flatMap((q) => (q.quote ? [q.quote] : []))
         expect(new Set(quotes).size, `${x.id} (graine ${c.seed}) : une citation deux fois`).toBe(quotes.length)
@@ -1017,9 +1024,10 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     // (0,40 avant le 25 novembre 2026 : la vitesse et le seuil standard, demandés à chaque copie, reviennent d'une copie à la suivante)
     expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.45)
     // Un signe déjà demandé compte aussi sous son autre forme (« lequel de ces signes… », puis « vrai ou faux », voir
-    // sameSign dans solo.ts). Mesuré : 74 copies sur 444 (40 avant le 25 novembre 2026 : la vitesse et le seuil
-    // standard, demandés à chaque copie, reviennent forcément d'une copie à la suivante ; la page ne propose pas
-    // encore « Encore 10 », ce chemin ne sert qu'aux tests)
+    // sameSign dans solo.ts). Mesuré : 101 copies sur 444 (40 avant le 25 novembre 2026 : la vitesse et le seuil
+    // standard, demandés à chaque copie, reviennent forcément d'une copie à la suivante, et une copie pose
+    // maintenant deux des trois ou quatre signes clés de la fiche ; la page ne propose pas encore « Encore 10 », ce
+    // chemin ne sert qu'aux tests)
     expect(beyondHalf / chained, `${beyondHalf} copies sur ${chained} reprennent plus de la moitié des faits de la précédente`).toBeLessThanOrEqual(CHAINED_CEILING)
     const mix = new Map<string, number>()
     for (const v of all) mix.set(v.type, (mix.get(v.type) ?? 0) + 1)
@@ -1381,6 +1389,10 @@ const SAME_FACT_WORDS: Readonly<Record<string, readonly (readonly [string, RegEx
   shade: [['la pièce où se trouve un joueur', /pièce où|même pièce/u]],
   yokai: [['plus actif quand on parle', /actif|activité/u]],
   onryo: [['la 3e flamme', /3e|compteur/u]],
+  // relevé le 25 novembre 2026 : le même fait posé jusqu'à trois fois dans une copie de quatre (un vrai ou faux, puis
+  // une question rédigée dont la bonne réponse se reconnaissait à ses mots)
+  deogen: [['rapide de loin, lent tout près', /chute fortement|0,4\u00a0m\/s|au ralenti/u]],
+  revenant: [['il accélère d’un coup', /instantan/u]],
 }
 /**
  * L'énoncé ou le corrigé de la première question soufflait la réponse de la seconde (relevé le 19 novembre 2026) :
@@ -1392,6 +1404,9 @@ const NEVER_AFTER: readonly (readonly [string, RegExp, RegExp, string])[] = [
   ['banshee', /^q:auth:banshee:[12]$/u, /^q:constat:banshee:banshee:O0$/u, '« … le cri unique de la Banshee » puis « tu entends un cri strident et unique : est-ce que ça suffit ? »'],
   ['kormos', /^q:constat:kormos:kormos:O[12]$/u, /^q:(?:sign-of:kormos:(?:1|t1)|vf:kormos:kormos:(?:K1|T1)|auth:kormos:1)$/u, 'la scène du joueur détecté de loin puis « Détecte tes déplacements… »'],
   ['moroi', /^q:constat:moroi:moroi:O6$/u, /^q:auth:moroi:0$/u, '« … un peu plus lentes que la normale » puis « À quelle vitesse de base… ? »'],
+  // une durée écrite en lettres dans la scène, puis demandée en secondes (relevé le 25 novembre 2026, voir SPELLED dans solo.ts)
+  ['yurei', /^q:constat:yurei:yurei:O4$/u, /^q:auth:yurei:5$/u, '« pendant une minute et demie, les détecteurs… restent muets » puis « Combien de temps… ? 90 s »'],
+  ['demon', /^q:constat:demon:demon:O0$/u, /^q:(?:auth:demon:1|sign-of:demon:0)$/u, '« une chasse démarre environ une minute après… » puis « Combien de temps après l’encens… ? 60 s »'],
 ]
 
 describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d’à moitié vrai (toute la réserve)', () => {
@@ -1814,6 +1829,64 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       }
     }
     measure(`D4. paires ordonnées, questions vues : ${JSON.stringify([...order])}`)
+  })
+
+  it('relecture du 25 novembre 2026 : pas de piège sur le Revenant, le vrai seuil de la Banshee, les 2,5 m/s du Djinn, le Deogen qu’on ne sème pas en se cachant', () => {
+    /** La part des copies de dix de x qui posent l'une de ces questions. */
+    const share = (id: string, re: RegExp) => {
+      const runs = copiesOf.get(id)!.filter((_, j) => j % 3 !== 2)
+      return runs.filter((qs) => qs.some((q) => re.test(q.id))).length / runs.length
+    }
+    // « Accélère-t-il quand il te voit ? » ne se demande pas au Revenant : il passe d'un coup de 1,0 à 3,0 m/s dès
+    // qu'il te voit, et « Non » (pas de montée progressive) contredisait ce que la copie venait de lui apprendre
+    expect(ids(getGhost('revenant')!).filter((id) => id.startsWith('q:los:'))).toEqual([])
+    for (const x of GHOSTS) for (const qs of copiesOf.get(x.id)!) for (const q of qs) if (q.id.startsWith('q:los:')) expect(q.id).not.toBe('q:los:revenant')
+    // les autres entités qui n'accélèrent pas gardent la question
+    for (const id of ['hantu', 'deogen', 'thaye', 'deildegast']) expect(ids(getGhost(id)!), id).toContain(`q:los:${id}`)
+    // le seuil de la Banshee vaut pour sa cible, pas pour l'équipe : il ne se demande pas en nombre (« 50 % », comme une
+    // entité normale), mais par son signe ou sa question rédigée, dans presque toutes les copies
+    expect(ids(getGhost('banshee')!).filter((id) => id.startsWith('q:san:'))).toEqual([])
+    expect(share('banshee', /^q:(?:sign-of:banshee:1|auth:banshee:0)$/u)).toBeGreaterThan(0.8)
+    // les 2,5 m/s du Djinn (son signe, ou sa question rédigée) : aucune copie ne les demandait, depuis que la vitesse
+    // habituelle (1,7 m/s) se pose à chaque fois ; ce sont deux faits (voir FACETS, solo.ts)
+    expect(share('jinn', /^q:(?:sign-of:jinn:0|auth:jinn:0)$/u)).toBeGreaterThan(0.3)
+    expect(share('jinn', /^q:spd:jinn$/u)).toBeGreaterThan(0.8)
+    // le signe qui continue le précédent ne se pose pas seul
+    expect(ids(getGhost('jinn')!)).not.toContain('q:sign-of:jinn:1')
+    // le Deogen : on ne lui échappe pas en se cachant, et il est plus visible en chasse (deux faits de sa fiche qu'aucune
+    // question ne demandait : sa copie tombait à deux ou trois questions)
+    expect(share('deogen', /^q:auth:deogen:5$/u)).toBeGreaterThan(0.8)
+    expect(share('deogen', /^q:auth:deogen:6$/u)).toBeGreaterThan(0.8)
+    for (const qs of copiesOf.get('deogen')!) expect(qs.length).toBeGreaterThanOrEqual(4)
+    // une question rédigée dont les réponses diffèrent par leurs mots demande le fait, pas seulement une valeur…
+    const soft = (id: string) => {
+      const x = getGhost(id.split(':')[2])!
+      const q = soloQuestion(x, GHOSTS, id, createRng(7))!
+      return soloFacts(q, true)!.asks.filter((k) => k.includes('|~'))
+    }
+    expect(soft('q:auth:deogen:1').some((k) => k.startsWith('deogen|~vitesse')), 'q:auth:deogen:1').toBe(true)
+    expect(soft('q:auth:revenant:2').some((k) => k.startsWith('revenant|~vitesse')), 'q:auth:revenant:2').toBe(true)
+    // … et celle dont les réponses ne diffèrent que par leurs nombres ne demande que sa valeur
+    expect(soft('q:auth:jinn:2'), 'q:auth:jinn:2').toEqual([])
+    expect(soft('q:auth:gallu:4'), 'q:auth:gallu:4').toEqual([])
+  })
+
+  it('relecture du 25 novembre 2026 : deux signes de X par copie de dix, jamais le même, jamais davantage', () => {
+    let two = 0
+    let copies = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        const signs = qs.filter((q) => soloType(q) === 'T2')
+        const asked = signs.map((q) => q.choices.find((c) => q.correct.includes(c.id))!.label)
+        expect(new Set(asked).size, `${x.id} : ${asked.join(' | ')}`).toBe(asked.length)
+        if (j % 3 === 2) continue
+        copies++
+        expect(signs.length, `${x.id} : ${signs.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(2)
+        if (signs.length === 2) two++
+      }
+    }
+    measure(`deux signes par copie : ${two} copies de dix sur ${copies}`)
+    expect(two / copies).toBeGreaterThan(0.3)
   })
 
   it('D9. aucune question rédigée dont l’énoncé nomme une autre entité (« Tu hésites entre un Esprit et un Spectre… »)', () => {

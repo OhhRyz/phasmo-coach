@@ -221,6 +221,28 @@
       ],
       "answer": 1,
       "explain": "L'Ombre ne chasse pas avant 35 % : une tentative à 38 % l'élimine. Le Deogen, qui chasse sous 40 %, reste possible, comme la Dayan (45 % si un joueur reste immobile près d'elle) et le Cauchemar (40 % lumière allumée). Au-dessus de 40 %, tu aurais aussi écarté le Deogen."
+    },
+    {
+      "q": "Pendant une chasse, peux-tu échapper à un Deogen en te cachant ?",
+      "choices": [
+        "Oui, s'il ne t'a pas vu te cacher",
+        "Non, il sait à tout moment où tu es",
+        "Oui, si tu restes immobile et silencieux",
+        "Non, sauf dans une cachette officielle"
+      ],
+      "answer": 1,
+      "explain": "Le Deogen sait en permanence où tu te trouves pendant une chasse : tu ne peux pas te cacher de lui."
+    },
+    {
+      "q": "Qu'a de particulier l'apparence du Deogen pendant une chasse ?",
+      "choices": [
+        "Il est presque invisible entre deux clignotements",
+        "Il change d'apparence le temps d'un clignotement",
+        "Il est plus visible que la normale",
+        "Il apparaît en silhouette noire"
+      ],
+      "answer": 2,
+      "explain": "Le Deogen est plus visible que la normale pendant les chasses : tu le suis facilement des yeux."
     }
   ],
   "changes": [],

@@ -152,6 +152,14 @@ const NUMBERS_MAX = 2
  * deux sur le même fait (voir Stmt.aspect).
  */
 const WORTH_MAX = 1
+/**
+ * Au plus deux « Lequel de ces signes est celui de X ? » par copie de dix. Jusqu'au 25 novembre 2026 la copie n'en
+ * posait qu'un, sans que ce soit voulu : deux questions qui se lisent pareil avant leurs choix (même énoncé, même
+ * citation) ne vont pas dans la même copie, et tous les signes de X ont le même énoncé. Une fiche a pourtant trois ou
+ * quatre signes clés, qui sont autant de faits : le second se demande donc aussi, sur un autre fait que le premier
+ * (voir screenIn). Deux, pas davantage : le même énoncé trois fois lasserait, et la copie garde sa variété.
+ */
+const SIGNS_MAX = 2
 
 /* ---------- ce qu'une question demande, ce qu'elle montre ---------- */
 
@@ -356,6 +364,15 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
       ['ne le coupe jamais', /ne coupe|couper (?:directement )?le disjoncteur|coupé directement|jamais coupé/iu],
       ['capacité', /25\s?%|capacité|EMF/iu],
     ],
+    // Sa vitesse habituelle (1,7 m/s, celle d'une entité standard) et sa pointe à 2,5 m/s sont deux faits : sans cela,
+    // la question en nombres sur la première, posée à chaque copie, écartait tout ce que la fiche dit de la seconde
+    // (mesuré le 25 novembre 2026 : « Dans quelles conditions le Djinn passe-t-il à 2,5 m/s ? » et son signe « fonce à
+    // 2,5 m/s quand il te voit à plus de 3 m » absents de toutes les copies)
+    vitesse: [
+      ['habituelle', /1,7|habituelle|par défaut|disjoncteur coupé|entité standard/iu],
+      ['pointe', /2,5|fonce|plus de 3\s?m|à distance|allure rapide|de loin|autre bout|test de vitesse/iu],
+      ['de près', /moins de 3\s?m|reprend|ralentit/iu],
+    ],
   },
   wraith: {
     sel: [
@@ -405,7 +422,7 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
   revenant: {
     vitesse: [
       // 1,0 m/s tant qu'il n'a détecté personne
-      ['sans cible', /1,0|(?<![\d,])1\s?m\/s|sans cible|aucun joueur|n[’']a (?:repéré|détecté) personne|sans t[’']avoir détecté|habituelle|très lents?|extrêmement lents/iu],
+      ['sans cible', /1,0|(?<![\d,])1\s?m\/s|sans cible|aucun joueur|n[’']a (?:repéré|détecté) personne|ne détecte personne|sans t[’']avoir détecté|habituelle|très lents?|extrêmement lents/iu],
       // 3,0 m/s dès qu'il détecte un joueur : par la vue, la voix, un appareil électronique
       ['détection', /3,0|(?<![\d,])3\s?m\/s|dès qu[’']\p{L}+ (?:te |t[’'])?(?:détecte|repère|voit)|où il détecte|laisses détecter|es repéré|voix|électronique|appareil|pleine vitesse|très rapides?/iu],
       // d'un coup, jamais peu à peu : pas d'accélération en ligne de vue
@@ -479,6 +496,16 @@ const FACETS: Readonly<Record<string, Readonly<Record<string, Facets>>>> = {
       ['délai', /180\s?s(?!\p{L})|3 minutes|90\s?s(?!\p{L})|attend(?!s)|rechass|ne lance aucune chasse/iu],
       // le test du double encens : le second entre 150 et 170 s, puis une chasse dans la minute
       ['double encens', /150|170|160|2\smin\s40|double|second|deuxième|de nouveau|une première fois/iu],
+    ],
+  },
+  // les deux états de l'Obambo (calme, agressif) : quand il en change, ce que chacun vaut, et la chasse plus courte
+  // lancée en état agressif. Sans ces faits, « Quand passe-t-il pour la première fois en état agressif ? » et « Chasse
+  // lancée en état agressif : 20 % plus courte » passaient pour le même fait
+  obambo: {
+    état: [
+      ['horaire', /bascule|1\s?min|toutes les 2|2\s?min|porte d[’']entrée|commence|première fois|dure chaque|alterne|montre|fenêtres?/iu],
+      ['par état', /1,45|1,96|10\s?%|65\s?%|seuil|m\/s/iu],
+      ['chasse plus courte', /20\s?%|plus courte|durée de chasse|un cinquième|réduite/iu],
     ],
   },
   // la voix des joueurs (voir OWN_OBJECTS) : trois faits de la fiche du Yokai
@@ -584,6 +611,20 @@ const OWN_OBJECTS: Readonly<Record<string, readonly (readonly [string, RegExp])[
   onryo: [['flamme', /compteur|(?<!\p{L})capacité/iu]],
 }
 
+/**
+ * Les durées que les scènes des fiches écrivent en lettres, pour ne pas réciter une valeur : « pendant une minute et
+ * demie, les détecteurs… restent muets » (le Yurei encensé, bloqué 90 s), « une chasse démarre environ une minute
+ * après que tu as encensé l'entité » (le Démon, 60 s). Lues telles quelles, elles ne disaient rien à la copie, qui
+ * posait la scène puis demandait la valeur (« Combien de temps un Yurei encensé reste-t-il bloqué dans sa pièce ?
+ * 90 s », relevé le 25 novembre 2026).
+ */
+const SPELLED: readonly (readonly [RegExp, number])[] = [
+  [/(?<!\p{L})une minute et demie(?!\p{L})/iu, 90],
+  [/(?<!\p{L})une minute(?!\s+et\s+demie)(?!\p{L})/iu, 60],
+  [/(?<!\p{L})deux minutes(?!\p{L})/iu, 120],
+  [/(?<!\p{L})trois minutes(?!\p{L})/iu, 180],
+]
+
 /** Les clés déjà calculées : les mêmes phrases des fiches reviennent d'une question à l'autre, d'une copie à l'autre. */
 const keyCache = new Map<string, string[]>()
 
@@ -649,6 +690,9 @@ function computeKeys(who: string, text: string): string[] {
     return m ? [`${m[1]}${m[2]},0`] : []
   })
   const keys = new Set([...all, ...rounded, ...whole])
+  // une durée écrite en lettres (« pendant une minute et demie », « environ une minute après… ») se lit en secondes,
+  // comme la valeur qu'une autre question demande (« Combien de temps… ? 90 s »)
+  for (const [re, seconds] of SPELLED) if (re.test(text)) keys.add(`${who}|${seconds} s`)
   refined(who, text, keys)
   if (OWN_ROOM.test(text)) keys.add(`${who}|~errance`)
   // une allure dite sans nombre (« des pas extrêmement lents tant que l'entité n'a repéré personne ») parle de la vitesse
@@ -1143,6 +1187,16 @@ function leanNumber(details: readonly string[], value: number, unit: '%' | 'm/s'
 /** « 1,0 », « 2,25 », « 1,7 » : une vitesse telle que les fiches l'écrivent, sans son unité. */
 const mpsNumber = (v: number) => (Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? v.toFixed(1) : v.toFixed(2)).replace('.', ',')
 
+/**
+ * La Banshee ne chasse pas selon la santé mentale moyenne de l'équipe, mais selon celle de sa cible (50 %). « Quel
+ * est le seuil de chasse habituel de la Banshee ? 50 % » la posait comme une entité normale ; et son corrigé, qui dit
+ * le vrai fait, écartait de la copie les questions qui le demandent (« Sur quelle santé mentale la Banshee se
+ * base-t-elle pour chasser ? », son signe « Chasse selon la santé de sa cible… ») et presque tout ce que la fiche dit
+ * de sa cible (mesuré le 25 novembre 2026 : trois questions absentes de toutes les copies). Son seuil ne se demande
+ * donc pas en nombre : il se demande par ce fait. Le Codex la range de même dans « Seuil qui change ».
+ */
+const TARGET_SANITY: ReadonlySet<string> = new Set(['banshee'])
+
 function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
   if (x.id === MIMIC) return []
   const out: Seed[] = []
@@ -1175,6 +1229,7 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
     return b
   }
   for (const kind of ['san', 'spd'] as const) {
+    if (kind === 'san' && TARGET_SANITY.has(x.id)) continue
     const topic: QuizTopic = kind === 'san' ? 'sanity' : 'speed'
     const details = kind === 'san' ? x.huntSanity.details : x.speed.details
     for (const a of asksOf(kind, x)) {
@@ -1255,6 +1310,9 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
 const CAN_HUNT_AT = /(?:peut|peuvent)\s+chasser[^.;·]*?(\d+)\s?%/giu
 const huntsThatEarly = (label: string, x: Ghost) => [...label.matchAll(CAN_HUNT_AT)].some((m) => Math.max(...thresholds(x)) >= Number(m[1]))
 
+/** Un signe clé qui continue le précédent (« Reprend une vitesse normale… ») : il ne se pose pas seul. */
+const FOLLOWS_ON = /^Reprend(?!\p{L})/u
+
 function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
   if (x.id === MIMIC) return []
   const byId = new Map(all.map((o) => [o.id, o]))
@@ -1276,15 +1334,37 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
     // (les trois autres signes parlent d'autres entités : plus aucune question de la copie ne les demande)
     return built({ ...q, explain, cardId }, 'T2', [{ who: x.id, text: full, key }])
   }
-  const out: Seed[] = x.keyTells.map((t, k) => ({
-    id: `q:sign-of:${x.id}:${k}`,
-    type: 'T2' as const,
-    topic: 'behavior' as const,
-    width: 4 as const,
-    late: SPEED_OR_SANITY.test(t),
-    pre: () => askKeys({ who: x.id, text: t, key: true }),
-    make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k), t, `g:${x.id}:tells`, true),
-  }))
+  // Un signe qui ne parle que de vitesse ou de seuil passe après les autres : ses valeurs se demandent déjà, en
+  // nombres ou par une question rédigée dont la réponse est une valeur. Sauf si rien ne les demande : « Disjoncteur
+  // allumé : fonce à 2,5 m/s quand il te voit à plus de 3 m » (le Djinn) est alors la seule question de la copie sur
+  // ce fait, et passe comme un autre signe (elle n'entrait dans aucune copie, mesuré le 25 novembre 2026)
+  // (ses vitesses et ses seuils seulement : « à moins de 3 m » n'est pas une valeur qu'une question en nombres demande)
+  const hardOf = (t: string) => keysOf(x.id, t).filter((k) => !isSoft(k) && /\|\d+(?:,\d+| %)$/u.test(k))
+  const valued = new Set([
+    ...(['san', 'spd'] as const).flatMap((kind) => asksOf(kind, x).flatMap((a) => hardOf(kind === 'san' ? `${a.value} %` : `${mpsNumber(a.value)} m/s`))),
+    ...x.quiz.filter((a) => a.answer >= 0 && a.answer < a.choices.length && bareValues(a.choices)).flatMap((a) => hardOf(a.choices[a.answer])),
+  ])
+  const askedElsewhere = (t: string) => {
+    const mine = hardOf(t)
+    return !mine.length || mine.some((k) => valued.has(k))
+  }
+  const out: Seed[] = x.keyTells.flatMap((t, k) =>
+    // « Reprend une vitesse normale une fois à moins de 3 m de toi » (le Djinn) : la suite du signe d'avant, qui ne se
+    // comprend pas seule (voir aussi NEEDS_CONTEXT, quiz.ts)
+    FOLLOWS_ON.test(t)
+      ? []
+      : [
+          {
+            id: `q:sign-of:${x.id}:${k}`,
+            type: 'T2' as const,
+            topic: 'behavior' as const,
+            width: 4 as const,
+            late: SPEED_OR_SANITY.test(t) && askedElsewhere(t),
+            pre: () => askKeys({ who: x.id, text: t, key: true }),
+            make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k), t, `g:${x.id}:tells`, true),
+          },
+        ],
+  )
   // les signes « 0 preuve » rédigés en phrases, face à des phrases d'autres fiches
   const numbers = tellNumbers(x)
   const reverse = new Set(reverseTells(x, all).map((r) => r.k))
@@ -1786,6 +1866,19 @@ function leanExplain(explain: string, x: Ghost, all: readonly Ghost[]): string {
 /** Au plus autant de caractères pour une phrase « très courte » (voir leanExplain). */
 const SHORT_SENTENCE = 30
 
+/**
+ * Les réponses d'une question rédigée ne diffèrent-elles que par leurs nombres (« 15 % », « 25 % » ; « Entre 150 et
+ * 170 s après le premier » ; « Crucifix +1 m et aveuglement par l'encens de 6 s ») ? Alors c'est une valeur qu'on
+ * demande, et un signe sans nombre ne la donne pas (savoir que l'entité lance des objets ne dit pas « 2 % »). Quand
+ * elles diffèrent par leurs mots, c'est à eux que la bonne se reconnaît : « Comment se comporte la vitesse du
+ * Deogen ? 3,0 m/s de loin, puis 0,4 m/s tout près de toi » se trouvait d'office après « Vitesse de chasse très
+ * élevée, qui chute fortement en approchant du joueur ciblé » (vrai ou faux), et « Il passe instantanément à
+ * 3,0 m/s » après « Accélération instantanée, jamais progressive » (relevé le 25 novembre 2026 : le même fait posé
+ * jusqu'à trois fois dans une copie de quatre). Une telle question demande le fait, comme une phrase.
+ */
+const NUMBER_SLOT = /[+−–-]?\d+(?:,\d+)?(?:ers?|res?|e|èmes?)?(?!\p{L})/gu
+const bareValues = (choices: readonly string[]) => new Set(choices.map((c) => c.replace(NUMBER_SLOT, '#').toLocaleLowerCase('fr').trim())).size === 1
+
 function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
   x.quiz.forEach((a, i) => {
@@ -1823,9 +1916,11 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
           explain,
         }
         const asked = `${a.q} \n ${a.choices[a.answer]}`
-        // « Combien de santé mentale fait perdre l'explosion ? 2 % par objet lancé » : la réponse est une valeur, c'est elle qu'on demande
+        // « Combien de santé mentale fait perdre la capacité du Djinn ? 25 % » : la réponse est une valeur, c'est elle qu'on
+        // demande. Seulement quand les réponses ne diffèrent que par leurs nombres (voir bareValues) : sinon ce sont leurs
+        // mots qu'on reconnaît, et la question demande le fait comme une phrase
         const answered = keysOf(x.id, a.choices[a.answer]).filter((k) => !isSoft(k))
-        const aspect = answered.length ? ('value' as const) : ('own' as const)
+        const aspect = answered.length && bareValues(a.choices) ? ('value' as const) : ('own' as const)
         // Tout ce que son énoncé et son corrigé mentionnent est montré : à qui est le fait, et ce qu'il vaut (« Quel outil
         // permet d'entendre le cri unique de la Banshee ? » dit déjà que ce cri la désigne ; un corrigé dit souvent « c'est
         // un test de confirmation », « un indice fort »). Une lecture plus fine (ne montrer ce que vaut le fait que si
@@ -2019,6 +2114,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     few: Math.max(1, Math.floor(FEW_MAX * scale)),
     numbers: Math.max(1, Math.round(NUMBERS_MAX * scale)),
     worth: Math.max(1, Math.round(WORTH_MAX * scale)),
+    signs: Math.max(1, Math.round(SIGNS_MAX * scale)),
   }
 
   const picked: Built[] = []
@@ -2042,8 +2138,15 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     if (s.width < 4 && picked.length - widthOf(4) >= caps.few) return false
     if (s.type === 'T1' && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
     if ((s.type === 'T3b' || s.type === 'T8') && countOf((b) => b.type === 'T3b' || b.type === 'T8') >= caps.worth) return false
+    if (s.type === 'T2' && countOf((b) => b.type === 'T2') >= caps.signs) return false
     return true
   }
+  /**
+   * Ce qu'on lit d'une question avant ses choix (voir screenOf) : deux questions qui se lisent pareil ne vont pas dans
+   * la même copie. Tous les signes de X se demandent sous le même énoncé (« Lequel de ces signes est celui de X ? ») :
+   * ce qui les distingue à l'écran est le signe lui-même, leur bonne réponse.
+   */
+  const screenIn = (b: Built) => (b.type === 'T2' ? `${b.q.prompt}|${b.q.choices.find((c) => b.q.correct.includes(c.id))?.label ?? ''}` : screenOf(b.q))
   /** Les clés qui comptent au palier en cours : les valeurs et les phrases toujours ; l'objet en bloc, ou fait par fait (voir LADDER). */
   const counts = (k: string, fine = LADDER[level].fine) => (fine ? !isSoft(k) : !isFine(k))
   /** `a` demande-t-elle ce que `b` montre une fois corrigée ? */
@@ -2140,7 +2243,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
     const n = picked.length
     picked.push(b)
     ids.add(b.q.id)
-    screens.add(screenOf(b.q))
+    screens.add(screenIn(b))
     if (b.q.quote) quotes.add(b.q.quote)
     before.push(new Set(at.after))
     for (const i of at.first) before[i].add(n)
@@ -2176,7 +2279,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
       let b = s.make(rng)
       // une question à quatre phrases qui ne se compose pas à ce tirage, ou qui reprend une mauvaise réponse déjà lue, se retente une fois
       if (s.width === 4 && (!b || wrongOf(b).some((w) => read.has(w)))) b = s.make(rng)
-      if (!b || screens.has(screenOf(b.q)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w)) || rereads(b)) {
+      if (!b || screens.has(screenIn(b)) || (b.q.quote && quotes.has(b.q.quote)) || stray?.(b.q) || wrongOf(b).some((w) => read.has(w)) || rereads(b)) {
         failed.set(s.id, (failed.get(s.id) ?? 0) + 1)
         continue
       }

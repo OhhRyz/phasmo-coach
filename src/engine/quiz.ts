@@ -681,6 +681,8 @@ function askWhen(condition: string, g: Ghost): string {
   // « 1,7 m/s de loin · 2,25 m/s si tu bouges, 1,2 si immobile » : les deux valeurs valent près de l'entité, l'énoncé le dit
   if (c === 'si tu bouges') return ` si tu bouges près ${isFeminine(g.name) ? 'd’elle' : 'de lui'}`
   if (c === 'loin' || c === 'près') return ` ${c} de sa cible`
+  // « 3,0 m/s en te détectant » (le Revenant) : dans un énoncé, « quand il te détecte »
+  if (c === 'en te détectant') return ` quand ${isFeminine(g.name) ? 'elle' : 'il'} te détecte`
   if (/^vers\s/u.test(c)) return ` quand ${isFeminine(g.name) ? 'elle' : 'il'} se dirige ${c}`
   if (/^(?:si|près|en|dans|quand|lorsqu|sous|sur)(?!\p{L})/u.test(c)) return ` ${c}`
   return ` (${c})`
@@ -714,6 +716,12 @@ const sanityAsks = perGhost((g): NumberAsk[] => {
   return out
 })
 
+/**
+ * La vitesse de base du Revenant (1,0 m/s) n'a rien d'« habituel » pour qui le fuit : dès qu'il détecte un joueur, il
+ * est à 3,0 m/s. L'énoncé dit quand elle vaut, comme le Codex (« lent tant qu'il ne te détecte pas »).
+ */
+const BASE_SPEED_WHEN: Readonly<Record<string, string>> = { revenant: 'tant qu’il ne détecte personne' }
+
 /** Les questions en nombres sur la vitesse d'une entité : l'habituelle, puis celles que son résumé cite sous condition. */
 const speedAsks = perGhost((g): NumberAsk[] => {
   if (g.id === MIMIC || !known(g)) return []
@@ -725,7 +733,7 @@ const speedAsks = perGhost((g): NumberAsk[] => {
       kind: 'spd',
       g,
       value: base,
-      prompt: `Quelle est la vitesse de chasse habituelle ${de(g.name)}${NNBSP}?`,
+      prompt: BASE_SPEED_WHEN[g.id] ? `Quelle est la vitesse de chasse ${de(g.name)} ${BASE_SPEED_WHEN[g.id]}${NNBSP}?` : `Quelle est la vitesse de chasse habituelle ${de(g.name)}${NNBSP}?`,
       weight: base === STANDARD_SPEED ? KEEP_STANDARD_SPEED : 1,
     })
   }
@@ -1126,13 +1134,23 @@ const speedStandard: Gen = (g, ctx) => {
 const speedSummary: Gen = (g, ctx) => summaryQuestion('spd', g, ctx)
 
 /**
- * Cinq entités seulement n'accélèrent pas en ligne de vue : posée à chaque fois, « Oui » gagnerait quatre
- * fois sur cinq. Une entité qui accélère n'est demandée qu'une fois sur cinq : « Oui » et « Non » s'équilibrent.
+ * Cinq entités seulement n'accélèrent pas en ligne de vue, dont quatre se le voient demander (voir LOS_TWO_ANSWERS) :
+ * posée à chaque fois, « Oui » gagnerait quatre fois sur cinq. Une entité qui accélère n'est demandée qu'une fois sur
+ * cinq : « Oui » et « Non » s'équilibrent.
  */
 export const KEEP_LOS_YES = 0.2
 
-/** La ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) n'a ni oui ni non ; le Mimic copie. */
-export const losAsked = (g: Ghost) => known(g) && g.id !== MIMIC && !g.speed.losVaries
+/**
+ * Le Revenant n'a pas l'accélération progressive en ligne de vue, mais il passe d'un coup de 1,0 à 3,0 m/s dès qu'il
+ * détecte un joueur, par la vue notamment. « Accélère-t-il quand il te voit ? » a donc deux réponses honnêtes : « Non »
+ * (pas de montée progressive, ce que disait le corrigé) et « Oui » (ce que l'élève entend en jeu, et ce que la copie
+ * vient de lui apprendre). La question ne se pose pas pour lui : ce qu'il faut savoir se demande par ses vitesses
+ * (1,0 puis 3,0 m/s) et par son signe (« accélération instantanée, jamais progressive »).
+ */
+const LOS_TWO_ANSWERS: ReadonlySet<string> = new Set(['revenant'])
+
+/** La ligne de vue « selon les conditions » (Kormos, Dayan, Raiju…) n'a ni oui ni non ; le Mimic copie ; le Revenant : voir LOS_TWO_ANSWERS. */
+export const losAsked = (g: Ghost) => known(g) && g.id !== MIMIC && !g.speed.losVaries && !LOS_TWO_ANSWERS.has(g.id)
 
 /** « X : pendant une chasse, l'entité accélère-t-elle quand elle te voit ? » (null : ni oui ni non pour cette entité). */
 export function losQuestion(g: Ghost): Question | null {
