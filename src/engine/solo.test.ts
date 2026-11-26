@@ -5,7 +5,7 @@ import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
 import { evidenceIn, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, thresholds } from './cards'
 import { redactGhostName } from './format'
-import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, hints, homogeneous, nearSpeed, oddOneOut, QUIZ_TOPICS, sharesMeasure, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
+import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, HALF_TRUE_OF_MANY, hints, homogeneous, inSpeedRange, nearSpeed, oddOneOut, QUIZ_TOPICS, sameTurn, sharesMeasure, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
 import { createRng } from './random'
 
 /**
@@ -291,7 +291,10 @@ const SHORT_COPIES: Readonly<Record<string, number>> = {
   dayan: 4,
   aswang: 3,
   kormos: 5,
-  deildegast: 3,
+  // (2 depuis le 25 novembre 2026 au soir : ses signes de vitesse ne se composent plus en « lequel de ces signes… ? »,
+  // toute vitesse d'un autre signe étant un palier du Deildegast, voir inSpeedRange dans quiz.ts ; ses premières
+  // copies gardent quatre questions au moins, c'est un « Encore 10 » qui descend à deux)
+  deildegast: 2,
 }
 
 /**
@@ -1025,8 +1028,10 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       if (again > c.views.length / 2) beyondHalf++
     }
     measure(`g. « Encore 10 », par fait : ${((100 * sum) / chained).toFixed(0)} % de la copie en moyenne reprend un fait de la précédente ; ${beyondHalf} copies sur ${chained} en reprennent plus de la moitié`)
-    // (0,40 avant le 25 novembre 2026 : la vitesse et le seuil standard, demandés à chaque copie, reviennent d'une copie à la suivante)
-    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.45)
+    // (0,40 avant le 25 novembre 2026 : la vitesse et le seuil standard, demandés à chaque copie, reviennent d'une copie
+    // à la suivante ; 0,45 jusqu'au soir du même jour : les garde-fous de la contre-relecture laissent moins de
+    // questions de rechange à chaque fiche. Mesuré : 0,454)
+    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.48)
     // Un signe déjà demandé compte aussi sous son autre forme (« lequel de ces signes… », puis « vrai ou faux », voir
     // sameSign dans solo.ts). Mesuré : 101 copies sur 444 (40 avant le 25 novembre 2026 : la vitesse et le seuil
     // standard, demandés à chaque copie, reviennent forcément d'une copie à la suivante, et une copie pose
@@ -1956,6 +1961,46 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     }
     expect(pairs).toBeGreaterThan(300)
     for (const [id, re] of SAME_OBJECT) for (const qs of copiesOf.get(id)!.filter((_, j) => j % 3 !== 2)) expect(qs.filter((q) => re.test(q.id)).map((q) => q.id).length, id).toBeLessThanOrEqual(1)
+  })
+
+  it('vérification de vérité du 25 novembre 2026 : aucune mauvaise réponse à moitié vraie de X, ni dite comme l’un de ses signes', () => {
+    const wrongOf = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id)).map((c) => c.label.replace(/[\u00a0\u202f]/gu, ' '))
+    const seen = (id: string) => [...byType('T2').filter((d) => d.x.id === id).map((d) => d.q), ...copiesOf.get(id)!.flat().filter((q) => soloType(q) === 'T2')].flatMap(wrongOf)
+    // ce que les deux vérificateurs ont relevé, entité par entité (la phrase fautive, d'où elle venait, pourquoi)
+    const HALF_TRUE: readonly (readonly [string, RegExp, string])[] = [
+      ['banshee', /15 % de santé mentale/u, 'le Yurei : la cible de la Banshee perd elle aussi 15 % (en touchant l’entité pendant un chant)'],
+      ['oni', /Plus actif quand on parle/u, 'le Yokai : presque le signe de l’Oni, « plus actif quand plusieurs joueurs sont à proximité »'],
+      ['oni', /20 % plus courte/u, 'l’Obambo : le « 20 % » du signe de l’Oni'],
+      ['obambo', /au lieu de 10 %/u, 'la Banshee : le « 10 % » du seuil de l’Obambo calme'],
+      ['revenant', /seuil \(50 %\) standard/u, 'le Goryo : le seuil du Revenant est bien 50 %'],
+      ['moroi', /seuil \(50 %\) standard|standards \(1,7/u, 'le Goryo, le Myling : le seuil du Moroï est bien 50 %'],
+      ['deildegast', /seuil \(50 %\) standard|standards \(1,7|Vitesse fixe de 2,5|1,5 ou ~1,9|soit de 1,5/u, 'le seuil du Deildegast est bien 50 %, et 1,5, 1,7, 1,9 et 2,5 m/s sont de ses paliers'],
+      ['thaye', /1,53 m\/s|soit de 1,5|Vitesse fixe de 2,5/u, 'des paliers du Thayé (1,525 ; 1,875 ; 2,575 m/s)'],
+      ['dayan', /Vitesse fixe de 2,5/u, 'le Raiju : « sa vitesse devient fixe » est le signe de la Dayan'],
+      ['kormos', /jusqu’à 80 %/u, 'le Yokai : la tournure du signe du Kormos, « Peut chasser dès 70 % si… »'],
+      ['demon', /à portée normale/u, 'le Kormos : sa première moitié est vraie de toute entité'],
+      ['jinn', /chasse à 40 %/u, 'le Gallu : un Djinn aussi chasse à 40 %'],
+      ['hantu', /sources de feu/u, 'l’Onryo : lu « source de feu = flamme », c’est vrai de toute entité'],
+      ['shade', /sources de feu/u, 'l’Onryo : de même'],
+    ]
+    for (const [id, re, why] of HALF_TRUE) expect(seen(id).filter((l) => re.test(l)), `${id} : ${why}`).toEqual([])
+    // les garde-fous qui les écartent (quiz.ts) reconnaissent bien ces phrases
+    const g = (id: string) => getGhost(id)!
+    expect(sharesMeasure('Pouvoir : ferme une porte et fait perdre 15 % de santé mentale aux joueurs proches', g('banshee'))).toBe(true)
+    expect(sameTurn('Plus actif quand on parle près de lui', g('oni'))).toBe(true)
+    expect(sameTurn('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('dayan'))).toBe(true)
+    expect(sameTurn('Peut chasser jusqu’à 80 % si l’on parle dans sa pièce', g('kormos'))).toBe(true)
+    expect(sameTurn('Plus actif quand on parle près de lui', g('spirit'))).toBe(false)
+    expect(inSpeedRange('Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de ligne de vue', g('thaye'))).toBe(true)
+    expect(inSpeedRange('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('deildegast'))).toBe(true)
+    expect(inSpeedRange('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('spirit'))).toBe(false)
+    for (const t of ['Vitesse (1,7 m/s) et seuil (50 %) standard : ce sont ses déplacements qui le trahissent, pas ses chasses', 'Vitesse et seuil de chasse standards (1,7 m/s, 50 %)', 'Détecte la voix et les appareils électroniques à portée normale, et repère en plus les déplacements']) expect(HALF_TRUE_OF_MANY.test(t), t).toBe(true)
+    // (un signe qui dit « standard » pour autre chose reste une mauvaise réponse possible)
+    expect(HALF_TRUE_OF_MANY.test('Après l’encens, ne peut pas rechasser avant 180 s (90 s pour une entité standard)')).toBe(false)
+    // aucune réponse ne dit d'où elle vient (« d'après le coach »)
+    for (const x of GHOSTS) expect(seen(x.id).filter((l) => /coach/iu.test(l)), x.id).toEqual([])
+    // … et le signe des Jumeaux se propose bien ailleurs, sans sa parenthèse
+    expect(GHOSTS.some((x) => seen(x.id).some((l) => /tirée au hasard à chaque chasse$/u.test(l)))).toBe(true)
   })
 
   it('contre-relecture du 25 novembre 2026 : « ce n’est qu’un indice » ne se dit pas d’un fait que la fiche réserve à X ; les nombres restent deux par copie', () => {

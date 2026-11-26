@@ -205,6 +205,11 @@ interface Built {
   range?: { who: string; unit: string; lo: number; hi: number }
   /** les phrases qu'elle demande, mot à mot (voir sameSaid) : ce que les clés ne reconnaissent pas, les mots le reconnaissent */
   said: Said[]
+  /**
+   * Ce qu'aucune question placée avant elle ne doit montrer, sans qu'elle le demande : les valeurs de ses mauvaises
+   * réponses, pour une question rédigée dont les réponses sont des valeurs (voir authoredSeeds).
+   */
+  guards?: ReadonlySet<string>
   /** les phrases qu'elle montre une fois corrigée, celles qu'elle demande comprises */
   told: Said[]
 }
@@ -1323,9 +1328,10 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
  * « Peut chasser à 65 % près d'un équipement électronique actif » (le Raiju) : parmi les mauvaises réponses de
  * « lequel de ces signes est celui de X ? », la phrase serait à moitié vraie d'une entité qui chasse déjà à ce
  * niveau (un Thayé jeune chasse dès 75 %, où qu'il soit). Le garde-fou du quiz (huntsAlready, quiz.ts) ne lit que
- * « dès », « jusqu'à » et « à partir de » : ici, toute tournure « peut chasser… N % ».
+ * « dès », « jusqu'à » et « à partir de » : ici, toute tournure « peut chasser… N % », et « chasse à N % » (« Après
+ * une chasse en état enragé, il s'affaiblit (1,36 m/s, chasse à 40 %) », le Gallu : un Djinn aussi chasse à 40 %).
  */
-const CAN_HUNT_AT = /(?:peut|peuvent)\s+chasser[^.;·]*?(\d+)\s?%/giu
+const CAN_HUNT_AT = /(?:(?:peut|peuvent)\s+chasser|(?<!\p{L})chasse(?:nt)?(?!\p{L}))[^.;·]*?(\d+)\s?%/giu
 const huntsThatEarly = (label: string, x: Ghost) => [...label.matchAll(CAN_HUNT_AT)].some((m) => Math.max(...thresholds(x)) >= Number(m[1]))
 
 /** Un signe clé qui continue le précédent (« Reprend une vitesse normale… ») : il ne se pose pas seul. */
@@ -1341,6 +1347,9 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
     const others = q.choices.filter((c) => !q.correct.includes(c.id))
     const owners = others.map((c) => byId.get(c.id))
     if (owners.some((o) => !o) || others.some((c) => huntsThatEarly(c.label, x))) return null
+    // « … tirée au hasard à chaque chasse (une chance sur deux, d'après le coach) » (les Jumeaux) : la parenthèse dit
+    // d'où vient la phrase ; en mauvaise réponse, le signe se propose sans elle (une autre version se tire)
+    if (others.some((c) => /d[’']après le coach/iu.test(c.label))) return null
     // le signe entier, cité : ses propres guillemets deviennent des guillemets anglais (« Le réglage “portes ouvertes au
     // départ” est appliqué… »), et son point final s'en va (la phrase qui le cite a le sien)
     const cited = full
@@ -1384,7 +1393,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
             // (le seuil de la Banshee, qui ne se demande pas en nombre, tient dans son signe « … la santé de sa cible »)
             early: (SPEED_OR_SANITY.test(t) || (TARGET_SANITY.has(x.id) && /santé de sa cible/iu.test(t))) && !askedElsewhere(t),
             pre: () => askKeys({ who: x.id, text: t, key: true }),
-            make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k), t, `g:${x.id}:tells`, true),
+            make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k, true), t, `g:${x.id}:tells`, true),
           },
         ],
   )
@@ -1402,7 +1411,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: 4,
       late: true,
       pre: () => askKeys({ who: x.id, text }),
-      make: (rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), { text, k: `t${k}` }), text, reverse.has(k) ? `g:${x.id}:rev:${k}` : `g:${x.id}:tells`, false),
+      make: (rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), { text, k: `t${k}` }, undefined, true), text, reverse.has(k) ? `g:${x.id}:rev:${k}` : `g:${x.id}:tells`, false),
     })
   }
   return out
@@ -1906,14 +1915,6 @@ const SHORT_SENTENCE = 30
 const NUMBER_SLOT = /[+−–-]?\d+(?:,\d+)?(?:ers?|res?|e|èmes?)?(?!\p{L})/gu
 const bareValues = (choices: readonly string[]) => new Set(choices.map((c) => c.replace(NUMBER_SLOT, '#').toLocaleLowerCase('fr').trim())).size === 1
 
-/** Une question rédigée dont la réponse est une vitesse (« 1,96 m/s ») ou un seuil de chasse (« 60 % »), et rien d'autre. */
-function valueGroup(a: Ghost['quiz'][number]): 'san' | 'spd' | undefined {
-  const right = a.choices[a.answer] ?? ''
-  if (!bareValues(a.choices)) return undefined
-  if (/\d\s?m\/s/u.test(right)) return 'spd'
-  return /\d\s?%/u.test(right) && /seuil|chass/iu.test(a.q) ? 'san' : undefined
-}
-
 function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
   const out: Seed[] = []
   x.quiz.forEach((a, i) => {
@@ -1939,10 +1940,6 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: a.choices.length as 2 | 3 | 4,
       // « À partir de quel seuil un Goryo peut-il chasser ? 50 % » : la valeur standard pour bonne réponse, une copie sur deux
       ...(STANDARD_ANSWER.test(a.choices[a.answer].trim()) ? { gate: 'stdAuth' as const } : {}),
-      // « À quelle vitesse chasse un Gallu enragé ? 1,96 m/s » : une question en nombres de plus, sous le même plafond
-      // que les autres (voir NUMBERS_MAX) ; elle venait en troisième, avec pour mauvaises réponses les deux vitesses
-      // que la copie venait de corriger (relevé le 25 novembre 2026)
-      ...(valueGroup(a) ? { group: valueGroup(a) } : {}),
       make: (rng) => {
         const q: Question = {
           id,
@@ -1967,10 +1964,14 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
         // corrigé se lit phrase par phrase et en entier : par ses objets comme par ses mots (voir sameSaid).
         const told = [asked, ...explain.split(SENTENCES), explain].map((text) => ({ who: x.id, text, aspect: 'any' as const }))
         const b = built(q, 'auth', [{ who: x.id, text: asked, aspect }], told)
-        // Ses mauvaises réponses aussi sont des valeurs : celles que la copie a déjà données pour vraies de X (« 1,7 m/s »,
-        // sa vitesse normale) s'écarteraient d'office. La question les demande donc aussi : elle passe avant les questions
-        // qui les montrent, ou ne se pose pas (ce qu'elle demande ainsi n'est pas montré pour autant)
-        if (aspect === 'value') for (const [k, c] of a.choices.entries()) if (k !== a.answer) for (const key of keysOf(x.id, c)) if (!isSoft(key) && /\d/u.test(key)) b.asks.add(key)
+        // Ses mauvaises réponses aussi sont des valeurs : celles que la copie a déjà données pour vraies de X s'écarteraient
+        // d'office (« À quelle vitesse chasse un Gallu enragé ? » venait en troisième question de vitesse, avec pour
+        // mauvaises réponses « 1,7 m/s » et « 1,36 m/s », que la copie venait de corriger : relevé le 25 novembre 2026).
+        // La question passe donc avant les questions qui les montrent, ou ne se pose pas (voir Built.guards)
+        // (à part de `asks` : ces valeurs ne sont pas des faits qu'elle demande, et un signe qui en cite une, « Ne te voit
+        // que si tu bouges à moins de 5 m », reste une autre question que « … un joueur qui sprinte ? 30 m », dont « 5 m »
+        // n'est qu'une mauvaise réponse)
+        if (aspect === 'value') b.guards = new Set(a.choices.flatMap((c, k) => (k === a.answer ? [] : keysOf(x.id, c).filter((key) => !isSoft(key) && /\d/u.test(key)))))
         const bounds = keysOf(x.id, a.choices[a.answer]).flatMap((k) => {
           const m = /^[^|]+\|(\d+) (\S+)$/u.exec(k)
           return m ? [{ n: Number(m[1]), unit: m[2] }] : []
@@ -2174,13 +2175,12 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const widthOf = (n: number) => picked.filter((b) => b.q.choices.length === n).length
   const countOf = (pred: (b: Built) => boolean) => picked.filter(pred).length
   /** seuil ou vitesse : le groupe d'une question en nombres déjà dans la copie */
-  const valueGroups = new Map(seeds.flatMap((s) => (s.type === 'auth' && s.group ? [[s.id, s.group] as const] : [])))
-  const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : (valueGroups.get(b.q.id) ?? null))
+  const numberGroup = (b: Built) => (/^q:san(?:sum)?:/u.test(b.q.id) ? 'san' : /^q:spd(?:sum)?:/u.test(b.q.id) ? 'spd' : null)
   const roomFor = (s: Seed) => {
     // deux réponses : trois dans toute copie ; au-delà, pas plus de la moitié de la copie telle qu'elle serait avec elle
     if (s.width === 2 && widthOf(2) + 1 > Math.max(caps.twoFree, Math.ceil((picked.length + 1) / 2))) return false
     if (s.width < 4 && picked.length - widthOf(4) >= caps.few) return false
-    if ((s.type === 'T1' || s.type === 'auth') && s.group && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
+    if (s.type === 'T1' && s.group !== 'los' && countOf((b) => numberGroup(b) === s.group) >= caps.numbers) return false
     if ((s.type === 'T3b' || s.type === 'T8') && countOf((b) => b.type === 'T3b' || b.type === 'T8') >= caps.worth) return false
     if (s.type === 'T2' && countOf((b) => b.type === 'T2') >= caps.signs) return false
     return true
@@ -2233,6 +2233,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   /** `a` demande-t-elle ce que `b` montre une fois corrigée ? */
   const leaks = (a: Built, b: Built, fine = LADDER[level].fine): boolean => {
     for (const k of a.asks) if (counts(k, fine) && b.shows.has(k)) return true
+    if (a.guards) for (const k of a.guards) if (b.shows.has(k)) return true
     // la même phrase dite autrement, à tous les paliers : à qui est le fait, dès que `b` le dit ; ce qu'il vaut, si `b` le dit
     for (const s of a.said) for (const t of b.told) if (sameSaid(s, t) && (!s.worthOnly || s.worth.some((w) => t.worth.includes(w)))) return true
     if (a.range) {

@@ -2179,19 +2179,57 @@ export function nearSpeed(text: string, o: Ghost): boolean {
 }
 
 /**
+ * Le signe cite-t-il une vitesse que o peut avoir ? Une entité dont la vitesse parcourt une plage (le Thayé de 2,75 à
+ * 1,0 m/s, le Deildegast de 3,0 à 0,4, le Moroï, le Hantu) passe par toutes les vitesses qu'un autre signe peut citer :
+ * « 1,53 m/s » (l'Aswang) est un palier du Thayé, « 2,5 m/s » (le Raiju) et « 1,5 ou 1,9 m/s » (les Jumeaux) des paliers
+ * du Deildegast. Aucune vitesse de sa plage, 1,7 m/s comprise, ne se dit fausse pour elle (relevé le 25 novembre 2026).
+ */
+export function inSpeedRange(text: string, o: Ghost): boolean {
+  const { min, max, isRange } = o.speed
+  if (!isRange || max == null) return false
+  const cited = [...text.matchAll(/(\d+,\d+)(?=\s*(?:m\/s|(?:ou|à|et|→|-)\s*[~≈]?\s*\d+(?:,\d+)?\s*m\/s))/gu)].map((m) => Number(m[1].replace(',', '.')))
+  return cited.some((v) => v >= min - 1e-9 && v <= max + 1e-9)
+}
+
+/**
  * Une distance ou une durée que cite le signe (« à moins de 4 m », « en moins de 20 s ») est-elle aussi dans les
  * signes de o ? « A une chance d'éteindre aussitôt une lumière que tu allumes à moins de 4 m de l'entité » (le
  * Cauchemar) face à l'Onryo, dont la flamme agit « à moins de 4 m » ; « Détecte tes déplacements : 10 m accroupi… »
  * (le Kormos) face à la Dayan, dont tout se joue « à moins de 10 m » : la même mesure, et la mauvaise réponse se
- * confond avec la bonne, ou paraît à moitié vraie (relevé le 25 novembre 2026). Pas les vitesses (voir nearSpeed).
+ * confond avec la bonne, ou paraît à moitié vraie (relevé le 25 novembre 2026). Les pourcentages aussi : « … fait perdre
+ * 15 % de santé mentale aux joueurs proches » (le Yurei) face à la Banshee, dont la cible perd 15 % en touchant
+ * l'entité. Pas les vitesses (voir nearSpeed).
  */
-const MEASURE = /(?<![\d,])(\d+(?:,\d+)?)\s?(m|s)(?![\p{L}\d/])/gu
+const MEASURE = /(?<![\d,])(\d+(?:,\d+)?)\s?(m|s|%)(?![\p{L}\d/])/gu
 const measuresOf = (text: string) => [...text.matchAll(MEASURE)].map((m) => `${m[1]} ${m[2]}`)
 const ownMeasures = new WeakMap<Ghost, ReadonlySet<string>>()
 export function sharesMeasure(text: string, o: Ghost): boolean {
   let mine = ownMeasures.get(o)
   if (!mine) ownMeasures.set(o, (mine = new Set([...o.keyTells, ...o.tells.filter((t) => t.zeroEvidence).map((t) => t.text)].flatMap(measuresOf))))
   return measuresOf(text).some((v) => mine!.has(v))
+}
+
+/**
+ * La tournure d'un signe est-elle celle de l'un des signes de o ? « Plus actif quand on parle près de lui » (le Yokai)
+ * face à l'Oni, « plus actif quand plusieurs joueurs sont à proximité » : des joueurs qui parlent près de lui sont des
+ * joueurs près de lui. « Vitesse fixe de 2,5 m/s près d'un appareil électronique actif » (le Raiju) face à la Dayan
+ * (« sa vitesse devient fixe ») et au Deildegast (« Vitesse fixe pendant toute la chasse »). « Peut chasser jusqu'à
+ * 80 % si l'on parle dans sa pièce » (le Yokai) face au Kormos (« Peut chasser dès 70 % si quelqu'un sprinte… »). La
+ * mauvaise réponse se confond alors avec un signe de o, ou paraît à moitié vraie (relevé le 25 novembre 2026).
+ */
+const TURNS: readonly RegExp[] = [
+  /(?<!\p{L})(?:plus|très)\s+acti(?:fs?|ves?)(?!\p{L})/iu,
+  /(?<!\p{L})vitesse\s+(?:devient\s+)?fixe(?!\p{L})/iu,
+  /(?<!\p{L})peu(?:t|vent)\s+chasser\s+(?:dès|jusqu[’']à)\s+\d+\s?%/iu,
+]
+const ownTurns = new WeakMap<Ghost, readonly RegExp[]>()
+export function sameTurn(text: string, o: Ghost): boolean {
+  let mine = ownTurns.get(o)
+  if (!mine) {
+    const signs = [...o.keyTells, ...o.tells.filter((t) => t.zeroEvidence).map((t) => t.text)]
+    ownTurns.set(o, (mine = TURNS.filter((re) => signs.some((t) => re.test(t)))))
+  }
+  return mine.some((re) => re.test(text))
 }
 
 /** L'énoncé d'une carte « Signe à reconnaître », et de signQuestion par défaut. */
@@ -2336,11 +2374,23 @@ export type SignStyle = 'key' | 'tell'
 
 /**
  * Un signe qui, lu hors de sa fiche, est vrai de toutes les entités : « Comme toutes les entités, ne peut pas allumer
- * de source de feu » ; « Détecteurs de mouvement et sel ne réagissent qu'à sa position réelle » (les Jumeaux : leur
+ * de source de feu » (une rédaction que les fiches n'ont plus : celle de l'Onryo dit aujourd'hui « Ne peut pas allumer
+ * les sources de feu », voir HALF_TRUE_OF_MANY) ; « Détecteurs de mouvement et sel ne réagissent qu'à sa position réelle » (les Jumeaux : leur
  * seconde interaction, lointaine, ne déclenche rien ; mais chez toute entité, détecteurs et sel ne réagissent que là où
  * elle se trouve). Il reste un signe de sa fiche, jamais une mauvaise réponse ni une phrase « fausse » pour une autre.
  */
 export const TRUE_OF_ALL = /comme toutes les entités|qu[’']à (?:sa|leur) position réelle/iu
+/**
+ * Des signes à moitié vrais de trop d'entités pour servir de mauvaise réponse dans la copie sur une seule entité (voir
+ * signVersions, `strict`) : « Détecte la voix et les appareils électroniques à portée normale, et repère en plus… »
+ * (le Kormos : sa première moitié est vraie de toute entité) et les signes qui disent une valeur standard, « Vitesse
+ * (1,7 m/s) et seuil (50 %) standard… » (le Goryo), « Vitesse et seuil de chasse standards » (le Myling) : le seuil de
+ * 50 % est celui de vingt entités, dont le Moroï, le Revenant et le Deildegast, à qui on les présentait comme faux
+ * (relevé le 25 novembre 2026). Et « Ne peut pas allumer les sources de feu » (l'Onryo) : lu « source de feu =
+ * flamme », c'est vrai de toute entité (aucune ne rallume une flamme de l'équipement) ; la fiche ne dit pas ce qui
+ * les distingue.
+ */
+export const HALF_TRUE_OF_MANY = /à portée normale|vitesse[^.:;]*seuil[^.:;]*standards?(?!\p{L})|sources? de feu/iu
 const signCache = new WeakMap<readonly Ghost[], Map<SignStyle, Sign[]>>()
 
 /** Les signes de toutes les entités qui peuvent servir de mauvaise réponse (jamais ceux du Mimic). */
@@ -2392,8 +2442,9 @@ export function signFits(text: string, x: Ghost, all: readonly Ghost[]): boolean
  * ne touche aucun thème des signes de X, ne colle pas à sa fiche, ne nomme personne, et son pronom ne
  * l'écarte pas d'emblée. Les quatre signes ont la même forme (longueur, « · », parenthèses, chiffres) : au
  * besoin, un signe perd ses apartés ou sa seconde partie. `one` : ce signe clé seulement (son rang dans la fiche).
+ * `strict` : les garde-fous de la copie sur une seule entité (voir signVersions et oddOneOut).
  */
-export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string }, one?: number): Question | null {
+export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string }, one?: number, strict = false): Question | null {
   if (x.id === MIMIC) return null
   const all = ctx.allGhosts
   // `only` : le signe d'une carte « Signe à reconnaître », posé à l'envers ; caviardé (« cette entité »), il
@@ -2410,7 +2461,7 @@ export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string
   const partners = new Set(x.confusions.map((c) => c.with))
   // une mauvaise réponse par entité et par thème, d'abord parmi celles qu'on confond avec X ; pour le signe
   // d'une carte « Signe à reconnaître » (une phrase), des phrases rédigées comme lui
-  const ranked = shuffle(ctx.rng, signVersions(x, all, only ? 'tell' : 'key')).sort((a, b) => Number(partners.has(b.value.ghost.id)) - Number(partners.has(a.value.ghost.id)))
+  const ranked = shuffle(ctx.rng, signVersions(x, all, only ? 'tell' : 'key', strict)).sort((a, b) => Number(partners.has(b.value.ghost.id)) - Number(partners.has(a.value.ghost.id)))
   const apart = (chosen: readonly Option<Sign>[]) =>
     distinctGhostsOf(chosen.map((o) => o.value.ghost)) && new Set(chosen.map((o) => o.value.themes.join() || o.value.text)).size === chosen.length
   const signs = shuffle(ctx.rng, pool)
@@ -2424,7 +2475,7 @@ export function signOfGhost(x: Ghost, ctx: Ctx, only?: { text: string; k: string
         if (hintAlone(x, right, options.map((o) => o.label))) continue
         const fits = (chosen: readonly Option<Sign>[]) => {
           const labels = chosen.map((o) => o.label)
-          return apart(chosen) && !twinOf(right, labels) && !hintAlone(x, right, labels) && !oddOneOut(right, labels)
+          return apart(chosen) && !twinOf(right, labels) && !hintAlone(x, right, labels) && !(strict && oddOneOut(right, labels))
         }
         const wrong = matching(ctx.rng, right, options, 3, fits, ranks, true, hintNeed(x, right))
         if (!wrong) continue
@@ -2524,17 +2575,20 @@ const signVersionCache = new WeakMap<readonly Ghost[], Map<string, Option<Sign>[
  * mauvaise réponse pour X, avec leurs versions plus courtes : aucun ne touche un thème des signes de X, ni
  * ne lui convient, même en partie.
  */
-export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle = 'key'): Option<Sign>[] {
+export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle = 'key', strict = false): Option<Sign>[] {
   let byGhost = signVersionCache.get(all)
   if (!byGhost) signVersionCache.set(all, (byGhost = new Map()))
-  const cached = byGhost.get(`${style}|${x.id}`)
+  const cached = byGhost.get(`${style}|${strict}|${x.id}`)
   if (cached) return cached
   const free = apartFrom(x)
   // « 1,5 ou 1,9 m/s » (les Jumeaux) face à l'Aswang, à 1,53 m/s : trop près pour être dit faux
   const out = distractorSigns(all, style)
-    .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x) && !sharesMeasure(s.text, x))
+    .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x))
+    // la copie sur une seule entité (`strict`) : ni mesure des signes de X, ni tournure de l'un d'eux, ni vitesse de sa
+    // plage, ni signe à moitié vrai de trop d'entités (relevés le 25 novembre 2026 ; la révision garde ses réponses)
+    .filter((s) => !strict || (!sharesMeasure(s.text, x) && !sameTurn(s.text, x) && !inSpeedRange(s.text, x) && !HALF_TRUE_OF_MANY.test(s.text)))
     .flatMap((s) => [s.text, ...shortened(s.text).filter((v) => keepsSense(s.text, v) && !signFits(v, x, all))].map((label) => ({ value: s, label })))
-  byGhost.set(`${style}|${x.id}`, out)
+  byGhost.set(`${style}|${strict}|${x.id}`, out)
   return out
 }
 
