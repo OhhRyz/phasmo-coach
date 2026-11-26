@@ -26,7 +26,9 @@ import {
   confusionWithoutEvidence,
   DEFAULT_TOPICS,
   factKeys,
+  asksOf,
   homogeneous,
+  numberQuestion,
   numericAsk,
   signatureKeys,
   SOFT_FACT,
@@ -1240,7 +1242,16 @@ describe('des réponses de même forme', () => {
           return q
         }
       }
-      void kind
+      // le seuil de la Banshee ne se demande pas en nombre dans sa propre copie (il vaut pour sa cible, pas pour l'équipe :
+      // voir TARGET_SANITY, solo.ts) ; la question du quiz général, elle, se compose
+      const ask = asksOf(kind as 'san' | 'spd', g).find((a) => a.key === id)
+      for (let seed = 1; ask && seed <= 20; seed++) {
+        const q = numberQuestion(ask, { topics: [], ghosts: [g], allGhosts: GHOSTS, mechanics: MECHANICS, count: 1, rng: createRng(seed) })
+        if (q) {
+          extra.push(q)
+          return q
+        }
+      }
       return undefined
     }
     for (const g of GHOSTS) for (const kind of ['san', 'spd'] as const) if (!noBase[kind].includes(g.id)) expect(find(g, `q:${kind}:${g.id}`), `q:${kind}:${g.id}`).toBeDefined()
@@ -1258,7 +1269,9 @@ describe('des réponses de même forme', () => {
       const q = find(getGhost(id.split(':')[2])!, id)
       expect(q, id).toBeDefined()
       expect(q!.prompt, id).toBe(prompt)
-      expect(q!.choices.find((c) => q!.correct.includes(c.id))!.label, id).toBe(value)
+      // (une vitesse s'affiche avec deux décimales, « 2,50 m/s », quand les quatre réponses d'une copie sur une entité
+      // ne s'écrivent pas avec autant de chiffres : la valeur est la même)
+      expect(valueOf(q!.choices.find((c) => q!.correct.includes(c.id))!.label), id).toBe(valueOf(value))
     }
     for (const q of [...questions, ...extra]) {
       const kind = /^q:san:|^q:card:g:[^:]+:san$/u.test(q.id) && q.prompt.startsWith('Quel est') ? 'san' : /^q:spd:|^q:card:g:[^:]+:spd$/u.test(q.id) && q.prompt.startsWith('Quelle est') ? 'spd' : null
@@ -1281,7 +1294,7 @@ describe('des réponses de même forme', () => {
     expect(right('spirit', 'san')).toBe('50\u00a0%')
     expect(right('demon', 'san')).toBe('70\u00a0%')
     expect(right('mare', 'san')).toBe('60\u00a0%')
-    expect(right('spirit', 'spd')).toBe('1,7\u00a0m/s')
+    expect(right('spirit', 'spd')).toMatch(/^1,70?\u00a0m\/s$/u)
     expect(right('aswang', 'spd')).toBe('1,53\u00a0m/s')
     // le Yokai chasse jusqu'à 80 % quand on parle : « 80 % » n'est jamais une mauvaise réponse pour lui
     for (const q of [...questions, ...extra].filter((x) => x.id === 'q:san:yokai')) expect(q.choices.map((c) => c.label), q.id).not.toContain('80\u00a0%')
@@ -1473,8 +1486,9 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
         sizes.push(qs.length)
         // dix questions au plus : une fiche courte donne une copie plus courte, jamais une question sur une autre entité
         expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
-        // (le Mimic, sans ses questions rédigées : deux tests, et une observation par sorte de scène, voir solo.ts)
-        expect(qs.length, g.id).toBeGreaterThanOrEqual(2)
+        // (sans leurs questions rédigées, les fiches les plus courtes descendent à une question : le Mimic, qui n'a ni
+        // nombres ni signes et ne pose qu'un « est-ce que ça suffit ? » par copie, et parfois le Poltergeist et l'Obake)
+        expect(qs.length, g.id).toBeGreaterThanOrEqual(1)
         expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
         for (const q of qs) {
           // toutes s'inscrivent sur X, et chacune est d'une sorte connue de la copie
@@ -1482,20 +1496,21 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
           expect(soloType(q), q.id).not.toBeNull()
           expect(q.correct, q.id).toHaveLength(1)
           expect(q.choices.map((c) => c.id), q.id).toContain(q.correct[0])
-          // des noms pour seuls choix : seulement « de qui parle-t-on ? », entre X et une entité qu'on confond avec lui
-          if (!named(q)) continue
-          expect(soloType(q), q.id).toBe('T7b')
-          expect(q.choices, q.id).toHaveLength(2)
-          expect(q.choices.map((c) => c.id), q.id).toContain(g.id)
-          expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
+          // jamais des noms d'entités pour choix : ni entre quatre noms, ni entre deux (« de qui parle-t-on : X ou Y ? »,
+          // qui ne se pose plus depuis le 18 novembre 2026 : une question sur deux y portait sur Y)
+          expect(named(q), q.id).toBe(false)
+          expect(q.id, q.id).not.toMatch(/^q:duel:/u)
+          // et « tu observes ceci » ne cite que les observations de la fiche de X
+          if (q.id.startsWith('q:constat:')) expect(q.id, q.id).toMatch(new RegExp(`^q:constat:${g.id}:${g.id}:O\\d+$`, 'u'))
         }
       }
     }
-    // cinq questions environ, sans les questions rédigées (les thèmes par défaut) : plus aucun départage à l'envers
-    // (« à quoi reconnais-tu Y plutôt que X ? »), la copie reste courte plutôt que de parler d'une autre entité (les
-    // tailles par entité se mesurent dans solo.test.ts)
+    // trois questions environ, sans les questions rédigées (les thèmes par défaut) : ni départage, ni « de qui
+    // parle-t-on ? », ni scène ou signe d'une autre fiche à juger, ni « quel test confirme X ? », et un seul « est-ce
+    // que ça suffit ? » ; la copie reste courte plutôt que de parler d'une autre entité ou de redemander un fait
+    // (mesuré le 19 novembre 2026 : 3,26 ; 5,2 la veille ; les tailles par entité se mesurent dans solo.test.ts)
     const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length
-    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(4.5)
+    expect(mean, `taille moyenne ${mean.toFixed(2)}`).toBeGreaterThanOrEqual(3)
     for (const g of GHOSTS) for (const qs of solo.get(g.id)!) for (const q of qs) expect(q.id.startsWith('q:dist:') && q.id.split(':')[3] !== g.id, q.id).toBe(false)
     // les questions rédigées de la fiche complètent la copie telle que la fiche la lance (tous les thèmes), sauf
     // celles dont les choix sont des noms d'entités ou nomment X
@@ -1509,15 +1524,23 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
     }
   }, 60_000)
 
-  it('« Me tester sur X » : ni « 50 % », ni « 1,7 m/s » ne gagnent d’office', () => {
+  it('« Me tester sur X » : la valeur standard (50 %, 1,7 m/s) se demande à l’entité qui l’a, et se propose aussi comme mauvaise réponse aux autres', () => {
+    // Depuis le 25 novembre 2026, la copie sur une entité demande sa vitesse et son seuil même quand ils sont
+    // standards : savoir qu'une entité est « normale » est un fait de sa fiche (les cases « Normales » du Codex), et
+    // la question la plus simple de la copie. La valeur standard est donc souvent la bonne réponse là où elle est
+    // proposée (deux entités sur trois sont normales) ; ce qui reste verrouillé : elle se propose aussi comme
+    // mauvaise réponse, et les quatre réponses ont la même forme (solo.test.ts, verrous c.). Le quiz général, lui,
+    // garde sa règle (la valeur standard y reste rare, voir KEEP_STANDARD_SANITY).
     const all = [...solo.values()].flat(2)
-    for (const value of ['50\u00a0%', '1,7\u00a0m/s']) {
-      const shown = all.filter((q) => q.choices.some((c) => c.label === value) && /^q:(?:san|spd):/u.test(q.id))
-      const won = shown.filter((q) => rightOf(q).label === value)
-      // la copie préfère les nombres propres à l'entité : la valeur standard se propose moins souvent qu'avant
-      expect(shown.length, value).toBeGreaterThan(20)
-      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.4)
+    for (const value of [/^50\u00a0%$/u, /^1,70?\u00a0m\/s$/u]) {
+      const shown = all.filter((q) => q.choices.some((c) => value.test(c.label)) && /^q:(?:san|spd):/u.test(q.id))
+      const won = shown.filter((q) => value.test(rightOf(q).label))
+      expect(shown.length, String(value)).toBeGreaterThan(200)
+      expect(shown.length - won.length, `${value} : proposé comme mauvaise réponse`).toBeGreaterThanOrEqual(60)
+      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.88)
     }
+    // et quatre réponses de même longueur à chaque question en nombres
+    for (const q of all) if (/^q:(?:san|spd):/u.test(q.id)) expect(new Set(q.choices.map((c) => c.label.length)).size, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
   })
 
   it('une mauvaise réponse raccourcie garde les nombres qui la rendaient fausse', () => {
@@ -1583,7 +1606,9 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
       expect(q.prompt.startsWith(`Sans preuve, à quoi reconnais-tu ${le(g.name)} plutôt que `), q.id).toBe(true)
       for (const c of q.choices) expect(namesGhost(c.label, g), `${q.id} : ${c.label}`).toBe(true)
     }
-    expect(dist).toBeGreaterThan(120)
+    // (les départages viennent des séries sur plusieurs entités et des cartes : une copie sur une seule entité n'en
+    // pose plus depuis le 19 novembre 2026. Mesuré : 94)
+    expect(dist).toBeGreaterThan(70)
   })
 
   it('aucune réponse composée ne commence par « Il » ou « Elle » : on ne saurait pas de qui elle parle', () => {
@@ -1600,17 +1625,19 @@ describe('« Me tester sur X », départages et réponses sans indice', () => {
 
   it('le Mimic n’est jamais un nom parmi les choix, et ne se trahit ni par « imitée » ni par « copie »', () => {
     // il copie tout : jamais une mauvaise réponse, il serait toujours la bonne. Ni en série, ni en révision
-    let own = 0
     for (const q of composed) {
       if (named(q)) expect(q.choices.map((c) => c.id), q.id).not.toContain('the-mimic')
       expect(q.id, q.id).not.toMatch(/^q:card:g:the-mimic:/u)
       if (q.ghostId !== 'the-mimic') continue
-      own++
-      // ses questions à lui (ses tests) : des phrases, et rien qui souffle « Mimic » à qui lit l'anglais
+      // une question composée sur lui : une phrase, et rien qui souffle « Mimic » à qui lit l'anglais
       expect(named(q), q.id).toBe(false)
       expect(`${q.prompt} ${q.quote ?? ''}`, q.id).not.toMatch(/imit|copi/iu)
     }
-    expect(own).toBeGreaterThan(0)
+    // ses questions à lui, dans sa copie (ses tests et ses observations : « est-ce que ça suffit ? ») : jamais des
+    // noms d'entités pour choix
+    const own = solo.get('the-mimic')!.flat()
+    expect(own.length).toBeGreaterThan(0)
+    for (const q of own) expect(named(q), q.id).toBe(false)
     // les séries sur plusieurs entités ne le proposent pas non plus
     for (let seed = 1; seed <= 20; seed++) {
       for (const q of buildQuiz({ topics: DEFAULT_TOPICS, ghosts: GHOSTS, allGhosts: GHOSTS, mechanics: MECHANICS, count: 30, rng: createRng(seed * 13) })) {

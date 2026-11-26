@@ -1,12 +1,32 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 // solo.ts d'abord, avant quiz.ts : les deux modules s'importent l'un l'autre, et rien ne doit en dépendre au chargement
-import { buildSoloQuiz, soloFacets, soloFacetsOf, soloFacts, soloQuestion, soloSupply, soloType, SOLO_ANSWERS, SOLO_COUNT, type SoloType } from './solo'
+import { buildSoloQuiz, soloFacets, soloFacetsOf, soloFacts, soloQuestion, soloSupply, soloType, soloWorthPlan, SOLO_ANSWERS, SOLO_COUNT, type SoloType } from './solo'
 import { GHOSTS, MECHANICS, getGhost } from '../data'
 import type { Ghost } from '../data/types'
-import { evidenceIn, fitsToo, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, numbersFit, restatedBy, zeroTests } from './cards'
+import { evidenceIn, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, thresholds } from './cards'
 import { redactGhostName } from './format'
-import { apartFrom, buildQuiz, DEFAULT_TOPICS, factKeys, hints, homogeneous, NARROW, nearSpeed, OBJECT_MASC, pronounClash, QUIZ_TOPICS, strayCheck, themesOf, TRUE_OF_ALL, type Choice, type Question } from './quiz'
+import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, HALF_TRUE_OF_MANY, hints, homogeneous, inSpeedRange, nearSpeed, oddOneOut, QUIZ_TOPICS, sameTurn, sharesMeasure, strayCheck, TRUE_OF_ALL, type Choice, type Question } from './quiz'
 import { createRng } from './random'
+
+/**
+ * Le plan des « est-ce que ça suffit ? » (worthPlan, solo.ts) équilibre « Oui » et « Non » à longueur voisine en
+ * réglant les chances des deux réponses de chaque fiche, sans jamais en faire tomber une sous une question sur
+ * quatre : ce garde-fou, et les fiches qui n'ont qu'une réponse, lui laissent un écart, prévu ici seuil par seuil.
+ * Mesuré le 19 novembre 2026, une fois retirés les tests dont la mise en garde nomme une autre entité et les indices
+ * écrits comme des impressions, et le plan tenant compte de ce qu'une copie ne pose plus qu'un « est-ce que ça
+ * suffit ? » (RIVAL et SHARE_FLOOR, solo.ts) : au pire seuil, 6,9 points pour les tests (à 80 caractères) et 9,4 pour
+ * les observations (à 150). Les plafonds sont ceux d'avant ces retraits ; ils laissent une marge à une fiche qui
+ * change, et ce que les copies donnent vraiment se mesure au verrou c.
+ */
+const PLAN_LENGTHS = [80, 100, 120, 135, 150, 170, 200] as const
+const PLAN_EDGE = { T3b: 9, T8: 10.5 } as const
+
+/**
+ * Les sortes de questions retirées de la copie sur une seule entité : « de qui parle-t-on ? » (q:duel) le 18 novembre
+ * 2026 ; le départage (q:dist), « quel test confirme X ? » (q:test-of), l'intrus (q:intrus), « dans lequel de ces cas
+ * peux-tu exclure X ? » (q:exclut) et le profil de seuil (q:sansum) le 19.
+ */
+const GONE_KINDS = /^q:(?:duel|dist|test-of|intrus|exclut|sansum):/u
 
 /** Les copies telles que la fiche les lance : tous les thèmes, dix questions, puis « Encore 10 ». */
 const copies = (id: string, seed: number) => {
@@ -21,7 +41,8 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     const aswang = getGhost('aswang')!
     const direct = buildSoloQuiz({ ghost: aswang, allGhosts: GHOSTS, rng: createRng(5), topics: DEFAULT_TOPICS })
     const routed = buildQuiz({ topics: DEFAULT_TOPICS, ghosts: [aswang], allGhosts: GHOSTS, mechanics: MECHANICS, count: SOLO_COUNT, rng: createRng(5) })
-    expect(direct.length).toBeGreaterThanOrEqual(4)
+    // une copie courte : l'Aswang n'a que trois à six questions depuis que tout vient de sa fiche (19 novembre 2026)
+    expect(direct.length).toBeGreaterThanOrEqual(3)
     // le même tirage donne la même copie, par l'un ou l'autre chemin
     expect(routed).toEqual(direct)
     expect(buildSoloQuiz({ ghost: aswang, allGhosts: GHOSTS, rng: createRng(5), topics: DEFAULT_TOPICS })).toEqual(direct)
@@ -57,20 +78,48 @@ describe('la copie sur une seule entité (solo.ts)', () => {
     }
   }, 60_000)
 
-  it('rien n’est jamais présenté comme faux pour le Mimic, ni comme l’excluant, hors de sa propre fiche', () => {
+  it('le Mimic copie : ni nombres, ni signe à reconnaître, ni vrai ou faux ; et il n’est jamais cité dans la copie d’une autre entité', () => {
     const mimic = getGhost('the-mimic')!
     const types = new Set(soloSupply(mimic, GHOSTS).map((s) => s.type))
-    for (const t of ['T2', 'T5', 'T6', 'T7a', 'T7b'] as const) expect(types.has(t), t).toBe(false)
-    for (const s of soloSupply(mimic, GHOSTS)) {
-      const q = soloQuestion(mimic, GHOSTS, s.id, createRng(3))
-      // « Non, ça l'exclut » : seulement son propre test d'élimination (pas d'orbes dans la pièce favorite)
-      if (q && s.type === 'T8' && q.correct[0] === 'excludes') expect(s.id).toMatch(/^q:constat:the-mimic:the-mimic:E\d+$/u)
-    }
-    // et il n'est jamais l'entité proche d'une autre copie
+    // ses tests, ses observations, ses questions rédigées. Ni vrai ou faux : son seul test d'élimination sans preuve ne
+    // se dit pas en une phrase (« Vérifie la pièce favorite à la recherche d'orbes… S'il n'y en a pas… »), et sans
+    // « Faux », « Vrai » sortirait toujours
+    expect([...types].sort()).toEqual(['T3b', 'T8', 'auth'])
+    // et il n'est jamais cité dans la copie d'une autre entité : ni son signe parmi les mauvaises réponses, ni son nom
     for (const g of GHOSTS) for (const s of soloSupply(g, GHOSTS)) if (g.id !== 'the-mimic') expect(s.id.split(':').slice(2), s.id).not.toContain('the-mimic')
   })
 
-  it('dix questions au plus, toutes sur X, sans doublon ; le signe d’une entité proche cité comme faux ne se relit pas parmi les réponses d’une autre question', () => {
+  it('un vrai ou faux ne juge jamais une consigne : la condition d’un test d’élimination ne se cite que si elle tient en une phrase, et aucune fiche ne garde des « Vrai » sans « Faux »', () => {
+    for (const g of GHOSTS) {
+      const mine = soloSupply(g, GHOSTS).filter((s) => s.type === 'T6')
+      const judged = mine.flatMap((s) => {
+        const q = soloQuestion(g, GHOSTS, s.id, createRng(7))
+        return q ? [q] : []
+      })
+      // tout vrai ou faux de la réserve se compose
+      expect(judged.length, g.id).toBe(mine.length)
+      for (const q of judged) {
+        if (!/^q:vf:[^:]+:[^:]+:E\d+$/u.test(q.id)) continue
+        // une seule phrase, qui ne s'adresse pas au joueur à l'impératif (« Place… », « Lance… », « Vérifie… »)
+        expect(q.quote!.split(/(?<=[.!?…])\s+/u), `${q.id} : « ${q.quote} »`).toHaveLength(1)
+        expect(q.quote!, q.id).not.toMatch(/^(?:Place|Lance|Vérifie|Écoute|Allume-|Pose|Attends|Reste|Observe|Regarde)(?!\p{L})/u)
+      }
+      // une fiche sans test d'élimination à citer ne pose aucun vrai ou faux : sans « Faux », « Vrai » sortirait toujours
+      const falses = judged.filter((q) => q.correct[0] === SOLO_ANSWERS.trueFalse.false)
+      if (mine.length) expect(falses.length, g.id).toBeGreaterThan(0)
+      for (const q of falses) expect(q.id, q.id).toMatch(new RegExp(`^q:vf:${g.id}:${g.id}:E\\d+$`, 'u'))
+    }
+    // les tests d'élimination précédés d'une mise en place ne se posent pas en vrai ou faux (ils se liraient comme des consignes)
+    for (const [id, tag] of [['spirit', 'E0'], ['mare', 'E1'], ['revenant', 'E0'], ['yurei', 'E1'], ['onryo', 'E1'], ['yokai', 'E0'], ['the-mimic', 'E0']] as const) {
+      expect(soloSupply(getGhost(id)!, GHOSTS).map((s) => s.id), `${id} ${tag}`).not.toContain(`q:vf:${id}:${id}:${tag}`)
+    }
+    // les autres se posent : « Rallume le disjoncteur. », faux pour le Hantu
+    const hantu = soloQuestion(getGhost('hantu')!, GHOSTS, 'q:vf:hantu:hantu:E1', createRng(1))
+    expect(hantu?.quote).toBe('Rallume le disjoncteur.')
+    expect(hantu?.correct).toEqual([SOLO_ANSWERS.trueFalse.false])
+  })
+
+  it('dix questions au plus, toutes sur X, sans doublon ; ce qui est cité comme faux pour X ne se relit pas parmi les réponses d’une autre question', () => {
     const start = (t: string) => t.toLocaleLowerCase('fr').replace(/[^\p{L}\d]+/gu, ' ').trim().slice(0, 40)
     for (const g of GHOSTS) {
       const { first, second } = copies(g.id, 9001 + g.id.length * 13)
@@ -78,16 +127,11 @@ describe('la copie sur une seule entité (solo.ts)', () => {
         expect(qs.length, g.id).toBeLessThanOrEqual(SOLO_COUNT)
         expect(new Set(qs.map((q) => q.id)).size, g.id).toBe(qs.length)
         expect(qs.every((q) => q.ghostId === g.id), g.id).toBe(true)
-        const foreign = qs.flatMap((q) => {
-          const t = soloType(q)
-          if (t === 'T6' && q.correct[0] === 'false') return [start(q.quote!)]
-          if (t === 'T7b' && q.correct[0] !== g.id) return [start(q.quote!)]
-          if (t === 'T5') return q.choices.filter((c) => q.correct.includes(c.id)).map((c) => start(c.label))
-          return []
-        })
-        expect(new Set(foreign).size, `${g.id} : un même signe cité deux fois comme faux`).toBe(foreign.length)
+        const foreign = qs.flatMap((q) => (soloType(q) === 'T6' && q.correct[0] === 'false' ? [start(q.quote!)] : []))
+        // un seul vrai ou faux par copie (voir judgedFor, solo.ts)
+        expect(qs.filter((q) => soloType(q) === 'T6').length, g.id).toBeLessThanOrEqual(1)
         for (const q of qs) {
-          if (!['T2', 'T3a', 'T7a'].includes(soloType(q)!)) continue
+          if (soloType(q) !== 'T2') continue
           for (const c of q.choices) expect(foreign, `${q.id} : « ${c.label} » déjà cité comme faux dans la copie`).not.toContain(start(c.label))
         }
       }
@@ -110,21 +154,73 @@ describe('la copie sur une seule entité (solo.ts)', () => {
 
   it('ce que vaut un fait ne se demande pas deux fois : l’observation décisive du Mimic et son test, qui citent les mêmes vitesses', () => {
     const mimic = getGhost('the-mimic')!
-    for (let seed = 1; seed <= 40; seed++) {
-      const ids = buildSoloQuiz({ ghost: mimic, allGhosts: GHOSTS, rng: createRng(seed * 17) }).map((q) => q.id)
-      const same = ['q:constat:the-mimic:the-mimic:O1', 'q:suffit:the-mimic:1', 'q:constat:the-mimic:the-mimic:C1'].filter((id) => ids.includes(id))
+    const asked = new Map<string, number>()
+    for (let seed = 1; seed <= 120; seed++) {
+      // des copies de trente questions (le quiz général réduit à une entité) : une copie de dix n'en pose jamais deux
+      const ids = buildSoloQuiz({ ghost: mimic, allGhosts: GHOSTS, rng: createRng(seed * 17), count: 30 }).map((q) => q.id)
+      // l'observation (« est-ce que ça suffit ? ») et le test qui décrit la même scène
+      const same = ['q:constat:the-mimic:the-mimic:O1', 'q:suffit:the-mimic:1'].filter((id) => ids.includes(id))
+      for (const id of same) asked.set(id, (asked.get(id) ?? 0) + 1)
       expect(same.length, `tirage ${seed} : ${same.join(', ')}`).toBeLessThanOrEqual(1)
     }
+    // le test mord : au fil des copies, l'observation et le test se posent bien l'un et l'autre, jamais ensemble
+    expect(asked.get('q:constat:the-mimic:the-mimic:O1') ?? 0, JSON.stringify([...asked])).toBeGreaterThan(0)
+    expect(asked.get('q:suffit:the-mimic:1') ?? 0, JSON.stringify([...asked])).toBeGreaterThan(0)
+  }, 30_000)
+
+  it('le plan des « est-ce que ça suffit ? » : toutes les citations se posent, une fiche à deux réponses pose l’une et l’autre, et à longueur voisine « Oui » est prévu autant que « Non »', () => {
+    const rows = soloWorthPlan(GHOSTS)
+    const predicted: string[] = []
+    for (const type of ['T3b', 'T8'] as const) {
+      const mine = rows.filter((r) => r.type === type)
+      expect(mine.length, type).toBeGreaterThan(60)
+      // le plan couvre toute la réserve, et elle seule : une citation hors plan ne se poserait jamais
+      const supply = GHOSTS.flatMap((g) => soloSupply(g, GHOSTS).filter((s) => s.type === type).map((s) => s.id))
+      expect(mine.map((r) => r.id).sort(), type).toEqual([...supply].sort())
+      for (const who of new Set(mine.map((r) => r.who))) {
+        const fiche = mine.filter((r) => r.who === who)
+        expect(fiche.reduce((n, r) => n + r.odds, 0), `${type} ${who}`).toBeCloseTo(1, 6)
+        // aucune citation ne disparaît : celles d'une même réponse ont des chances égales, et leur fiche pose encore la
+        // question (au moins un tiers de la part d'une fiche à une seule réponse, voir SHARE_FLOOR, solo.ts)
+        for (const r of fiche) {
+          expect(r.odds, r.id).toBeCloseTo(fiche.find((o) => o.answer === r.answer)!.odds, 9)
+          expect(r.share, r.id).toBeGreaterThan(0.05)
+          expect(r.share, r.id).toBeLessThanOrEqual(1)
+        }
+        // une fiche qui a des faits décisifs et d'autres non pose les uns et les autres : jamais moins d'une fois sur quatre
+        const yes = fiche.filter((r) => r.answer === SOLO_ANSWERS.enough.yes).reduce((n, r) => n + r.odds, 0)
+        if (new Set(fiche.map((r) => r.answer)).size === 2) {
+          expect(yes, `${type} ${who} : « Oui » ${(100 * yes).toFixed(0)} %`).toBeGreaterThanOrEqual(0.25 - 1e-9)
+          expect(yes, `${type} ${who} : « Oui » ${(100 * yes).toFixed(0)} %`).toBeLessThanOrEqual(0.75 + 1e-9)
+        } else expect([0, 1], `${type} ${who}`).toContain(Math.round(yes * 1e6) / 1e6)
+      }
+      // ce que le plan prévoit, chaque fiche posant la question dans sa part des copies : autant de « Oui » que de « Non »…
+      const rate = (pred: (r: (typeof mine)[number]) => boolean) => mine.filter(pred).reduce((n, r) => n + r.share * r.odds, 0)
+      const yes = rate((r) => r.answer === SOLO_ANSWERS.enough.yes)
+      const no = rate((r) => r.answer === SOLO_ANSWERS.enough.no)
+      expect(yes / (yes + no), `${type} : « Oui » prévu ${((100 * yes) / (yes + no)).toFixed(1)} %`).toBeGreaterThanOrEqual(0.45)
+      expect(yes / (yes + no), `${type} : « Oui » prévu ${((100 * yes) / (yes + no)).toFixed(1)} %`).toBeLessThanOrEqual(0.55)
+      // … et à toute longueur : l'avance prévue de qui répondrait « Oui » aux citations d'au moins tant de caractères, et
+      // « Non » aux autres (la moitié de l'écart entre les parts de « Oui » et de « Non » au-dessus du seuil)
+      let worst = 0
+      for (const cut of PLAN_LENGTHS) {
+        const edge = 50 * (rate((r) => r.answer === SOLO_ANSWERS.enough.yes && r.length >= cut) / yes - rate((r) => r.answer === SOLO_ANSWERS.enough.no && r.length >= cut) / no)
+        predicted.push(`${type} ≥ ${cut} : ${edge.toFixed(1)}`)
+        worst = Math.max(worst, Math.abs(edge))
+      }
+      expect(worst, `${type} : ${predicted.join(' ; ')}`).toBeLessThanOrEqual(PLAN_EDGE[type])
+    }
+    if (import.meta.env.VITE_SOLO_MEASURES) console.info(`plan : avance prévue du joueur « Oui aux longues citations », en points : ${predicted.join(' ; ')}`)
   })
 
-  it('une question à deux noms propose X et une entité qu’on confond avec lui, jamais quatre noms', () => {
-    const names = new Set(GHOSTS.map((g) => g.name))
-    for (const id of ['deogen', 'thaye', 'kormos', 'oni']) {
+  it('aucune question ne demande « quelle entité ? » : pas un nom d’entité parmi les réponses', () => {
+    const names = new Set(GHOSTS.flatMap((g) => [g.name, g.nameEn]))
+    for (const id of ['deogen', 'thaye', 'kormos', 'oni', 'aswang']) {
       for (const seed of [1, 2, 3]) {
-        for (const q of copies(id, seed * 77).first) {
-          if (!q.choices.every((c) => names.has(c.label))) continue
-          expect(soloType(q), q.id).toBe('T7b')
-          expect(q.choices.map((c) => c.id).sort(), q.id).toEqual([id, q.id.split(':')[3]].sort())
+        const { first, second } = copies(id, seed * 77)
+        for (const q of [...first, ...second]) {
+          expect(q.id, q.id).not.toMatch(GONE_KINDS)
+          for (const c of q.choices) expect(names.has(c.label), `${q.id} : « ${c.label} »`).toBe(false)
         }
       }
     }
@@ -134,9 +230,14 @@ describe('la copie sur une seule entité (solo.ts)', () => {
 /* =====================================================================================================================
  * Le verrou de la spécification
  *
- * Deux règles : (I1) savoir que la copie porte sur X ne rapporte rien ; (I2) chaque question porte sur X, ou compare X
- * à une entité qu'on confond avec lui. Les mesures ci-dessous ne lisent que ce que l'élève lit (l'identifiant, l'énoncé,
- * la citation, les réponses, le corrigé) et les fiches : jamais le registre interne de la copie (soloFacts).
+ * Trois règles : (I1) savoir que la copie porte sur X ne rapporte rien ; (I2) chaque question porte sur X (le coach,
+ * 18 novembre 2026 : dans un test sur X, aucune question ne demande de quelle entité il s'agit, aucune ne porte sur
+ * le comportement d'une autre) ; (I3) tout ce que la copie affirme vient de la fiche de X (19 novembre 2026) : plus
+ * de signe d'une entité proche jugé « Faux », plus d'intrus, plus de départage, plus de « quel test confirme X ? ».
+ * Ce qui vient encore d'une autre fiche : les trois mauvaises réponses, sans nom, de « lequel de ces signes est celui
+ * de X ? », et les mauvaises valeurs ou profils d'une question de vitesse ou de seuil. Les mesures ci-dessous ne
+ * lisent que ce que l'élève lit (l'identifiant, l'énoncé, la citation, les réponses, le corrigé) et les fiches :
+ * jamais le registre interne de la copie (soloFacts).
  *
  * Le corpus : 30 entités × 30 copies, tirées comme la page les tire (une graine d'horloge sur 32 bits), une copie sur
  * deux enchaînée à la précédente (« Encore 10 » : ses questions déjà vues).
@@ -148,59 +249,100 @@ const pageSeed = (entity: number, copy: number) => (CLOCK + Math.floor(copy / 2)
 const COPIES = 30
 
 /**
- * Le plus petit nombre de questions des copies de chaque entité dans le corpus. Aucune fiche ne remplit toujours une
- * copie de dix aujourd'hui : la copie reste courte plutôt que de reposer une réponse déjà lue, de pencher vers une
- * réponse, d'aligner les questions à deux réponses, de dire faux ce que la fiche de X explique, ou de poser une
- * question sur une autre entité (le départage à l'envers, « à quoi reconnais-tu Y plutôt que X ? », que le coach a
- * écarté le 18 novembre 2026 : mieux vaut cinq questions sur X que sept dont deux sur celles qu'on confond avec
- * lui). En moyenne, 5,9 questions.
- * À vider à mesure que des questions rédigées complètent ces fiches : une entité retirée de la liste doit atteindre
- * dix à chaque copie, et le test le vérifie.
+ * Le plus petit nombre de questions des copies de chaque entité dans le corpus. Aucune fiche ne remplit une copie de
+ * dix aujourd'hui : la copie reste courte plutôt que de reposer une réponse déjà lue, de pencher vers une réponse,
+ * d'aligner les questions à deux réponses, ou d'emprunter à la fiche d'une autre entité (le coach, 18 et 19 novembre
+ * 2026 : mieux vaut cinq questions honnêtes sur X que sept dont deux empruntées). Recalibré le 19 novembre 2026,
+ * quand la copie a cessé de citer les fiches des entités proches (ni signe d'une autre jugé « Faux », ni intrus, ni
+ * départage, ni « quel test confirme X ? »), de demander deux fois ce que vaut un même fait, et de poser les indices
+ * écrits comme des impressions : 4,5 questions par copie en moyenne sur les 900 copies du corpus (6,4 la veille), de
+ * 2,8 pour le Goryo à 7,0 pour l'Obambo. Le Mimic descend à zéro dans un « Encore 10 » : sa fiche a sept questions,
+ * et une copie ne reprend jamais plus d'une moitié de questions déjà posées (la page, elle, ne passe pas encore les
+ * questions déjà vues : elle n'y arrive pas). À vider à mesure que des questions rédigées complètent ces fiches : une
+ * entité retirée de la liste doit atteindre dix à chaque copie, et le test le vérifie.
  */
 const SHORT_COPIES: Readonly<Record<string, number>> = {
-  'the-twins': 7,
-  kormos: 7,
-  phantom: 6,
-  mare: 6,
-  onryo: 6,
-  poltergeist: 5,
-  banshee: 5,
-  shade: 5,
-  yurei: 5,
-  yokai: 5,
-  myling: 5,
-  thaye: 5,
-  obambo: 5,
-  spirit: 4,
+  spirit: 3,
   wraith: 4,
-  jinn: 4,
-  demon: 4,
-  oni: 4,
-  hantu: 4,
-  raiju: 4,
-  obake: 4,
-  // ses questions sont presque toutes à deux ou trois réponses (tests, observations) : cinq au plus par copie
-  'the-mimic': 4,
-  moroi: 4,
-  deogen: 4,
-  gallu: 4,
-  dayan: 3,
-  aswang: 3,
-  deildegast: 3,
-  // sa fiche tient en une idée (1,0 m/s, puis 3,0 m/s dès qu'il te détecte) : les questions en nombres la demandent déjà
+  phantom: 3,
+  poltergeist: 2,
+  banshee: 3,
+  jinn: 3,
+  mare: 4,
   revenant: 2,
-  // pas d'observation décisive ni de test de confirmation sans preuve : peu de questions qui ne se recoupent pas
+  shade: 4,
+  demon: 4,
+  yurei: 4,
+  oni: 3,
+  yokai: 3,
+  hantu: 3,
   goryo: 2,
+  myling: 3,
+  onryo: 5,
+  'the-twins': 3,
+  raiju: 4,
+  obake: 2,
+  'the-mimic': 0,
+  moroi: 3,
+  deogen: 2,
+  thaye: 4,
+  gallu: 5,
+  obambo: 4,
+  dayan: 4,
+  aswang: 3,
+  kormos: 5,
+  // (2 depuis le 25 novembre 2026 au soir : ses signes de vitesse ne se composent plus en « lequel de ces signes… ? »,
+  // toute vitesse d'un autre signe étant un palier du Deildegast, voir inSpeedRange dans quiz.ts ; ses premières
+  // copies gardent quatre questions au moins, c'est un « Encore 10 » qui descend à deux)
+  deildegast: 2,
 }
+
+/**
+ * La longueur des copies du corpus (une copie sur deux y est un « Encore 10 », plus court). Des planchers, à relever
+ * quand les fiches s'étoffent : mesuré le 19 novembre 2026, 4,49 questions par copie et 484 copies de moins de cinq
+ * questions sur 900 (les premières copies seules, sans « Encore 10 » : 4,8 en moyenne) ; la veille, 6,40 et 86.
+ */
+const MEAN_SIZE = 4.3
+const UNDER_FIVE = 520
+/**
+ * Les planchers et plafonds des comptages du corpus (ce que le test mesure aujourd'hui, avec une marge) : 7 776
+ * paires de questions, 1 481 questions composées à quatre réponses, 40 « Encore 10 » sur 444 qui reprennent plus de
+ * la moitié des faits de la copie précédente, 2 193 signes d'autres fiches en mauvaises réponses dans la réserve.
+ */
+const PAIRS_FLOOR = 6000
+const COMPOSED_FLOOR = 1200
+const CHAINED_CEILING = 0.25
+/** La valeur standard, là où elle est proposée : bonne réponse 85 fois sur 100 au plus, mauvaise réponse 100 fois au moins (mesuré le 25 novembre 2026 : voir le verrou c.). */
+// (0,85 et 100 jusqu'au 25 novembre 2026 au soir : « 1,7 m/s » servait aussi de mauvaise réponse aux questions rédigées
+// sur une vitesse (« À quelle vitesse chasse un Gallu enragé ? »), qui venaient en plus des deux questions en nombres ;
+// elles comptent maintenant sous le même plafond, et ne suivent plus les questions qui donnent leurs mauvaises
+// réponses pour vraies. Mesuré : 86,6 % et 78)
+const STANDARD_WON = 0.88
+const STANDARD_WRONG = 70
+/** Une entité « normale » : sa valeur standard est demandée dans au moins 85 de ses premières copies sur 100. */
+const STANDARD_ASKED = 0.85
+const WRONG_SIGNS_FLOOR = 1800
+/** Les fiches qui ont un test d'élimination à citer en une phrase, sans preuve : leur réserve a de quoi poser un vrai ou faux. */
+const JUDGING: readonly string[] = ['wraith', 'phantom', 'banshee', 'jinn', 'mare', 'shade', 'hantu', 'goryo', 'onryo', 'raiju', 'deogen', 'thaye']
+/**
+ * Celles dont la copie le pose : il faut, face au « Faux », un « Vrai » de la fiche de même tournure et de longueur
+ * voisine (voir judgedFor, solo.ts). Les quatre autres (Djinn, Cauchemar, Goryo, Thayé) n'en ont pas : leur vrai ou
+ * faux se devinerait à sa forme. (L'Oni, le Myling et le Deildegast ont bien un test d'élimination, mais il s'adresse
+ * au joueur, « Tu vois un événement… », « … quand elle te garde en ligne de vue » : une scène ne se juge pas en vrai
+ * ou faux.)
+ */
+const PAIRED: readonly string[] = ['wraith', 'phantom', 'banshee', 'shade', 'hantu', 'onryo', 'raiju', 'deogen']
+/** La tournure d'une affirmation jugée en vrai ou faux, et deux longueurs voisines : les règles de solo.ts, redites ici. */
+const SAYS_YOU = /(?<!\p{L})(?:tu|te|toi|ton|ta|tes|t[’'])(?!\p{L})/iu
+const shapeOf = (t: string) => (/^L[’']entité(?!\p{L})/u.test(t) ? 'led' : /l[’']entité/iu.test(t) ? 'entity' : 'sign')
+const closeSize = (a: string, b: string) => Math.max(a.length, b.length) <= 1.3 * Math.min(a.length, b.length) || Math.abs(a.length - b.length) <= 16
 
 interface View {
   q: Question
   type: SoloType
   x: Ghost
-  /** l'entité proche de la question (départage, intrus, vrai ou faux, observation), d'après son identifiant */
-  partner: Ghost | null
-  /** l'entité dont parle la bonne réponse */
-  about: Ghost
+  /** l'entité de la fiche d'où vient la phrase jugée (vrai ou faux, observation), d'après son identifiant : toujours X */
+  source: Ghost
   right: Choice
   wrong: Choice[]
 }
@@ -213,33 +355,14 @@ interface Copy {
   ms: number
 }
 
-/** Une question lue de l'extérieur : sa sorte, l'entité proche et l'entité dont parle la réponse, d'après son identifiant. */
+/** Une question lue de l'extérieur : sa sorte, et la fiche d'où vient la phrase jugée, d'après son identifiant. */
 function view(q: Question, x: Ghost): View {
   const type = soloType(q)!
   const p = q.id.split(':')
-  let partner: string | null = null
-  let about = x.id
-  if (type === 'T7a') {
-    // q:dist:<face à>:<reconnue>
-    partner = p[2] === x.id ? p[3] : p[2]
-    about = p[3]
-  } else if (type === 'T7b') {
-    // q:duel:<x>:<y>:<celle dont on parle>:…
-    partner = p[3]
-    about = p[4]
-  } else if (type === 'T5') {
-    partner = p[3]
-    about = p[3]
-  } else if (type === 'T6' || type === 'T8') {
-    // q:vf:<x>:<source>:… et q:constat:<x>:<source>:…
-    partner = p[3] === x.id ? null : p[3]
-    about = p[3]
-  }
-  return { q, type, x, partner: partner ? getGhost(partner)! : null, about: getGhost(about)!, right: q.choices.find((c) => q.correct.includes(c.id))!, wrong: q.choices.filter((c) => !q.correct.includes(c.id)) }
+  // q:vf:<x>:<source>:… et q:constat:<x>:<source>:…
+  const source = type === 'T6' || type === 'T8' ? p[3] : x.id
+  return { q, type, x, source: getGhost(source) ?? x, right: q.choices.find((c) => q.correct.includes(c.id))!, wrong: q.choices.filter((c) => !q.correct.includes(c.id)) }
 }
-
-const confused = (x: Ghost, y: Ghost) => x.confusions.some((c) => c.with === y.id) || y.confusions.some((c) => c.with === x.id)
-
 /* ---------- textes ---------- */
 
 const bareCache = new Map<string, string>()
@@ -307,15 +430,13 @@ function valuesOf(who: string, text: string): string[] {
 
 /* ---------- ce qu'une question demande, ce qu'elle montre ---------- */
 
-const TYPES: readonly SoloType[] = ['T1', 'T2', 'T3a', 'T3b', 'T4', 'T5', 'T6', 'T7a', 'T7b', 'T8', 'auth']
+const TYPES: readonly SoloType[] = ['T1', 'T2', 'T3b', 'T6', 'T8', 'auth']
 const NUMERIC = /^q:(?:san|spd):/u
 const isLos = (q: Question) => q.id.startsWith('q:los:')
 /** Les questions à réponses fixes : la phrase jugée est la citation. */
-const FIXED: readonly SoloType[] = ['T3b', 'T6', 'T7b', 'T8']
+const FIXED: readonly SoloType[] = ['T3b', 'T6', 'T8']
 /** Les questions qui demandent ce que vaut un fait de X (une preuve, un simple indice), et non à qui il est. */
-const asksWorth = (v: View) => v.type === 'T3b' || (v.type === 'T8' && v.about.id === v.x.id)
-/** Ce que vaut le fait, d'après la bonne réponse. */
-const verdict = (v: View) => (v.type === 'T3b' ? (v.q.correct[0] === SOLO_ANSWERS.enough.yes ? 'confirms' : 'fits') : v.q.correct[0])
+const asksWorth = (v: View) => v.type === 'T3b' || v.type === 'T8'
 
 /** La phrase dont la connaissance donne la réponse. */
 function answerText(v: View): string {
@@ -325,24 +446,10 @@ function answerText(v: View): string {
   return v.right.label
 }
 /** Les valeurs que demande la question (celles de sa réponse). */
-const answerValues = (v: View) => valuesOf(v.about.id, NUMERIC.test(v.q.id) ? v.right.label : answerText(v))
+const answerValues = (v: View) => valuesOf(v.x.id, NUMERIC.test(v.q.id) ? v.right.label : answerText(v))
 
-/** Ce que la question montre de vrai une fois corrigée, et de qui : [entité, texte]. */
-function shownTexts(v: View): [string, string][] {
-  const { q, x, about, partner } = v
-  const out: [string, string][] = []
-  // l'énoncé et le corrigé parlent de X, de l'entité proche, ou des deux
-  for (const t of [q.prompt, q.explain]) for (const who of new Set([x.id, about.id, ...(partner ? [partner.id] : [])])) out.push([who, t])
-  if (q.quote) out.push([about.id, q.quote])
-  out.push([about.id, v.right.label])
-  for (const c of v.wrong) {
-    // un signe ou un test d'une autre entité (le corrigé dit de qui), ou une phrase de X lui-même (intrus, exclusion)
-    if (v.type === 'T2' || v.type === 'T3a' || v.type === 'T7a') {
-      if (getGhost(c.id)) out.push([c.id, c.label])
-    } else if (v.type === 'T5' || v.type === 'T4') out.push([x.id, c.label])
-  }
-  return out
-}
+/** Ce que la question montre de X une fois corrigée : son énoncé, sa citation, sa bonne réponse, son corrigé. */
+const shownTexts = (v: View): string[] => [v.q.prompt, v.q.explain, ...(v.q.quote ? [v.q.quote] : []), v.right.label]
 /** Tout ce qui se lit à l'écran une fois la question corrigée. */
 const screen = (q: Question) => [q.prompt, q.quote ?? '', q.note ?? '', q.explain, ...q.choices.map((c) => c.label)].join(' \n ')
 /** Ce qui se lit avant de répondre. */
@@ -388,6 +495,22 @@ const extreme = (v: View, sign: 1 | -1): number[] => {
   return lens.flatMap((l, i) => (l === best ? [i] : []))
 }
 const at = (v: View, id: string) => [v.q.choices.findIndex((c) => c.id === id)]
+/**
+ * Le plafond de qui répond d'après la longueur de la citation d'un « est-ce que ça suffit ? » (« Oui » aux longues,
+ * « Non » aux courtes, ou l'inverse), à quinze seuils : le hasard plus QUOTE_LENGTH_EDGE points, et c'est un écart
+ * connu. Sur les fiches, une observation décisive se décrit en détail (ses conditions, sa suite) et un simple indice
+ * tient en une ligne ; le plan équilibre les réponses à longueur voisine (voir worthPlan, solo.ts) sans priver une
+ * fiche de l'une de ses deux réponses (voir BOTH). Mesuré le 19 novembre 2026 : au pire seuil, 13,1 points aux
+ * observations (« Oui » à 140 caractères et plus : 63,1 % sur 471 questions) et 8,7 aux tests (à 90 caractères, sur
+ * 264). Le plafond est celui d'avant : une fois retirés les indices écrits comme des impressions (souvent de longues
+ * scènes à « Non ») et réduite la copie à un seul « est-ce que ça suffit ? », l'écart montait à 20,5 points ; le plan
+ * l'a ramené sous son plafond en posant moins souvent la question sur les fiches à une seule réponse dont la
+ * citation a la longueur de trop (voir RIVAL et SHARE_FLOOR, solo.ts). À resserrer si des observations décisives
+ * courtes ou de simples indices détaillés s'ajoutent aux fiches.
+ */
+const QUOTE_LENGTH_EDGE = 14
+const SHORTEST = 'la réponse la plus courte'
+const LONGEST = 'la réponse la plus longue'
 /** Ceux qui jouent toutes les questions : le hasard plus deux points, sans marge. */
 const EVERY_QUESTION: Record<string, Player> = {
   'la réponse la plus longue': (v) => extreme(v, 1),
@@ -401,39 +524,58 @@ const EVERY_QUESTION: Record<string, Player> = {
     return shared.flatMap((s, i) => (s === best ? [i] : []))
   },
 }
+/** L'autre réponse d'une question à deux réponses. */
+const flip = (answer: string) =>
+  answer === SOLO_ANSWERS.trueFalse.true ? SOLO_ANSWERS.trueFalse.false : answer === SOLO_ANSWERS.trueFalse.false ? SOLO_ANSWERS.trueFalse.true : answer === SOLO_ANSWERS.enough.yes ? SOLO_ANSWERS.enough.no : SOLO_ANSWERS.enough.yes
+const TRUE = SOLO_ANSWERS.trueFalse.true
+const FALSE = SOLO_ANSWERS.trueFalse.false
+const YES = SOLO_ANSWERS.enough.yes
+const NO = SOLO_ANSWERS.enough.no
+const isWorth = (v: View) => v.type === 'T3b' || v.type === 'T8'
+/** La phrase jugée parle de « l'entité » (une scène), ou non (un signe écrit sans sujet). */
+const SAYS_ENTITY = /l[’']entité/iu
 /** Ceux qui ne jouent que certaines questions. */
 const SOME_QUESTIONS: Record<string, Player> = {
-  'toujours X quand X est proposé': (v) => {
-    const i = v.q.choices.findIndex((c) => c.label === v.x.name)
-    return i < 0 ? null : [i]
-  },
-  // (hors « de qui parle-t-on ? », où le joueur d'avant répond déjà X : mêlées aux autres, ses 300 questions à une chance
-  // sur deux cacheraient une fuite sur les phrases)
   'la seule réponse qui nomme X ou contient le mot que souffle son nom': (v) => {
-    if (v.type === 'T7b') return null
     const hit = v.q.choices.flatMap((c, i) => (namesGhost(c.label, v.x) || hints(v.x, c.label) ? [i] : []))
     return hit.length === 1 ? hit : null
   },
-  'toujours « Vrai »': (v) => (v.type === 'T6' ? at(v, SOLO_ANSWERS.trueFalse.true) : null),
-  'toujours « Faux »': (v) => (v.type === 'T6' ? at(v, SOLO_ANSWERS.trueFalse.false) : null),
-  'observation : toujours « Oui, et ça suffit »': (v) => (v.type === 'T8' ? at(v, SOLO_ANSWERS.observation.confirms) : null),
-  'observation : toujours « Oui, mais ça ne suffit pas »': (v) => (v.type === 'T8' ? at(v, SOLO_ANSWERS.observation.fits) : null),
-  'observation : toujours « Non, ça l’exclut »': (v) => (v.type === 'T8' ? at(v, SOLO_ANSWERS.observation.excludes) : null),
-  'ce test suffit-il : toujours « Oui »': (v) => (v.type === 'T3b' ? at(v, SOLO_ANSWERS.enough.yes) : null),
-  'ce test suffit-il : toujours « Non »': (v) => (v.type === 'T3b' ? at(v, SOLO_ANSWERS.enough.no) : null),
+  'toujours « Vrai »': (v) => (v.type === 'T6' ? at(v, TRUE) : null),
+  'toujours « Faux »': (v) => (v.type === 'T6' ? at(v, FALSE) : null),
+  'observation : toujours « Oui, ça suffit »': (v) => (v.type === 'T8' ? at(v, YES) : null),
+  'observation : toujours « Non, ce n’est qu’un indice »': (v) => (v.type === 'T8' ? at(v, NO) : null),
+  'ce test suffit-il : toujours « Oui »': (v) => (v.type === 'T3b' ? at(v, YES) : null),
+  'ce test suffit-il : toujours « Non »': (v) => (v.type === 'T3b' ? at(v, NO) : null),
   'ligne de vue : toujours « Oui »': (v) => (isLos(v.q) ? [0] : null),
   'ligne de vue : toujours « Non »': (v) => (isLos(v.q) ? [1] : null),
+  // (un seul vrai ou faux et un seul « est-ce que ça suffit ? » par copie : rien à déduire d'une réponse pour la
+  // suivante, voir le verrou f. Deux « est-ce que ça suffit ? » se devinaient l'un par l'autre : « l'autre réponse qu'à
+  // la précédente » trouvait 60 fois sur 100)
+  '« est-ce que ça suffit ? » : « Oui » aux tests, « Non » aux observations': (v) => (isWorth(v) ? at(v, v.type === 'T3b' ? YES : NO) : null),
+  '« est-ce que ça suffit ? » : « Non » aux tests, « Oui » aux observations': (v) => (isWorth(v) ? at(v, v.type === 'T3b' ? NO : YES) : null),
+  // la forme de la phrase jugée en vrai ou faux : sa longueur, sa tournure
+  'vrai ou faux : « Vrai » si la phrase est longue (80 caractères et plus), sinon « Faux »': (v) => (v.type === 'T6' ? at(v, v.q.quote!.length >= 80 ? TRUE : FALSE) : null),
+  'vrai ou faux : « Faux » si la phrase est longue (80 caractères et plus), sinon « Vrai »': (v) => (v.type === 'T6' ? at(v, v.q.quote!.length >= 80 ? FALSE : TRUE) : null),
+  'vrai ou faux : « Faux » si la phrase parle de « l’entité », sinon « Vrai »': (v) => (v.type === 'T6' ? at(v, SAYS_ENTITY.test(v.q.quote!) ? FALSE : TRUE) : null),
+  'vrai ou faux : « Vrai » si la phrase parle de « l’entité », sinon « Faux »': (v) => (v.type === 'T6' ? at(v, SAYS_ENTITY.test(v.q.quote!) ? TRUE : FALSE) : null),
 }
+/**
+ * « Oui » aux longues citations, « Non » aux courtes (ou l'inverse), à plusieurs seuils : sur les fiches, un fait
+ * décisif se décrit en détail (ses conditions), un simple indice tient en une ligne.
+ */
+const QUOTE_LENGTHS = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220] as const
+const byQuoteLength = (type: SoloType, least: number, long: string): Player => (v) => (v.type === type ? at(v, v.q.quote!.length >= least ? long : flip(long)) : null)
 
 /* ---------- les fiches ---------- */
 
-/** Les faits d'une fiche : ce qu'elle dit de sa propre entité. */
-const ownLines = (g: Ghost): string[] => [
-  ...g.keyTells,
-  ...[...g.tells, ...g.behaviors, ...g.abilities, ...g.observations, ...g.confirmationTests, ...g.eliminationTests].map((t) => t.text),
-]
 /** La phrase vient-elle de l'un de ces textes (au caviardage, aux apartés et à la conclusion retirés près) ? */
 const from = (statement: string, texts: readonly string[]) => texts.some((t) => within(statement, t) >= 0.8)
+/** Une ligne de fiche telle qu'un corrigé la cite : sans la phrase qui nomme une source que l'élève ne connaît pas (voir withoutSource, solo.ts). */
+const withoutSourceSentences = (line: string) =>
+  line
+    .split(/(?<=[.!?…])\s+/u)
+    .filter((s) => !/tybayn/iu.test(s))
+    .join(' ')
 /** Ce qui, dans la citation d'un test, dirait déjà s'il suffit : un nom d'entité, sa conclusion, un mot de verdict. */
 const VERDICT_WORDS = /c[’']est\s+(?:une?|le|la|les|cette|ces)\s+(?!cas(?!\p{L}))|c[’']est\s+l[’']|ce\s+sont\s|ce\s+n[’']est\s+pas|ça\s+(?:pourrait|peut)|pourrait|peut-être|(?<!\p{L})indices?(?!\p{L})|à coup sûr|forcément|certitude|(?<!\p{L})certaine?s?(?!\p{L})|confirm|suffi|prouv|exclu|élimin/iu
 
@@ -444,6 +586,25 @@ const VERDICT_WORDS = /c[’']est\s+(?:une?|le|la|les|cette|ces)\s+(?!cas(?!\p{L
 const measure = (line: string) => {
   if (import.meta.env.VITE_SOLO_MEASURES) console.info(line)
 }
+
+/** La règle « un mot d'impression → Non, sinon Oui » du relecteur (verify/coach/tools/cues.py), mot pour mot. */
+const VAGUE =
+  /souvent|surtout|un peu|semble|plutôt|de plus en plus|bien plus|plus tard|jamais|toujours|chaque fois|à chaque|de toute la partie|tant que|malgré|encore (?:vers|autour)|vers \d|autour de|d[’']une chasse à l[’']autre|certaines|beaucoup|pourrait|peut-être/iu
+/**
+ * Les deux joueurs qui ne lisent que la tournure d'une observation (« tu observes ceci : est-ce que ça suffit ? »).
+ * Avant le 19 novembre 2026, les indices des fiches, écrits comme des impressions, se posaient tous : le premier
+ * joueur (« un mot d'impression : Non ; sinon : Oui ») trouvait 73 fois sur 100, le second (qui a appris sur les
+ * observations corrigées des 29 autres entités quels mots vont avec quelle réponse) 78 fois sur 100. Ces indices ne se
+ * posent plus (voir IMPRESSION, solo.ts). Mesuré depuis, sur les 471 observations du corpus : 52,4 % pour le
+ * premier, 67,7 % pour le second. Le premier joueur est sous l'objectif de 60 % ; le second
+ * n'y descend pas sans vider la question de ses « Non » : ce qu'il lit encore, ce sont des sujets (portes,
+ * interactions, « l'équipe » : les indices des fiches parlent de l'activité de l'entité, ses faits décisifs d'une
+ * chasse racontée à la deuxième personne), que seule une réécriture des fiches changerait. Son plafond est ce qui se
+ * mesure aujourd'hui, pour qu'il ne remonte pas sans qu'on le voie.
+ */
+const WORDING_CEILING = { rule: 60, learnt: 72 } as const
+/** Les mots d'une citation tels que le joueur qui apprend les lit : six lettres au plus, trois au moins, et les chiffres un à un. */
+const tokens = (t: string) => new Set((t.toLocaleLowerCase('fr').match(/\p{L}+|\d/gu) ?? []).filter((w) => w.length >= 3 || /\d/u.test(w)).map((w) => w.slice(0, 6)))
 
 describe('« Me tester sur X » : le verrou de la spécification (30 entités × 30 copies, graines d’horloge)', () => {
   const corpus: Copy[] = []
@@ -472,74 +633,47 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
 
   /* ---------- a. chaque question porte sur X ---------- */
 
-  it('a. chaque question porte sur X ; toute autre entité nommée est la seule entité proche de la question, qu’on confond avec X', () => {
-    let naming = 0
+  it('a. chaque question porte sur X, et rien de ce qui se lit avant le corrigé ne nomme une autre entité', () => {
     for (const v of all) {
       expect(v.q.ghostId, v.q.id).toBe(v.x.id)
       expect(v.type, v.q.id).not.toBeNull()
       expect(v.q.correct, v.q.id).toHaveLength(1)
       expect(v.right, v.q.id).toBeDefined()
-      const named = namedIn(v.q, v.x)
-      if (named.length) naming++
-      if (v.type === 'auth') {
-        // une question rédigée de la fiche peut comparer X à une entité : une seule, qu'on confond avec lui
-        expect(named.length, `${v.q.id} : « ${v.q.prompt} »`).toBeLessThanOrEqual(1)
-        for (const o of named) expect(confused(v.x, o) && o.id !== MIMIC, `${v.q.id} nomme ${o.name}`).toBe(true)
-      } else {
-        for (const o of named) expect(o.id, `${v.q.id} nomme ${o.name}`).toBe(v.partner?.id)
-      }
-      if (v.partner) {
-        expect(confused(v.x, v.partner), `${v.q.id} : ${v.partner.name} ne se confond pas avec ${v.x.name}`).toBe(true)
-        expect(v.partner.id, v.q.id).not.toBe(MIMIC)
-        expect(v.x.id, v.q.id).not.toBe(MIMIC)
-        expect(v.partner.id, v.q.id).not.toBe(v.x.id)
-      }
+      // ni l'énoncé, ni la citation, ni une réponse ne nomme une autre entité : plus de départage (« plutôt que Y »),
+      // plus de question rédigée qui compare X à une autre (« Tu hésites entre un Esprit et un Spectre… »). Seul un
+      // corrigé peut en nommer une (de qui sont les trois autres signes ; pourquoi un indice n'est qu'un indice)
+      expect(namedIn(v.q, v.x).map((o) => o.name), `${v.q.id} : « ${v.q.prompt} »`).toEqual([])
     }
-    // le test mord : des centaines de questions nomment bien une entité proche (« de qui parle-t-on ? », le départage)
-    expect(naming).toBeGreaterThan(300)
-    measure(`a. ${all.length} questions dans ${corpus.length} copies, dont ${naming} nomment une entité proche`)
+    measure(`a. ${all.length} questions dans ${corpus.length} copies ; aucune ne nomme une autre entité avant son corrigé`)
   })
 
-  /* ---------- b. plus de « quelle entité ? » ---------- */
+  /* ---------- b. plus de « quelle entité ? », plus rien d'une autre fiche ---------- */
 
-  it('b. aucun choix entre des noms, sauf « de qui parle-t-on ? » : X et une entité proche, X une fois sur deux', () => {
+  it('b. aucune question ne demande « quelle entité ? », aucune ne porte sur une autre entité, aucune affirmation ne vient d’une autre fiche', () => {
     const names = new Set(GHOSTS.flatMap((g) => [g.name, g.nameEn, `${g.name} (${g.nameEn})`]))
+    const faults: string[] = []
     for (const v of all) {
-      const n = v.q.choices.filter((c) => names.has(c.label)).length
-      if (v.type !== 'T7b') {
-        expect(n, `${v.q.id} : ${n} noms d’entités parmi les réponses`).toBe(0)
-        continue
-      }
-      expect(v.q.choices, v.q.id).toHaveLength(2)
-      expect(v.q.choices.map((c) => c.id).sort(), v.q.id).toEqual([v.x.id, v.partner!.id].sort())
-      expect(v.q.choices.map((c) => c.label).sort(), v.q.id).toEqual([v.x.name, v.partner!.name].sort())
-      expect([v.x.id, v.partner!.id], v.q.id).toContain(v.about.id)
-      // la citation ne nomme ni l'une ni l'autre
-      expect(namesGhost(v.q.quote!, v.x) || namesGhost(v.q.quote!, v.partner!), `${v.q.id} : « ${v.q.quote} »`).toBe(false)
+      const p = v.q.id.split(':')
+      // pas un nom d'entité parmi les réponses : ni « de qui parle-t-on ? », ni « quelle entité fait ceci ? »
+      for (const c of v.q.choices) if (names.has(c.label) || GHOSTS.some((g) => c.label === g.name)) faults.push(`${v.q.id} : « ${c.label} » parmi les réponses`)
+      // ni départage, ni « quel test confirme X ? », ni intrus, ni « dans lequel de ces cas peux-tu exclure X ? »
+      if (GONE_KINDS.test(v.q.id)) faults.push(`${v.q.id} : une sorte de question qui ne se pose plus`)
+      // « est-ce que ça suffit ? » ne se pose que sur une observation de la fiche de X
+      if (v.type === 'T8' && (p[3] !== v.x.id || !/^O\d+$/u.test(p[4]))) faults.push(`${v.q.id} : une scène qui n’est pas une observation de la fiche de ${v.x.name}`)
+      // un vrai ou faux ne juge qu'une phrase de la fiche de X : l'un de ses tests d'élimination (E), de ses signes clés
+      // (K), de ses signes « 0 preuve » (T) ou de ses observations (O). Ni signe d'une entité proche, ni comportement
+      // ou capacité (B, A : ils redisaient les signes clés), ni phrase de départage (L)
+      if (v.type === 'T6' && (p[3] !== v.x.id || !/^[EKTO]\d+$/u.test(p[4]))) faults.push(`${v.q.id} : un vrai ou faux qui ne vient pas de la fiche de ${v.x.name}`)
+      if (v.source.id !== v.x.id) faults.push(`${v.q.id} : la phrase jugée vient de la fiche de ${v.source.name}`)
+      if (v.type === 'T6') expect(v.q.prompt.replace(/[\u00a0\u202f]/gu, ' '), v.q.id).toMatch(/^Vrai ou faux pour .+ \?$/u)
     }
-    const duels = all.filter((v) => v.type === 'T7b')
-    const share = (list: readonly View[]) => (100 * list.filter((v) => v.about.id === v.x.id).length) / list.length
-    expect(duels.length).toBeGreaterThan(200)
-    // 45 à 55 %, à l'erreur d'échantillonnage près comme pour chaque entité ci-dessous (deux écarts-types : sur 300
-    // questions, 6 points). La réponse se tire à pile ou face entre une phrase sur X et une phrase sur l'entité proche
-    // (voir addEither) : sur 2 020 questions (240 copies par entité), X est la réponse de 48,6 %. Une borne nue, sur
-    // 300 questions, se jouerait à la graine.
-    const noise = 2 * 100 * Math.sqrt(0.25 / duels.length)
-    expect(share(duels), `X est la réponse de ${share(duels).toFixed(1)} % des ${duels.length} « de qui parle-t-on ? »`).toBeGreaterThanOrEqual(45 - noise)
-    expect(share(duels)).toBeLessThanOrEqual(55 + noise)
-    measure(`b. « de qui parle-t-on ? » : X est la réponse de ${share(duels).toFixed(1)} % des ${duels.length} questions`)
-    // par entité : 35 à 65 %, à l'erreur d'échantillonnage près (deux écarts-types : à 30 questions, 9 points chacun) ;
-    // et, pour que le tirage puisse tomber des deux côtés, sa réserve compte des phrases sur X et sur l'entité proche
-    for (const x of GHOSTS) {
-      const sides = new Set(soloSupply(x, GHOSTS).filter((s) => s.type === 'T7b').map((s) => (s.id.split(':')[4] === x.id ? 'x' : 'y')))
-      const mine = duels.filter((v) => v.x.id === x.id)
-      if (mine.length) expect([...sides].sort(), `${x.id} : « de qui parle-t-on ? » se pose, mais d’un seul côté`).toEqual(['x', 'y'])
-      if (mine.length) measure(`b.   ${x.id} : X ${mine.filter((v) => v.about.id === x.id).length}/${mine.length}`)
-      if (mine.length < 8) continue
-      const margin = 2 * 100 * Math.sqrt(0.25 / mine.length)
-      expect(share(mine), `${x.id} : ${share(mine).toFixed(0)} % sur ${mine.length}`).toBeGreaterThanOrEqual(35 - margin)
-      expect(share(mine), `${x.id} : ${share(mine).toFixed(0)} % sur ${mine.length}`).toBeLessThanOrEqual(65 + margin)
-    }
+    expect(faults, [...new Set(faults)].slice(0, 12).join('\n')).toEqual([])
+    // le test mord : des vrai ou faux se posent bien, « Faux » compris
+    const judged = all.filter((v) => v.type === 'T6')
+    measure(`b. vrai ou faux : ${judged.length} dans ${corpus.length} copies, dont ${judged.filter((v) => v.q.correct[0] === FALSE).length} « Faux », tous tirés d’un test d’élimination de X`)
+    // (huit fiches posent un vrai ou faux, voir PAIRED : mesuré, 84 « Faux » et 93 « Vrai » dans 900 copies)
+    expect(judged.filter((v) => v.q.correct[0] === FALSE).length).toBeGreaterThan(60)
+    expect(judged.filter((v) => v.q.correct[0] === TRUE).length).toBeGreaterThan(60)
   })
 
   /* ---------- c. savoir que la copie porte sur X ne rapporte rien ---------- */
@@ -551,14 +685,40 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +2,0)`)
       expect(s.got, `${name} : ${say(s)}`).toBeLessThanOrEqual(ceiling(s, true))
     }
+    // Les questions en nombres, à part : la valeur standard s'y demande à chaque entité (voir SOLO_STANDARD, solo.ts),
+    // et « 1,7 m/s » s'écrit plus court que « 1,53 m/s ». Les quatre réponses ont donc la même longueur (voir le
+    // verrou « des réponses de même forme »), et ni la plus courte ni la plus longue n'y gagne rien
+    const numeric = all.filter((v) => NUMERIC.test(v.q.id))
+    expect(numeric.length).toBeGreaterThan(800)
+    for (const name of [SHORTEST, LONGEST]) {
+      const s = play(numeric, EVERY_QUESTION[name])
+      measure(`c. ${name}, sur les nombres : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +2,0)`)
+      expect(s.got, `${name}, sur les nombres : ${say(s)}`).toBeLessThanOrEqual(ceiling(s, true))
+    }
     for (const [name, player] of Object.entries(SOME_QUESTIONS)) {
       const s = play(all, player)
       // (une seule réponse qui souffle X : il en reste peu, et tant mieux ; les autres joueurs ont des centaines de questions)
+      // (la ligne de vue ne se demande plus au Revenant depuis le 25 novembre 2026, voir LOS_TWO_ANSWERS dans quiz.ts :
+      // quatre entités qui n'accélèrent pas se la voient demander, il en reste un peu moins de cent sur les 900 copies)
       if (name.startsWith('la seule réponse')) expect(s.n, name).toBeLessThan(200)
-      else expect(s.n, name).toBeGreaterThan(100)
+      else expect(s.n, name).toBeGreaterThan(name.startsWith('ligne de vue') ? 70 : 100)
       if (!s.n) continue
       measure(`c. ${name} : ${say(s)} (écart ${(s.got - s.chance).toFixed(1)}, plafond +${(ceiling(s, false) - s.chance).toFixed(1)})`)
       expect(s.got, `${name} : ${say(s)} (plafond ${ceiling(s, false).toFixed(1)} %)`).toBeLessThanOrEqual(ceiling(s, false))
+    }
+    // la longueur de la citation d'un « est-ce que ça suffit ? » : un écart connu, borné à ce qui se mesure (voir QUOTE_LENGTH_EDGE)
+    for (const type of ['T3b', 'T8'] as const) {
+      let worst = { name: '', edge: 0 }
+      for (const least of QUOTE_LENGTHS) {
+        for (const long of [YES, NO]) {
+          const name = `${type === 'T3b' ? 'ce test suffit-il' : 'observation'} : « ${long === YES ? 'Oui' : 'Non'} » si la citation fait ${least} caractères et plus, sinon « ${long === YES ? 'Non' : 'Oui'} »`
+          const s = play(all, byQuoteLength(type, least, long))
+          expect(s.n, name).toBeGreaterThan(100)
+          if (s.got - s.chance > worst.edge) worst = { name: `${name} : ${say(s)}`, edge: s.got - s.chance }
+          expect(s.got, `${name} : ${say(s)} (plafond ${(s.chance + QUOTE_LENGTH_EDGE).toFixed(1)} %)`).toBeLessThanOrEqual(s.chance + QUOTE_LENGTH_EDGE)
+        }
+      }
+      measure(`c. longueur de la citation, au pire seuil : ${worst.name} (écart ${worst.edge.toFixed(1)}, plafond +${QUOTE_LENGTH_EDGE})`)
     }
     // sorte par sorte : un joueur peut ne jouer sa règle que là où elle paie (la seule réponse qui contient « disparaît »,
     // dans les questions rédigées du Fantôme). Sur ces petits nombres, et tant de mesures, trois écarts-types de marge
@@ -573,6 +733,46 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     }
   })
 
+  it('c. D11. la tournure d’une observation ne souffle pas sa réponse : « un mot d’impression, donc Non » ne paie plus, et qui a appris les mots des autres fiches reste sous son plafond', () => {
+    const scenes = all.filter((v) => v.type === 'T8')
+    expect(scenes.length).toBeGreaterThan(300)
+    const yes = scenes.filter((v) => v.q.correct[0] === YES).length
+    // 1. la règle écrite à la main : un mot d'impression (« souvent », « semble », « un peu », « jamais »…) : « Non » ; sinon : « Oui »
+    const rule = scenes.filter((v) => VAGUE.test(v.q.quote!) === (v.q.correct[0] === NO)).length
+    // 2. le joueur qui a appris, sur les observations corrigées des 29 autres entités, quels mots vont avec quelle réponse
+    // (un classement bayésien naïf, comme l'outil du relecteur) : il ne sait rien de l'entité de la copie
+    const known = GHOSTS.flatMap((g) =>
+      soloSupply(g, GHOSTS)
+        .filter((s) => s.type === 'T8')
+        .flatMap((s) => {
+          const q = soloQuestion(g, GHOSTS, s.id, createRng(1))
+          return q ? [{ who: g.id, words: tokens(q.quote!), yes: q.correct[0] === YES }] : []
+        }),
+    )
+    const guess = new Map<string, (quote: string) => boolean>()
+    for (const g of GHOSTS) {
+      const train = known.filter((k) => k.who !== g.id)
+      const ny = train.filter((k) => k.yes).length
+      const nn = train.length - ny
+      const count = (of: boolean) => {
+        const c = new Map<string, number>()
+        for (const k of train) if (k.yes === of) for (const w of k.words) c.set(w, (c.get(w) ?? 0) + 1)
+        return c
+      }
+      const [cy, cn] = [count(true), count(false)]
+      guess.set(g.id, (quote) => {
+        let s = Math.log((ny + 1) / (nn + 1))
+        for (const w of tokens(quote)) if ((cy.get(w) ?? 0) + (cn.get(w) ?? 0) >= 3) s += Math.log(((cy.get(w) ?? 0) + 1) / (ny + 2)) - Math.log(((cn.get(w) ?? 0) + 1) / (nn + 2))
+        return s > 0
+      })
+    }
+    const learnt = scenes.filter((v) => guess.get(v.x.id)!(v.q.quote!) === (v.q.correct[0] === YES)).length
+    const pct = (n: number) => (100 * n) / scenes.length
+    measure(`c. D11. observations : ${scenes.length}, « Oui » ${pct(yes).toFixed(1)} % ; « mot d’impression : Non » ${pct(rule).toFixed(1)} % (plafond ${WORDING_CEILING.rule}) ; joueur qui a appris les mots des autres fiches ${pct(learnt).toFixed(1)} % (plafond ${WORDING_CEILING.learnt})`)
+    expect(pct(rule), `« mot d’impression : Non » : ${pct(rule).toFixed(1)} %`).toBeLessThanOrEqual(WORDING_CEILING.rule)
+    expect(pct(learnt), `joueur qui a appris les mots des autres fiches : ${pct(learnt).toFixed(1)} %`).toBeLessThanOrEqual(WORDING_CEILING.learnt)
+  })
+
   it('c. sur quatre phrases, la bonne est la plus longue une fois sur quatre ; ni « 50 % », ni « 1,7 m/s » ne gagnent d’office', () => {
     const four = all.filter((v) => v.q.choices.length === 4 && !NUMERIC.test(v.q.id))
     const longest = four.filter((v) => v.wrong.every((c) => c.label.length <= v.right.label.length))
@@ -580,13 +780,57 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     measure(`c. sur quatre phrases, la bonne est la plus longue (ou l’une des plus longues) : ${share.toFixed(1)} % de ${four.length}`)
     expect(share, `${share.toFixed(1)} % de ${four.length}`).toBeGreaterThanOrEqual(15)
     expect(share, `${share.toFixed(1)} % de ${four.length}`).toBeLessThanOrEqual(35)
-    // partout où la valeur standard est l'une des réponses, questions rédigées comprises (« À partir de quel seuil un Goryo peut-il chasser ? »)
-    for (const value of ['50\u00a0%', '1,7\u00a0m/s']) {
-      const shown = all.filter((v) => v.q.choices.some((c) => c.label === value))
-      const won = shown.filter((v) => v.right.label === value)
+    // La valeur standard (« 50 % », « 1,7 m/s ») se demande à toute entité qui l'a : c'est un fait de sa fiche, et le
+    // plus simple à retenir (les cases « Normales » du Codex). Elle est donc souvent la bonne réponse là où elle est
+    // proposée : deux entités sur trois sont « normales ». Ce qui reste verrouillé : elle se propose aussi comme
+    // mauvaise réponse (sinon « 50 % est là, donc c'est 50 % » gagnerait à coup sûr), et pas plus souvent bonne que
+    // ce qui se mesure aujourd'hui (STANDARD_WON)
+    // (« 1,70 m/s » : la vitesse standard quand les quatre réponses s'alignent sur deux décimales)
+    for (const [value, is] of [
+      ['50 %', /^50\u00a0%$/u],
+      ['1,7 m/s', /^1,70?\u00a0m\/s$/u],
+    ] as const) {
+      const shown = all.filter((v) => v.q.choices.some((c) => is.test(c.label)))
+      const won = shown.filter((v) => is.test(v.right.label))
       measure(`c. « ${value} » proposé ${shown.length} fois, bonne réponse ${won.length} fois (${((100 * won.length) / Math.max(1, shown.length)).toFixed(1)} %)`)
-      expect(shown.length, value).toBeGreaterThanOrEqual(20)
-      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(0.4)
+      expect(shown.length, value).toBeGreaterThanOrEqual(200)
+      expect(shown.length - won.length, `${value} : proposé comme mauvaise réponse`).toBeGreaterThanOrEqual(STANDARD_WRONG)
+      expect(won.length / shown.length, `${value} : ${won.length}/${shown.length}`).toBeLessThanOrEqual(STANDARD_WON)
+    }
+  })
+
+  it('c. des réponses de même forme aux questions en nombres : quatre valeurs de même longueur (« 1,70 m/s » à côté de « 1,53 m/s »), pour que la vitesse standard ne se repère pas à sa longueur', () => {
+    const numeric = all.filter((v) => NUMERIC.test(v.q.id))
+    expect(numeric.length).toBeGreaterThan(800)
+    for (const v of numeric) expect(new Set(v.q.choices.map((c) => c.label.length)).size, `${v.q.id} : ${v.q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
+    // et sur toute la réserve : chaque question en nombres de chaque fiche, à vingt tirages
+    let drawn = 0
+    for (const x of GHOSTS) {
+      for (const s of soloSupply(x, GHOSTS).filter((k) => NUMERIC.test(k.id))) {
+        for (let r = 1; r <= 20; r++) {
+          const q = soloQuestion(x, GHOSTS, s.id, createRng(r * 7919 + 11))
+          if (!q) continue
+          drawn++
+          expect(new Set(q.choices.map((c) => c.label.length)).size, `${q.id} : ${q.choices.map((c) => c.label).join(' | ')}`).toBe(1)
+        }
+      }
+    }
+    expect(drawn).toBeGreaterThan(1000)
+  })
+
+  it('c. une entité « normale » se voit demander ce qui la rend normale : sa vitesse (1,7 m/s) et son seuil (50 %) sont dans presque toutes ses copies', () => {
+    // Le Codex range ces entités dans ses cases « Normales » : le savoir est un fait de leur fiche, et la question la
+    // plus simple de la copie. (Jusqu'au 25 novembre 2026, la valeur standard ne se demandait que 8 fois sur 100.)
+    const first = corpus.filter((c) => !c.seen)
+    for (const [value, is, standard] of [
+      ['1,7 m/s', /^1,70?\u00a0m\/s$/u, (x: Ghost) => x.speed.min === 1.7 && !x.speed.isRange && x.id !== MIMIC],
+      ['50 %', /^50\u00a0%$/u, (x: Ghost) => x.huntSanity.normal === 50 && x.id !== MIMIC],
+    ] as const) {
+      const mine = first.filter((c) => standard(c.x))
+      const asked = mine.filter((c) => c.views.some((v) => is.test(v.right.label)))
+      measure(`c. « ${value} » demandé dans ${asked.length} premières copies sur ${mine.length} des entités qui l’ont (${((100 * asked.length) / mine.length).toFixed(1)} %)`)
+      expect(mine.length, value).toBeGreaterThan(200)
+      expect(asked.length / mine.length, `${value} : ${asked.length}/${mine.length}`).toBeGreaterThanOrEqual(STANDARD_ASKED)
     }
   })
 
@@ -613,20 +857,17 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
 
   it('e. dans une copie, aucune réponse ne se lit plus tôt, aucun fait ne se demande deux fois sous le même angle', () => {
     /**
-     * Un fait se demande une fois pour dire à qui il est, puis une fois pour dire ce qu'il vaut (une preuve, un simple
-     * indice) : `b`, posée après `a` sur le même fait, est permise si elle demande ce qu'il vaut et que `a` ne l'a pas dit.
-     * « Quel test confirme X ? » dit les deux (c'est une preuve) ; deux questions sur ce que vaut le fait ne disent la
-     * même chose que si leur réponse est la même (une preuve, puis un simple indice sur le même objet, sont deux faits).
+     * Un fait se demande une fois pour dire à qui il est, puis une fois pour dire ce qu'il vaut (« est-ce que ça
+     * suffit ? ») : `b`, posée après `a` sur le même fait, est permise si elle demande ce qu'il vaut et que `a` demandait
+     * à qui il est. Deux « est-ce que ça suffit ? » sur le même fait ne vont jamais ensemble, quelle que soit leur
+     * réponse : au même verdict ils se répètent, à verdicts opposés ils déroutent.
      */
-    const otherAngle = (a: View, b: View) => {
-      if (!asksWorth(b)) return false
-      if (a.type === 'T3a') return verdict(b) !== 'confirms'
-      return !asksWorth(a) || verdict(a) !== verdict(b)
-    }
+    const otherAngle = (a: View, b: View) => asksWorth(b) && !asksWorth(a)
     const readEarlier: string[] = []
     const valueShown: string[] = []
     const askedTwice: string[] = []
     const worthFirst: string[] = []
+    const judgedTwice: string[] = []
     let twoAngles = 0
     let pairs = 0
     for (const c of corpus) {
@@ -641,41 +882,51 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
           const a = c.views[i]
           pairs++
           const tag = `${c.x.id} (graine ${c.seed}) ${a.q.id} puis ${b.q.id}`
+          // 0. deux citations jugées (vrai ou faux, « est-ce que ça suffit ? ») : aucune ne commence comme un passage de
+          // l'autre, dans un ordre comme dans l'autre. Deux angles sur un fait vont ensemble, pas deux fois la même phrase
+          if (a.q.quote && b.q.quote) {
+            const [qa, qb] = [bare(a.q.quote), bare(b.q.quote)]
+            if ((qa.length >= 20 && qb.includes(qa.slice(0, 60))) || (qb.length >= 20 && qa.includes(qb.slice(0, 60)))) judgedTwice.push(`${tag} : « ${b.q.quote.slice(0, 80)} »`)
+          }
           // 1. la phrase de la réponse, déjà lue telle quelle (énoncé, citation, réponses, corrigé)
           if (!NUMERIC.test(b.q.id) && !isLos(b.q) && start.length >= 20 && screens[i].includes(start)) readEarlier.push(`${tag} : « ${answer.slice(0, 80)} »`)
-          // une valeur de la réponse, déjà montrée de la même entité ; ou deux réponses qui disent le même fait de la même entité
-          const told = new Set(shown[i].filter(([who]) => who === b.about.id).flatMap(([who, t]) => valuesOf(who, t)))
+          // une valeur de la réponse, déjà montrée ; ou deux réponses qui disent le même fait
+          const told = new Set(shown[i].flatMap((t) => valuesOf(c.x.id, t)))
           const hit = values.filter((k) => told.has(k))
-          const same = a.about.id === b.about.id && (alike(answerText(a), answer) >= SAME_FACT || answerValues(a).some((k) => values.includes(k)))
+          const same = alike(answerText(a), answer) >= SAME_FACT || answerValues(a).some((k) => values.includes(k))
           if (!hit.length && !same) continue
           if (otherAngle(a, b)) twoAngles++
           // 2. ce que vaut le fait, puis à qui il est : le corrigé de la première l'a dit
           else if (same && asksWorth(a) && !asksWorth(b)) worthFirst.push(tag)
-          // 3. le même fait, deux fois sous le même angle
+          // 3. le même fait, deux fois sous le même angle (deux « est-ce que ça suffit ? » compris)
           else if (same) askedTwice.push(tag)
-          // 4. une valeur de la réponse, lue plus tôt à propos de la même entité
+          // 4. une valeur de la réponse, lue plus tôt
           else valueShown.push(`${tag} : ${hit.join(', ')}`)
         }
       }
     }
     const some = (list: string[]) => [...new Set(list)].slice(0, 12).join('\n')
-    measure(`e. ${pairs} paires de questions ; réponse déjà lue ${readEarlier.length}, valeur déjà montrée ${valueShown.length}, « ce que ça vaut » avant « à qui est-ce » ${worthFirst.length}, même fait sous le même angle ${askedTwice.length} ; deux angles (permis) ${twoAngles}, soit ${(twoAngles / corpus.length).toFixed(2)} par copie`)
+    measure(`e. ${pairs} paires de questions ; même phrase jugée deux fois ${judgedTwice.length}, réponse déjà lue ${readEarlier.length}, valeur déjà montrée ${valueShown.length}, « ce que ça vaut » avant « à qui est-ce » ${worthFirst.length}, même fait sous le même angle ${askedTwice.length} ; deux angles (permis) ${twoAngles}, soit ${(twoAngles / corpus.length).toFixed(2)} par copie`)
+    for (const l of [...new Set(askedTwice)]) measure(`e.   même angle : ${l}`)
+    for (const l of [...new Set(valueShown)]) measure(`e.   valeur montrée : ${l}`)
+    expect(judgedTwice, some(judgedTwice)).toHaveLength(0)
     expect(readEarlier, some(readEarlier)).toHaveLength(0)
     expect(valueShown, some(valueShown)).toHaveLength(0)
     expect(worthFirst, some(worthFirst)).toHaveLength(0)
     expect(askedTwice, some(askedTwice)).toHaveLength(0)
-    // les deux angles : mesurés, pour que leur part ne grimpe pas sans qu'on le voie (0,4 paire par copie aujourd'hui)
-    expect(pairs).toBeGreaterThan(12_000)
+    // les deux angles : mesurés, pour que leur part ne grimpe pas sans qu'on le voie (204 paires, soit 0,23 par copie)
+    expect(pairs).toBeGreaterThan(PAIRS_FLOOR)
     expect(twoAngles / corpus.length, `${twoAngles} paires « à qui est-ce, puis ce que ça vaut » sur ${corpus.length} copies`).toBeLessThanOrEqual(0.6)
   })
 
   /* ---------- f. la forme ---------- */
 
-  it('f. des réponses de même forme ; les réponses fixes dans leur ordre ; trois questions à deux réponses au plus, cinq à moins de quatre', () => {
-    const fixed: Record<string, string[]> = {
+  it('f. des réponses de même forme ; les réponses fixes dans leur ordre ; les questions à deux réponses : trois au plus, ou la moitié de la copie ; cinq à moins de quatre', () => {
+    const fixed: Partial<Record<SoloType, string[]>> = {
       T3b: [SOLO_ANSWERS.enough.yes, SOLO_ANSWERS.enough.no],
       T6: [SOLO_ANSWERS.trueFalse.true, SOLO_ANSWERS.trueFalse.false],
-      T8: [SOLO_ANSWERS.observation.confirms, SOLO_ANSWERS.observation.fits, SOLO_ANSWERS.observation.excludes],
+      // l'observation : deux réponses, celles de « ce test suffit-il ? » (plus de « Non, ça l'exclut », presque jamais juste)
+      T8: [SOLO_ANSWERS.enough.yes, SOLO_ANSWERS.enough.no],
     }
     const labels = new Map<string, Set<string>>()
     let composed = 0
@@ -688,7 +939,6 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
         const key = `${v.type}|${v.x.id}`
         labels.set(key, (labels.get(key) ?? new Set()).add(v.q.choices.map((c) => c.label).join(' | ')))
       } else if (isLos(v.q)) expect(ids, v.q.id).toEqual(['yes', 'no'])
-      else if (v.type === 'T7b') expect(v.q.choices, v.q.id).toHaveLength(2)
       else if (v.type !== 'auth') {
         // ce que l'app compose : quatre réponses de même unité, de longueur voisine, sans marque qui en distingue une seule
         composed++
@@ -701,16 +951,30 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
         for (const c of v.q.choices) expect(namesGhost(c.label, v.x), `${v.q.id} : ${c.label}`).toBe(false)
       }
     }
-    expect(composed).toBeGreaterThan(1400)
+    measure(`f. questions composées à quatre réponses : ${composed}`)
+    expect(composed).toBeGreaterThan(COMPOSED_FLOOR)
     for (const [key, set] of labels) expect(set.size, key).toBe(1)
-    // la variété : à toute taille, trois questions à deux réponses au plus (une sur deux se trouve au hasard) et cinq au
-    // plus à moins de quatre réponses ; une copie de dix compte donc cinq questions à quatre réponses au moins
+    // les mots de l'observation, les mêmes pour toutes les entités : « Oui, ça suffit », « Non, ce n'est qu'un indice »
+    const observation = new Set(all.filter((v) => v.type === 'T8').map((v) => v.q.choices.map((c) => c.label).join(' | ')))
+    expect([...observation]).toEqual(['Oui, ça suffit | Non, ce n’est qu’un indice'])
+    // la variété : les questions à deux réponses (une sur deux se trouve au hasard) sont trois au plus dans toute copie,
+    // et au-delà jamais plus de la moitié de la copie (quatre sur sept ou huit, cinq sur neuf ou dix) ; cinq questions
+    // au plus ont moins de quatre réponses : une copie de dix compte donc cinq questions à quatre réponses au moins.
+    let beyondThree = 0
     for (const c of corpus) {
+      // un seul vrai ou faux et un seul « est-ce que ça suffit ? » (un test ou une observation) par copie : aucune réponse
+      // fixe ne se déduit de la précédente, et ce que vaut un fait ne se demande jamais deux fois
+      expect(c.views.filter((v) => v.type === 'T6').length, `${c.x.id} (graine ${c.seed}) : vrai ou faux`).toBeLessThanOrEqual(1)
+      expect(c.views.filter(isWorth).length, `${c.x.id} (graine ${c.seed}) : « est-ce que ça suffit ? »`).toBeLessThanOrEqual(1)
       const width = (n: number) => c.qs.filter((q) => q.choices.length === n).length
-      expect(width(2), `${c.x.id} (graine ${c.seed}) : ${width(2)} questions à deux réponses`).toBeLessThanOrEqual(3)
+      if (width(2) > 3) beyondThree++
+      expect(width(2), `${c.x.id} (graine ${c.seed}) : ${width(2)} questions à deux réponses sur ${c.qs.length}`).toBeLessThanOrEqual(Math.max(3, Math.ceil(c.qs.length / 2)))
       expect(c.qs.length - width(4), `${c.x.id} (graine ${c.seed})`).toBeLessThanOrEqual(5)
       if (c.qs.length === SOLO_COUNT) expect(width(4), `${c.x.id} (graine ${c.seed})`).toBeGreaterThanOrEqual(5)
     }
+    const two = all.filter((v) => v.q.choices.length === 2).length
+    measure(`f. questions à deux réponses : ${((100 * two) / all.length).toFixed(1)} % ; copies qui en comptent plus de trois : ${beyondThree}/${corpus.length}`)
+    expect(two / all.length).toBeLessThanOrEqual(0.5)
   })
 
   /* ---------- g. l'offre ---------- */
@@ -724,20 +988,30 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       for (const c of of(x)) {
         expect(c.qs.length, x.id).toBeLessThanOrEqual(SOLO_COUNT)
         expect(new Set(c.qs.map((q) => q.id)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
-        expect(new Set(c.qs.map((q) => `${q.prompt}|${q.quote ?? ''}`)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
+        // deux questions ne se lisent jamais pareil avant leurs choix ; les signes de X, qui ont tous le même énoncé
+        // (« Lequel de ces signes est celui de X ? »), se distinguent par le signe demandé, et une copie de dix en pose
+        // deux au plus (voir SIGNS_MAX, solo.ts)
+        const screen = (q: Question) => (soloType(q) === 'T2' ? `${q.prompt}|${q.choices.find((o) => q.correct.includes(o.id))!.label}` : `${q.prompt}|${q.quote ?? ''}`)
+        expect(new Set(c.qs.map(screen)).size, `${x.id} (graine ${c.seed})`).toBe(c.qs.length)
+        expect(c.qs.filter((q) => soloType(q) === 'T2').length, `${x.id} (graine ${c.seed}) : signes`).toBeLessThanOrEqual(2)
+        // une même scène ne se relit pas sous deux questions (jugée en vrai ou faux, puis « est-ce que ça suffit ? »)
+        const quotes = c.qs.flatMap((q) => (q.quote ? [q.quote] : []))
+        expect(new Set(quotes).size, `${x.id} (graine ${c.seed}) : une citation deux fois`).toBe(quotes.length)
         if (!c.seen) continue
         const again = c.qs.filter((q) => c.seen!.includes(q.id)).length
         expect(again, `${x.id} (graine ${c.seed}) : ${again} questions de la copie précédente sur ${c.qs.length}`).toBeLessThanOrEqual(c.qs.length / 2)
       }
     }
     const sizes = corpus.map((c) => c.qs.length)
-    measure(`g. copies de dix : ${sizes.filter((n) => n === SOLO_COUNT).length}/${sizes.length} ; taille moyenne ${(all.length / corpus.length).toFixed(2)} ; plus petites copies : ${JSON.stringify(measured)}`)
+    const under = sizes.filter((n) => n < 5).length
+    measure(`g. copies de dix : ${sizes.filter((n) => n === SOLO_COUNT).length}/${sizes.length} ; taille moyenne ${(all.length / corpus.length).toFixed(2)} ; copies de moins de cinq questions : ${under}/${sizes.length} ; plus petites copies : ${JSON.stringify(measured)}`)
     for (const x of GHOSTS) {
       const mine = of(x)
       const over = Math.max(...mine.filter((c) => c.seen).map((c) => c.qs.filter((q) => c.seen!.includes(q.id)).length / Math.max(1, c.qs.length)))
       const kinds = new Map<string, number>()
       for (const v of mine.flatMap((c) => c.views)) kinds.set(v.type, (kinds.get(v.type) ?? 0) + 1)
-      measure(`g.   ${x.id} : min ${Math.min(...mine.map((c) => c.qs.length))}, moyenne ${(mine.reduce((n, c) => n + c.qs.length, 0) / mine.length).toFixed(1)}, dix ${mine.filter((c) => c.qs.length === SOLO_COUNT).length}/${mine.length}, reprise max ${(100 * over).toFixed(0)} %, questions distinctes ${new Set(mine.flatMap((c) => c.qs.map((q) => q.id))).size} ; ${[...kinds].map(([t, n]) => `${t} ${n}`).join(', ')}`)
+      const short = mine.filter((c) => c.qs.length < 5)
+      measure(`g.   ${x.id} : min ${Math.min(...mine.map((c) => c.qs.length))}, moyenne ${(mine.reduce((n, c) => n + c.qs.length, 0) / mine.length).toFixed(1)}, moins de cinq ${short.length}/${mine.length} (dont « Encore 10 » ${short.filter((c) => c.seen).length}), dix ${mine.filter((c) => c.qs.length === SOLO_COUNT).length}/${mine.length}, reprise max ${(100 * over).toFixed(0)} %, questions distinctes ${new Set(mine.flatMap((c) => c.qs.map((q) => q.id))).size} ; ${[...kinds].map(([t, n]) => `${t} ${n}`).join(', ')}`)
     }
     // d'une copie à la suivante, par fait et non plus par identifiant : le même signe revient parfois sous une autre
     // forme (« lequel de ces signes… », puis « vrai ou faux »), que la liste des questions déjà vues ne connaît pas
@@ -748,28 +1022,22 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       const c = corpus[i]
       if (!c.seen || !c.views.length) continue
       const before = corpus[i - 1].views
-      const again = c.views.filter((b) => before.some((a) => a.q.id === b.q.id || (a.about.id === b.about.id && asksWorth(a) === asksWorth(b) && alike(answerText(a), answerText(b)) >= SAME_FACT))).length
+      const again = c.views.filter((b) => before.some((a) => a.q.id === b.q.id || (asksWorth(a) === asksWorth(b) && alike(answerText(a), answerText(b)) >= SAME_FACT))).length
       chained++
       sum += again / c.views.length
       if (again > c.views.length / 2) beyondHalf++
     }
     measure(`g. « Encore 10 », par fait : ${((100 * sum) / chained).toFixed(0)} % de la copie en moyenne reprend un fait de la précédente ; ${beyondHalf} copies sur ${chained} en reprennent plus de la moitié`)
-    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.4)
-    expect(beyondHalf / chained, `${beyondHalf} copies sur ${chained} reprennent plus de la moitié des faits de la précédente`).toBeLessThanOrEqual(0.08)
-    // la part des questions dont la réponse parle de l'entité proche (départage à l'envers, signe d'une autre fiche jugé faux…)
-    const rival = (c: Copy) => c.views.filter((v) => v.about.id !== c.x.id).length
-    measure(`g. questions dont la réponse parle de l’entité proche : ${((100 * corpus.reduce((n, c) => n + rival(c), 0)) / all.length).toFixed(1)} % ; au plus ${Math.max(...corpus.map(rival))} par copie ; copies où elles sont la majorité : ${corpus.filter((c) => rival(c) > c.qs.length / 2).length}/${corpus.length}`)
-    // le départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») demandait de connaître Y : une question sur
-    // une autre entité, que le coach a écartée (18 novembre 2026). Il ne se pose plus : une copie sur X parle de X,
-    // quitte à rester plus courte. Le départage ne se pose que dans l'autre sens, et sa bonne réponse parle de X
-    const reverse = (c: Copy) => c.views.filter((v) => v.type === 'T7a' && v.about.id !== c.x.id).length
-    const duels = (c: Copy) => c.views.filter((v) => v.type === 'T7a' || v.type === 'T7b').length
-    measure(`g. départages : au plus ${Math.max(...corpus.map(duels))} par copie ; à l’envers : ${corpus.reduce((n, c) => n + reverse(c), 0)}`)
-    for (const c of corpus) {
-      expect(reverse(c), `${c.x.id} (graine ${c.seed}) : un départage à l’envers`).toBe(0)
-      expect(duels(c), `${c.x.id} (graine ${c.seed})`).toBeLessThanOrEqual(5)
-      for (const q of c.qs) expect(q.prompt.replace(/[\u00a0\u202f]/gu, ' '), `${c.x.id} (graine ${c.seed}) : ${q.id}`).not.toMatch(new RegExp(`plutôt que (?:le |la |l’|les )${c.x.name}`, 'u'))
-    }
+    // (0,40 avant le 25 novembre 2026 : la vitesse et le seuil standard, demandés à chaque copie, reviennent d'une copie
+    // à la suivante ; 0,45 jusqu'au soir du même jour : les garde-fous de la contre-relecture laissent moins de
+    // questions de rechange à chaque fiche. Mesuré : 0,454)
+    expect(sum / chained, 'part moyenne des faits repris d’une copie à la suivante').toBeLessThanOrEqual(0.48)
+    // Un signe déjà demandé compte aussi sous son autre forme (« lequel de ces signes… », puis « vrai ou faux », voir
+    // sameSign dans solo.ts). Mesuré : 101 copies sur 444 (40 avant le 25 novembre 2026 : la vitesse et le seuil
+    // standard, demandés à chaque copie, reviennent forcément d'une copie à la suivante, et une copie pose
+    // maintenant deux des trois ou quatre signes clés de la fiche ; la page ne propose pas encore « Encore 10 », ce
+    // chemin ne sert qu'aux tests)
+    expect(beyondHalf / chained, `${beyondHalf} copies sur ${chained} reprennent plus de la moitié des faits de la précédente`).toBeLessThanOrEqual(CHAINED_CEILING)
     const mix = new Map<string, number>()
     for (const v of all) mix.set(v.type, (mix.get(v.type) ?? 0) + 1)
     measure(`g. sortes : ${[...mix].sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${((100 * n) / all.length).toFixed(1)} %`).join(', ')}`)
@@ -784,96 +1052,78 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
       } else expect(least, `${x.id} : une copie de ${least} questions (mesuré : ${JSON.stringify(measured)})`).toBe(SOLO_COUNT)
     }
     for (const id of Object.keys(SHORT_COPIES)) expect(getGhost(id), id).toBeDefined()
+    // la longueur des copies, pour qu'elle ne fonde pas sans qu'on le voie (voir MEAN_SIZE et UNDER_FIVE)
+    expect(all.length / corpus.length, 'taille moyenne des copies').toBeGreaterThanOrEqual(MEAN_SIZE)
+    expect(under, 'copies de moins de cinq questions').toBeLessThanOrEqual(UNDER_FIVE)
   })
 
   /* ---------- h. la vérité ---------- */
 
-  it('h. ce qui est dit faux pour X vient d’une entité qu’on confond avec lui, jamais de sa fiche, et ne lui convient en rien', () => {
-    let checked = 0
-    const falseFor = (statement: string, source: Ghost, target: Ghost, id: string) => {
-      checked++
-      expect(confused(source, target), `${id} : ${source.name} ne se confond pas avec ${target.name}`).toBe(true)
-      expect(source.id, id).not.toBe(MIMIC)
-      expect(target.id, id).not.toBe(MIMIC)
-      // elle vient de la fiche de l'entité proche, ou de ce qu'une des deux fiches dit pour les départager
-      const pairWhy = [source, target].flatMap((g) => g.confusions.filter((c) => c.with === source.id || c.with === target.id).map((c) => c.why))
-      expect(from(statement, [...ownLines(source), ...pairWhy]), `${id} : « ${statement} » ne se retrouve pas sur la fiche de ${source.name}`).toBe(true)
-      // jamais de la fiche de la cible : aucune de ses lignes ne la dit, ni ne la redit
-      expect(ownLines(target).some((l) => bare(l).startsWith(bare(statement).slice(0, 40))), `${id} : « ${statement} » est sur la fiche de ${target.name}`).toBe(false)
-      expect(restatedBy(statement, target, GHOSTS), `${id} : « ${statement} » est redit par la fiche de ${target.name}`).toBe(false)
-      expect(fitsToo(statement, GHOSTS, true)(target), `${id} : « ${statement} » convient aussi à ${target.name}`).toBe(false)
-      expect(numbersFit(statement, target), `${id} : les nombres de « ${statement} » sont ceux de ${target.name}`).toBe(false)
-    }
+  it('h. vrai ou faux : « Faux » pour l’un des tests d’élimination de X et rien d’autre, « Vrai » pour ses signes et ses observations', () => {
+    const plain = (t: string) => t.replace(/[\u00a0\u202f]/gu, ' ')
+    const seen = { E: 0, K: 0, T: 0, O: 0 }
     for (const v of all) {
-      if (v.type === 'T5') falseFor(v.right.label, v.partner!, v.x, v.q.id)
-      else if (v.type === 'T6' && v.q.correct[0] === SOLO_ANSWERS.trueFalse.false) falseFor(v.q.quote!, v.partner!, v.x, v.q.id)
-      else if (v.type === 'T7b') falseFor(v.q.quote!, v.about, v.about.id === v.x.id ? v.partner! : v.x, v.q.id)
-      else if (v.type === 'T8' && v.partner) falseFor(v.q.quote!, v.partner, v.x, v.q.id)
-      // un vrai ou faux « Vrai » : une phrase de la fiche de X, ou ce qu'une fiche proche dit de lui
-      if (v.type === 'T6' && v.q.correct[0] === SOLO_ANSWERS.trueFalse.true) {
-        expect(v.partner, v.q.id).toBeNull()
-        const about = GHOSTS.flatMap((g) => g.confusions.filter((c) => c.with === v.x.id).map((c) => c.why))
-        expect(from(v.q.quote!, [...ownLines(v.x), ...about]), `${v.q.id} : « ${v.q.quote} » ne se retrouve sur aucune fiche`).toBe(true)
+      if (v.type !== 'T6') continue
+      const tag = v.q.id.split(':')[4] ?? ''
+      const rank = Number(tag.slice(1))
+      const quote = v.q.quote!
+      expect(tag, v.q.id).toMatch(/^[EKTO]\d+$/u)
+      seen[tag[0] as keyof typeof seen]++
+      expect(GHOSTS.some((g) => namesGhost(quote, g)), `${v.q.id} : « ${quote} »`).toBe(false)
+      if (tag[0] === 'E') {
+        // « Faux » : la condition de l'un des tests d'élimination de X (« si l'entité rallume le disjoncteur, ce n'est pas
+        // un Hantu »), telle que la fiche l'écrit ; le corrigé est cette ligne de la fiche
+        const line = v.x.eliminationTests[rank].text
+        expect(v.q.correct, v.q.id).toEqual([FALSE])
+        expect(within(quote, line), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
+        expect(plain(v.q.explain), v.q.id).toBe(plain(`Faux. ${withoutSourceSentences(line)}`))
+        continue
       }
-      // l'intrus : les trois autres affirmations sont bien des signes de X
-      if (v.type === 'T5') for (const c of v.wrong) expect(from(c.label, ownLines(v.x)), `${v.q.id} : « ${c.label} » n’est pas sur la fiche de ${v.x.name}`).toBe(true)
+      // « Vrai » : un signe clé, un signe « 0 preuve » ou une observation de la fiche de X, et rien d'autre
+      expect(v.q.correct, `${v.q.id} : « ${quote} »`).toEqual([TRUE])
+      if (tag[0] === 'K') expect(plain(quote), v.q.id).toBe(plain(v.x.keyTells[rank]))
+      else if (tag[0] === 'T') expect(from(quote, v.x.tells.filter((t) => t.zeroEvidence).map((t) => t.text)), `${v.q.id} : « ${quote} »`).toBe(true)
+      else {
+        const o = v.x.observations[rank]
+        expect(o.requires, v.q.id).toBeUndefined()
+        expect(within(quote, o.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
+      }
     }
-    expect(checked).toBeGreaterThan(500)
+    measure(`h. vrai ou faux : ${seen.E} tests d’élimination de X (« Faux ») ; « Vrai » : ${seen.K} signes clés, ${seen.T} signes « 0 preuve », ${seen.O} observations`)
+    // chaque sorte de phrase a servi
+    for (const [k, n] of Object.entries(seen)) expect(n, k).toBeGreaterThan(0)
   })
 
-  it('h. « ça l’exclut », « ça suffit », « ce test suffit-il ? » : seulement ce que la fiche prouve', () => {
-    const seenAnswers = { confirms: 0, fits: 0, excludes: 0, yes: 0, no: 0, excluded: 0 }
+  it('h. « ça suffit », « ce n’est qu’un indice » : seulement ce que la fiche prouve', () => {
+    const seenAnswers = { 'T8 yes': 0, 'T8 no': 0, 'T3b yes': 0, 'T3b no': 0 }
+    const plain = (t: string) => t.replace(/[\u00a0\u202f]/gu, ' ')
     for (const v of all) {
       const p = v.q.id.split(':')
       if (v.type === 'T8') {
-        const answer = v.q.correct[0] as keyof typeof SOLO_ANSWERS.observation
-        seenAnswers[answer]++
-        const kind = p[4][0]
-        const rank = Number(p[4].slice(1))
+        const answer = v.q.correct[0] as 'yes' | 'no'
+        seenAnswers[`T8 ${answer}`]++
         const quote = v.q.quote!
-        if (v.partner) {
-          // l'observation décisive d'une entité proche : elle prouve cette entité, donc exclut X
-          const o = v.partner.observations[rank]
-          expect(kind, v.q.id).toBe('O')
-          expect(o?.strength, `${v.q.id} : l’observation de ${v.partner.name} n’est pas décisive`).toBe('definitive')
-          expect(o.requires, v.q.id).toBeUndefined()
-          expect(within(quote, o.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
-          expect(answer, v.q.id).toBe('excludes')
-        } else if (kind === 'O') {
-          // une observation de la fiche de X : décisive, elle suffit ; forte ou simple indice, elle ne suffit pas
-          const o = v.x.observations[rank]
-          expect(o.requires, v.q.id).toBeUndefined()
-          expect(within(quote, o.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
-          expect(answer, `${v.q.id} : observation ${o.strength}`).toBe(o.strength === 'definitive' ? 'confirms' : 'fits')
-        } else if (kind === 'C') {
-          // un test de confirmation de X dit comme ce qu'on observe : il suffit si la fiche le dit définitif
-          const t = v.x.confirmationTests[rank]
-          expect(t.requires, v.q.id).toBeUndefined()
-          expect(within(quote, t.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
-          expect(answer, `${v.q.id} : test ${t.definitive ? 'définitif' : 'non définitif'}`).toBe(t.definitive ? 'confirms' : 'fits')
-        } else {
-          // un test d'élimination de X
-          expect(kind, v.q.id).toBe('E')
-          expect(within(quote, v.x.eliminationTests[rank].text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
-          expect(answer, v.q.id).toBe('excludes')
-        }
+        // une observation de la fiche de X, et d'elle seule : décisive, elle suffit ; forte ou simple indice, elle ne suffit pas
+        expect(p[3], v.q.id).toBe(v.x.id)
+        expect(p[4], v.q.id).toMatch(/^O\d+$/u)
+        const o = v.x.observations[Number(p[4].slice(1))]
+        expect(o.requires, v.q.id).toBeUndefined()
+        expect(within(quote, o.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
+        expect(answer, `${v.q.id} : observation ${o.strength}`).toBe(o.strength === 'definitive' ? SOLO_ANSWERS.enough.yes : SOLO_ANSWERS.enough.no)
+        expect(plain(v.q.prompt), v.q.id).toMatch(/^Tu observes ceci\. Est-ce que ça suffit pour confirmer (?:le |la |l’|les )\S.* \?$/u)
+        // le corrigé dit ce que la fiche en dit : décisive, indice fort, simple indice
+        // (et pourquoi un indice ne suffit pas : « Non : c'est un simple indice du Djinn, pas une confirmation. À lui seul,
+        // il n'écarte pas les autres entités. » ; le corrigé d'avant, « sur la fiche du Djinn, c'est un simple indice », ne
+        // disait pas ce qui manquait)
+        if (o.strength === 'definitive') expect(plain(v.q.explain), v.q.id).toContain('cette observation est décisive')
+        else expect(plain(v.q.explain), v.q.id).toMatch(new RegExp(`^Non : c’est un ${o.strength === 'strong' ? 'indice fort' : 'simple indice'} (?:du |de la |de l’|des )\\S.*, pas une confirmation\\. À lui seul, il n’écarte pas les autres entités\\.`, 'u'))
         // la citation ne nomme personne, et ne dit pas elle-même ce qu'elle vaut
         expect(GHOSTS.some((g) => namesGhost(quote, g)), `${v.q.id} : « ${quote} »`).toBe(false)
-      }
-      if (v.type === 'T4') {
-        seenAnswers.excluded++
-        // la bonne réponse : un test d'élimination de X ; les trois autres, des tests de confirmation de X lui-même
-        expect(within(v.right.label, v.x.eliminationTests[Number(p[3])].text), `${v.q.id} : « ${v.right.label} »`).toBeGreaterThanOrEqual(0.8)
-        for (const c of v.wrong) {
-          const m = /^test:(\d+)$/u.exec(c.id)
-          expect(m, `${v.q.id} : ${c.id}`).not.toBeNull()
-          expect(within(c.label, v.x.confirmationTests[Number(m![1])].text), `${v.q.id} : « ${c.label} »`).toBeGreaterThanOrEqual(0.8)
-        }
       }
       if (v.type === 'T3b') {
         const t = v.x.confirmationTests[Number(p[3])]
         const quote = v.q.quote!
-        seenAnswers[v.q.correct[0] as 'yes' | 'no']++
+        seenAnswers[`T3b ${v.q.correct[0] as 'yes' | 'no'}`]++
         expect(t.requires, v.q.id).toBeUndefined()
         expect(v.q.correct[0], `${v.q.id} : test ${t.definitive ? 'définitif' : 'non définitif'}`).toBe(t.definitive ? SOLO_ANSWERS.enough.yes : SOLO_ANSWERS.enough.no)
         expect(within(quote, t.text), `${v.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
@@ -888,27 +1138,24 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     for (const [k, n] of Object.entries(seenAnswers)) expect(n, k).toBeGreaterThan(0)
   })
 
-  it('h. le Mimic : rien n’est dit faux pour lui ni ne l’exclut hors de sa fiche, et il n’est jamais l’entité proche', () => {
+  it('h. le Mimic : ses tests, ses observations, ses questions rédigées ; et il n’est jamais cité ailleurs', () => {
     const mimic = getGhost(MIMIC)!
     const mine = of(mimic).flatMap((c) => c.views)
     expect(mine.length).toBeGreaterThan(60)
     for (const v of mine) {
-      // ses tests, ses observations, ses questions rédigées : aucune entité proche, aucun signe d'une autre fiche jugé pour lui
-      expect(['T3a', 'T3b', 'T4', 'T8', 'auth'], v.q.id).toContain(v.type)
-      expect(v.partner, v.q.id).toBeNull()
-      expect(v.about.id, v.q.id).toBe(MIMIC)
-      expect(namedIn(v.q, mimic), v.q.id).toHaveLength(0)
-      if (v.type === 'T8' && v.q.correct[0] === SOLO_ANSWERS.observation.excludes) expect(v.q.id).toMatch(/^q:constat:the-mimic:the-mimic:E\d+$/u)
+      // ni nombres, ni signe à reconnaître, ni vrai ou faux : il copie l'entité imitée
+      expect(['T3b', 'T8', 'auth'], v.q.id).toContain(v.type)
+      expect(v.source.id, v.q.id).toBe(MIMIC)
     }
     for (const v of all) {
       if (v.x.id === MIMIC) continue
-      // ni entité proche, ni signe ou test du Mimic parmi les réponses, ni son nom
+      // ni signe du Mimic parmi les réponses, ni son nom
       expect(v.q.choices.map((c) => c.id), v.q.id).not.toContain(MIMIC)
       expect(strays.get(MIMIC)!(v.q), v.q.id).toBe(false)
     }
     // et dans toute la réserve, pas seulement dans le corpus
     for (const g of GHOSTS) for (const s of soloSupply(g, GHOSTS)) if (g.id !== MIMIC) expect(s.id.split(':').slice(2), s.id).not.toContain(MIMIC)
-    for (const s of soloSupply(mimic, GHOSTS)) expect(['T3a', 'T3b', 'T4', 'T8', 'auth'], s.id).toContain(s.type)
+    for (const s of soloSupply(mimic, GHOSTS)) expect(['T3b', 'T8', 'auth'], s.id).toContain(s.type)
   })
 
   /* ---------- i. le tirage ---------- */
@@ -923,10 +1170,13 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     const median = ms[ms.length >> 1]
     const p95 = ms[Math.floor(ms.length * 0.95)]
     measure(`i. temps d’une copie : médiane ${median.toFixed(1)} ms, 95e centile ${p95.toFixed(1)} ms, la plus lente ${ms[ms.length - 1].toFixed(0)} ms`)
-    // mesuré seul : médiane 32 ms, 95e centile 63 ms ; les plafonds laissent de la marge à une machine chargée (toute la suite en parallèle)
+    // mesuré seul : médiane 47 ms, 95e centile 155 ms (32 et 63 ms avant que la copie ne se compose plusieurs fois pour
+    // garder la plus longue, voir ATTEMPTS dans solo.ts : deux essais, quatre pour une copie de moins de cinq questions).
+    // Les plafonds laissent de la marge à une machine chargée (toute la suite en parallèle) : la médiane garde le sien,
+    // le 95e centile passe de 250 à 400 ms, deux fois et demie la mesure comme avant
     expect(median, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(100)
-    expect(p95, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(250)
-  })
+    expect(p95, `médiane ${median.toFixed(0)} ms, 95e centile ${p95.toFixed(0)} ms`).toBeLessThan(400)
+  }, 60_000)
 
   /* ---------- j. buildQuiz ---------- */
 
@@ -951,15 +1201,14 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
             expect(soloType(q), `${tag} : ${q.id}`).not.toBeNull()
             expect(q.beyond, q.id).toBeUndefined()
             expect(topics, q.id).toContain(q.topic)
-            const v = view(q, x)
-            for (const o of namedIn(q, x)) expect(v.type === 'auth' ? confused(x, o) : o.id === v.partner?.id, `${tag} : ${q.id} nomme ${o.name}`).toBe(true)
-            // jamais quatre noms d'entités
-            expect(q.choices.filter((c) => GHOSTS.some((g) => g.name === c.label)).length, q.id).toBeLessThanOrEqual(2)
+            // rien, avant le corrigé, ne nomme une autre entité ; jamais un nom d'entité parmi les réponses
+            expect(namedIn(q, x).map((o) => o.name), `${tag} : ${q.id}`).toEqual([])
+            expect(q.choices.filter((c) => GHOSTS.some((g) => g.name === c.label)).length, q.id).toBe(0)
           }
           // le même tirage par l'un ou l'autre chemin, tant que les mécaniques ne s'y glissent pas
           if (topics === DEFAULT_TOPICS) expect(qs, tag).toEqual(buildSoloQuiz({ ghost: x, allGhosts: GHOSTS, rng: createRng(seed), count, topics }))
           // à dix questions, la variété de la copie tient par ce chemin aussi
-          if (count === SOLO_COUNT && topics === DEFAULT_TOPICS) expect(qs.filter((q) => q.choices.length === 2).length, tag).toBeLessThanOrEqual(3)
+          if (count === SOLO_COUNT && topics === DEFAULT_TOPICS) expect(qs.filter((q) => q.choices.length === 2).length, tag).toBeLessThanOrEqual(Math.max(3, Math.ceil(qs.length / 2)))
         }
       }
     })
@@ -1006,8 +1255,11 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     expect(known[0].known).toBe(true)
     expect(known[0].facts).toEqual(['cadence'])
     // une entité sans table : aucun objet à distinguer
-    expect(soloFacets('spirit')).toEqual([])
-    expect(soloFacetsOf('spirit', 'Attend 180 s après un encens')).toEqual([])
+    expect(soloFacets('phantom')).toEqual([])
+    expect(soloFacetsOf('phantom', 'Disparaît quand on la prend en photo')).toEqual([])
+    // l'Esprit a sa table depuis le 18 novembre 2026 : le délai après un encens, et le test du double encens
+    expect(soloFacets('spirit')).toEqual(['encens'])
+    expect(soloFacetsOf('spirit', 'Attend 180 s après un encens')[0].facts).toEqual(['délai'])
     // les lignes des fiches dont la copie tire ses questions (signes, observations, tests, questions rédigées)
     const unrecognised: string[] = []
     for (const g of GHOSTS) {
@@ -1028,41 +1280,178 @@ describe('« Me tester sur X » : le verrou de la spécification (30 entités ×
     expect(unrecognised).toEqual([
       'hantu · froid · Dans une difficulté qui donne au moins 1 preuve (Cauchemar, ',
       'goryo · errance · Vitesse (1,7 m/s) et seuil (50 %) standard : ce sont ses dép',
-      'aswang · cachette · Place du sel ou des détecteurs de mouvement près de la pièce',
     ])
   })
 })
 
 /* =====================================================================================================================
- * Ce que deux relecteurs ont trouvé en lisant chaque affirmation des copies face aux fiches et à la feuille de tybayn :
- * des phrases vraies de toutes les entités dites « fausses » pour l'une d'elles, des scènes dites « ça l'exclut » que
- * la fiche de l'entité testée explique, une mauvaise réponse vraie, deux verdicts pour une même scène. Chaque test
- * balaie toute la réserve (chaque question possible de chaque entité, composée plusieurs fois), pas seulement ce
- * qu'un tirage de copies fait sortir : la plupart de ces défauts sortaient moins d'une fois sur vingt copies.
+ * Toute la réserve : chaque question possible de chaque entité, composée plusieurs fois, et pas seulement ce qu'un
+ * tirage de copies fait sortir (la plupart des défauts trouvés à la relecture sortaient moins d'une fois sur vingt
+ * copies). Les règles du 19 novembre 2026, une par test : tout vient de la fiche de X (vrai ou faux compris), « Oui,
+ * ça suffit » ne se dit que d'une ligne qui tient seule, un test d'élimination se juge avec toutes ses conditions,
+ * un signe « Seule entité… » et un « est-ce que ça suffit ? » sur le même fait ne vont pas ensemble, ce que vaut un
+ * fait ne se demande qu'une fois, la tournure d'une observation ne souffle pas sa réponse, rien ne cite une preuve ni
+ * une source inconnue de l'élève.
  * ===================================================================================================================== */
 
-describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute la réserve)', () => {
+/** Une chasse qui part trop tôt, ou de là où l'entité ne chasse pas (voir EARLY_HUNT, solo.ts) : ne vaut que « sans objet maudit ». */
+const EARLY_HUNT =
+  /(?:une|nouvelle) chasse (?:démarre|commence)|chass\p{L}*\s+(?:de nouveau\s+|naturellement\s+(?:\([^()]*\)\s+)?)?(?:avant|au-dessus|dans les)(?!\p{L})|tente de (?:chasser|lancer)|lance une chasse/iu
+const CURSED = /objets?\s+maudits?/iu
+/** « Seule entité qui peut… », « Seule à… » : le signe dit que le fait désigne l'entité. */
+const SAYS_ONLY = /(?<!\p{L})seule?s?\s+(?:entités?|à)(?!\p{L})/iu
+/** Ce qui suit la conclusion d'un test (« …, c'est un Hantu : … L'Obambo change aussi de vitesse… »). */
+function afterConclusion(text: string, x: Ghost): string {
+  const names = [...new Set([x.name, x.nameEn].map((n) => n.replace(/^(?:The |Le |Les |La |L['’])/u, '')))].map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+  const m = new RegExp(`(?:c[’']est(?:\\s+peut-être)?|ce\\s+sont|ça\\s+(?:pourrait|peut)\\s+être|désigne)\\s+(?:une?\\s+|le\\s+|la\\s+|les\\s+|l[’'])?(?:${names})(?!\\p{L})`, 'u').exec(text)
+  return m ? text.slice(m.index + m[0].length) : ''
+}
+const othersIn = (text: string, x: Ghost) => GHOSTS.filter((o) => o.id !== x.id && namesGhost(text, o))
+
+/**
+ * Les « Oui, ça suffit » dont la fiche nomme une autre entité après sa conclusion (ou dans la raison qu'elle donne),
+ * relus un à un : la phrase dit ce qui sépare les deux entités, et la condition citée dans la question l'écarte déjà.
+ * Toute autre ligne décisive qui nomme une autre entité ne se pose pas (voir TOLD_APART, solo.ts) : la fiche y dit
+ * que cette entité ferait pareil.
+ */
+const TOLD_APART: Readonly<Record<string, RegExp>> = {
+  'q:suffit:deogen:0': /une Dayan ne ralentit que si tu restes immobile/u,
+  'q:suffit:gallu:0': /le Spectre ne perturbe pas le sel non plus, mais reste à 1,7 m\/s/u,
+  'q:suffit:oni:0': /le Deogen aussi est plus visible en chasse, mais sa vitesse est complètement différente/u,
+  'q:suffit:revenant:0': /bien plus rapide qu’un Djinn ou un Raiju/u,
+  'q:constat:spirit:spirit:O0': /ni un Démon, le plus rapide, avant 60 s/u,
+  'q:constat:spirit:spirit:O1': /ni un Démon, le plus rapide, avant 60 s/u,
+}
+/** Ce qu'un corrigé ne dit jamais après « Oui » : qu'une autre entité ferait de même. */
+const DOES_THE_SAME = /pareil|ferait de même|confondre|(?:change|ralentit|accélère|accélèrent|chasse)\s+aussi|peut chasser tôt|attention\s*:/iu
+/** Les lignes décisives écartées parce que la fiche y nomme une entité qui ferait pareil (relevées le 19 novembre 2026). */
+const NOT_ALONE = ['q:suffit:wraith:0', 'q:suffit:wraith:1', 'q:suffit:hantu:1', 'q:suffit:moroi:3', 'q:suffit:raiju:1', 'q:suffit:jinn:0', 'q:suffit:demon:2', 'q:constat:moroi:moroi:O4'] as const
+/** Un test décisif relu de même, mais trop long pour se citer : « si la première [ligne de sel] est perturbée mais pas les deux suivantes » (le Spectre ne perturbe jamais le sel). */
+const TOLD_APART_UNASKED = ['q:suffit:gallu:2'] as const
+/** Les observations décisives qui redisent un tel test, mais portent elles-mêmes ce qui écarte l'entité nommée. */
+const KEEPS_APART: Readonly<Record<string, RegExp>> = {
+  'q:constat:jinn:jinn:O0': /sans électronique allumée à proximité/u,
+  'q:constat:demon:demon:O3': /hors Sunny Meadows/u,
+}
+
+/**
+ * Les signes « Seule entité… » des fiches, et les « est-ce que ça suffit ? » sur le même fait. Les deux ne vont
+ * jamais dans la même copie : le signe soufflerait « Oui » ; et pour le Yurei, dont la fiche ne tient pas la porte
+ * de sortie pour décisive (un indice fort, aucun test de confirmation), il contredirait « Non, ce n'est qu'un indice ».
+ * Une fiche qui gagne un signe « Seule… » doit entrer ici (le test le demande), avec ses questions.
+ */
+const ONLY_SIGNS: Readonly<Record<string, { sign: RegExp; worth: readonly string[] }>> = {
+  // « Seule entité qui peut faire plus de 4 pas juste après avoir marché dans du sel »
+  gallu: { sign: /plus de 4 pas/u, worth: ['q:suffit:gallu:3'] },
+  // « Seule entité qui ne peut pas faire clignoter les lumières en laissant un EMF 2 à l'interrupteur » : aucune observation, aucun test ne le reprend
+  mare: { sign: /clignoter les lumières/u, worth: [] },
+  // « Seule entité capable d'éteindre deux fois la même flamme en moins de 20 s »
+  onryo: { sign: /même flamme/u, worth: ['q:suffit:onryo:0', 'q:constat:onryo:onryo:O4'] },
+  // « Seule entité qui peut apparaître en silhouette noire au cercle d'invocation, à la boîte à musique ou à la patte de singe »
+  shade: { sign: /silhouette noire/u, worth: ['q:suffit:shade:1', 'q:suffit:shade:2', 'q:constat:shade:shade:O0', 'q:constat:shade:shade:O1', 'q:constat:shade:shade:O5'] },
+  // « Seule entité qui peut annoncer un âge de 90 ans ou plus à la planche Ouija »
+  thaye: { sign: /90 ans ou plus/u, worth: ['q:suffit:thaye:1'] },
+  // « Seule à fermer ou toucher une porte de sortie hors chasse et hors événement » : ses observations sont des indices forts
+  yurei: { sign: /porte de sortie/u, worth: ['q:constat:yurei:yurei:O0', 'q:constat:yurei:yurei:O1'] },
+}
+
+/**
+ * Les « est-ce que ça suffit ? » (tests C, observations O) qui décrivent la même chose sur une fiche, relevés à la
+ * relecture : un seul par copie, quelle que soit sa réponse. Des scènes presque identiques aux verdicts opposés
+ * déroutent (le murmure du Moroï : « ta santé mentale continue de baisser même dans une pièce éclairée », oui ; « la
+ * santé mentale d'un joueur semble baisser plus vite », non), au même verdict elles se répètent. Certaines ne se posent
+ * plus (un indice écrit comme une impression) : elles restent listées, pour le jour où elles reviendraient.
+ */
+const SAME_SCENE: Readonly<Record<string, readonly (readonly string[])[]>> = {
+  moroi: [['O2', 'C2', 'C4']],
+  gallu: [['C4', 'O0', 'C2']],
+  dayan: [['C1', 'O0', 'C0']],
+  jinn: [['O1', 'O0', 'C0']],
+  myling: [['O4', 'O0', 'O1', 'C0'], ['O3', 'O5', 'C1'], ['O6', 'C2']],
+  aswang: [['C1', 'C3', 'O2'], ['C0', 'O0', 'O1']],
+  shade: [['O5', 'O0', 'O1', 'C1', 'C2']],
+  yokai: [['O5', 'O1', 'O3', 'C0'], ['O6', 'C1']],
+  phantom: [['C3', 'C4', 'O4'], ['C0', 'C1', 'O0'], ['C2', 'O1']],
+  wraith: [['C2', 'O4'], ['C0', 'C1', 'O0', 'O1', 'O2']],
+  poltergeist: [['C1', 'O0'], ['C0', 'O1', 'O4']],
+  demon: [['O1', 'O2', 'C1'], ['O0', 'C0'], ['O3', 'C2']],
+  oni: [['O0', 'C1'], ['O1', 'O2', 'C0']],
+  obake: [['O0', 'C0'], ['O8', 'C1']],
+  banshee: [['O0', 'C0']],
+  hantu: [['O0', 'C0']],
+  deogen: [['O0', 'C0']],
+  raiju: [['O6', 'C2'], ['O0', 'C0'], ['O1', 'C1']],
+  thaye: [['O3', 'C0', 'C1']],
+  spirit: [['O0', 'O1']],
+  'the-twins': [['O2', 'O5', 'C0'], ['O0', 'O1', 'O3', 'C1']],
+  'the-mimic': [['O1', 'C1']],
+  revenant: [['O0', 'C0']],
+  obambo: [['O0', 'C0', 'C1', 'O5']],
+}
+const worthId = (x: string, tag: string) => (tag[0] === 'C' ? `q:suffit:${x}:${tag.slice(1)}` : `q:constat:${x}:${x}:${tag}`)
+
+/**
+ * Le même fait dit avec d'autres mots, relevé à la relecture des copies : une seule question par copie le demande
+ * (à qui est-il ?), signe, vrai ou faux ou question rédigée. Le texte demandé : la bonne réponse d'un « lequel de
+ * ces signes… ? », la phrase d'un vrai ou faux, l'énoncé et la bonne réponse d'une question rédigée.
+ */
+const SAME_FACT_WORDS: Readonly<Record<string, readonly (readonly [string, RegExp])[]>> = {
+  oni: [['plus actif à plusieurs', /plusieurs (?:joueurs|personnes)/u]],
+  'the-twins': [['deux interactions', /interactions? (?:quasi|en même)|2 interactions|[Dd]eux interactions|deux portées/u]],
+  thaye: [['activité qui baisse', /actif|activité/u]],
+  shade: [['la pièce où se trouve un joueur', /pièce où|même pièce/u]],
+  yokai: [['plus actif quand on parle', /actif|activité/u]],
+  onryo: [['la 3e flamme', /3e|compteur/u]],
+  // relevé le 25 novembre 2026 : le même fait posé jusqu'à trois fois dans une copie de quatre (un vrai ou faux, puis
+  // une question rédigée dont la bonne réponse se reconnaissait à ses mots)
+  deogen: [['rapide de loin, lent tout près', /chute fortement|0,4\u00a0m\/s|au ralenti/u]],
+  revenant: [['il accélère d’un coup', /instantan/u]],
+}
+/**
+ * L'énoncé ou le corrigé de la première question soufflait la réponse de la seconde (relevé le 19 novembre 2026) :
+ * la seconde ne vient jamais après la première dans une copie.
+ */
+const NEVER_AFTER: readonly (readonly [string, RegExp, RegExp, string])[] = [
+  ['yokai', /^q:san:yokai:80$/u, /^q:auth:yokai:4$/u, '« … si quelqu’un parle dans sa pièce » puis « Quand un Yokai est-il plus actif ? »'],
+  ['onryo', /^q:auth:onryo:5$/u, /^q:auth:onryo:0$/u, '« … après que son compteur a atteint 3 » puis « Après combien de flammes éteintes… ? »'],
+  ['banshee', /^q:auth:banshee:[12]$/u, /^q:constat:banshee:banshee:O0$/u, '« … le cri unique de la Banshee » puis « tu entends un cri strident et unique : est-ce que ça suffit ? »'],
+  ['kormos', /^q:constat:kormos:kormos:O[12]$/u, /^q:(?:sign-of:kormos:(?:1|t1)|vf:kormos:kormos:(?:K1|T1)|auth:kormos:1)$/u, 'la scène du joueur détecté de loin puis « Détecte tes déplacements… »'],
+  ['moroi', /^q:constat:moroi:moroi:O6$/u, /^q:auth:moroi:0$/u, '« … un peu plus lentes que la normale » puis « À quelle vitesse de base… ? »'],
+  // une durée écrite en lettres dans la scène, puis demandée en secondes (relevé le 25 novembre 2026, voir SPELLED dans solo.ts)
+  ['yurei', /^q:constat:yurei:yurei:O4$/u, /^q:auth:yurei:5$/u, '« pendant une minute et demie, les détecteurs… restent muets » puis « Combien de temps… ? 90 s »'],
+  ['demon', /^q:constat:demon:demon:O0$/u, /^q:(?:auth:demon:1|sign-of:demon:0)$/u, '« une chasse démarre environ une minute après… » puis « Combien de temps après l’encens… ? 60 s »'],
+  // relevé par la contre-relecture du 25 novembre 2026 :
+  // le corrigé « … il accélère immédiatement à 3,0 m/s », puis le signe « Accélération instantanée, jamais progressive »
+  ['revenant', /^q:spd:revenant:3$/u, /^q:sign-of:revenant:1$/u, 'le corrigé « il accélère immédiatement à 3,0 m/s » puis « Accélération instantanée… »'],
+  // la citation « … après que la bougie a été éteinte au moins 3 fois », puis « Après combien de flammes éteintes… ? »
+  ['onryo', /^q:suffit:onryo:1$/u, /^q:auth:onryo:0$/u, '« … éteinte au moins 3 fois » puis « Après combien de flammes éteintes… ? »'],
+  // la bonne réponse d'un « lequel de ces signes… ? » est la seule à parler de l'objet de X : il passe avant les autres
+  // questions qui en parlent (le disjoncteur du Hantu, la cachette de l'Aswang, les états du Gallu et de l'Obambo)
+  ['hantu', /^q:vf:hantu:hantu:(?:T1|E1)$/u, /^q:sign-of:hantu:0$/u, '« … rallumer le disjoncteur » puis « Buée glacée… quand le disjoncteur est éteint ou cassé »'],
+  ['aswang', /^q:auth:aswang:5$/u, /^q:sign-of:aswang:1$/u, '« L’Aswang t’a trouvé caché… » puis « La chasse s’arrête net… dans une cachette officielle »'],
+  ['gallu', /^q:(?:san:gallu:60|spd:gallu:1\.96)$/u, /^q:sign-of:gallu:2$/u, '« … du Gallu en état enragé ? » puis « Enragé : … »'],
+  ['obambo', /^q:(?:san|spd):obambo:/u, /^q:sign-of:obambo:0$/u, '« … de l’Obambo en état calme ? » puis « Calme/agressif : bascule… »'],
+  // une question rédigée dont les mauvaises réponses sont des vitesses de X ne suit pas les questions qui les corrigent
+  ['gallu', /^q:spd:gallu(?::1\.36)?$/u, /^q:auth:gallu:1$/u, '« 1,7 m/s » et « 1,36 m/s » corrigées, puis proposées comme mauvaises réponses'],
+]
+
+describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d’à moitié vrai (toute la réserve)', () => {
   interface Drawn {
     x: Ghost
     q: Question
     v: View
   }
   let supply: Drawn[] = []
+  /** des copies de dix et de trente questions (le quiz général réduit à une entité en demande jusqu'à trente) */
+  const copiesOf = new Map<string, Question[][]>()
   const byType = (...types: SoloType[]) => supply.filter((d) => types.includes(d.v.type))
-  /** Ce que la question présente comme faux pour X, ou comme le signe d'une autre : sa phrase, et l'entité d'où elle vient. */
-  const shownFalse = (d: Drawn): { text: string; from: Ghost }[] => {
-    const { v, q } = d
-    if (v.type === 'T2') return v.wrong.map((c) => ({ text: c.label, from: getGhost(c.id)! }))
-    if (v.type === 'T5') return [{ text: v.right.label, from: v.partner! }]
-    if (v.type === 'T6' && q.correct[0] === SOLO_ANSWERS.trueFalse.false && /^[KT]\d+$/u.test(q.id.split(':')[4])) return [{ text: q.quote!, from: v.partner! }]
-    // « de qui parle-t-on ? » sur un signe clé : il est dit faux pour l'autre des deux entités
-    if (v.type === 'T7b' && /^K\d+$/u.test(q.id.split(':')[5])) return [{ text: q.quote!, from: v.about }]
-    return []
-  }
+  const ids = (x: Ghost) => soloSupply(x, GHOSTS).map((s) => s.id)
+  /** Les signes d'autres entités que la question montre comme mauvaises réponses : sa phrase, et l'entité d'où elle vient. */
+  const wrongSigns = (d: Drawn): { text: string; from: Ghost }[] => (d.v.type === 'T2' ? d.v.wrong.map((c) => ({ text: c.label, from: getGhost(c.id)! })) : [])
 
   beforeAll(() => {
     supply = []
-    for (const x of GHOSTS) {
+    for (const [k, x] of GHOSTS.entries()) {
       for (const s of soloSupply(x, GHOSTS)) {
         const seen = new Set<string>()
         for (let r = 0; r < 6; r++) {
@@ -1074,35 +1463,42 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
           supply.push({ x, q, v: view(q, x) })
         }
       }
+      const runs: Question[][] = []
+      for (let j = 0; j < 60; j++) runs.push(buildSoloQuiz({ ghost: x, allGhosts: GHOSTS, rng: createRng(770_000 + k * 7919 + j * 104_729), count: j % 3 === 2 ? 30 : SOLO_COUNT }))
+      copiesOf.set(x.id, runs)
     }
-  }, 120_000)
+  }, 300_000)
 
-  it('un signe vrai de toutes les entités n’est jamais une mauvaise réponse, ni « faux » pour une autre (les Jumeaux : « ne réagissent qu’à sa position réelle »)', () => {
+  it('un signe vrai de toutes les entités n’est jamais une mauvaise réponse (les Jumeaux : « ne réagissent qu’à sa position réelle »)', () => {
     // le signe des Jumeaux est bien de ceux-là : s'il est reformulé, relire TRUE_OF_ALL (quiz.ts) avec la fiche
     const twins = getGhost('the-twins')!
     const sign = twins.keyTells.find((t) => /détecteurs? de mouvement/iu.test(t))!
     expect(TRUE_OF_ALL.test(sign), sign).toBe(true)
     let checked = 0
     for (const d of supply) {
-      for (const f of shownFalse(d)) {
+      for (const f of wrongSigns(d)) {
         checked++
         expect(TRUE_OF_ALL.test(f.text), `${d.q.id} : « ${f.text} »`).toBe(false)
+        expect(f.from.id, d.q.id).not.toBe(MIMIC)
+        expect(f.from.id, d.q.id).not.toBe(d.x.id)
       }
     }
-    expect(checked).toBeGreaterThan(2000)
-    // il reste un signe des Jumeaux : « Vrai » pour eux
-    const own = byType('T6').filter((d) => d.x.id === twins.id && d.q.quote === sign)
-    expect(own.length).toBeGreaterThan(0)
-    for (const d of own) expect(d.q.correct).toEqual([SOLO_ANSWERS.trueFalse.true])
+    measure(`signes d’autres fiches en mauvaises réponses, dans la réserve : ${checked}`)
+    expect(checked).toBeGreaterThan(WRONG_SIGNS_FLOOR)
   })
 
-  it('un signe dit faux pour X ne redit pas une mécanique commune à toutes les entités (« ralentit… à ta dernière position connue ») sans les valeurs qui le rendent propre à la sienne', () => {
+  it('une mauvaise réponse de « lequel de ces signes… ? » ne redit pas une mécanique commune (« ralentit… à ta dernière position connue ») sans ses valeurs, ne cite pas une vitesse trop proche de celle de X, et ne dit pas « peut chasser à N % » d’une entité qui chasse déjà à ce niveau', () => {
     // la mécanique, telle que l'app l'enseigne : toute entité garde sa vitesse jusqu'à la dernière position connue, puis la perd
     const rule = MECHANICS.topics.flatMap((t) => t.facts).find((f) => /dernière position connue/iu.test(f.text) && !GHOSTS.some((g) => namesGhost(f.text, g)))
     expect(rule, 'la mécanique de la ligne de vue perdue').toBeDefined()
     let seen = 0
     for (const d of supply) {
-      for (const f of shownFalse(d)) {
+      const top = Math.max(...thresholds(d.x))
+      for (const f of wrongSigns(d)) {
+        // « ~1,5 ou ~1,9 m/s » (les Jumeaux) face à l'Aswang, à 1,53 m/s : trop près pour être le signe d'une autre
+        expect(nearSpeed(f.text, d.x), `${d.q.id} : « ${f.text} »`).toBe(false)
+        // « Peut chasser à 65 % près d'un équipement électronique actif » (le Raiju) : à moitié vrai d'un Thayé jeune (75 %)
+        for (const m of f.text.matchAll(/(?:peut|peuvent)\s+chasser[^.;·]*?(\d+)\s?%/giu)) expect(Number(m[1]), `${d.q.id} : « ${f.text} » face à ${d.x.name}, qui chasse jusqu’à ${top} %`).toBeGreaterThan(top)
         if (!/dernière position/iu.test(f.text)) continue
         seen++
         // « Garde 3,0 m/s jusqu'à ta dernière position connue, puis ralentit peu à peu jusqu'à 1,0 m/s » : faux pour qui n'a pas ces vitesses
@@ -1110,119 +1506,611 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
       }
     }
     expect(seen).toBeGreaterThan(0)
+    // « peut chasser à N % » : la réserve échantillonnée ne tire que rarement ce signe face à une entité qui chasse tôt
+    // (9 fois sur 44 000 mauvaises réponses sans le garde-fou, toutes face au Thayé). On relit donc, pour chaque entité
+    // qui chasse au-dessus de 50 %, chaque question « lequel de ces signes… ? » sur 120 tirages
+    let early = 0
+    for (const x of GHOSTS) {
+      const top = Math.max(...thresholds(x))
+      if (top <= 50) continue
+      for (const s of soloSupply(x, GHOSTS).filter((k) => k.type === 'T2')) {
+        for (let r = 1; r <= 120; r++) {
+          const q = soloQuestion(x, GHOSTS, s.id, createRng(r * 104_729 + 3))
+          if (!q) continue
+          for (const c of q.choices) {
+            if (q.correct.includes(c.id)) continue
+            early++
+            const label = c.label.replace(/[\u00a0\u202f]/gu, ' ')
+            for (const m of label.matchAll(/(?:peut|peuvent)\s+chasser[^.;·]*?(\d+)\s?%/giu)) expect(Number(m[1]), `${s.id} : « ${label} » face à ${x.name}, qui chasse jusqu’à ${top} %`).toBeGreaterThan(top)
+          }
+        }
+      }
+    }
+    expect(early).toBeGreaterThan(5000)
+    const aswang = getGhost('aswang')!
+    expect(nearSpeed('Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse', aswang)).toBe(true)
     // la phrase du Revenant porte ses vitesses : elle n'est plus vraie de toute entité qui accélère en ligne de vue
-    const revenant = getGhost('revenant')!
-    const slows = revenant.keyTells.find((t) => /dernière position connue/iu.test(t))!
+    const slows = getGhost('revenant')!.keyTells.find((t) => /dernière position connue/iu.test(t))!
     expect(slows).toMatch(/3,0\sm\/s/u)
     expect(slows).toMatch(/1,0\sm\/s/u)
   })
 
-  it('« ça l’exclut » : jamais une scène qui touche un objet ou un geste dont parlent les signes de X, ni un simple ralentissement, ni un joueur ignoré face à une entité qui ne poursuit que sa cible', () => {
-    const rival = byType('T8').filter((d) => d.v.partner)
-    expect(rival.length).toBeGreaterThan(150)
-    for (const d of rival) {
-      expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.observation.excludes])
-      // recalculé ici, sans apartFrom : les thèmes précis des signes clés et des signes « 0 preuve » de X
-      const mine = new Set(themesOf([...d.x.keyTells, ...d.x.tells.filter((t) => t.zeroEvidence).map((t) => t.text)].join(' ')).filter((t) => NARROW.has(t)))
-      const touched = themesOf(d.q.quote!).filter((t) => mine.has(t))
-      expect(touched, `${d.q.id} : « ${d.q.quote} »`).toEqual([])
-      expect(apartFrom(d.x, true)(d.q.quote!), d.q.id).toBe(true)
+  it('D1, D2, D3, D14. toute la réserve vient de la fiche de X : ni départage, ni « quel test confirme X ? », ni intrus, ni signe d’une autre fiche à juger ; un profil de vitesse seulement là où la fiche n’a aucun nombre à demander', () => {
+    const names = new Set(GHOSTS.flatMap((g) => [g.name, g.nameEn, `${g.name} (${g.nameEn})`]))
+    const faults: string[] = []
+    const profiles: string[] = []
+    const judging: string[] = []
+    for (const x of GHOSTS) {
+      const mine = soloSupply(x, GHOSTS)
+      for (const s of mine) {
+        const p = s.id.split(':')
+        // les sortes retirées : « de qui parle-t-on ? », le départage, « quel test confirme X ? », l'intrus, « dans lequel
+        // de ces cas peux-tu exclure X ? », le profil de seuil
+        if (GONE_KINDS.test(s.id) || soloType(s.id) === null) faults.push(`${s.id} : une sorte de question qui ne se pose plus`)
+        // seules les observations de la fiche de X se demandent en « est-ce que ça suffit ? »
+        if (p[1] === 'constat' && (p[2] !== x.id || p[3] !== x.id || !/^O\d+$/u.test(p[4]))) faults.push(`${s.id} : une scène qui n’est pas une observation de la fiche de ${x.name}`)
+        // un vrai ou faux : une phrase de la fiche de X (test d'élimination, signe clé, signe « 0 preuve », observation)
+        if (p[1] === 'vf' && (p[2] !== x.id || p[3] !== x.id || !/^[EKTO]\d+$/u.test(p[4]))) faults.push(`${s.id} : un vrai ou faux qui ne vient pas de la fiche de ${x.name}`)
+        if (p[1] === 'spdsum') profiles.push(x.id)
+      }
+      // le vrai ou faux ne se pose que pour une fiche qui a un test d'élimination à citer
+      const judged = mine.filter((s) => s.type === 'T6')
+      if (judged.length) {
+        judging.push(x.id)
+        expect(judged.some((s) => /:E\d+$/u.test(s.id)), x.id).toBe(true)
+      }
+      // le profil de vitesse (quatre résumés, dont trois d'autres entités) : seulement sans aucun nombre à demander ;
+      // jamais de profil de seuil
+      expect(mine.some((s) => s.id.startsWith('q:spdsum:')), x.id).toBe(x.id !== MIMIC && asksOf('spd', x).length === 0)
     }
-    // les paires relevées : 20 points perdus après un événement (le Fantôme draine la santé pendant les événements), le sel
-    // intact (le Gallu enragé ne le perturbe pas non plus), la voix qui n'attire pas (la Banshee ignore qui n'est pas sa
-    // cible), l'entité qui ralentit après les pilules (toute entité ralentit quand elle a perdu le joueur)
-    const gone = ['phantom:oni:O0', 'gallu:wraith:O0', 'banshee:yokai:O1', 'spirit:moroi:O4', 'revenant:moroi:O4', 'poltergeist:moroi:O4', 'shade:moroi:O4', 'demon:moroi:O4', 'the-twins:moroi:O4', 'thaye:moroi:O4', 'aswang:moroi:O4']
-    for (const pair of gone) {
-      const id = `q:constat:${pair}`
-      expect(soloSupply(getGhost(pair.split(':')[0])!, GHOSTS).map((s) => s.id), id).not.toContain(id)
+    for (const d of supply) {
+      const p = d.q.id.split(':')
+      for (const c of d.q.choices) if (names.has(c.label)) faults.push(`${d.q.id} : « ${c.label} » parmi les réponses`)
+      expect(d.q.ghostId, d.q.id).toBe(d.x.id)
+      expect(d.v.source.id, d.q.id).toBe(d.x.id)
+      if (p[1] === 'vf') expect(d.q.correct, d.q.id).toEqual([p[4][0] === 'E' ? SOLO_ANSWERS.trueFalse.false : SOLO_ANSWERS.trueFalse.true])
     }
-    // ce que la scène du Moroï prouve reste demandé sur sa propre fiche
-    expect(soloSupply(getGhost('moroi')!, GHOSTS).map((s) => s.id)).toContain('q:constat:moroi:moroi:O4')
+    expect(faults, [...new Set(faults)].slice(0, 12).join('\n')).toEqual([])
+    // chaque sorte de question est dans la réserve
+    for (const t of TYPES) expect(byType(t).length, t).toBeGreaterThan(0)
+    // les quatre fiches dont la vitesse ne tient pas en un nombre : « 1,4 à 2,7 m/s selon le froid », « 1,5 ou 1,9 m/s
+    // selon la chasse », « 1,5 → 2,25 m/s selon la santé », « 3,0 → 0,4 m/s selon les objets »
+    expect(profiles).toEqual(['hantu', 'the-twins', 'moroi', 'deildegast'])
+    // les fiches qui ont un test d'élimination à citer en une phrase, sans preuve
+    expect(judging).toEqual(JUDGING)
+    // les scènes d'entités proches relevées par les relecteurs du 18 novembre 2026 sont parties avec toutes les autres
+    for (const pair of ['phantom:oni:O0', 'gallu:wraith:O0', 'banshee:yokai:O1', 'spirit:moroi:O4', 'aswang:moroi:O4']) {
+      expect(ids(getGhost(pair.split(':')[0])!), pair).not.toContain(`q:constat:${pair}`)
+    }
   })
 
-  it('une chasse qui démarre trop tôt ne désigne une entité (et n’exclut les autres) que « sans objet maudit » : la fiche le dit', () => {
-    // une chasse maudite part quels que soient le seuil et les délais : sans cette précision, la scène se voit avec toute entité
-    const early = /(?:une|nouvelle) chasse (?:démarre|commence)|chasse au-dessus/iu
-    let checked = 0
+  it('D1, D8. un vrai ou faux : « Faux » pour un test d’élimination de X, cité avec toutes ses conditions ; « Vrai » pour ses signes et ses observations ; aucune mise en garde entre parenthèses, aucune phrase qui se lit de travers', () => {
+    const plain = (t: string) => t.replace(/[  ]/gu, ' ')
+    const seen = { E: 0, O: 0, K: 0, T: 0 }
+    for (const d of byType('T6')) {
+      const tag = d.q.id.split(':')[4]
+      const rank = Number(tag.slice(1))
+      const quote = d.q.quote!
+      seen[tag[0] as keyof typeof seen]++
+      // rien n'y nomme une entité, rien n'y parle des preuves
+      expect(GHOSTS.some((g) => namesGhost(quote, g)), `${d.q.id} : « ${quote} »`).toBe(false)
+      expect(mentionsEvidence(quote), `${d.q.id} : « ${quote} »`).toBe(false)
+      // et la phrase parle de l'entité, sans s'adresser au joueur : une scène à la deuxième personne (« Tu vois un
+      // événement « Forme de Brume » ») est possible ou impossible avec X, pas vraie ou fausse
+      expect(SAYS_YOU.test(quote), `${d.q.id} : « ${quote} » s’adresse au joueur`).toBe(false)
+      if (tag[0] === 'E') {
+        const line = d.x.eliminationTests[rank].text
+        expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.trueFalse.false])
+        // la fiche dit elle-même que ce fait exclut X, et le corrigé est sa ligne (sans la phrase qui cite une source)
+        expect(line, d.q.id).toMatch(/n[’']est\s+pas|ne\s+sont\s+pas/u)
+        expect(plain(d.q.explain), d.q.id).toBe(plain(`Faux. ${withoutSourceSentences(line)}`))
+        // la condition entière, en une phrase : tout ce que la fiche écrit avant « ce n'est pas un X » est dans la phrase jugée
+        const condition = line.slice(0, line.search(/,?\s*ce\s+n[’']est\s+pas|,?\s*ce\s+ne\s+sont\s+pas/u))
+        expect(within(condition, quote), `${d.q.id} : « ${quote} » ne reprend pas toute la condition « ${condition} »`).toBeGreaterThanOrEqual(0.8)
+        expect(within(quote, line), `${d.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
+        expect(quote.split(/(?<=[.!?…])\s+/u), `${d.q.id} : « ${quote} »`).toHaveLength(1)
+        for (const aside of condition.match(/\([^()]*\)/gu) ?? []) expect(plain(quote), `${d.q.id} : la précision ${aside} manque`).toContain(plain(aside))
+        // ni mise en garde entre parenthèses (« (attention aux limites de pièce, réelles ou buguées) »), nulle part sur sa ligne
+        expect(line, d.q.id).not.toMatch(/\((?:attention|prudence|sauf)(?!\p{L})|\([^()]*(?<!\p{L})bug/iu)
+        // et une chasse partie trop tôt n'exclut une entité que « sans objet maudit »
+        if (EARLY_HUNT.test(line)) expect(quote, `${d.q.id} : « ${quote} »`).toMatch(CURSED)
+        continue
+      }
+      // tout le reste de la fiche de X est vrai pour lui
+      expect(d.q.correct, `${d.q.id} : « ${quote} »`).toEqual([SOLO_ANSWERS.trueFalse.true])
+      if (tag[0] === 'O') {
+        const o = d.x.observations[rank]
+        expect(o.requires, d.q.id).toBeUndefined()
+        expect(within(quote, o.text), `${d.q.id} : « ${quote} »`).toBeGreaterThanOrEqual(0.8)
+      } else if (tag[0] === 'K') expect(plain(quote), d.q.id).toBe(plain(d.x.keyTells[rank]))
+      else expect(from(quote, d.x.tells.filter((t) => t.zeroEvidence).map((t) => t.text)), `${d.q.id} : « ${quote} »`).toBe(true)
+      expect(TRUE_OF_ALL.test(quote) && tag[0] !== 'K', `${d.q.id} : « ${quote} »`).toBe(false)
+    }
+    for (const [k, n] of Object.entries(seen)) expect(n, k).toBeGreaterThan(0)
+    // les tests d'élimination qui ne se jugent pas : une phrase qui se lit de travers seule (« … donnant EMF 2, 3 ou 4
+    // dans la même pièce qu'un joueur » : l'Ombre le fait depuis l'extérieur de la pièce), une mise en garde entre
+    // parenthèses (les limites de pièce, les portes de casier)
+    for (const id of ['q:vf:shade:shade:E1', 'q:vf:shade:shade:E5', 'q:vf:yurei:yurei:E0']) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    // ni ceux qui s'adressent au joueur (l'Oni : « Tu vois un événement « Forme de Brume » » ; le Myling ; la buée du Hantu)
+    for (const id of ['q:vf:oni:oni:E0', 'q:vf:myling:myling:E0', 'q:vf:deildegast:deildegast:E0', 'q:vf:hantu:hantu:E0', 'q:vf:hantu:hantu:O0']) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    // ceux qui disent « sans objet maudit » se jugent, précision comprise
+    const deogen = byType('T6').find((d) => d.q.id === 'q:vf:deogen:deogen:E0')
+    expect(deogen?.q.quote?.replace(/[  ]/gu, ' ')).toBe('Tente de chasser au-dessus de 40 % de santé mentale moyenne (chasse naturelle, sans objet maudit).')
+    expect(byType('T6').find((d) => d.q.id === 'q:vf:shade:shade:E2')?.q.quote).toMatch(/sans objet maudit\)\.$/u)
+  })
+
+  it('D1. le vrai ou faux : un seul par copie, il y entre le premier ; « Vrai » sort autant que « Faux », pour chaque fiche comme pour toutes ; ni sa tournure, ni sa longueur ne disent lequel est posé', () => {
+    let truths = 0
+    let lies = 0
+    const asking: string[] = []
+    const shares: string[] = []
+    for (const [k, x] of GHOSTS.entries()) {
+      if (!ids(x).some((id) => id.startsWith('q:vf:'))) continue
+      const judged = supply.filter((d) => d.x.id === x.id && d.v.type === 'T6')
+      let mine = 0
+      let mineTrue = 0
+      for (let j = 0; j < 300; j++) {
+        // une copie d'une seule question : le vrai ou faux de la copie, s'il y en a un (voir judgedFor, solo.ts)
+        const [q] = buildSoloQuiz({ ghost: x, allGhosts: GHOSTS, rng: createRng(31_337 + k * 104_729 + j * 7919), count: 1 })
+        if (!q || soloType(q) !== 'T6') continue
+        mine++
+        if (q.correct[0] === SOLO_ANSWERS.trueFalse.true) mineTrue++
+        // la paire d'où il vient : la fiche a, pour l'autre réponse, une affirmation de même tournure et de longueur
+        // voisine. Sans elle, la forme de la phrase dirait sa réponse (« Rallume le disjoncteur. », 23 caractères,
+        // face à des signes de 60 à 100 caractères : « court, donc Faux »)
+        const facing = judged.filter((d) => d.q.correct[0] !== q.correct[0] && shapeOf(d.q.quote!) === shapeOf(q.quote!) && closeSize(d.q.quote!, q.quote!))
+        expect(facing.length, `${q.id} : « ${q.quote} » n’a aucune affirmation de même forme pour l’autre réponse`).toBeGreaterThan(0)
+      }
+      for (const qs of copiesOf.get(x.id)!) expect(qs.filter((q) => soloType(q) === 'T6').length, x.id).toBeLessThanOrEqual(1)
+      // une fiche sans paire ne pose aucun vrai ou faux, dans aucune copie
+      if (!mine) {
+        for (const qs of copiesOf.get(x.id)!) expect(qs.filter((q) => soloType(q) === 'T6').map((q) => q.id), x.id).toEqual([])
+        continue
+      }
+      asking.push(x.id)
+      truths += mineTrue
+      lies += mine - mineTrue
+      // pour chaque fiche, « Vrai » environ une fois sur deux (300 tirages : 50 % à 3 écarts-types près)
+      const own = (100 * mineTrue) / mine
+      shares.push(`${x.id} ${own.toFixed(0)} %`)
+      expect(mine, x.id).toBe(300)
+      expect(own, `${x.id} : « Vrai » ${own.toFixed(1)} %`).toBeGreaterThanOrEqual(40)
+      expect(own, `${x.id} : « Vrai » ${own.toFixed(1)} %`).toBeLessThanOrEqual(60)
+    }
+    expect(asking).toEqual(PAIRED)
+    const share = (100 * truths) / (truths + lies)
+    measure(`D1. vrai ou faux : « Vrai » ${share.toFixed(1)} % de ${truths + lies} (${shares.join(', ')})`)
+    expect(truths + lies).toBeGreaterThan(2000)
+    // la part de « Vrai », toutes fiches confondues : entre 45 et 55 %
+    expect(share, `« Vrai » ${share.toFixed(1)} % de ${truths + lies}`).toBeGreaterThanOrEqual(45)
+    expect(share, `« Vrai » ${share.toFixed(1)} % de ${truths + lies}`).toBeLessThanOrEqual(55)
+  }, 120_000)
+
+  it('D8. une chasse qui démarre trop tôt ne désigne une entité, et n’exclut les autres, que « sans objet maudit » : les lignes décisives des fiches le disent, ou ne se posent pas', () => {
+    // une chasse maudite part quels que soient le seuil, les délais et l'endroit : sans cette précision, la scène se voit avec toute entité
+    let observations = 0
+    let eliminations = 0
     for (const g of GHOSTS) {
       for (const o of g.observations) {
-        if (o.strength !== 'definitive' || !early.test(o.text)) continue
-        checked++
-        expect(o.text, `${g.id} : « ${o.text} »`).toMatch(/objet maudit/iu)
+        if (o.strength !== 'definitive' || !EARLY_HUNT.test(o.text)) continue
+        observations++
+        expect(o.text, `${g.id} : « ${o.text} »`).toMatch(CURSED)
+      }
+      // tous les tests d'élimination (le Deogen, l'Esprit, l'Ombre deux fois), qu'ils se jugent en vrai ou faux ou non
+      for (const t of g.eliminationTests) {
+        if (!EARLY_HUNT.test(t.text)) continue
+        eliminations++
+        expect(t.text, `${g.id} : « ${t.text} »`).toMatch(CURSED)
       }
     }
-    expect(checked).toBeGreaterThanOrEqual(6)
+    expect(observations).toBeGreaterThanOrEqual(6)
+    expect(eliminations).toBeGreaterThanOrEqual(4)
+    // un « Oui, ce test suffit » : jamais sur un test qui conclut d'une chasse partie trop tôt sans le dire
+    let asked = 0
+    for (const d of byType('T3b', 'T8')) {
+      if (d.q.correct[0] !== SOLO_ANSWERS.enough.yes) continue
+      const p = d.q.id.split(':')
+      const line = d.v.type === 'T3b' ? d.x.confirmationTests[Number(p[3])].text : d.x.observations[Number(p[4].slice(1))].text
+      if (!EARLY_HUNT.test(line)) continue
+      asked++
+      expect(`${line} ${d.q.quote}`, d.q.id).toMatch(CURSED)
+    }
+    expect(asked).toBeGreaterThan(0)
+    // les deux tests au chronomètre du Démon ne le disent pas (ses observations, si) : ils ne se posent pas
+    const demon = getGhost('demon')!
+    for (const i of [0, 1]) {
+      expect(EARLY_HUNT.test(demon.confirmationTests[i].text) && !CURSED.test(demon.confirmationTests[i].text), demon.confirmationTests[i].text).toBe(true)
+      expect(ids(demon)).not.toContain(`q:suffit:demon:${i}`)
+    }
   })
 
-  it('un départage : aucune mauvaise réponse ne touche un thème des signes de l’entité reconnue (« plus visible que les autres », dit du Deogen), ni ne la contredit par un pronom', () => {
-    const duels = byType('T7a')
-    expect(duels.length).toBeGreaterThan(300)
-    for (const d of duels) {
-      const g = d.v.about
-      const apart = apartFrom(g)
-      for (const c of d.v.wrong) {
-        expect(apart(c.label), `${d.q.id} : « ${c.label} »`).toBe(true)
-        expect(pronounClash(c.label, g), `${d.q.id} : « ${c.label} »`).toBe(false)
+  it('D7. « Oui, ça suffit » ne se dit que d’une ligne qui tient seule : jamais quand la fiche ajoute qu’une autre entité ferait pareil', () => {
+    const yes = byType('T3b', 'T8').filter((d) => d.q.correct[0] === SOLO_ANSWERS.enough.yes)
+    expect(yes.length).toBeGreaterThan(60)
+    const reviewed = new Set<string>()
+    for (const d of yes) {
+      const p = d.q.id.split(':')
+      const said = d.v.type === 'T3b' ? `${afterConclusion(d.x.confirmationTests[Number(p[3])].text, d.x)} ${d.x.confirmationTests[Number(p[3])].why ?? ''}` : `${d.x.observations[Number(p[4].slice(1))].text} ${d.x.observations[Number(p[4].slice(1))].why ?? ''}`
+      const named = [...new Set([...othersIn(said, d.x), ...othersIn(d.q.explain, d.x)])]
+      // la citation elle-même ne nomme personne
+      expect(othersIn(d.q.quote!, d.x).map((o) => o.name), d.q.id).toEqual([])
+      if (!named.length) continue
+      // une autre entité est nommée : seulement sur une ligne relue, où la fiche dit ce qui les sépare
+      reviewed.add(d.q.id)
+      expect(Object.keys(TOLD_APART), `${d.q.id} : « ${d.q.explain} »`).toContain(d.q.id)
+      expect(d.q.explain.replace(/[  ]/gu, ' '), d.q.id).toMatch(TOLD_APART[d.q.id])
+      expect(d.q.explain, `${d.q.id} : « ${d.q.explain} »`).not.toMatch(DOES_THE_SAME)
+    }
+    // la liste des lignes relues est exacte : une ligne qui ne se pose plus en sort
+    expect([...reviewed].sort()).toEqual(Object.keys(TOLD_APART).sort())
+    // les lignes décisives dont la mise en garde nomme une entité qui ferait pareil ne se posent pas du tout : le Spectre
+    // (un Gallu enragé ne perturbe pas le sel non plus), le Hantu et le Moroï (l'Obambo change aussi de vitesse en pleine
+    // chasse), le Raiju (un Revenant, un Kormos accélèrent aussi), le Djinn (l'accélération du Raiju), le Démon (un Onryo
+    // à Sunny Meadows) ; ni l'observation du Moroï qui redit son test des pilules
+    for (const id of NOT_ALONE) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    // une observation décisive qui redit un test écarté ainsi : seulement si elle porte elle-même ce qui écarte l'entité nommée
+    for (const d of yes) {
+      if (d.v.type !== 'T8') continue
+      const o = d.x.observations[Number(d.q.id.split(':O')[1])]
+      for (const [i, t] of d.x.confirmationTests.entries()) {
+        const tail = `${afterConclusion(t.text, d.x)} ${t.why ?? ''}`
+        const id = `q:suffit:${d.x.id}:${i}`
+        if (!t.definitive || !othersIn(tail, d.x).length || id in TOLD_APART || (TOLD_APART_UNASKED as readonly string[]).includes(id)) continue
+        const body = t.text.slice(0, t.text.length - afterConclusion(t.text, d.x).length)
+        if (alike(o.text, body) < SAME_FACT) continue
+        expect(Object.keys(KEEPS_APART), `${d.q.id} redit le test ${i} de ${d.x.name}, dont la mise en garde nomme une autre entité`).toContain(d.q.id)
+        expect(o.text.replace(/[  ]/gu, ' '), d.q.id).toMatch(KEEPS_APART[d.q.id])
       }
     }
-    const deogen = duels.filter((d) => d.q.id === 'q:dist:oni:deogen')
-    for (const d of deogen) for (const c of d.v.wrong) expect(c.label, d.q.id).not.toMatch(/plus visible/iu)
-    // « l'encens le piège dans sa pièce » ne se dit pas de la Banshee ; « ce qui le rend plus visible », pas de « cette entité »
-    expect(pronounClash('La Banshee peut claquer une porte et l’encens le piège dans sa pièce pendant 90 s.', getGhost('banshee')!)).toBe(true)
-    for (const d of byType('T7b')) if (/^Cette entité/u.test(d.q.quote!)) expect(OBJECT_MASC.test(d.q.quote!), `${d.q.id} : « ${d.q.quote} »`).toBe(false)
+    // (l'observation du Démon « au-dessus de 80 % » n'a plus de citation de même longueur pour l'autre réponse depuis
+    // que les scènes de la porte de sortie du Yurei ne se posent plus, voir ONLY_ONE dans solo.ts : elle sort de la
+    // réserve, où le plan ne la tirait déjà dans aucune copie)
+    for (const id of Object.keys(KEEPS_APART)) if (id !== 'q:constat:demon:demon:O3') expect(ids(getGhost(id.split(':')[2])!), id).toContain(id)
   })
 
-  it('une observation de la fiche de X : « ça ne suffit pas » ne se dit pas d’un indice fort quand la fiche a un test ou un rapport décisif', () => {
+  it('D5. un signe « Seule entité… » et un « est-ce que ça suffit ? » sur le même fait ne vont jamais dans la même copie', () => {
+    // chaque signe « Seule… » des fiches est connu de la table, avec ses « est-ce que ça suffit ? »
+    for (const g of GHOSTS) {
+      const signs = [...g.keyTells, ...g.tells.filter((t) => t.zeroEvidence).map((t) => t.text)].filter((t) => SAYS_ONLY.test(t))
+      if (!signs.length) continue
+      expect(Object.keys(ONLY_SIGNS), `${g.id} : « ${signs[0]} »`).toContain(g.id)
+      for (const s of signs) expect(s, g.id).toMatch(ONLY_SIGNS[g.id].sign)
+    }
+    let signsAsked = 0
+    let worthAsked = 0
+    for (const [id, { sign, worth }] of Object.entries(ONLY_SIGNS)) {
+      const x = getGhost(id)!
+      for (const qs of [...copiesOf.get(id)!, ...extraCopies(x, 120)]) {
+        // le signe, comme bonne réponse de « lequel de ces signes… ? » ou comme phrase jugée « Vrai »
+        const signText = (q: Question) => {
+          const t = soloType(q)
+          return t === 'T2' ? `${q.choices.find((c) => q.correct.includes(c.id))!.label} ${q.explain.split('. Les trois autres')[0]}` : t === 'T6' ? q.quote! : ''
+        }
+        const said = qs.filter((q) => sign.test(signText(q)) && SAYS_ONLY.test(signText(q)))
+        const asked = qs.filter((q) => worth.includes(q.id))
+        signsAsked += said.length
+        worthAsked += asked.length
+        if (said.length) expect(asked.map((q) => q.id), `${id} : ${said[0].id} dans la même copie`).toEqual([])
+        // et, sans la table : aucun « est-ce que ça suffit ? » de la copie ne reprend les mots du signe
+        for (const s of said) for (const q of qs) if (soloType(q) === 'T8' || soloType(q) === 'T3b') expect(alike(signText(s), q.quote!), `${id} : ${s.id} et ${q.id}`).toBeLessThan(SAME_FACT)
+      }
+    }
+    // le test mord : ces signes et ces questions se posent bien, jamais ensemble
+    expect(signsAsked).toBeGreaterThan(40)
+    expect(worthAsked).toBeGreaterThan(100)
+  }, 120_000)
+
+  it('D6. ce que vaut un fait ne se demande qu’une fois par copie : deux « est-ce que ça suffit ? » ne décrivent jamais la même chose', () => {
+    let together = 0
+    for (const x of GHOSTS) {
+      const scenes = (SAME_SCENE[x.id] ?? []).map((tags) => tags.map((t) => worthId(x.id, t)))
+      for (const qs of copiesOf.get(x.id)!) {
+        const worth = qs.filter((q) => soloType(q) === 'T8' || soloType(q) === 'T3b')
+        if (worth.length > 1) together++
+        // les scènes relevées à la relecture : une seule par copie
+        for (const scene of scenes) expect(worth.filter((q) => scene.includes(q.id)).map((q) => q.id).length, `${x.id} : ${worth.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(1)
+        // et, sans la table : jamais deux citations aux mêmes mots, ni à la même valeur chiffrée
+        for (let a = 0; a < worth.length; a++) {
+          for (let b = a + 1; b < worth.length; b++) {
+            const tag = `${x.id} : ${worth[a].id} et ${worth[b].id}`
+            expect(alike(worth[a].quote!, worth[b].quote!), tag).toBeLessThan(SAME_FACT)
+            const values = valuesOf(x.id, worth[a].quote!).filter((k) => !/ligne de vue/u.test(k))
+            expect(valuesOf(x.id, worth[b].quote!).filter((k) => values.includes(k)), tag).toEqual([])
+          }
+        }
+      }
+    }
+    // le test mord : des copies posent bien deux « est-ce que ça suffit ? » sur deux faits différents. Seulement celles
+    // de trente questions (une sur trois) : une copie de dix n'en pose plus qu'un (mesuré : 147 copies sur 600)
+    expect(together).toBeGreaterThan(100)
+    // la table ne nomme que des lignes des fiches
+    for (const [id, scenes] of Object.entries(SAME_SCENE)) {
+      const x = getGhost(id)!
+      for (const tag of scenes.flat()) expect((tag[0] === 'C' ? x.confirmationTests : x.observations)[Number(tag.slice(1))], `${id} ${tag}`).toBeDefined()
+    }
+  })
+
+  it('D4. un même fait ne se demande pas deux fois sous d’autres mots, et aucun énoncé ne souffle la réponse d’une question suivante (les paires relevées à la relecture)', () => {
+    const askedText = (q: Question) => {
+      const t = soloType(q)
+      const right = q.choices.find((c) => q.correct.includes(c.id))!.label
+      return t === 'T2' ? `${right} ${q.explain.split('. Les trois autres')[0]}` : t === 'T6' ? q.quote! : t === 'auth' ? `${q.prompt} ${right}` : ''
+    }
+    let seen = 0
+    for (const [id, facts] of Object.entries(SAME_FACT_WORDS)) {
+      for (const qs of copiesOf.get(id)!) {
+        for (const [name, re] of facts) {
+          const hit = qs.filter((q) => re.test(askedText(q)))
+          seen += hit.length
+          expect(hit.map((q) => q.id).length, `${id}, « ${name} » : ${hit.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(1)
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(100)
+    const order = new Map<string, number>()
+    for (const [id, first, then, why] of NEVER_AFTER) {
+      for (const qs of copiesOf.get(id)!) {
+        const a = qs.findIndex((q) => first.test(q.id))
+        const b = qs.findIndex((q) => then.test(q.id))
+        if (a >= 0) order.set(`${id} a`, (order.get(`${id} a`) ?? 0) + 1)
+        if (b >= 0) order.set(`${id} b`, (order.get(`${id} b`) ?? 0) + 1)
+        if (a >= 0 && b >= 0) expect(a, `${id} : ${why}`).toBeGreaterThan(b)
+      }
+    }
+    measure(`D4. paires ordonnées, questions vues : ${JSON.stringify([...order])}`)
+  })
+
+  it('relecture du 25 novembre 2026 : pas de piège sur le Revenant, le vrai seuil de la Banshee, les 2,5 m/s du Djinn, le Deogen qu’on ne sème pas en se cachant', () => {
+    /** La part des copies de dix de x qui posent l'une de ces questions. */
+    const share = (id: string, re: RegExp) => {
+      const runs = copiesOf.get(id)!.filter((_, j) => j % 3 !== 2)
+      return runs.filter((qs) => qs.some((q) => re.test(q.id))).length / runs.length
+    }
+    // « Accélère-t-il quand il te voit ? » ne se demande pas au Revenant : il passe d'un coup de 1,0 à 3,0 m/s dès
+    // qu'il te voit, et « Non » (pas de montée progressive) contredisait ce que la copie venait de lui apprendre
+    expect(ids(getGhost('revenant')!).filter((id) => id.startsWith('q:los:'))).toEqual([])
+    for (const x of GHOSTS) for (const qs of copiesOf.get(x.id)!) for (const q of qs) if (q.id.startsWith('q:los:')) expect(q.id).not.toBe('q:los:revenant')
+    // les autres entités qui n'accélèrent pas gardent la question
+    for (const id of ['hantu', 'deogen', 'thaye', 'deildegast']) expect(ids(getGhost(id)!), id).toContain(`q:los:${id}`)
+    // le seuil de la Banshee vaut pour sa cible, pas pour l'équipe : il ne se demande pas en nombre (« 50 % », comme une
+    // entité normale), mais par son signe ou sa question rédigée, dans presque toutes les copies
+    expect(ids(getGhost('banshee')!).filter((id) => id.startsWith('q:san:'))).toEqual([])
+    expect(share('banshee', /^q:(?:sign-of:banshee:1|auth:banshee:0)$/u)).toBeGreaterThan(0.8)
+    // les 2,5 m/s du Djinn (son signe, ou sa question rédigée) : aucune copie ne les demandait, depuis que la vitesse
+    // habituelle (1,7 m/s) se pose à chaque fois ; ce sont deux faits (voir FACETS, solo.ts)
+    expect(share('jinn', /^q:(?:sign-of:jinn:0|auth:jinn:0)$/u)).toBeGreaterThan(0.8)
+    expect(share('jinn', /^q:spd:jinn$/u)).toBeGreaterThan(0.8)
+    // le signe qui continue le précédent ne se pose pas seul
+    expect(ids(getGhost('jinn')!)).not.toContain('q:sign-of:jinn:1')
+    // le Deogen : on ne lui échappe pas en se cachant, et il est plus visible en chasse (deux faits de sa fiche qu'aucune
+    // question ne demandait : sa copie tombait à deux ou trois questions)
+    expect(share('deogen', /^q:auth:deogen:5$/u)).toBeGreaterThan(0.8)
+    expect(share('deogen', /^q:auth:deogen:6$/u)).toBeGreaterThan(0.8)
+    for (const qs of copiesOf.get('deogen')!) expect(qs.length).toBeGreaterThanOrEqual(4)
+    // une question rédigée dont les réponses diffèrent par leurs mots demande le fait, pas seulement une valeur…
+    const soft = (id: string) => {
+      const x = getGhost(id.split(':')[2])!
+      const q = soloQuestion(x, GHOSTS, id, createRng(7))!
+      return soloFacts(q, true)!.asks.filter((k) => k.includes('|~'))
+    }
+    expect(soft('q:auth:deogen:1').some((k) => k.startsWith('deogen|~vitesse')), 'q:auth:deogen:1').toBe(true)
+    expect(soft('q:auth:revenant:2').some((k) => k.startsWith('revenant|~vitesse')), 'q:auth:revenant:2').toBe(true)
+    // … et celle dont les réponses ne diffèrent que par leurs nombres ne demande que sa valeur
+    expect(soft('q:auth:jinn:2'), 'q:auth:jinn:2').toEqual([])
+    expect(soft('q:auth:gallu:4'), 'q:auth:gallu:4').toEqual([])
+  })
+
+  it('relecture du 25 novembre 2026 : deux signes de X par copie de dix, jamais le même, jamais davantage', () => {
+    let two = 0
+    let copies = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        const signs = qs.filter((q) => soloType(q) === 'T2')
+        const asked = signs.map((q) => q.choices.find((c) => q.correct.includes(c.id))!.label)
+        expect(new Set(asked).size, `${x.id} : ${asked.join(' | ')}`).toBe(asked.length)
+        if (j % 3 === 2) continue
+        copies++
+        expect(signs.length, `${x.id} : ${signs.map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(2)
+        if (signs.length === 2) two++
+      }
+    }
+    measure(`deux signes par copie : ${two} copies de dix sur ${copies}`)
+    expect(two / copies).toBeGreaterThan(0.3)
+  })
+
+  it('contre-relecture du 25 novembre 2026 : un signe ne se trouve ni au mot de son objet, ni à sa forme, ni à l’entité déjà nommée', () => {
+    const right = (q: Question) => q.choices.find((c) => q.correct.includes(c.id))!.label
+    const wrong = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id))
+    // toute la réserve : aucune réponse ne se remarque à « jamais » ni à son premier mot (voir oddOneOut, quiz.ts), et
+    // aucune mauvaise réponse ne cite une distance ou une durée des signes de X (« à moins de 4 m », voir sharesMeasure)
+    const signs = byType('T2')
+    expect(signs.length).toBeGreaterThan(300)
+    for (const d of signs) {
+      const labels = wrong(d.q).map((c) => c.label)
+      expect(oddOneOut(right(d.q), labels), `${d.q.id} : ${right(d.q)} | ${labels.join(' | ')}`).toBe(false)
+      for (const l of labels) expect(sharesMeasure(l, d.x), `${d.q.id} : « ${l} » cite une mesure des signes de ${d.x.name}`).toBe(false)
+    }
+    // (le garde-fou a de quoi faire : « Ne coupe jamais… » face à trois réponses sans « jamais » se remarque)
+    expect(oddOneOut('Ne coupe jamais le disjoncteur lui-même', ['Plus actif quand on parle près de lui', 'Lance les objets plus vite et plus loin', 'Encensé, reste enfermé dans sa pièce'])).toBe(true)
+    expect(oddOneOut('Plus actif quand on parle près de lui', ['Ne coupe jamais le disjoncteur', 'N’allume jamais les lumières', 'Accélération instantanée, jamais progressive'])).toBe(true)
+    expect(oddOneOut('Peut rechasser 60 s après l’encens', ['En chasse, pas et voix inaudibles', 'En chasse, ne poursuit que sa cible', 'En pleine chasse, sa vitesse change'])).toBe(true)
+    expect(sharesMeasure('A une chance d’éteindre aussitôt une lumière que tu allumes à moins de 4 m de l’entité', getGhost('onryo')!)).toBe(true)
+    expect(sharesMeasure('Détecte tes déplacements : 10 m accroupi, 15 m en marchant, 30 m en sprintant', getGhost('dayan')!)).toBe(true)
+    expect(sharesMeasure('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', getGhost('yokai')!)).toBe(false)
+    // dans une copie : deux signes ne prennent jamais leurs mauvaises réponses chez la même entité (le corrigé du
+    // premier l'a nommée), ne parlent jamais du même objet de X, et ne commencent jamais pareil
+    const SAME_OBJECT: readonly (readonly [string, RegExp])[] = [
+      ['banshee', /^q:sign-of:banshee:[12]$/u],
+      ['mare', /^q:sign-of:mare:[123]$/u],
+      ['jinn', /^q:sign-of:jinn:[023]$/u],
+      ['demon', /^q:sign-of:demon:[01]$/u],
+      ['onryo', /^q:sign-of:onryo:[124]$/u],
+    ]
+    let pairs = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        if (j % 3 === 2) continue
+        const asked = qs.filter((q) => soloType(q) === 'T2')
+        if (asked.length < 2) continue
+        pairs++
+        const owners = asked.flatMap((q) => wrong(q).map((c) => c.id))
+        expect(new Set(owners).size, `${x.id} : ${asked.map((q) => q.id).join(', ')} : ${owners.join(', ')}`).toBe(owners.length)
+        const openings = asked.map((q) => (right(q).toLocaleLowerCase('fr').match(/\p{L}+/gu) ?? []).slice(0, 2).join(' '))
+        expect(new Set(openings).size, `${x.id} : ${openings.join(' | ')}`).toBe(openings.length)
+      }
+    }
+    expect(pairs).toBeGreaterThan(300)
+    for (const [id, re] of SAME_OBJECT) for (const qs of copiesOf.get(id)!.filter((_, j) => j % 3 !== 2)) expect(qs.filter((q) => re.test(q.id)).map((q) => q.id).length, id).toBeLessThanOrEqual(1)
+  })
+
+  it('vérification de vérité du 25 novembre 2026 : aucune mauvaise réponse à moitié vraie de X, ni dite comme l’un de ses signes', () => {
+    const wrongOf = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id)).map((c) => c.label.replace(/[\u00a0\u202f]/gu, ' '))
+    const seen = (id: string) => [...byType('T2').filter((d) => d.x.id === id).map((d) => d.q), ...copiesOf.get(id)!.flat().filter((q) => soloType(q) === 'T2')].flatMap(wrongOf)
+    // ce que les deux vérificateurs ont relevé, entité par entité (la phrase fautive, d'où elle venait, pourquoi)
+    const HALF_TRUE: readonly (readonly [string, RegExp, string])[] = [
+      ['banshee', /15 % de santé mentale/u, 'le Yurei : la cible de la Banshee perd elle aussi 15 % (en touchant l’entité pendant un chant)'],
+      ['oni', /Plus actif quand on parle/u, 'le Yokai : presque le signe de l’Oni, « plus actif quand plusieurs joueurs sont à proximité »'],
+      ['oni', /20 % plus courte/u, 'l’Obambo : le « 20 % » du signe de l’Oni'],
+      ['obambo', /au lieu de 10 %/u, 'la Banshee : le « 10 % » du seuil de l’Obambo calme'],
+      ['revenant', /seuil \(50 %\) standard/u, 'le Goryo : le seuil du Revenant est bien 50 %'],
+      ['moroi', /seuil \(50 %\) standard|standards \(1,7/u, 'le Goryo, le Myling : le seuil du Moroï est bien 50 %'],
+      ['deildegast', /seuil \(50 %\) standard|standards \(1,7|Vitesse fixe de 2,5|1,5 ou ~1,9|soit de 1,5/u, 'le seuil du Deildegast est bien 50 %, et 1,5, 1,7, 1,9 et 2,5 m/s sont de ses paliers'],
+      ['thaye', /1,53 m\/s|soit de 1,5|Vitesse fixe de 2,5/u, 'des paliers du Thayé (1,525 ; 1,875 ; 2,575 m/s)'],
+      ['dayan', /Vitesse fixe de 2,5/u, 'le Raiju : « sa vitesse devient fixe » est le signe de la Dayan'],
+      ['kormos', /jusqu’à 80 %/u, 'le Yokai : la tournure du signe du Kormos, « Peut chasser dès 70 % si… »'],
+      ['demon', /à portée normale/u, 'le Kormos : sa première moitié est vraie de toute entité'],
+      ['jinn', /chasse à 40 %/u, 'le Gallu : un Djinn aussi chasse à 40 %'],
+      ['hantu', /sources de feu/u, 'l’Onryo : lu « source de feu = flamme », c’est vrai de toute entité'],
+      ['shade', /sources de feu/u, 'l’Onryo : de même'],
+    ]
+    for (const [id, re, why] of HALF_TRUE) expect(seen(id).filter((l) => re.test(l)), `${id} : ${why}`).toEqual([])
+    // les garde-fous qui les écartent (quiz.ts) reconnaissent bien ces phrases
+    const g = (id: string) => getGhost(id)!
+    expect(sharesMeasure('Pouvoir : ferme une porte et fait perdre 15 % de santé mentale aux joueurs proches', g('banshee'))).toBe(true)
+    expect(sameTurn('Plus actif quand on parle près de lui', g('oni'))).toBe(true)
+    expect(sameTurn('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('dayan'))).toBe(true)
+    expect(sameTurn('Peut chasser jusqu’à 80 % si l’on parle dans sa pièce', g('kormos'))).toBe(true)
+    expect(sameTurn('Plus actif quand on parle près de lui', g('spirit'))).toBe(false)
+    expect(inSpeedRange('Vitesse de base 1,53 m/s, atteint 1,65× en 8,7 s de ligne de vue', g('thaye'))).toBe(true)
+    expect(inSpeedRange('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('deildegast'))).toBe(true)
+    expect(inSpeedRange('Vitesse fixe de 2,5 m/s près d’un appareil électronique actif', g('spirit'))).toBe(false)
+    for (const t of ['Vitesse (1,7 m/s) et seuil (50 %) standard : ce sont ses déplacements qui le trahissent, pas ses chasses', 'Vitesse et seuil de chasse standards (1,7 m/s, 50 %)', 'Détecte la voix et les appareils électroniques à portée normale, et repère en plus les déplacements']) expect(HALF_TRUE_OF_MANY.test(t), t).toBe(true)
+    // (un signe qui dit « standard » pour autre chose reste une mauvaise réponse possible)
+    expect(HALF_TRUE_OF_MANY.test('Après l’encens, ne peut pas rechasser avant 180 s (90 s pour une entité standard)')).toBe(false)
+    // aucune réponse ne dit d'où elle vient (« d'après le coach »)
+    for (const x of GHOSTS) expect(seen(x.id).filter((l) => /coach/iu.test(l)), x.id).toEqual([])
+    // … et le signe des Jumeaux se propose bien ailleurs, sans sa parenthèse
+    expect(GHOSTS.some((x) => seen(x.id).some((l) => /tirée au hasard à chaque chasse$/u.test(l)))).toBe(true)
+  })
+
+  it('contre-relecture du 25 novembre 2026 : « ce n’est qu’un indice » ne se dit pas d’un fait que la fiche réserve à X ; les nombres restent deux par copie', () => {
+    // « Seule entité capable de lancer un objet alors qu'elle se trouve dans une pièce éclairée » (le Poltergeist), « Seule
+    // à fermer ou toucher une porte de sortie… » (le Yurei) : leur test ou leur scène, qui n'est qu'un indice, ne se pose pas
+    for (const id of ['q:suffit:poltergeist:2', 'q:constat:yurei:yurei:O0', 'q:constat:yurei:yurei:O1']) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    // (les autres « Non » de ces fiches restent : la fiche ne les réserve pas à X)
+    expect(ids(getGhost('yurei')!)).toContain('q:constat:yurei:yurei:O4')
+    expect(ids(getGhost('the-twins')!).some((id) => id.startsWith('q:constat:')), 'les Jumeaux gardent leurs observations').toBe(true)
+    // deux questions au plus sur la vitesse et deux sur le seuil par copie de dix, questions rédigées comprises
+    const speed = (q: Question) => /^q:spd(?:sum)?:/u.test(q.id) || (soloType(q) === 'auth' && /^\d+(?:,\d+)?\u00a0m\/s$/u.test(q.choices.find((c) => q.correct.includes(c.id))!.label))
+    let most = 0
+    for (const x of GHOSTS) {
+      for (const [j, qs] of copiesOf.get(x.id)!.entries()) {
+        if (j % 3 === 2) continue
+        most = Math.max(most, qs.filter(speed).length)
+        expect(qs.filter(speed).length, `${x.id} : ${qs.filter(speed).map((q) => q.id).join(', ')}`).toBeLessThanOrEqual(2)
+      }
+    }
+    expect(most).toBe(2)
+    // les fiches corrigées ce jour-là : la mauvaise réponse qui était vraie (l'Onryo), la bonne réponse seule à dire
+    // « l'entité imitée » (le Mimic)
+    const onryo = getGhost('onryo')!.quiz[5]
+    expect(onryo.choices.some((c) => /aucun effet sur son compteur/u.test(c))).toBe(false)
+    const mimic = getGhost('the-mimic')!.quiz[0]
+    expect(mimic.choices.filter((c) => /imit/u.test(c)).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('D9. aucune question rédigée dont l’énoncé nomme une autre entité (« Tu hésites entre un Esprit et un Spectre… »)', () => {
+    const authored = byType('auth')
+    expect(authored.length).toBeGreaterThan(100)
+    for (const d of authored) expect(othersIn(d.q.prompt, d.x).map((o) => o.name), `${d.q.id} : « ${d.q.prompt} »`).toEqual([])
+    // les trois que la fiche pose ainsi ne sont plus dans la copie
+    for (const id of ['q:auth:spirit:3', 'q:auth:jinn:5', 'q:auth:gallu:5']) expect(ids(getGhost(id.split(':')[2])!), id).not.toContain(id)
+    for (const [g, i] of [['spirit', 3], ['jinn', 5], ['gallu', 5]] as const) expect(othersIn(getGhost(g)!.quiz[i].q, getGhost(g)!).length, `${g} ${i}`).toBeGreaterThan(0)
+  })
+
+  it('D10, D12, D13. ce qui se lit : aucune preuve (« EMF 2 (ou 5) »), aucune source inconnue de l’élève (« tybayn »), aucun guillemet dans des guillemets', () => {
+    let read = 0
+    for (const d of supply) {
+      const texts = [d.q.prompt, d.q.quote ?? '', d.q.explain, ...d.q.choices.map((c) => c.label)]
+      for (const t of texts) {
+        read++
+        // le niveau 5 de l'EMF est une preuve : « un EMF 2 (ou 5) », « un EMF 2 ou 5 » ne se lisent nulle part
+        expect(t, `${d.q.id} : « ${t} »`).not.toMatch(/EMF\s*2\s*\(?\s*ou\s+(?:un\s+EMF\s*)?5/iu)
+        // la feuille de référence des fiches n'est pas une source que l'élève connaît
+        expect(t, `${d.q.id} : « ${t} »`).not.toMatch(/tybayn/iu)
+        // des guillemets dans des guillemets, ou un point de chaque côté du guillemet fermant
+        expect(t, `${d.q.id} : « ${t} »`).not.toMatch(/«[^»]*«|\.\s*»\s*\./u)
+      }
+      expect(d.q.explain.trim().length, d.q.id).toBeGreaterThan(3)
+    }
+    expect(read).toBeGreaterThan(5000)
+    // les trois textes des fiches corrigés le 19 novembre 2026
+    const emf = /EMF 2 \(ou 5\)|EMF 2 ou 5/u
+    expect(getGhost('jinn')!.quiz[3].explain).not.toMatch(emf)
+    expect(getGhost('wraith')!.quiz[1].explain).not.toMatch(emf)
+    expect(getGhost('oni')!.confusions.find((c) => c.with === 'jinn')!.why).not.toMatch(emf)
+    // le corrigé du test d'élimination du Goryo s'arrête avant « tybayn ne dit pas si… » ; celui du signe du Deildegast
+    // cite « portes ouvertes au départ » entre guillemets anglais
+    const goryo = supply.find((d) => d.q.id === 'q:vf:goryo:goryo:E0')
+    expect(goryo?.q.explain.replace(/[  ]/gu, ' ')).toBe('Faux. Si l’entité change de pièce favorite, ce n’est pas un Goryo.')
+    expect(getGhost('goryo')!.eliminationTests[0].text).toMatch(/tybayn/u)
+    const doors = supply.filter((d) => d.q.id === 'q:sign-of:deildegast:t2' && d.q.explain.includes('portes ouvertes'))
+    expect(doors.length).toBeGreaterThan(0)
+    for (const d of doors) expect(d.q.explain).toMatch(/“portes ouvertes au départ”[^«»]*\)[   ]»\. Les trois autres/u)
+  })
+
+  it('D15. un corrigé allégé reste entier là où il énumère : les trois états du Gallu', () => {
+    const gallu = supply.find((d) => d.q.id === 'q:auth:gallu:2')
+    expect(gallu?.q.explain.replace(/[  ]/gu, ' ')).toBe('Enragé : 60 %. Normal : 50 %. Affaibli : 40 %.')
+  })
+
+  it('une observation de la fiche de X : deux réponses ; « ce n’est qu’un indice » ne se dit pas d’un indice fort quand la fiche a un test ou un rapport décisif, ni d’un indice écrit comme une impression', () => {
     // les mots ne suffisent pas à reconnaître qu'un indice fort redit un test décisif (« ton coéquipier se retrouve au
     // contact de l'entité et survit » ; « ceux-ci peuvent la toucher sans mourir, c'est une Banshee ») : la copie
     // enseignait les deux verdicts pour la même scène. À rouvrir quand les forces des rapports seront alignées sur les tests.
-    const own = byType('T8').filter((d) => !d.v.partner && /:O\d+$/u.test(d.q.id))
-    expect(own.length).toBeGreaterThan(80)
+    const own = byType('T8')
+    expect(own.length).toBeGreaterThan(60)
+    const answers = { yes: 0, no: 0 }
     for (const d of own) {
+      expect(d.q.id, d.q.id).toMatch(new RegExp(`^q:constat:${d.x.id}:${d.x.id}:O\\d+$`, 'u'))
+      expect(d.q.choices.map((c) => c.id), d.q.id).toEqual([SOLO_ANSWERS.enough.yes, SOLO_ANSWERS.enough.no])
+      expect(d.q.choices.map((c) => c.label), d.q.id).toEqual(['Oui, ça suffit', 'Non, ce n’est qu’un indice'])
       const o = d.x.observations[Number(d.q.id.split(':O')[1])]
       const decisive = d.x.confirmationTests.some((t) => t.definitive) || d.x.observations.some((k) => k.strength === 'definitive')
-      if (o.strength === 'definitive') expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.observation.confirms])
+      answers[d.q.correct[0] as 'yes' | 'no']++
+      if (o.strength === 'definitive') expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.enough.yes])
       else {
-        expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.observation.fits])
+        expect(d.q.correct, d.q.id).toEqual([SOLO_ANSWERS.enough.no])
         if (decisive) expect(o.strength, `${d.q.id} : « ${o.text} »`).toBe('hint')
+        // D11 : un indice dont la tournure dit déjà « ce n'est qu'un indice » ne se pose pas
+        expect(o.text, d.q.id).not.toMatch(/souvent|surtout|plutôt|semble|un peu|de plus en plus|bien plus|beaucoup|parfois|jamais|toujours|tant que/iu)
       }
     }
+    // aucune des deux réponses n'est presque jamais juste
+    expect(answers.yes).toBeGreaterThan(30)
+    expect(answers.no).toBeGreaterThan(25)
     const gone = ['hantu:hantu:O1', 'hantu:hantu:O2', 'hantu:hantu:O3', 'yokai:yokai:O3', 'wraith:wraith:O1', 'wraith:wraith:O2', 'banshee:banshee:O1', 'banshee:banshee:O2', 'poltergeist:poltergeist:O3', 'revenant:revenant:O2']
-    for (const pair of gone) {
+    // et les indices écrits comme des impressions (« très souvent… bien plus que d'habitude », « semble », « surtout »)
+    const impressions = ['poltergeist:poltergeist:O5', 'banshee:banshee:O5', 'yokai:yokai:O5', 'shade:shade:O5', 'myling:myling:O4', 'moroi:moroi:O6', 'mare:mare:O6']
+    for (const pair of [...gone, ...impressions]) {
       const id = `q:constat:${pair}`
-      expect(soloSupply(getGhost(pair.split(':')[0])!, GHOSTS).map((s) => s.id), id).not.toContain(id)
+      expect(ids(getGhost(pair.split(':')[0])!), id).not.toContain(id)
     }
   })
 
-  it('une vitesse trop proche de celle de X n’est jamais dite fausse pour lui (« ~1,5 ou ~1,9 m/s » face à l’Aswang, à 1,53 m/s)', () => {
-    const aswang = getGhost('aswang')!
-    expect(nearSpeed('Vitesse de chasse ~1,5 ou ~1,9 m/s, tirée au hasard à chaque chasse', aswang)).toBe(true)
-    expect(nearSpeed('En chasse, sa vitesse sera soit de 1,5 m/s, soit de 1,9 m/s', aswang)).toBe(true)
-    for (const d of supply) for (const f of shownFalse(d)) expect(nearSpeed(f.text, d.v.type === 'T7b' ? (d.v.about.id === d.x.id ? d.v.partner! : d.x) : d.x), `${d.q.id} : « ${f.text} »`).toBe(false)
-  })
-
-  it('« Quel test confirme X ? » : la bonne réponse garde les conditions du test (« (disjoncteur allumé) »)', () => {
-    const tests = byType('T3a')
-    expect(tests.length).toBeGreaterThan(40)
-    for (const d of tests) {
-      const k = Number(d.q.id.split(':')[3])
-      const full = zeroTests(d.x).find((t) => t.k === k)!.text
-      const at = full.search(/c[’']est (?:une? |le |la |l[’']|les )?\p{Lu}|ce sont les/u)
-      const asides = (at < 0 ? full : full.slice(0, at)).match(/\([^()]*\)/gu) ?? []
-      for (const aside of asides) {
-        if (GHOSTS.some((g) => namesGhost(aside, g)) || mentionsEvidence(aside)) continue
-        expect(d.v.right.label.replace(/[\u00a0\u202f]/gu, ' '), `${d.q.id} : « ${d.v.right.label} »`).toContain(aside.replace(/[\u00a0\u202f]/gu, ' '))
-      }
-    }
-    const jinn = tests.filter((d) => d.q.id === 'q:test-of:jinn:0')
-    expect(jinn.length).toBeGreaterThan(0)
-    for (const d of jinn) expect(d.v.right.label).toContain('(disjoncteur allumé)')
-  })
-
-  it('une vitesse dite sans décimale (« environ 1 m/s ») est la même que « 1,0 m/s » : elle ne se demande pas après la scène qui la cite ; et aucun départage ne se pose à l’envers', () => {
-    const plain = (t: string) => t.replace(/[\u00a0\u202f]/gu, ' ')
+  it('une vitesse dite sans décimale (« environ 1 m/s ») est la même que « 1,0 m/s » : elle ne se demande pas après la scène qui la cite', () => {
+    const plain = (t: string) => t.replace(/[  ]/gu, ' ')
     let pairs = 0
-    let opened = 0
     for (const id of ['revenant', 'deildegast', 'thaye']) {
       const x = getGhost(id)!
       for (let seed = 1; seed <= 40; seed++) {
@@ -1230,7 +2118,7 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
         qs.forEach((q, i) => {
           if (soloType(q) !== 'T1') return
           for (const c of q.choices.filter((k) => q.correct.includes(k.id))) {
-            for (const m of plain(c.label).matchAll(/(?<![\d,])(\d+),0 m\/s/gu)) {
+            for (const m of plain(c.label).matchAll(/(?<![\d,])(\d+),00? m\/s/gu)) {
               const said = new RegExp(`(?<![\\d,])${m[1]} m/s`, 'u')
               for (const before of qs.slice(0, i)) {
                 const shown = plain([before.prompt, before.quote ?? '', before.explain, ...before.choices.filter((k) => before.correct.includes(k.id)).map((k) => k.label)].join(' '))
@@ -1240,15 +2128,9 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
             }
           }
         })
-        // aucun départage à l'envers (« à quoi reconnais-tu Y plutôt que X ? ») : ni en première question, ni ailleurs
-        if (qs.length > 1) {
-          opened++
-          for (const q of qs) expect(soloType(q) === 'T7a' && q.id.split(':')[3] !== id, `${id} (graine ${seed}) : ${q.id}`).toBe(false)
-        }
       }
     }
     expect(pairs).toBeGreaterThan(20)
-    expect(opened).toBeGreaterThan(100)
   }, 60_000)
 
   it('la copie s’ouvre sur du simple : un nombre de la fiche (vitesse, seuil) ou un signe de l’entité, presque toujours quand elle en a un', () => {
@@ -1263,21 +2145,23 @@ describe('« Me tester sur X » : rien de faux, rien d’à moitié vrai (toute 
         if (easy(qs[0])) opening++
       }
     }
-    // une question simple ne passe pas en premier quand elle montrerait ce qu'une autre question de la copie demande :
-    // mesuré, 85 copies sur 100 s’ouvrent sur du simple (41 sur 100 quand l’ordre est laissé au hasard)
+    // une question simple ne passe pas en premier quand elle montrerait ce qu'une autre question de la copie demande
     expect(having).toBeGreaterThan(300)
+    measure(`la copie s’ouvre sur du simple : ${opening}/${having}`)
     expect(opening / having).toBeGreaterThan(0.75)
   }, 120_000)
 
-  it('les énoncés et les corrigés : la Dayan « si tu bouges près d’elle », le Revenant sans « elle… il », aucun corrigé rédigé sur les preuves', () => {
+  it('les énoncés et les corrigés : la Dayan « si tu bouges près d’elle », aucun corrigé rédigé sur les preuves', () => {
     const dayan = supply.filter((d) => d.q.id === 'q:spd:dayan:2.25')
     expect(dayan.length).toBeGreaterThan(0)
-    for (const d of dayan) expect(d.q.prompt.replace(/[\u00a0\u202f]/gu, ' ')).toContain('si tu bouges près d’elle')
-    const revenant = supply.filter((d) => d.q.id === 'q:constat:revenant:revenant:E0')
-    expect(revenant.length).toBeGreaterThan(0)
-    for (const d of revenant) expect(d.q.quote).not.toMatch(/(?<!\p{L})il ralentit/u)
+    for (const d of dayan) expect(d.q.prompt.replace(/[  ]/gu, ' ')).toContain('si tu bouges près d’elle')
     // le corrigé d'une question rédigée ne parle pas des preuves ; sauf celui du Mimic, sur ses orbes à 0 preuve
     for (const d of byType('auth')) if (d.x.id !== MIMIC) expect(mentionsEvidence(d.q.explain), `${d.q.id} : ${d.q.explain}`).toBe(false)
   })
 })
 
+/** D'autres copies de dix questions sur x, pour les tests qui cherchent une paire rare. */
+function extraCopies(x: Ghost, n: number): Question[][] {
+  const k = GHOSTS.indexOf(x)
+  return Array.from({ length: n }, (_, j) => buildSoloQuiz({ ghost: x, allGhosts: GHOSTS, rng: createRng(424_242 + k * 104_729 + j * 7919) }))
+}

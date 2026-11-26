@@ -186,7 +186,7 @@
         "Sa téléportation vers un joueur"
       ],
       "answer": 3,
-      "explain": "Le Spectre peut se téléporter près d'un joueur pris au hasard et laisser un EMF 2 (ou 5). Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Son accélération en ligne de vue est standard et ne laisse aucun EMF ; le drain soudain de 25 % est celui du Djinn."
+      "explain": "Le Spectre peut se téléporter près d'un joueur pris au hasard et laisser un EMF 2. Il ne traverse pas les murs : c'est une mauvaise lecture du journal. Son accélération en ligne de vue est standard et ne laisse aucun EMF ; le drain soudain de 25 % est celui du Djinn."
     },
     {
       "q": "Laquelle de ces entités n'est pas ralentie par le sel de rang 3 pendant une chasse ?",

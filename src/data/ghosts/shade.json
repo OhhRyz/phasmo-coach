@@ -121,7 +121,7 @@
       "text": "Si l'entité fait une interaction ou un événement donnant EMF 2, 3 ou 4 dans la même pièce qu'un joueur, ce n'est pas une Ombre."
     },
     {
-      "text": "Si l'entité tente de lancer ou lance une chasse alors qu'elle est dans la même pièce qu'un joueur, ce n'est pas une Ombre."
+      "text": "Si l'entité tente de lancer ou lance une chasse alors qu'elle est dans la même pièce qu'un joueur (chasse naturelle, sans objet maudit), ce n'est pas une Ombre."
     },
     {
       "text": "Si l'entité tente de chasser au-dessus de 35 % de santé mentale moyenne (chasse naturelle, sans objet maudit), ce n'est pas une Ombre."

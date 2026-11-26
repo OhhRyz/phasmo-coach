@@ -271,7 +271,7 @@
         "Le compteur repart à zéro, sans chasse",
         "Sa chasse est retardée sans être annulée",
         "Il chasse aussitôt, malgré l'encens",
-        "L'encens n'a aucun effet sur son compteur"
+        "L'encens n'a aucun effet sur sa chasse"
       ],
       "answer": 1,
       "explain": "L'encens repousse la chasse de la capacité sans remettre le compteur à zéro ; en encensant à répétition, tu peux la retarder de plusieurs minutes."
