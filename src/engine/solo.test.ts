@@ -2048,40 +2048,41 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(sameTurn(sign('wraith', /n’interagit d’aucune façon/u), g('oni')), '« interagit » sans « plus souvent » n’est pas la tournure').toBe(false)
 
     // 3. les niveaux de chasse : chaque phrase des fiches qui parle de chasse ou de seuil avec un pourcentage, les niveaux
-    // où elle dit que l'entité chasse, et ceux avant lesquels elle dit qu'elle ne chasse pas. Une ligne de fiche nouvelle
-    // ou reformulée se signale ici : la relire, puis l'ajouter (voir HUNTS_AT et NOT_BEFORE, solo.ts)
-    const LEVELS: readonly (readonly [string, string, number[], number[]])[] = [
-      ['phantom', 'Draine 0,5 %/s de santé', [], []],
-      ['phantom', 'Pendant les chasses et les événeme', [], []],
-      ['banshee', 'Chasse selon la santé de sa cible ', [50], []],
-      ['mare', 'Chasse dès 60 % lumière éteinte, à', [60], [40]],
-      ['mare', 'Ne chasse pas avant 40 % de santé ', [60], [40]],
-      ['shade', 'Seuil de chasse bas : 35 %', [], []],
-      ['demon', 'Seuil 70 %, et capable de chasser ', [], []],
-      ['yokai', 'Peut chasser jusqu’à 80 % si l’on ', [80], []],
-      ['goryo', 'Vitesse (1,7 m/s) et seuil (50 %) ', [], []],
-      ['myling', 'Vitesse et seuil de chasse standar', [], []],
-      ['onryo', 'Seuil de chasse normal à 60 %, mai', [], [40]],
-      ['raiju', 'Peut chasser dès 65 % près d’un ap', [65], []],
-      ['raiju', 'Peut chasser à 65 % près d’un équi', [65], []],
-      ['moroi', 'L’aveuglement à l’encens pendant l', [], []],
-      ['deogen', 'Seuil de chasse 40 % · plus visibl', [], []],
-      ['thaye', 'Chasse dès 75 % quand il est jeune', [75], []],
-      ['gallu', 'En état normal, sel, encens ou cru', [60], []],
-      ['gallu', 'Après une chasse en état enragé, i', [40], []],
-      ['gallu', 'État enragé : 1,96 m/s, seuil de 6', [], []],
-      ['gallu', 'État affaibli : 1,36 m/s, seuil de', [], []],
-      ['obambo', 'Calme : ≈1,45 m/s, chasse à 10 % ·', [10, 65], []],
-      ['obambo', 'Chasse lancée en état agressif : 2', [], []],
-      ['obambo', 'Si une chasse est démarrée alors q', [], []],
-      ['dayan', 'Chasse dès 65 % si tu bouges près ', [65], [45]],
-      ['kormos', 'Peut chasser dès 70 % si quelqu’un', [70], []],
+    // où elle dit que l'entité chasse, ceux avant lesquels elle dit qu'elle ne chasse pas, et les seuils qu'elle dit comme
+    // tels. Une ligne de fiche nouvelle ou reformulée se signale ici : la relire, puis l'ajouter (voir HUNTS_AT,
+    // NOT_BEFORE et SAID_THRESHOLD, solo.ts)
+    const LEVELS: readonly (readonly [string, string, number[], number[], number[]])[] = [
+      ['phantom', 'Draine 0,5 %/s de santé', [], [], []],
+      ['phantom', 'Pendant les chasses et les événeme', [], [], []],
+      ['banshee', 'Chasse selon la santé de sa cible ', [50], [], []],
+      ['mare', 'Chasse dès 60 % lumière éteinte, à', [60], [40], []],
+      ['mare', 'Ne chasse pas avant 40 % de santé ', [60], [40], []],
+      ['shade', 'Seuil de chasse bas : 35 %', [], [], [35]],
+      ['demon', 'Seuil 70 %, et capable de chasser ', [], [], [70]],
+      ['yokai', 'Peut chasser jusqu’à 80 % si l’on ', [80], [], []],
+      ['goryo', 'Vitesse (1,7 m/s) et seuil (50 %) ', [], [], [50]],
+      ['myling', 'Vitesse et seuil de chasse standar', [], [], []],
+      ['onryo', 'Seuil de chasse normal à 60 %, mai', [], [40], [60]],
+      ['raiju', 'Peut chasser dès 65 % près d’un ap', [65], [], []],
+      ['raiju', 'Peut chasser à 65 % près d’un équi', [65], [], []],
+      ['moroi', 'L’aveuglement à l’encens pendant l', [], [], []],
+      ['deogen', 'Seuil de chasse 40 % · plus visibl', [], [], [40]],
+      ['thaye', 'Chasse dès 75 % quand il est jeune', [75], [], []],
+      ['gallu', 'En état normal, sel, encens ou cru', [60], [], []],
+      ['gallu', 'Après une chasse en état enragé, i', [40], [], []],
+      ['gallu', 'État enragé : 1,96 m/s, seuil de 6', [], [], [60]],
+      ['gallu', 'État affaibli : 1,36 m/s, seuil de', [], [], [40]],
+      ['obambo', 'Calme : ≈1,45 m/s, chasse à 10 % ·', [10, 65], [], []],
+      ['obambo', 'Chasse lancée en état agressif : 2', [], [], []],
+      ['obambo', 'Si une chasse est démarrée alors q', [], [], []],
+      ['dayan', 'Chasse dès 65 % si tu bouges près ', [65], [45], []],
+      ['kormos', 'Peut chasser dès 70 % si quelqu’un', [70], [], []],
     ]
     const read = GHOSTS.flatMap((x) => signsOf(x).filter((t) => /%/u.test(t) && /chass|seuil/iu.test(t)).map((t) => ({ x, t: norm(t) })))
     for (const { x, t } of read) {
       const row = LEVELS.find(([id, start]) => id === x.id && t.startsWith(start))
       expect(row, `${x.id} : « ${t} » n’est pas dans la table des niveaux de chasse`).toBeDefined()
-      expect(soloHuntLevels(t), `${x.id} : ${t}`).toEqual({ at: row![2], notBefore: row![3] })
+      expect(soloHuntLevels(t), `${x.id} : ${t}`).toEqual({ at: row![2], notBefore: row![3], said: row![4] })
     }
     expect(read.length).toBe(LEVELS.length)
     // ce qu'on en tire : à moitié vraie d'une entité qui chasse déjà à ce niveau, ou qui ne chasse jamais plus tôt
@@ -2092,6 +2093,10 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(huntsThatEarly(sign('mare', /^Chasse dès 60/u), g('shade'))).toBe(true)
     expect(huntsThatEarly(sign('obambo', /20 % plus courte$/u), g('spirit')), 'une durée, pas un niveau de chasse').toBe(false)
     expect(huntsThatEarly(sign('shade', /^Seuil de chasse bas/u), g('spirit')), 'un seuil dit comme tel est faux de qui en a un autre').toBe(false)
+    // … sauf pour le Thayé, dont le seuil parcourt 75 % à 15 % : tout niveau de sa plage est le sien à un âge donné
+    expect(GHOSTS.filter((x) => /→/u.test(x.huntSanity.summary)).map((x) => x.id)).toEqual(['thaye'])
+    for (const [id, re] of [['deogen', /^Seuil de chasse 40/u], ['onryo', /^Seuil de chasse normal/u], ['shade', /^Seuil de chasse bas/u], ['demon', /^Seuil 70/u]] as const) expect(huntsThatEarly(sign(id, re), g('thaye')), `${id} : un seuil de la plage du Thayé`).toBe(true)
+    expect(huntsThatEarly(sign('yokai', /^Peut chasser jusqu/u), g('thaye')), '80 % : au-dessus de sa plage, faux pour lui').toBe(false)
 
     // dans la réserve et les copies : plus aucune de ces mauvaises réponses…
     const NO_MORE: readonly (readonly [string, RegExp, string])[] = [
@@ -2106,6 +2111,7 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       ['obambo', /60 s après/u, 'le Démon : la minute de l’Obambo'],
       ['shade', /seulement à 45 %|à 40 % seulement|pas avant 40 %/u, 'une restriction vraie d’une entité qui ne chasse pas avant 35 %'],
       ['deogen', /seulement à 45 %/u, 'de même : le Deogen ne chasse pas avant 40 %'],
+      ['thaye', /^Seuil |seuil de (?:40|60) %/u, 'un seuil de la plage du Thayé (75 % jeune, 15 % vieux)'],
     ]
     for (const [id, re, why] of NO_MORE) expect(seen(id).filter((l) => re.test(l)), `${id} : ${why}`).toEqual([])
     for (const x of GHOSTS) for (const l of seen(x.id)) expect(huntsThatEarly(l, x), `${x.id} : ${l}`).toBe(false)

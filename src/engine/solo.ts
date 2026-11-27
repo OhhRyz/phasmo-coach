@@ -1343,18 +1343,31 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
  *    Dayan), « … à 40 % seulement si l'interrupteur est allumé » (le Cauchemar), « … pas avant 40 % près de flammes
  *    allumées » (l'Onryo). Fausse pour un Yurei, qui chasse dès 50 %, elle serait à moitié vraie d'une entité qui ne
  *    chasse jamais au-dessus de ce niveau (l'Ombre, 35 % ; le Deogen, 40 %) : c'est à elles qu'on ne la propose pas.
+ *
+ * Reste l'entité dont le seuil parcourt une plage (le Thayé, « 75 % jeune → 15 % vieux ») : tout niveau de sa plage,
+ * dit comme un seuil (« Seuil de chasse 40 % », le Deogen) ou comme un niveau de chasse, est le sien à un âge donné,
+ * à un point près ; aucun ne se dit faux pour elle (voir inSpeedRange, quiz.ts, pour les vitesses).
  */
 const HUNTS_AT = /(?:(?:peut|peuvent)\s+chasser[^.;·\d]*?|(?<!\p{L})chasse(?:nt)?\s+(?:à|dès|jusqu[’']à|à\s+partir\s+de)\s+|≤\s*)(\d+)\s?%(?!\s+seulement)/giu
 const NOT_BEFORE = /(?:pas\s+avant|seulement\s+à)\s+(\d+)\s?%|(?<!\p{L})à\s+(\d+)\s?%\s+seulement/giu
-/** Les niveaux de santé mentale où la phrase dit que l'entité chasse, et ceux avant lesquels elle dit qu'elle ne chasse pas. */
-export const soloHuntLevels = (label: string): { at: number[]; notBefore: number[] } => ({
+/** « Seuil de chasse bas : 35 % », « seuil de 60 % », « seuil (50 %) » : un seuil dit comme tel */
+const SAID_THRESHOLD = /(?<!\p{L})seuil(?!\p{L})[^.;·,\d]*?(\d+)\s?%/giu
+/**
+ * Les niveaux de santé mentale où la phrase dit que l'entité chasse (`at`), ceux avant lesquels elle dit qu'elle ne
+ * chasse pas (`notBefore`), et les seuils qu'elle dit comme tels (`said`).
+ */
+export const soloHuntLevels = (label: string): { at: number[]; notBefore: number[]; said: number[] } => ({
   at: [...label.matchAll(HUNTS_AT)].map((m) => Number(m[1])),
   notBefore: [...label.matchAll(NOT_BEFORE)].map((m) => Number(m[1] ?? m[2])),
+  said: [...label.matchAll(SAID_THRESHOLD)].map((m) => Number(m[1])),
 })
 export const huntsThatEarly = (label: string, x: Ghost): boolean => {
-  const top = Math.max(...thresholds(x))
-  const { at, notBefore } = soloHuntLevels(label)
-  return at.some((n) => top >= n) || notBefore.some((n) => top <= n)
+  const all = [...thresholds(x)]
+  const top = Math.max(...all)
+  const { at, notBefore, said } = soloHuntLevels(label)
+  if (at.some((n) => top >= n) || notBefore.some((n) => top <= n)) return true
+  // un seuil qui parcourt une plage : aucun niveau de la plage ne se dit faux
+  return /→/u.test(x.huntSanity.summary) && [...at, ...notBefore, ...said].some((n) => n >= Math.min(...all) && n <= top)
 }
 
 /** Un signe clé qui continue le précédent (« Reprend une vitesse normale… ») : il ne se pose pas seul. */
