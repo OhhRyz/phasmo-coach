@@ -18,6 +18,7 @@ import {
   quoteFor,
   screenOf,
   SENTENCES,
+  signAskable,
   signOfGhost,
   SPEED_OR_SANITY,
   strayCheck,
@@ -1328,11 +1329,33 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
  * « Peut chasser à 65 % près d'un équipement électronique actif » (le Raiju) : parmi les mauvaises réponses de
  * « lequel de ces signes est celui de X ? », la phrase serait à moitié vraie d'une entité qui chasse déjà à ce
  * niveau (un Thayé jeune chasse dès 75 %, où qu'il soit). Le garde-fou du quiz (huntsAlready, quiz.ts) ne lit que
- * « dès », « jusqu'à » et « à partir de » : ici, toute tournure « peut chasser… N % », et « chasse à N % » (« Après
- * une chasse en état enragé, il s'affaiblit (1,36 m/s, chasse à 40 %) », le Gallu : un Djinn aussi chasse à 40 %).
+ * « dès », « jusqu'à » et « à partir de » : ici, toute tournure qui dit que l'entité CHASSE à un niveau, « peut
+ * chasser… N % », « chasse à N % », « chasse dès N % » (« Après une chasse en état enragé, il s'affaiblit (1,36 m/s,
+ * chasse à 40 %) », le Gallu : un Djinn aussi chasse à 40 %), « (≤ 50 %) ».
+ *
+ * Deux lectures à ne pas confondre avec celle-là (relevé le 26 novembre 2026 : lues comme elle, elles faisaient jeter
+ * une question composée sur seize) :
+ *  - un pourcentage qui n'est pas un niveau de chasse (« Chasse lancée en état agressif : 20 % plus courte »,
+ *    l'Obambo : une durée, que toute entité « atteignait »), ou qui DIT un seuil (« Seuil de chasse bas : 35 % »,
+ *    l'Ombre) : la phrase est fausse de toute entité dont ce n'est pas le seuil, et le seuil de X lui-même s'écarte
+ *    déjà (numbersFit, quiz.ts) ;
+ *  - une restriction, qui dit que l'entité ne chasse PAS plus tôt : « … seulement à 45 % si tu restes immobile » (la
+ *    Dayan), « … à 40 % seulement si l'interrupteur est allumé » (le Cauchemar), « … pas avant 40 % près de flammes
+ *    allumées » (l'Onryo). Fausse pour un Yurei, qui chasse dès 50 %, elle serait à moitié vraie d'une entité qui ne
+ *    chasse jamais au-dessus de ce niveau (l'Ombre, 35 % ; le Deogen, 40 %) : c'est à elles qu'on ne la propose pas.
  */
-const CAN_HUNT_AT = /(?:(?:peut|peuvent)\s+chasser|(?<!\p{L})chasse(?:nt)?(?!\p{L}))[^.;·]*?(\d+)\s?%/giu
-const huntsThatEarly = (label: string, x: Ghost) => [...label.matchAll(CAN_HUNT_AT)].some((m) => Math.max(...thresholds(x)) >= Number(m[1]))
+const HUNTS_AT = /(?:(?:peut|peuvent)\s+chasser[^.;·\d]*?|(?<!\p{L})chasse(?:nt)?\s+(?:à|dès|jusqu[’']à|à\s+partir\s+de)\s+|≤\s*)(\d+)\s?%(?!\s+seulement)/giu
+const NOT_BEFORE = /(?:pas\s+avant|seulement\s+à)\s+(\d+)\s?%|(?<!\p{L})à\s+(\d+)\s?%\s+seulement/giu
+/** Les niveaux de santé mentale où la phrase dit que l'entité chasse, et ceux avant lesquels elle dit qu'elle ne chasse pas. */
+export const soloHuntLevels = (label: string): { at: number[]; notBefore: number[] } => ({
+  at: [...label.matchAll(HUNTS_AT)].map((m) => Number(m[1])),
+  notBefore: [...label.matchAll(NOT_BEFORE)].map((m) => Number(m[1] ?? m[2])),
+})
+export const huntsThatEarly = (label: string, x: Ghost): boolean => {
+  const top = Math.max(...thresholds(x))
+  const { at, notBefore } = soloHuntLevels(label)
+  return at.some((n) => top >= n) || notBefore.some((n) => top <= n)
+}
 
 /** Un signe clé qui continue le précédent (« Reprend une vitesse normale… ») : il ne se pose pas seul. */
 const FOLLOWS_ON = /^Reprend(?!\p{L})/u
@@ -1379,8 +1402,9 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
   }
   const out: Seed[] = x.keyTells.flatMap((t, k) =>
     // « Reprend une vitesse normale une fois à moins de 3 m de toi » (le Djinn) : la suite du signe d'avant, qui ne se
-    // comprend pas seule (voir aussi NEEDS_CONTEXT, quiz.ts)
-    FOLLOWS_ON.test(t)
+    // comprend pas seule (voir aussi NEEDS_CONTEXT, quiz.ts) ; ni un signe qu'aucune mauvaise réponse ne peut entourer
+    // (voir signAskable : les signes chiffrés en m/s du Deildegast, huit essais perdus chacun par composition)
+    FOLLOWS_ON.test(t) || !signAskable(x, all, t, 'key', true)
       ? []
       : [
           {
@@ -1404,6 +1428,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
     if (!t.zeroEvidence) continue
     const k = numbers.get(t)!
     const text = redact(withoutEvidenceAsides(t.text), x)
+    if (!signAskable(x, all, text, 'tell', true)) continue
     out.push({
       id: `q:sign-of:${x.id}:t${k}`,
       type: 'T2',
@@ -1968,9 +1993,13 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
         // d'office (« À quelle vitesse chasse un Gallu enragé ? » venait en troisième question de vitesse, avec pour
         // mauvaises réponses « 1,7 m/s » et « 1,36 m/s », que la copie venait de corriger : relevé le 25 novembre 2026).
         // La question passe donc avant les questions qui les montrent, ou ne se pose pas (voir Built.guards)
-        // (à part de `asks` : ces valeurs ne sont pas des faits qu'elle demande, et un signe qui en cite une, « Ne te voit
-        // que si tu bouges à moins de 5 m », reste une autre question que « … un joueur qui sprinte ? 30 m », dont « 5 m »
-        // n'est qu'une mauvaise réponse)
+        // (à part de `asks` : ces valeurs ne sont pas des faits qu'elle demande ; rangées avec eux, elles écartaient
+        // d'avance, par doomed(), des signes qui n'ont rien à voir avec elle. Un signe qui cite l'une d'elles, « Ne te
+        // voit que si tu bouges à moins de 5 m », reste une autre question que « … un joueur qui sprinte ? 30 m », dont
+        // « 5 m » n'est qu'une mauvaise réponse ; les deux ne vont pourtant pas dans la même copie, dans aucun ordre :
+        // le corrigé de la question rédigée écrit lui-même « Les 5 m correspondent à sa vue », ce que le signe demande.
+        // C'est le cas de 22 des 23 paires que les gardes séparent, mesuré le 26 novembre 2026 ; le fait reste demandé
+        // par le signe, ou par une question en nombres)
         if (aspect === 'value') b.guards = new Set(a.choices.flatMap((c, k) => (k === a.answer ? [] : keysOf(x.id, c).filter((key) => !isSoft(key) && /\d/u.test(key)))))
         const bounds = keysOf(x.id, a.choices[a.answer]).flatMap((k) => {
           const m = /^[^|]+\|(\d+) (\S+)$/u.exec(k)
