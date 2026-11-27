@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 // solo.ts d'abord, avant quiz.ts : les deux modules s'importent l'un l'autre, et rien ne doit en dépendre au chargement
 import { buildSoloQuiz, huntsThatEarly, soloFacets, soloFacetsOf, soloFacts, soloHuntLevels, soloQuestion, soloSupply, soloType, soloWorthPlan, SOLO_ANSWERS, SOLO_COUNT, type SoloType } from './solo'
 import { GHOSTS, MECHANICS, getGhost } from '../data'
@@ -6,7 +6,7 @@ import type { Ghost } from '../data/types'
 import { evidenceIn, isEvidenceList, mentionsEvidence, MIMIC, namesGhost, needsEvidence, tellNumbers, thresholds, withoutEvidenceAsides } from './cards'
 import { sanityFamily, speedFamily } from './families'
 import { redactGhostName } from './format'
-import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, HALF_TRUE_OF_MANY, hints, homogeneous, inSpeedRange, measuresOf, nearSpeed, oddOneOut, QUIZ_TOPICS, sameTurn, sharesMeasure, signAskable, signOfGhost, strayCheck, TRUE_OF_ALL, type Choice, type Ctx, type Question, type QuizTopic } from './quiz'
+import { asksOf, buildQuiz, DEFAULT_TOPICS, factKeys, HALF_TRUE_OF_MANY, hints, homogeneous, inSpeedRange, measuresOf, nearSpeed, oddOneOut, QUIZ_TOPICS, sameLineOfSight, sameTurn, sharesMeasure, signAskable, signOfGhost, signVersions, strayCheck, TRUE_OF_ALL, type Choice, type Ctx, type Question, type QuizTopic } from './quiz'
 import { createRng, type Rng } from './random'
 
 /**
@@ -32,10 +32,11 @@ const GONE_KINDS = /^q:(?:duel|dist|test-of|intrus|exclut|sansum):/u
 /**
  * Les signes de la réserve qui ne se composent à aucun tirage alors que signAskable (quiz.ts) ne peut pas le prouver
  * d'avance (chacune de leurs marques existe chez une mauvaise réponse possible, mais aucun groupe de trois ne les
- * équilibre toutes) : huit, mesuré le 27 novembre 2026 (Poltergeist K1, Ombre K2, Hantu t1, Moroï K3, Deogen K1 et
- * K3, Gallu t0, Kormos t1). Chacun coûte huit essais perdus par composition : au-delà du plafond, relire signAskable.
+ * équilibre toutes) : neuf, mesuré le 27 novembre 2026 (Poltergeist K1, Ombre K2, Hantu t1, Moroï K3, Deogen K1 et
+ * K3, Gallu t0, Dayan K1, Kormos t1). Chacun coûte huit essais perdus par composition : au-delà du plafond, relire
+ * signAskable.
  */
-const NEVER_COMPOSED_CEILING = 10
+const NEVER_COMPOSED_CEILING = 12
 
 /** Les copies telles que la fiche les lance : tous les thèmes, dix questions, puis « Encore 10 ». */
 const copies = (id: string, seed: number) => {
@@ -2012,7 +2013,7 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(GHOSTS.some((x) => seen(x.id).some((l) => /tirée au hasard à chaque chasse$/u.test(l)))).toBe(true)
   })
 
-  it('relecture du code du 26 novembre 2026 : une mesure se lit dans une suite et en minutes, une tournure sans ses mots exacts, un niveau de chasse pour ce qu’il dit ; un signe sans mauvaises réponses possibles ne se tente pas', () => {
+  it('relecture du code du 26 novembre 2026 : une mesure se lit dans une suite, en minutes et sur toute la fiche, une tournure sans ses mots exacts, un niveau de chasse pour ce qu’il dit ; un signe sans mauvaises réponses possibles ne se tente pas', async () => {
     const g = (id: string) => getGhost(id)!
     const norm = (t: string) => t.replace(/[  ]/gu, ' ')
     const wrongOf = (q: Question) => q.choices.filter((c) => !q.correct.includes(c.id)).map((c) => norm(c.label))
@@ -2036,6 +2037,21 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(sharesMeasure(sign('demon', /^Portée du crucifix/u), g('raiju'))).toBe(true)
     expect(sharesMeasure(sign('obambo', /^Calme\/agressif/u), g('demon')), '« 1 min » : les 60 s du Démon').toBe(true)
     expect(sharesMeasure(sign('demon', /^Peut rechasser 60 s/u), g('obambo'))).toBe(true)
+    // une suite : « / », un tiret, « à » ; pas « et », qui joint aussi deux choses sans rapport (« … 6 m au rang 2 et 7,5 m au
+    // rang 3 » ne cite pas « 2 m »)
+    const crucifix = g('demon').quiz.map((a) => a.explain ?? '').find((t) => /au rang 2 et 7,5/u.test(norm(t)))
+    expect(crucifix, 'le corrigé du Démon sur la portée du crucifix').toBeDefined()
+    expect(measuresOf(crucifix!)).not.toContain('2 m')
+    expect(measuresOf(crucifix!)).toEqual(expect.arrayContaining(['4,5 m', '6 m', '7,5 m']))
+    expect(measuresOf('Essaie de vieillir toutes les 1 à 2 min')).toEqual(['60 s', '120 s'])
+    // les mesures de X : celles de toute sa fiche. Le Deogen a « 33 % de chances » de se faire entendre à la Spirit Box
+    // (une phrase que la copie ne pose pas), le Thayé « essaie de vieillir toutes les 1 à 2 min » (un comportement)
+    expect(sharesMeasure(sign('banshee', /^Cri unique/u), g('deogen')), '33 % : la respiration lourde du Deogen').toBe(true)
+    expect(sharesMeasure(sign('obambo', /^Calme\/agressif/u), g('thaye')), '1 min, 2 min : le rythme de vieillissement du Thayé').toBe(true)
+    // une durée raccourcie « de 20 % » face à l'entité dont un signe dit « 20 s » (au lieu de 25 s : 20 % de moins)
+    expect(sharesMeasure(sign('obambo', /20 % plus courte$/u), g('demon')), 'les 20 s du Démon').toBe(true)
+    expect(sharesMeasure(sign('obambo', /durée de chasse est réduite de 20 %/u), g('demon'))).toBe(true)
+    expect(sharesMeasure(sign('obambo', /20 % plus courte$/u), g('spirit'))).toBe(false)
 
     // 2. la tournure, pas ses seuls mots : « interagit plus souvent » face à « plus actif », « chasse dès N % » sans « peut »
     const poltergeist = sign('poltergeist', /interagit plus souvent/u)
@@ -2046,6 +2062,43 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     expect(sameTurn(sign('yokai', /^Peut chasser jusqu/u), g('dayan'))).toBe(true)
     expect(sameTurn(sign('yokai', /^Peut chasser jusqu/u), g('spirit'))).toBe(false)
     expect(sameTurn(sign('wraith', /n’interagit d’aucune façon/u), g('oni')), '« interagit » sans « plus souvent » n’est pas la tournure').toBe(false)
+    // (27 novembre) « chasse à N % », la tournure du signe de l'Obambo ; un état nommé (le Gallu et l'Obambo, les deux
+    // entités à états) ; une capacité qui retire de la santé mentale aux joueurs proches (le Djinn et le Yurei)
+    expect(sameTurn(sign('thaye', /^Chasse dès 75/u), g('obambo')), '« chasse à 10 % … chasse à 65 % » : la même tournure').toBe(true)
+    expect(sameTurn(sign('raiju', /^Peut chasser à 65/u), g('mare'))).toBe(true)
+    expect(sameTurn(sign('gallu', /^Enragé : /u), g('obambo')), 'un état nommé').toBe(true)
+    expect(sameTurn(sign('obambo', /20 % plus courte$/u), g('gallu'))).toBe(true)
+    expect(sameTurn(sign('obambo', /^Calme\/agressif/u), g('gallu'))).toBe(true)
+    expect(sameTurn(sign('thaye', /de plus en plus calme/u), g('obambo')), '« calme » seul ne nomme pas un état').toBe(false)
+    expect(sameTurn(sign('jinn', /^Capacité : /u), g('yurei')), 'le pouvoir du Yurei').toBe(true)
+    expect(sameTurn(sign('jinn', /^Capacité : /u), g('spirit'))).toBe(false)
+    // la ligne de vue, dite comme elle est pour X : « … et il accélère en ligne de vue » (le Moroï) est vrai de toute entité
+    // qui y accélère ; « Aucune accélération en ligne de vue » (le Deogen) de celles qui n'y accélèrent pas
+    expect(sameLineOfSight(sign('moroi', /il accélère en ligne de vue$/u), g('spirit'))).toBe(true)
+    expect(sameLineOfSight(sign('moroi', /il accélère en ligne de vue$/u), g('hantu')), 'faux pour le Hantu, qui n’y accélère pas').toBe(false)
+    expect(sameLineOfSight(sign('deogen', /^Aucune accélération en ligne de vue/u), g('hantu'))).toBe(true)
+    expect(sameLineOfSight(sign('deogen', /^Aucune accélération en ligne de vue/u), g('spirit'))).toBe(false)
+    // un signe à moitié vrai de trop d'entités : celui du Kormos, tant qu'il ne dit pas « même en pleine vue »
+    expect(HALF_TRUE_OF_MANY.test(sign('kormos', /^Immobile et silencieux/u))).toBe(true)
+    // … et les listes de mauvaises réponses possibles (mode strict) n'en contiennent plus aucune
+    const offered = (id: string) => (['key', 'tell'] as const).flatMap((style) => signVersions(g(id), GHOSTS, style, true).map((o) => norm(o.label)))
+    const NOT_OFFERED: readonly (readonly [string, RegExp])[] = [
+      ['spirit', /il accélère en ligne de vue/u],
+      ['goryo', /^Immobile et silencieux/u],
+      ['oni', /^Immobile et silencieux|interagit plus souvent/u],
+      ['demon', /20 % plus courte|réduite de 20 %|à moins de 6 m, 8 m ou 10 m|bascule 1 min/u],
+      ['gallu', /état agressif|^Calme\/agressif|^Calme : |^Peut chasser à 65 %/u],
+      ['obambo', /^Enragé : |^Affaibli : |état enragé|^Chasse dès 75 %|jusqu’à 80 %|dès 70 %/u],
+      ['deogen', /33 % de chances/u],
+      ['thaye', /bascule 1 min|1 minute après/u],
+      ['yurei', /−25 % de santé/u],
+      ['mare', /^Peut chasser à 65 %/u],
+      ['hantu', /^Aucune accélération en ligne de vue/u],
+    ]
+    for (const [id, re] of NOT_OFFERED) expect(offered(id).filter((l) => re.test(l)), `${id} : ${re}`).toEqual([])
+    // (elles restent possibles pour qui elles sont fausses sans ambiguïté)
+    expect(offered('spirit').some((l) => /20 % plus courte/u.test(l))).toBe(true)
+    expect(offered('spirit').some((l) => /^Aucune accélération en ligne de vue/u.test(l)), 'le signe du Deogen, faux pour l’Esprit').toBe(true)
 
     // 3. les niveaux de chasse : chaque phrase des fiches qui parle de chasse ou de seuil avec un pourcentage, les niveaux
     // où elle dit que l'entité chasse, ceux avant lesquels elle dit qu'elle ne chasse pas, et les seuils qu'elle dit comme
@@ -2061,7 +2114,7 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       ['demon', 'Seuil 70 %, et capable de chasser ', [], [], [70]],
       ['yokai', 'Peut chasser jusqu’à 80 % si l’on ', [80], [], []],
       ['goryo', 'Vitesse (1,7 m/s) et seuil (50 %) ', [], [], [50]],
-      ['myling', 'Vitesse et seuil de chasse standar', [], [], []],
+      ['myling', 'Vitesse et seuil de chasse standar', [], [], [50]],
       ['onryo', 'Seuil de chasse normal à 60 %, mai', [], [40], [60]],
       ['raiju', 'Peut chasser dès 65 % près d’un ap', [65], [], []],
       ['raiju', 'Peut chasser à 65 % près d’un équi', [65], [], []],
@@ -2085,6 +2138,19 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       expect(soloHuntLevels(t), `${x.id} : ${t}`).toEqual({ at: row![2], notBefore: row![3], said: row![4] })
     }
     expect(read.length).toBe(LEVELS.length)
+    // les tournures voisines que les fiches emploient hors de leurs signes (résumés, précisions) se lisent de même :
+    // un adverbe après « peut », « ne peut pas chasser avant », « ne chasse qu'à », un écart qui n'est pas un seuil
+    const detail = (id: string, re: RegExp) => {
+      const found = [g(id).summary, ...g(id).huntSanity.details].find((t) => re.test(norm(t)))
+      expect(found, `${id} : aucune ligne ne correspond à ${re}`).toBeDefined()
+      return found!
+    }
+    expect(soloHuntLevels(detail('gallu', /peut alors chasser dès 60 %/u)).at).toContain(60)
+    expect(soloHuntLevels(detail('onryo', /ne peut pas chasser avant 40 %/u))).toEqual({ at: [], notBefore: [40], said: [] })
+    expect(soloHuntLevels(detail('obambo', /ne chasse qu’à 10 %/u))).toEqual({ at: [65], notBefore: [10], said: [] })
+    expect(soloHuntLevels(detail('banshee', /peut donc chasser dès 87 %/u))).toEqual({ at: [87], notBefore: [12], said: [] })
+    expect(soloHuntLevels(detail('thaye', /1 % plus bas/u)).said, '« 1 % plus bas que prévu » : un écart, pas un seuil').toEqual([])
+    expect(soloHuntLevels(sign('yokai', /^Peut chasser jusqu/u)).notBefore, '« jusqu’à » n’est pas « qu’à »').toEqual([])
     // ce qu'on en tire : à moitié vraie d'une entité qui chasse déjà à ce niveau, ou qui ne chasse jamais plus tôt
     expect(huntsThatEarly(sign('raiju', /^Peut chasser à 65/u), g('thaye')), 'un Thayé jeune chasse dès 75 %').toBe(true)
     expect(huntsThatEarly(sign('gallu', /chasse à 40 %\)$/u), g('jinn')), 'un Djinn aussi chasse à 40 %').toBe(true)
@@ -2112,9 +2178,22 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
       ['shade', /seulement à 45 %|à 40 % seulement|pas avant 40 %/u, 'une restriction vraie d’une entité qui ne chasse pas avant 35 %'],
       ['deogen', /seulement à 45 %/u, 'de même : le Deogen ne chasse pas avant 40 %'],
       ['thaye', /^Seuil |seuil de (?:40|60) %/u, 'un seuil de la plage du Thayé (75 % jeune, 15 % vieux)'],
+      ['demon', /20 % plus courte|réduite de 20 %/u, 'l’Obambo : les 20 s du Démon'],
+      ['gallu', /état agressif|^Calme\/agressif|^Calme : /u, 'l’Obambo : un état nommé, comme ceux du Gallu'],
+      ['obambo', /^Enragé : |^Affaibli : |état enragé/u, 'le Gallu : de même'],
+      ['obambo', /^Chasse dès 75 %|jusqu’à 80 %|dès 70 %/u, 'la tournure « chasse à N % » du signe de l’Obambo'],
+      ['deogen', /33 % de chances/u, 'la Banshee : le Deogen a lui aussi 33 % de chances, à la Spirit Box'],
+      ['thaye', /bascule 1 min|1 minute après/u, 'l’Obambo : le Thayé vieillit toutes les 1 à 2 min'],
+      ['yurei', /−25 % de santé/u, 'le Djinn : la tournure du pouvoir du Yurei'],
     ]
     for (const [id, re, why] of NO_MORE) expect(seen(id).filter((l) => re.test(l)), `${id} : ${why}`).toEqual([])
-    for (const x of GHOSTS) for (const l of seen(x.id)) expect(huntsThatEarly(l, x), `${x.id} : ${l}`).toBe(false)
+    for (const x of GHOSTS) {
+      for (const l of seen(x.id)) {
+        expect(huntsThatEarly(l, x), `${x.id} : ${l}`).toBe(false)
+        expect(sameLineOfSight(l, x), `${x.id} : ${l}`).toBe(false)
+        expect(/^Immobile et silencieux/u.test(l), `${x.id} : ${l}`).toBe(false)
+      }
+    }
     // … et les phrases rejetées à tort jusque-là se proposent de nouveau : une durée (l'Obambo, à douze entités dans ce
     // corpus), un seuil dit comme tel à une entité qui chasse plus tôt que lui (l'Onryo : à la Banshee, au Yokai, à la
     // Dayan, au Kormos)
@@ -2162,6 +2241,13 @@ describe('« Me tester sur X » : tout vient de la fiche de X, rien de faux ni d
     )
     measure(`relecture du 26 novembre. signes de la réserve qui ne se composent à aucun de 30 tirages : ${never.length} (${never.join(', ')})`)
     expect(never.length, never.join(', ')).toBeLessThanOrEqual(NEVER_COMPOSED_CEILING)
+    // … et cela ne se vérifie que pour l'entité de la copie : la première copie d'une session ne calcule pas les listes
+    // de mauvaises réponses des trente fiches (deux listes par entité : signes clés, phrases « 0 preuve »)
+    vi.resetModules()
+    const cold = { solo: await import('./solo'), quiz: await import('./quiz'), data: await import('../data'), random: await import('./random') }
+    expect(cold.quiz.strictSignLists.built).toBe(0)
+    cold.solo.buildSoloQuiz({ ghost: cold.data.getGhost('yurei')!, allGhosts: cold.data.GHOSTS, rng: cold.random.createRng(4242) })
+    expect(cold.quiz.strictSignLists.built, 'listes strictes calculées pour la première copie d’une session').toBeLessThanOrEqual(2)
 
     // 6. le quiz général : « … comme une entité standard ? » ne désigne qu'une entité de la case « Normales » du coach
     // (la Dayan, 1,7 m/s et 50 % loin d'elle seulement, en était une bonne réponse)

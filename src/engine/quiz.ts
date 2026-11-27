@@ -2218,8 +2218,19 @@ export function inSpeedRange(text: string, o: Ghost): boolean {
  * Démon) cite aussi « 6 m », la mesure du Raiju (« … à moins de 6 m, 8 m ou 10 m ») ; « 150–170 s » cite 150 s et
  * 170 s. Et une durée en minutes se compte en secondes : « bascule 1 min après… » (l'Obambo) est le « 60 s » du Démon
  * et de l'Esprit (relevé le 26 novembre 2026 : seule la dernière valeur d'une suite était lue, et aucune minute).
+ * Une suite : des valeurs que séparent « / », un tiret ou « à » (« toutes les 1 à 2 min ») ; pas « et » ni « ou », qui
+ * joignent aussi deux choses sans rapport (« 6 m au rang 2 et 7,5 m au rang 3 » ne cite pas « 2 m »).
+ *
+ * Les mesures de o : celles de toute sa fiche, pas de ses seuls signes posables. « Cri unique au microphone parabolique
+ * (33 % de chances) » (la Banshee) face au Deogen, qui a lui aussi « 33 % de chances » de se faire entendre, mais à
+ * la Spirit Box (une phrase que la copie ne pose pas) ; « … bascule 1 min après…, puis toutes les 2 min » (l'Obambo)
+ * face au Thayé, qui « essaie de vieillir toutes les 1 à 2 min » (un comportement). Et une durée raccourcie « de
+ * 20 % » (« Chasse lancée en état agressif : 20 % plus courte », l'Obambo) face au Démon, qui « peut rechasser 20 s
+ * après une chasse (au lieu de 25 s) » : le même nombre sur le même sujet, et 20 s au lieu de 25 font justement
+ * 20 % de moins (relevés le 27 novembre 2026).
  */
-const MEASURE = /(?<![\d,])((?:\d+(?:,\d+)?\s*(?:\/|–|-|à|ou|et)\s*)*)(\d+(?:,\d+)?)\s?(min(?:utes?)?|m|s|%)(?![\p{L}\d/])/gu
+const MEASURE = /(?<![\d,])((?:\d+(?:,\d+)?\s*(?:\/|–|-|à)\s*)*)(\d+(?:,\d+)?)\s?(min(?:utes?)?|m|s|%)(?![\p{L}\d/])/gu
+const SHORTER_BY = /(\d+)\s?%\s+plus\s+court|réduite?s?\s+de\s+(\d+)\s?%/giu
 export const measuresOf = (text: string): string[] =>
   [...text.matchAll(MEASURE)].flatMap((m) =>
     [...(m[1].match(/\d+(?:,\d+)?/gu) ?? []), m[2]].map((v) => (m[3].startsWith('min') ? `${Math.round(Number(v.replace(',', '.')) * 60)} s` : `${v} ${m[3]}`)),
@@ -2227,8 +2238,8 @@ export const measuresOf = (text: string): string[] =>
 const ownMeasures = new WeakMap<Ghost, ReadonlySet<string>>()
 export function sharesMeasure(text: string, o: Ghost): boolean {
   let mine = ownMeasures.get(o)
-  if (!mine) ownMeasures.set(o, (mine = new Set([...o.keyTells, ...o.tells.filter((t) => t.zeroEvidence).map((t) => t.text)].flatMap(measuresOf))))
-  return measuresOf(text).some((v) => mine!.has(v))
+  if (!mine) ownMeasures.set(o, (mine = new Set([...o.keyTells, ...[...o.tells, ...o.behaviors, ...o.abilities].map((t) => t.text)].flatMap(measuresOf))))
+  return measuresOf(text).some((v) => mine!.has(v)) || [...text.matchAll(SHORTER_BY)].some((m) => mine!.has(`${m[1] ?? m[2]} s`))
 }
 
 /**
@@ -2244,11 +2255,20 @@ export function sharesMeasure(text: string, o: Ghost): boolean {
  * interagit plus souvent, la seconde moitié de la phrase est vraie d'eux. Et « Chasse dès 75 % quand il est jeune… »
  * (le Thayé), « Chasse dès 65 % si tu bouges près d'elle… » (la Dayan) disent « chasse dès N % » sans « peut » : la
  * même tournure que « Peut chasser dès 65 % près d'un appareil électronique actif » (le Raiju).
+ *
+ * Trois tournures de plus (relevé le 27 novembre 2026). « Chasse à N % » : le signe de l'Obambo dit « chasse à 10 % …
+ * chasse à 65 % », et recevait encore « Chasse dès 75 % quand il est jeune… ». Un état nommé : le Gallu (normal,
+ * enragé, affaibli) et l'Obambo (calme, agressif) sont les deux entités à états, et s'échangeaient leurs signes
+ * (« Enragé : ne perturbe pas le sel… » face à « Chasse lancée en état agressif : 20 % plus courte ») : même forme
+ * « [état] : effets », et « agressif » est presque « enragé ». Une capacité qui retire de la santé mentale aux
+ * joueurs proches : « Capacité : −25 % de santé à un joueur proche… » (le Djinn) face au pouvoir du Yurei.
  */
 const TURNS: readonly RegExp[] = [
   /(?<!\p{L})(?:(?:plus|très)\s+acti(?:fs?|ves?)|interagi\p{L}*\s+plus\s+souvent)(?!\p{L})/iu,
   /(?<!\p{L})vitesse\s+(?:devient\s+)?fixe(?!\p{L})/iu,
-  /(?<!\p{L})(?:peu(?:t|vent)\s+chasser|chasse(?:nt)?)\s+(?:dès|jusqu[’']à)\s+\d+\s?%/iu,
+  /(?<!\p{L})(?:peu(?:t|vent)\s+chasser|chasse(?:nt)?)\s+(?:à|dès|jusqu[’']à)\s+\d+\s?%/iu,
+  /(?<!\p{L})(?:état\s+(?:calme|agressif|enragé|affaibli|normal)(?!\p{L})|(?:calme|agressif|enragé|affaibli)\s*[:/·])/iu,
+  /santé[^.;·]*(?<!\p{L})joueurs?\s+proches?(?!\p{L})/iu,
 ]
 const ownTurns = new WeakMap<Ghost, readonly RegExp[]>()
 export function sameTurn(text: string, o: Ghost): boolean {
@@ -2258,6 +2278,17 @@ export function sameTurn(text: string, o: Ghost): boolean {
     ownTurns.set(o, (mine = TURNS.filter((re) => signs.some((t) => re.test(t)))))
   }
   return mine.some((re) => re.test(text))
+}
+
+/**
+ * Le signe dit-il de la ligne de vue ce qui est vrai de o ? « … et il accélère en ligne de vue » (le Moroï) est vrai de
+ * toute entité qui y accélère (vingt-cinq sur trente), « Aucune accélération en ligne de vue » de celles qui n'y
+ * accélèrent pas ou pas toujours. Seules les règles de forme écartaient ces phrases (relevé le 27 novembre 2026).
+ */
+const LOS_YES = /(?<!n[’'])(?<!\p{L})accélèr(?:e|ent)\s+(?:encore\s+)?en\s+ligne\s+de\s+vue/iu
+const LOS_NO = /n[’']accélèr(?:e|ent)\s+(?:pas|jamais)(?:\s+\p{L}+)?\s+en\s+ligne\s+de\s+vue|(?:aucune|pas\s+d[’']|plus\s+d[’']|sans)\s*accélération\s+en\s+ligne\s+de\s+vue/iu
+export function sameLineOfSight(text: string, o: Ghost): boolean {
+  return (o.speed.los && LOS_YES.test(text)) || ((!o.speed.los || !!o.speed.losVaries) && LOS_NO.test(text))
 }
 
 /** L'énoncé d'une carte « Signe à reconnaître », et de signQuestion par défaut. */
@@ -2416,9 +2447,11 @@ export const TRUE_OF_ALL = /comme toutes les entités|qu[’']à (?:sa|leur) pos
  * 50 % est celui de vingt entités, dont le Moroï, le Revenant et le Deildegast, à qui on les présentait comme faux
  * (relevé le 25 novembre 2026). Et « Ne peut pas allumer les sources de feu » (l'Onryo) : lu « source de feu =
  * flamme », c'est vrai de toute entité (aucune ne rallume une flamme de l'équipement) ; la fiche ne dit pas ce qui
- * les distingue.
+ * les distingue. Et « Immobile et silencieux, il ne te détecte pas » (le Kormos) : sans « même en pleine vue », la
+ * phrase se lit « caché, sans bouger ni parler », ce qui est vrai de toute entité ; elle servait de mauvaise réponse à
+ * vingt-trois fiches (relevé le 27 novembre 2026 ; à rendre quand la fiche dira ce qui est propre au Kormos).
  */
-export const HALF_TRUE_OF_MANY = /à portée normale|vitesse[^.:;]*seuil[^.:;]*standards?(?!\p{L})|sources? de feu/iu
+export const HALF_TRUE_OF_MANY = /à portée normale|vitesse[^.:;]*seuil[^.:;]*standards?(?!\p{L})|sources? de feu|immobile et silencieux/iu
 const signCache = new WeakMap<readonly Ghost[], Map<SignStyle, Sign[]>>()
 
 /** Les signes de toutes les entités qui peuvent servir de mauvaise réponse (jamais ceux du Mimic). */
@@ -2626,6 +2659,11 @@ export function apartFrom(x: Ghost, strict = false): (text: string, themes?: rea
 }
 
 const signVersionCache = new WeakMap<readonly Ghost[], Map<string, Option<Sign>[]>>()
+/**
+ * Combien de listes strictes ont été calculées (une par entité et par style, à la demande) : la copie sur une entité
+ * ne calcule que les siennes, ce que le verrou de solo.test.ts vérifie sur un module fraîchement chargé.
+ */
+export const strictSignLists = { built: 0 }
 
 /**
  * Les signes d'autres entités (signes clés, ou phrases « 0 preuve » : voir SignStyle) qui peuvent servir de
@@ -2637,13 +2675,15 @@ export function signVersions(x: Ghost, all: readonly Ghost[], style: SignStyle =
   if (!byGhost) signVersionCache.set(all, (byGhost = new Map()))
   const cached = byGhost.get(`${style}|${strict}|${x.id}`)
   if (cached) return cached
+  if (strict) strictSignLists.built++
   const free = apartFrom(x)
   // « 1,5 ou 1,9 m/s » (les Jumeaux) face à l'Aswang, à 1,53 m/s : trop près pour être dit faux
   const out = distractorSigns(all, style)
     .filter((s) => s.ghost.id !== x.id && free(s.text, s.themes) && !signFits(s.text, x, all) && !nearSpeed(s.text, x))
-    // la copie sur une seule entité (`strict`) : ni mesure des signes de X, ni tournure de l'un d'eux, ni vitesse de sa
-    // plage, ni signe à moitié vrai de trop d'entités (relevés le 25 novembre 2026 ; la révision garde ses réponses)
-    .filter((s) => !strict || (!sharesMeasure(s.text, x) && !sameTurn(s.text, x) && !inSpeedRange(s.text, x) && !HALF_TRUE_OF_MANY.test(s.text)))
+    // la copie sur une seule entité (`strict`) : ni mesure de la fiche de X, ni tournure de l'un de ses signes, ni vitesse
+    // de sa plage, ni ligne de vue dite comme la sienne, ni signe à moitié vrai de trop d'entités (relevés les 25 et
+    // 27 novembre 2026 ; la révision garde ses réponses)
+    .filter((s) => !strict || (!sharesMeasure(s.text, x) && !sameTurn(s.text, x) && !inSpeedRange(s.text, x) && !sameLineOfSight(s.text, x) && !HALF_TRUE_OF_MANY.test(s.text)))
     .flatMap((s) => [s.text, ...shortened(s.text).filter((v) => keepsSense(s.text, v) && !signFits(v, x, all))].map((label) => ({ value: s, label })))
   byGhost.set(`${style}|${strict}|${x.id}`, out)
   return out
