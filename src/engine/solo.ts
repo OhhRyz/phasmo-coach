@@ -18,6 +18,7 @@ import {
   quoteFor,
   screenOf,
   SENTENCES,
+  signAskable,
   signOfGhost,
   SPEED_OR_SANITY,
   strayCheck,
@@ -247,6 +248,11 @@ interface Seed {
    * chercher ses mauvaises réponses (la recherche de réponses de même forme est ce qui coûte).
    */
   pre?: () => string[]
+  /**
+   * Peut-elle se composer, quel que soit le tirage (un signe, voir signAskable dans quiz.ts) ? Demandé une fois, pour
+   * l'entité de la copie seulement (voir askableSeeds).
+   */
+  askable?: () => boolean
   make: (rng: Rng) => Built | null
 }
 
@@ -1328,11 +1334,53 @@ function numberSeeds(x: Ghost, all: Ghost[]): Seed[] {
  * « Peut chasser à 65 % près d'un équipement électronique actif » (le Raiju) : parmi les mauvaises réponses de
  * « lequel de ces signes est celui de X ? », la phrase serait à moitié vraie d'une entité qui chasse déjà à ce
  * niveau (un Thayé jeune chasse dès 75 %, où qu'il soit). Le garde-fou du quiz (huntsAlready, quiz.ts) ne lit que
- * « dès », « jusqu'à » et « à partir de » : ici, toute tournure « peut chasser… N % », et « chasse à N % » (« Après
- * une chasse en état enragé, il s'affaiblit (1,36 m/s, chasse à 40 %) », le Gallu : un Djinn aussi chasse à 40 %).
+ * « dès », « jusqu'à » et « à partir de » : ici, toute tournure qui dit que l'entité CHASSE à un niveau, « peut
+ * chasser… N % », « chasse à N % », « chasse dès N % » (« Après une chasse en état enragé, il s'affaiblit (1,36 m/s,
+ * chasse à 40 %) », le Gallu : un Djinn aussi chasse à 40 %), « (≤ 50 %) ».
+ *
+ * Deux lectures à ne pas confondre avec celle-là (relevé le 26 novembre 2026 : lues comme elle, elles faisaient jeter
+ * une question composée sur seize) :
+ *  - un pourcentage qui n'est pas un niveau de chasse (« Chasse lancée en état agressif : 20 % plus courte »,
+ *    l'Obambo : une durée, que toute entité « atteignait »), ou qui DIT un seuil (« Seuil de chasse bas : 35 % »,
+ *    l'Ombre) : la phrase est fausse de toute entité dont ce n'est pas le seuil, et le seuil de X lui-même s'écarte
+ *    déjà (numbersFit, quiz.ts) ;
+ *  - une restriction, qui dit que l'entité ne chasse PAS plus tôt : « … seulement à 45 % si tu restes immobile » (la
+ *    Dayan), « … à 40 % seulement si l'interrupteur est allumé » (le Cauchemar), « … pas avant 40 % près de flammes
+ *    allumées » (l'Onryo). Fausse pour un Yurei, qui chasse dès 50 %, elle serait à moitié vraie d'une entité qui ne
+ *    chasse jamais au-dessus de ce niveau (l'Ombre, 35 % ; le Deogen, 40 %) : c'est à elles qu'on ne la propose pas.
+ *
+ * Reste l'entité dont le seuil parcourt une plage (le Thayé, « 75 % jeune → 15 % vieux ») : tout niveau de sa plage,
+ * dit comme un seuil (« Seuil de chasse 40 % », le Deogen) ou comme un niveau de chasse, est le sien à un âge donné,
+ * à un point près ; aucun ne se dit faux pour elle (voir inSpeedRange, quiz.ts, pour les vitesses).
+ *
+ * Les tournures voisines que les fiches emploient hors de leurs signes se lisent de même (relevé le 27 novembre 2026,
+ * au cas où l'une d'elles entrerait dans un signe) : « il peut alors chasser dès 60 % » (un adverbe après « peut »),
+ * « il ne peut pas chasser avant 40 % » et « ne chasse qu'à 10 % » (des restrictions, pas des niveaux où il chasse).
  */
-const CAN_HUNT_AT = /(?:(?:peut|peuvent)\s+chasser|(?<!\p{L})chasse(?:nt)?(?!\p{L}))[^.;·]*?(\d+)\s?%/giu
-const huntsThatEarly = (label: string, x: Ghost) => [...label.matchAll(CAN_HUNT_AT)].some((m) => Math.max(...thresholds(x)) >= Number(m[1]))
+const HUNTS_AT = /(?:(?<!ne\s)(?<!n[’'])(?<!\p{L})(?:peut|peuvent)\s+(?:\p{L}+\s+)?chasser(?:(?!\savant\s)[^.;·\d])*?|(?<!\p{L})chasse(?:nt)?\s+(?:à|dès|jusqu[’']à|à\s+partir\s+de)\s+|≤\s*)(\d+)\s?%(?!\s+seulement)/giu
+const NOT_BEFORE = /(?:pas\s+(?:chasser\s+)?avant|seulement\s+à|(?<!\p{L})qu[’']à)\s+(\d+)\s?%|(?<!\p{L})à\s+(\d+)\s?%\s+seulement/giu
+/**
+ * « Seuil de chasse bas : 35 % », « seuil de 60 % », « seuil (50 %) », « … seuil de chasse standards (1,7 m/s, 50 %) » :
+ * un seuil dit comme tel. Pas un écart (« chaque seuil est en réalité 1 % plus bas que prévu »).
+ */
+const SAID_THRESHOLD = /(?<!\p{L})seuils?(?!\p{L})(?:[^.;·,\d]|\d+(?:,\d+)?\s?m\/s,?)*?(\d+)\s?%(?!\s+(?:plus|de\s+(?:moins|plus))(?!\p{L}))/giu
+/**
+ * Les niveaux de santé mentale où la phrase dit que l'entité chasse (`at`), ceux avant lesquels elle dit qu'elle ne
+ * chasse pas (`notBefore`), et les seuils qu'elle dit comme tels (`said`).
+ */
+export const soloHuntLevels = (label: string): { at: number[]; notBefore: number[]; said: number[] } => ({
+  at: [...label.matchAll(HUNTS_AT)].map((m) => Number(m[1])),
+  notBefore: [...label.matchAll(NOT_BEFORE)].map((m) => Number(m[1] ?? m[2])),
+  said: [...label.matchAll(SAID_THRESHOLD)].map((m) => Number(m[1])),
+})
+export const huntsThatEarly = (label: string, x: Ghost): boolean => {
+  const all = [...thresholds(x)]
+  const top = Math.max(...all)
+  const { at, notBefore, said } = soloHuntLevels(label)
+  if (at.some((n) => top >= n) || notBefore.some((n) => top <= n)) return true
+  // un seuil qui parcourt une plage : aucun niveau de la plage ne se dit faux
+  return /→/u.test(x.huntSanity.summary) && [...at, ...notBefore, ...said].some((n) => n >= Math.min(...all) && n <= top)
+}
 
 /** Un signe clé qui continue le précédent (« Reprend une vitesse normale… ») : il ne se pose pas seul. */
 const FOLLOWS_ON = /^Reprend(?!\p{L})/u
@@ -1393,6 +1441,9 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
             // (le seuil de la Banshee, qui ne se demande pas en nombre, tient dans son signe « … la santé de sa cible »)
             early: (SPEED_OR_SANITY.test(t) || (TARGET_SANITY.has(x.id) && /santé de sa cible/iu.test(t))) && !askedElsewhere(t),
             pre: () => askKeys({ who: x.id, text: t, key: true }),
+            // un signe qu'aucune mauvaise réponse ne peut entourer ne se tente pas (les signes chiffrés en m/s du
+            // Deildegast : huit essais perdus chacun par composition)
+            askable: () => signAskable(x, all, t, 'key', true),
             make: (rng: Rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), undefined, k, true), t, `g:${x.id}:tells`, true),
           },
         ],
@@ -1411,6 +1462,7 @@ function signSeeds(x: Ghost, all: Ghost[]): Seed[] {
       width: 4,
       late: true,
       pre: () => askKeys({ who: x.id, text }),
+      askable: () => signAskable(x, all, text, 'tell', true),
       make: (rng) => wrap(signOfGhost(x, ctxFor(x, all, rng), { text, k: `t${k}` }, undefined, true), text, reverse.has(k) ? `g:${x.id}:rev:${k}` : `g:${x.id}:tells`, false),
     })
   }
@@ -1968,9 +2020,13 @@ function authoredSeeds(x: Ghost, all: Ghost[]): Seed[] {
         // d'office (« À quelle vitesse chasse un Gallu enragé ? » venait en troisième question de vitesse, avec pour
         // mauvaises réponses « 1,7 m/s » et « 1,36 m/s », que la copie venait de corriger : relevé le 25 novembre 2026).
         // La question passe donc avant les questions qui les montrent, ou ne se pose pas (voir Built.guards)
-        // (à part de `asks` : ces valeurs ne sont pas des faits qu'elle demande, et un signe qui en cite une, « Ne te voit
-        // que si tu bouges à moins de 5 m », reste une autre question que « … un joueur qui sprinte ? 30 m », dont « 5 m »
-        // n'est qu'une mauvaise réponse)
+        // (à part de `asks` : ces valeurs ne sont pas des faits qu'elle demande ; rangées avec eux, elles écartaient
+        // d'avance, par doomed(), des signes qui n'ont rien à voir avec elle. Un signe qui cite l'une d'elles, « Ne te
+        // voit que si tu bouges à moins de 5 m », reste une autre question que « … un joueur qui sprinte ? 30 m », dont
+        // « 5 m » n'est qu'une mauvaise réponse ; les deux ne vont pourtant pas dans la même copie, dans aucun ordre :
+        // le corrigé de la question rédigée écrit lui-même « Les 5 m correspondent à sa vue », ce que le signe demande.
+        // C'est le cas de 22 des 23 paires que les gardes séparent, mesuré le 26 novembre 2026 ; le fait reste demandé
+        // par le signe, ou par une question en nombres)
         if (aspect === 'value') b.guards = new Set(a.choices.flatMap((c, k) => (k === a.answer ? [] : keysOf(x.id, c).filter((key) => !isSoft(key) && /\d/u.test(key)))))
         const bounds = keysOf(x.id, a.choices[a.answer]).flatMap((k) => {
           const m = /^[^|]+\|(\d+) (\S+)$/u.exec(k)
@@ -2006,9 +2062,17 @@ const seedsFor = memo((x, all): Seed[] => {
   return everySeed(x, all).filter((s) => !out.has(s.id))
 })
 
+/**
+ * Les questions qu'une copie sur x peut poser : celles qui ne peuvent pas se composer (`askable`) s'écartent ici, pour
+ * la seule entité demandée. Écartées dès signSeeds, ou dans seedsFor, les trente fiches le payaient à la première
+ * copie de la session (unmatched et worthPlan les parcourent toutes) : une centaine de millisecondes de plus à froid,
+ * mesuré le 27 novembre 2026.
+ */
+const askableSeeds = memo((x, all): Seed[] => seedsFor(x, all).filter((s) => !s.askable || s.askable()))
+
 /** Les identifiants de toutes les questions qu'une copie sur x peut poser (certaines ne se composent pas à chaque tirage). */
 export function soloSupply(x: Ghost, all: Ghost[]): { id: string; type: SoloType; topic: QuizTopic }[] {
-  return seedsFor(x, all).map(({ id, type, topic }) => ({ id, type, topic }))
+  return askableSeeds(x, all).map(({ id, type, topic }) => ({ id, type, topic }))
 }
 
 /**
@@ -2016,7 +2080,7 @@ export function soloSupply(x: Ghost, all: Ghost[]): { id: string; type: SoloType
  * fois : pas de mauvaises réponses de même forme). Pour relire une question, ou la vérifier une à une.
  */
 export function soloQuestion(x: Ghost, all: Ghost[], id: string, rng: Rng): Question | null {
-  const b = seedsFor(x, all).find((s) => s.id === id)?.make(rng)
+  const b = askableSeeds(x, all).find((s) => s.id === id)?.make(rng)
   return b ? finished(b) : null
 }
 
@@ -2117,7 +2181,7 @@ function judgedFor(opts: SoloOptions, rng: Rng): string | null {
   if (opts.topics && !opts.topics.includes('behavior')) return null
   const asked = [...(opts.seen ?? [])]
   const seen = new Set([...asked, ...asked.flatMap(sameSign)])
-  const mine = seedsFor(opts.ghost, opts.allGhosts).filter((s) => s.type === 'T6' && !seen.has(s.id))
+  const mine = askableSeeds(opts.ghost, opts.allGhosts).filter((s) => s.type === 'T6' && !seen.has(s.id))
   const truths = mine.filter((s) => s.cls === 'true')
   const pairs = mine
     .filter((s) => s.cls === 'false')
@@ -2143,7 +2207,7 @@ function compose(opts: SoloOptions, count: number, draw: Draw, rng: Rng): Built[
   const asked = [...(opts.seen ?? [])]
   const seen: ReadonlySet<string> = new Set([...asked, ...asked.flatMap(sameSign)])
   const topics = opts.topics ? new Set<QuizTopic>(opts.topics) : null
-  const seeds = seedsFor(x, all).filter((s) => !topics || topics.has(s.topic))
+  const seeds = askableSeeds(x, all).filter((s) => !topics || topics.has(s.topic))
   if (!seeds.length) return []
   const stray = opts.onlyListed ? strayCheck(all.filter((o) => o.id !== x.id)) : null
   const gates = draw.gates
